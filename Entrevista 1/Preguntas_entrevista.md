@@ -86,9 +86,9 @@ Para aprovechar al máximo los 20 minutos sin superponerse:
 * **Pérdida de control y errores frecuentes:**
   - *"¿Cuáles son las situaciones más frecuentes donde sentís que se pierde el control usando WhatsApp?"*  
     *(Atentos a: mensajes traspapelados, pedidos duplicados, demoras en responder, reclamos cruzados).*
-* **Gestión de excepciones e imprevistos [^1] :**
+* **Gestión de excepciones e imprevistos <sup>1</sup> :**
   - *"¿Qué pasa cuando un cliente final no está en su domicilio, la dirección es errónea o surge algún problema en la entrega? ¿Cómo se resuelve esa situación hoy?"*
-* **Registro histórico [^1] :**
+* **Registro histórico <sup>1</sup> :**
   - *"¿Llevan algún tipo de registro de las entregas realizadas al final del día o de la semana (planillas de Excel, cuadernos, nada)?"*
 
 ---
@@ -115,4 +115,4 @@ Para aprovechar al máximo los 20 minutos sin superponerse:
 
 
 
-[^1]: Esta pregunta puede ir para la entrevista 2.
+<sup>1</sup>: Esta pregunta puede ir para la entrevista 2.

@@ -1,18 +1,49 @@
-# Ideas del proyecto
+# Notas y Preparación del Proyecto
 
-Martín hace repartos, vamos a tener que hacer una plataforma que funcione en un teléfono celular como prioridad.
-Quizás también en  una computadora, así arma allí sus pedidos (en su casa, por ejemplo) y luego sale a repartirlos.
+Documento de trabajo para registrar ideas preliminares, consejos metodológicos y puntos de debate del equipo.
 
+---
 
-Los clientes de Martín están acostumbrados a trabajar con Whatsapp. Quizás está bueno pensar en una intregración con esta app (o quizas hasta una plataforma web en lugar de una app dedicada). Porque sino, estaríamos forzando a los clientes a cambiarse de plataforma, cosa que es limitante y además puede costarles a comerciantes más mayores.
+## 1. Ideas Preliminares del Proyecto (a revisar)
 
+- **Enfoque en dispositivos móviles:**
+  - Martín hace y coordina repartos. Como prioridad, la plataforma debería ser cómoda de operar desde un teléfono celular.
+  - Considerar una versión o acceso de escritorio/computadora (ej. si arma y planifica los pedidos desde su casa/oficina antes de salir a coordinar o repartir).
+- **Adopción y fricción con los clientes (Comercios):**
+  - Los comercios están muy acostumbrados a usar WhatsApp.
+  - Conviene evaluar alternativas que reduzcan la resistencia al cambio:
+    - Integración o automatización con WhatsApp.
+    - Plataforma web ligera (sin obligar a instalar aplicaciones pesadas).
+    - Evitar forzar un cambio abrupto que genere rechazo, especialmente en comerciantes mayores o con menor afinidad digital.
 
-# Consejos de entrevistas
+---
 
-- Grabar entrevista con autorizacion del entrevistado
-    - A la hora de grabar, el profe me dijo que al inicio de la grabación cada uno de los participantes se presente con su nombre y apellido, para hacer explícito el consentimiento de la grabación.
-- Tomar nota de la entrevista 
-    - Llevar preguntas preparadas, quizas tambien las posibles respuestas (para una anotación más rápida).
-    - Pedir firma al final de la entrevista, de todos los miembros del grupo y del entrevistado tambien. ESPECIALMENTE SI NO SE GRABA.
+## 2. Consejos Metodológicos para las Entrevistas
 
-- Evaluar que hacer si no quiere firmar ni grabar. Plantarse o buscar otra forma de que quede asentado el requerimiento del cliente.
+- **Grabación y consentimiento:**
+  - Grabar siempre con autorización explícita del entrevistado.
+  - Al iniciar la grabación, cada integrante del grupo debe presentarse con **Nombre y Apellido** para que el consentimiento y los participantes queden formalmente registrados en el audio.
+- **Toma de notas:**
+  - Llevar preguntas impresas y preparadas de antemano, idealmente con espacios en blanco y opciones de respuesta rápida (checklist/rangos) para agilizar la anotación.
+  - **Firma de conformidad:** Solicitar al cierre la firma del entrevistado y de todos los miembros del grupo al pie del documento de notas (fundamental, especialmente si no se autoriza la grabación).
+- **Contingencia:**
+  - Prever qué hacer si el cliente no desea grabar ni firmar: buscar alternativas de validación para que quede constancia del relevamiento realizado.
+
+---
+
+## 3. Puntos de Debate Clave con el Grupo (Antes de la Entrevista 1)
+
+Temas a consensuar entre los 6 integrantes antes del viernes:
+
+1. **Definición de roles personales para la entrevista (20 minutos):**
+   - ¿Quiénes serán los **2 transcriptores**? (Definir quién anota datos cuantitativos/flujo y quién anota dolores/expectativas).
+   - ¿Quién será el **Timekeeper**? (Responsable de mirar el reloj y hacer señas para no exceder los 20 min).
+   - ¿Quiénes serán los **3 interlocutores**? (Asignar quién lidera la apertura + Bloque 1, quién el Bloque 2 y quién los Bloques 3 y 4).
+2. **Estrategia para el Bloque 2 (Flujo de trabajo):**
+   - ¿Arrancamos directo con la **Opción A** (pregunta abarcativa general) para que hable fluido y ahorremos tiempo, dejando las preguntas puntuales de repregunta? ¿O preferimos guiar paso a paso con la **Opción B**?
+3. **Decisión sobre preguntas postergables a la Entrevista 2:**
+   - Acordar si ciertas preguntas corresponden o no a la primera entrevista.
+4. **Preparación del material impreso:**
+   - Imprimir las hojas de preguntas con renglones amplios para los transcriptores y la sección de firmas al pie.
+5. **Plan de contingencia ante negativa de grabación/firma:**
+   - Ponerse de acuerdo en cómo reaccionar con serenidad y profesionalismo si Martín prefiere no ser grabado ni firmar.

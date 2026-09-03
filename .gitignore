@@ -1,0 +1,41 @@
+# ==========================================
+# LaTeX - Archivos auxiliares y de compilación
+# ==========================================
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.idx
+*.ind
+*.ilg
+*.nav
+*.snm
+*.vrb
+*.dvi
+
+# ==========================================
+# Archivos de configuración de editores
+# ==========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ==========================================
+# Sistema Operativo
+# ==========================================
+.DS_Store
+Thumbs.db

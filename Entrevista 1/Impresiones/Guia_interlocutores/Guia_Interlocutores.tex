@@ -1,0 +1,186 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{spanish.ldf}{\usepackage[spanish,es-tabla]{babel}}{}
+\usepackage[a4paper, left=1.4cm, right=1.4cm, top=2.5cm, bottom=2.0cm]{geometry}
+\usepackage{lmodern}
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+
+% Definición de tonos sobrios y formales (tipo cuestionario institucional)
+\definecolor{grisCabecera}{gray}{0.92}
+\definecolor{grisBorde}{gray}{0.35}
+\definecolor{textoMuted}{gray}{0.25}
+
+% Configuración de listas compactas con mayor tamaño de fuente
+\setlist{nosep, leftmargin=1.35em, topsep=2pt, itemsep=2.5pt}
+
+% Configuración de títulos sobrios y discretos
+\titleformat{\section}
+  {\normalfont\large\bfseries}
+  {}{0em}
+  {}
+  [{\titlerule[0.7pt]}]
+
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+
+% Encabezados y pies de página formales
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{UNLP --- Facultad de Ingeniería} \textbar\ Ingeniería de Software 2026 \textbar\ Grupo 7}
+\fancyfoot[L]{\footnotesize Guía de mesa para interlocutores y moderación (relevamiento inicial)}
+\fancyfoot[R]{\small Hoja \thepage\ de 2}
+
+\begin{document}
+
+% ENCABEZADO INSTITUCIONAL
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{\large PROTOCOLO Y GUÍA DE RELEVAMIENTO EN MESA} & \textbf{\normalsize ROL: INTERLOCUTORES} \\
+  \textit{Proyecto de Software: Plataforma de Logística y Reparto} & \small Moderación \& Timekeeper \\
+\end{tabularx}
+\vspace{1pt}
+\hrule height 1.1pt
+\vspace{4pt}
+
+% TABLA DE METADATOS TIPO CUESTIONARIO DISCRETO (SOLO FILA GRIS SOLICITADA)
+\noindent
+\begin{tabularx}{\textwidth}{|X|X|X|X|}
+\hline
+\rowcolor{grisCabecera}
+\textbf{Entrevistado:} Martín & \textbf{Fecha:} 04/09/2026 & \textbf{Hora:} 09:20 hs & \textbf{Modalidad:} Presencial \\
+\hline
+\end{tabularx}
+
+\vspace{5pt}
+
+% APERTURA
+\section*{Apertura \& Consentimiento Informado \hfill \normalfont\small\itshape [Interlocutor 1]}
+\begin{enumerate}[label=\textbf{\alph*.}]
+  \item \textbf{Saludo institucional y encuadre:} Agradecer la presencia y explicar brevemente la meta: conocer la dinámica diaria de su trabajo para relevar los procesos reales.
+  \item \textbf{Autorización de grabación:} 
+  \textit{``Martín, para trabajar con datos exactos y relevar fielmente el proceso sin perder ningún detalle técnico vamos a grabar el audio de la reunión, ¿estás de acuerdo?''}
+  \item \textbf{Identificación protocolar (si autoriza):} Al encender el grabador, cada uno de los 6 integrantes enuncia su \textbf{Nombre y Apellido}, y Martín ratifica oralmente su conformidad para el registro.
+  \item \textbf{Plan de contingencia (si no autoriza):} Toma de notas manual exhaustiva por transcriptores y firma de conformidad al pie al finalizar.
+\end{enumerate}
+
+% BLOQUE 1
+\section*{Bloque 1: Organización, Rol de Martín y Contexto General \hfill \normalfont\small\itshape [Interlocutor 1]}
+\begin{itemize}
+  \item \textbf{1. Rol y estructura organizativa:}
+  \textit{``Martín, para arrancar y situarnos en tu día a día: ¿Cuál es exactamente tu rol dentro de la empresa y cómo está organizada hoy en día?''}
+  
+  \begin{itemize}[label=$\circ$]
+    \item \textit{Bifurcación A1 (Coordinación individual / 'Hombre orquesta'):} 
+    ``Al coordinar vos solo todos los pedidos, ¿cómo te organizás con el celular en horas pico para no atrasarte con los mensajes? ¿Sos vos también quien sale a repartir en algún momento?''
+    \item \textit{Bifurcación A2 (Equipo gestor / socios / ayudantes):} 
+    ``¿Cómo se dividen las tareas o comercios entre ustedes? ¿Manejan una única línea telefónica o varias? ¿Tienen que rendirse cuentas o reportes entre ustedes?''
+  \end{itemize}
+
+  \item \textbf{2. Comercios adheridos y rubros:}
+  \textit{``¿Con cuántos comercios trabajás actualmente y de qué rubros son (gastronomía, farmacias, tiendas, etc.)?''}
+
+  \item \textbf{3. Equipo de cadetes y medios de transporte:}
+  \textit{``¿Cuántos repartidores tenés a cargo y en qué se mueven (bicicleta, moto, auto)?''}\\
+  \textit{\small[Repregunta: ¿Son fijos del equipo o trabajan de manera libre/independiente?]}
+
+  \item \textbf{4. Zonas y logística de retiro:}
+  \textit{``¿En qué zonas geográficas realizan los repartos? ¿Los paquetes salen directo desde cada local hacia el cliente (punto a punto) o pasan primero por algún lugar donde se juntan o acopian?''}
+
+  \item \textbf{5. Contacto con clientes finales:}
+  \textit{``Los clientes que compran en los locales, ¿se comunican alguna vez con vos o con los chicos, o su contacto es únicamente con el comercio?''}
+\end{itemize}
+
+% BLOQUE 2
+\section*{Bloque 2: Flujo Operativo Actual (AS-IS) \hfill \normalfont\small\itshape [Interlocutor 2]}
+\noindent
+\textit{\small Estrategia: Formular la pregunta troncal abarcativa para escuchar el circuito natural. Usar el checklist solo para repreguntar vacíos.}
+
+\vspace{3pt}
+\noindent
+\begin{tabularx}{\textwidth}{|X|}
+\hline
+\textbf{Pregunta Troncal Abarcativa:}
+\textit{``Contanos paso a paso qué pasa desde que un comercio te avisa que tiene un pedido hasta que se entrega al cliente: ¿Qué datos te mandan, cómo se lo asignás al repartidor y cómo finaliza la entrega?''} \\
+\hline
+\end{tabularx}
+
+\begin{itemize}[label=$\diamond$]
+  \item \textbf{Entrada del pedido:} ¿Por qué canal entra (WhatsApp personal, grupo)? ¿Qué datos envían (dirección exacta, cliente, horario tope, método de pago, tamaño del bulto)? ¿Tenés datos ya agendados o recordados?
+  \item \textbf{Asignación al repartidor:} ¿Qué criterio usás para decidir a quién mandar (cercanía en el mapa, orden de llegada a la parada, tipo de vehículo según tamaño)? ¿Cómo le notificás la orden?
+  \item \textbf{Monitoreo del estado:} ¿Cómo sabés en qué estado está el pedido a lo largo del día (retirado del local, en viaje, entregado, demora)? ¿Te avisan uno a uno por chat?
+  \item \textbf{Cobros y rendiciones:} ¿Ustedes cobran el valor del producto al cliente final o solo el flete/envío? ¿Qué medios usan (efectivo, transferencias)? ¿Con qué frecuencia liquidan a comercios y cadetes?
+\end{itemize}
+
+\clearpage
+
+% BLOQUE 3
+\section*{Bloque 3: Puntos de Dolor con WhatsApp \& Contingencias \hfill \normalfont\small\itshape [Interlocutor 3]}
+\begin{itemize}
+  \item \textbf{1. Pérdida de control y errores operativos habituales:}
+  \textit{``¿Cuáles son las situaciones más frecuentes donde sentís que se te va de las manos o se pierde el control con WhatsApp?''}
+  \begin{itemize}[label=$\circ$]
+    \item \textit{Foco de relevamiento:} Mensajes que quedan sin leer o perdidos en horas pico, pedidos duplicados, reclamos cruzados entre comercio y cadete.
+  \end{itemize}
+
+  \item \textbf{2. Excepciones e imprevistos en destino:}
+  \textit{``¿Qué pasa cuando un repartidor llega y el cliente no atiende el timbre, la dirección es errónea o no tiene cambio? ¿Cómo se resuelve y a quién recurre el cadete en ese momento?''}
+
+  \item \textbf{3. Registros históricos y trazabilidad:}
+  \textit{``¿Llevan algún tipo de registro de las entregas que se completaron durante el día o la semana (planillas de cálculo, cuadernos, o no queda registro formal)?''}
+
+  \item \textbf{4. Carga de trabajo manual más crítica:}
+  \textit{``En tu día a día, ¿cuál es la tarea manual que más tiempo y energía te consume o que te resulta más desgastante?''}
+\end{itemize}
+
+% BLOQUE 4
+\section*{Bloque 4: Alcance del Sistema (TO-BE) \& Expectativas \hfill \normalfont\small\itshape [Interlocutor 3]}
+\begin{itemize}
+  \item \textbf{1. Definición de actores y fronteras del software (Pregunta Clave de Alcance):}
+  \textit{``Pensando en el sistema que necesitás: ¿Te imaginás una herramienta de uso exclusivo para vos y la coordinación interna, o la idea es que los comercios y los repartidores también ingresen a cargar o ver estados?''}
+  \begin{itemize}[label=$\circ$]
+    \item \textit{Repregunta cliente final:} ``¿Y los compradores que reciben el pedido en su casa, necesitarían entrar a ver un estado o seguimiento, o quedan totalmente afuera del sistema?''
+    \item \textit{Perfil de usuarios:} ``¿Hay limitaciones técnicas o barreras en el uso del celular por parte de comercios o repartidores?''
+  \end{itemize}
+
+  \item \textbf{2. Volumen y proyección de crecimiento:}
+  \textit{``¿Cuántos pedidos manejan un día promedio (y un fin de semana)? ¿Cuánto estimás que podría crecer el negocio en los próximos meses?''}
+
+  \item \textbf{3. Funcionalidades irrenunciables y visión de éxito:}
+  \textit{``Si el sistema tuviera una sola cosa bien resuelta el primer día, ¿cuál sería la función que para vos no puede faltar bajo ningún punto de vista?''}
+
+  \item \textbf{4. Materiales y artefactos de referencia:}
+  \textit{``¿Nos podrías facilitar o reenviar luego capturas de mensajes típicos, listas o planillas que uses hoy para entender el formato real?''}
+\end{itemize}
+
+% CIERRE FORMAL
+\section*{Cierre Formal, Validación \& Traspaso a Firmas \hfill \normalfont\small\itshape [Cierre Grupal]}
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item \textbf{Síntesis de comprobación:} Resumir en 2 o 3 frases lo comprendido (ej.: \textit{``Entendemos que el núcleo es aliviar la saturación de chats entre comercios y repartidores en hora pico y dar visibilidad clara de qué cadete tiene cada pedido y las cuentas claras al final del día''}) para que Martín asienta y valide.
+  \item \textbf{Agradecimiento institucional:} Agradecer sinceramente a Martín por su tiempo y aportes.
+  \item \textbf{Paso a firmas (Acta de Relevamiento):} Traspasar formalmente a los transcriptores para la firma de Martín y de los integrantes del equipo en las hojas de notas.
+\end{enumerate}
+
+\vspace{8pt}
+\hrule
+\vspace{5pt}
+
+% RECORDATORIO DISCRETO PARA MODERACIÓN
+\noindent
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\small\textbf{Pautas de Moderación:} & 
+\small
+$\bullet$ Mantener la conversación en tono profesional, empático y fluido. \quad
+$\bullet$ Si el entrevistado se desvía, reencauzar amablemente: \textit{``Super claro Martín; y en cuanto a...''}. \quad
+$\bullet$ No discutir soluciones de código ni bases de datos; concentrarse 100\% en el problema y procesos de negocio.
+\end{tabularx}
+
+\end{document}

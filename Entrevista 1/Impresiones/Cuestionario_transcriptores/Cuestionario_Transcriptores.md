@@ -3,7 +3,7 @@
 **Materia:** Ingeniería de Software 2026 — Facultad de Ingeniería (UNLP)  
 **Equipo:** Grupo N° 7  
 **Entrevistado:** Martín  
-**Fecha:** 04/09/2026 | **Hora:** 09:20 hs | **Duración:** 40 minutos | **Modalidad:** Presencial  
+**Fecha:** 04/09/2026 | **Hora:** 09:20 hs | **Modalidad:** Presencial  
 **Consentimiento de grabación:** [ &nbsp; ] SÍ &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] NO  
 **Transcriptores responsables:** __________________________________________________________________
 

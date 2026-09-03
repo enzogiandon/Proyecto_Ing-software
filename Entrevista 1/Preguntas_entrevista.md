@@ -1,7 +1,6 @@
 # Guía para Entrevista 1 - Relevamiento Inicial
 
 **Objetivo:** Conocer el negocio actual (AS-IS), roles de los involucrados, puntos de dolor en la gestión actual y definir el alcance inicial de la solución esperada (TO-BE).  
-**Duración estimada:** 40 minutos.  
 **Modalidad:** Presencial en la Facultad.
 
 > **Referencias de superíndices de autoría y coincidencias del equipo:**  
@@ -13,14 +12,14 @@
 
 ## Organización y Roles del Equipo (6 personas)
 
-Para aprovechar al máximo el tiempo sin superponerse:
+Para aprovechar al máximo la entrevista sin superponerse:
 
 - **2 Transcriptores / Tomadores de notas:**
   - Registran por escrito todo lo que el cliente responde, dividiéndose los temas (uno toma datos cuantitativos, actores y flujo; el otro anota problemas, excepciones y expectativas).
   - Tienen preparadas hojas con espacios listos para anotar de forma ágil.
-- **1 Moderador de Ritmo y Tiempo (Timekeeper):**
-  - Controla el reloj y marca los tiempos de cada bloque mediante señas discretas al interlocutor de turno.
-  - Asegura que no se excedan de los minutos previstos por sección.
+- **1 Moderador de Ritmo y Dinámica (Timekeeper):**
+  - Controla el reloj y marca la transición de cada bloque mediante señas discretas al interlocutor de turno.
+  - Asegura el ritmo ágil y la transición ordenada entre secciones.
 - **3 Interlocutores principales (divididos por bloques):**
   - **Interlocutor 1:** Encargado de la apertura, consentimiento y el **Bloque 1** (Organización y contexto general).
   - **Interlocutor 2:** Encargado del **Bloque 2** (Flujo de trabajo y procesos).
@@ -29,7 +28,7 @@ Para aprovechar al máximo el tiempo sin superponerse:
 
 ---
 
-## Protocolo de Apertura y Consentimiento (Primeros 2 minutos)
+## Protocolo de Apertura y Consentimiento
 
 1. **Saludo inicial y encuadre:**
    - Saludar a Martín y agradecerle por su tiempo y disposición para la reunión.
@@ -42,7 +41,7 @@ Para aprovechar al máximo el tiempo sin superponerse:
 
 ---
 
-## Bloque 1: Organización, Rol de Martín y Contexto General (~4 minutos)
+## Bloque 1: Organización, Rol de Martín y Contexto General
 
 * **Rol y Estructura Organizativa:<sup>[AT, AC-6]</sup>**
   - *"Martín, para arrancar y situarnos en tu día a día: ¿Cuál es exactamente tu rol dentro de la empresa y cómo está organizada la estructura hoy en día?"*  
@@ -67,9 +66,9 @@ Para aprovechar al máximo el tiempo sin superponerse:
 
 ---
 
-## Bloque 2: Flujo de Trabajo Actual (AS-IS) (~6 minutos)
+## Bloque 2: Flujo de Trabajo Actual (AS-IS)
 
-> **Nota para el equipo:** Decidir si usar la **Opción A** (recomendada para ahorrar tiempo y dejar hablar fluido al cliente) o la **Opción B** (preguntas guiadas una a una). Si se usa la Opción A, las preguntas de la Opción B quedan de soporte para repreguntar solo lo que Martín no haya mencionado.
+> **Nota para el equipo:** Decidir si usar la **Opción A** (recomendada para facilitar una conversación fluida) o la **Opción B** (preguntas guiadas una a una). Si se usa la Opción A, las preguntas de la Opción B quedan de soporte para repreguntar solo lo que Martín no haya mencionado.
 
 ### Opción A: Pregunta abarcativa y general<sup>[AC-1, AT]</sup>
 - *"Contanos paso a paso qué pasa desde que un comercio te avisa que tiene un pedido hasta que se entrega al cliente: ¿Qué datos te mandan, cómo se lo asignás al repartidor y cómo finaliza la entrega?"*  
@@ -92,7 +91,7 @@ Para aprovechar al máximo el tiempo sin superponerse:
 
 ---
 
-## Bloque 3: Puntos de Dolor con WhatsApp (~4 minutos)
+## Bloque 3: Puntos de Dolor con WhatsApp
 
 * **Pérdida de control y errores frecuentes:<sup>[AC-17, AC-18, AC-19]</sup>**
   - *"¿Cuáles son las situaciones más frecuentes donde sentís que se pierde el control usando WhatsApp?"*  
@@ -106,10 +105,10 @@ Para aprovechar al máximo el tiempo sin superponerse:
 
 ---
 
-## Bloque 4: Alcance del Sistema (Scope) y Cierre (~4 minutos)
+## Bloque 4: Alcance del Sistema (Scope) y Cierre
 
 * **Definición de usuarios y alcance del software:<sup>[AC-22, AT]</sup>**
-  - *"Pensando en la solución que necesitás: ¿Te imaginás un sistema de uso exclusivo para vos y la coordinación interna, o la idea es que los repartidores o los propios comercios (tus clientes) también ingresen directamente al sistema?"*
+  - *"Pensando en la solución que necesitás: ¿Te imaginás un sistema de uso exclusivo para vos y la coordinación interna, o la idea es que los repartidores o los propios comercios (tus clientes) también ingresen directamente al sistema? ¿Cuál es el grupo etario de los usuarios del sistema?"* 
   - **Repregunta en caso afirmativo:**  
     - *"¿Y los clientes finales que reciben el paquete, necesitarían acceder a algún seguimiento o ellos quedan totalmente fuera de la plataforma?"*
 * **Volumen y proyección de escala:<sup>[AT]</sup>** *(Pregunta complementaria agregada)*
@@ -121,7 +120,7 @@ Para aprovechar al máximo el tiempo sin superponerse:
 
 ---
 
-## Cierre y Firma (Últimos 1-2 minutos)
+## Cierre y Firma
 
 1. Agradecer formalmente a Martín por la reunión y la información brindada.
 2. Hacer un brevísimo resumen oral de los puntos principales entendidos para validar conformidad.

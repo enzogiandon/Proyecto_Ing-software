@@ -35,9 +35,9 @@ Documento de trabajo para registrar ideas preliminares, consejos metodológicos 
 
 Temas a consensuar entre los 6 integrantes antes del viernes:
 
-1. **Definición de roles personales para la entrevista (20 minutos):**
+1. **Definición de roles personales para la entrevista:**
    - ¿Quiénes serán los **2 transcriptores**? (Definir quién anota datos cuantitativos/flujo y quién anota dolores/expectativas).
-   - ¿Quién será el **Timekeeper**? (Responsable de mirar el reloj y hacer señas para no exceder los 20 min).
+   - ¿Quién será el **Timekeeper**? (Responsable de mirar el reloj y marcar los ritmos de transición con señas discretas).
    - ¿Quiénes serán los **3 interlocutores**? (Asignar quién lidera la apertura + Bloque 1, quién el Bloque 2 y quién los Bloques 3 y 4).
 2. **Estrategia para el Bloque 2 (Flujo de trabajo):**
    - ¿Arrancamos directo con la **Opción A** (pregunta abarcativa general) para que hable fluido y ahorremos tiempo, dejando las preguntas puntuales de repregunta? ¿O preferimos guiar paso a paso con la **Opción B**?
@@ -47,3 +47,24 @@ Temas a consensuar entre los 6 integrantes antes del viernes:
    - Imprimir las hojas de preguntas con renglones amplios para los transcriptores y la sección de firmas al pie.
 5. **Plan de contingencia ante negativa de grabación/firma:**
    - Ponerse de acuerdo en cómo reaccionar con serenidad y profesionalismo si Martín prefiere no ser grabado ni firmar.
+
+---
+
+## 4. Tips y Consejos de Primera Mano (Experiencia con el Docente)
+
+Aportes transmitidos por un compañero que ya realizó la entrevista con el mismo docente (Martín):
+
+1. **Actitud y Roleplay del Cliente:**
+   - El docente es muy accesible y "buena onda", pero **se mete 100% en el personaje** del cliente informal de barrio.
+   - **Disposición a grabar:** Es muy probable que **no quiera ser grabado**. Por eso es vital que los transcriptores estén listos para tomar notas manuscritas ágiles y completas.
+   - **Imagen profesional del equipo:** Le va a gustar y valorar mucho que el grupo se muestre organizado de antemano, que se presenten con nombre de empresa propia (**Softech**) y con material formal bien redactado en la mesa.
+
+2. **Manejo del Ritmo y la Conversación:**
+   - **Desvíos:** Tiende a "irse por las ramas" en el relato informal; hay que reencauzarlo amablemente hacia el proceso operativo (*«Clarísimo Martín; volviendo al tema de cómo te pasan el pedido...»*).
+
+3. **Negociación del Alcance (Scope) y Trampas Comunes:**
+   - **No prometer soluciones técnicas prematuras:** Él tiende a decir que **"SÍ a todo"**. Bajo ningún concepto prometer o debatir qué tecnología usar (evitar decir *"vamos a hacer una app móvil"* o *"lo programamos en tal lenguaje"*). En esta etapa solo se releva el problema y el negocio.
+   - **Objetivos inalcanzables / Prueba de criterio:** Es muy probable que plantee expectativas desmedidas o funciones inalcanzables para evaluar si el equipo tiene criterio ingenieril. **No hay que tener miedo de decirle que NO**, marcar límites o explicar que ciertas cosas exceden el alcance inicial; lo va a entender y valorar positivamente.
+
+4. **Alternativa al Acta de Firmas:**
+   - Si al terminar no quiere firmar físicamente o no tiene tiempo en la mesa, aplicar el plan de contingencia: **enviarle por mail formal (`is.ic.unlp@gmail.com`) toda la minuta de lo relevado** para que valide o confirme de forma asincrónica.

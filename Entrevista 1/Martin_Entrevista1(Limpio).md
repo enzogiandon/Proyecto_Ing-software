@@ -1,99 +1,117 @@
-PRIMERA ENTREVISTA A MARTIN
+# Registro Estructurado de la Primera Entrevista a Martín
 
+**Fecha:** 04/09/2026  
+**Modalidad:** Presencial  
+**Entrevistado:** Martín (Responsable de Planificación Logística y Hojas de Ruta)  
+**Equipo entrevistador:** Softech (Grupo 7)  
 
-NOTAS ADICIONALES: Martin consintio en grabar la charla.
+---
 
-Su empresa es un centro de institucion logistica.
+## Apertura y Consentimiento Informado
 
+- **Grabación de audio:** Se solicitó autorización al inicio del encuentro. Martín otorgó su consentimiento expreso para grabar la sesión con fines de relevamiento técnico.
+- **Identificación:** Cada integrante del equipo se presentó formalmente al encender el grabador, ratificándose la conformidad oral del entrevistado.
 
-**BLOQUE 1**
+---
 
+## Bloque 1: Organización, Rol de Martín y Contexto General
 
-En cuanto al rol que cumple su empresa, es un servicio tercializado donde trabajan con marcas que tienen su propio servicio de reparto, mayormente de bebidas, casos como coca-cola que aunque cuenten con su propio distribuidor, por decision comercial dejan zonas para que repartan terceros y ahi es donde la empresa de martin ofrece sus servicios.
+### 1. Rol y estructura organizativa
+- **Modelo de negocio:** La empresa opera como un centro de servicios logísticos tercerizados. Trabajan de forma estratégica con grandes compañías (principalmente de bebidas, como Coca-Cola) que, si bien poseen su propia red de distribución, delegan zonas secundarias o de difícil acceso a operadores externos. Es en este nicho donde la empresa brinda sus servicios de flete y entrega.
+- **Equipo administrativo:** Disponen de un plantel de 10 empleados administrativos abocados a diagramar las rutas, confeccionar los remitos, supervisar la efectividad de las ventas y conciliar los montos globales recaudados.
+- **Responsabilidad de Martín:** Su función específica se centra en coordinar y ordenar las hojas de ruta de acuerdo a las zonas solicitadas. Aclaró que su sector no gestiona inventarios (tarea delegada al área de proveedores) ni se encarga de la coordinación en tiempo real durante los viajes.
 
+### 2. Comercios adheridos y rubros
+- **Perfil de clientes:** Abastecen al canal minorista barrial tradicional: almacenes de barrio, kioscos y supermercados de proximidad (autoservicios chinos).
+- **Límite de servicio:** Quedan expresamente excluidas las grandes cadenas de supermercados (como Carrefour, Coto o Disco), ya que estas cuentan con esquemas propios o acuerdos centralizados.
+- **Volumen y estacionalidad:** La cartera de comercios adheridos mantiene una base estable a lo largo del año, aunque experimenta picos y valles según la temporada. Como referencia reciente, durante agosto incorporaron 10 nuevos locales.
 
-El centro tiene 6 centros de acopio, con 4 o 5 areas diferentes, donde se asientan los caminos o rutas (como expresa Martin), con disponibilidad de 200 vehiculos (camiones de reparto) y 300 transportistas humanos. Por el momento se tiene estabilidad en cuantos comercios tiene adheridos aunque esta la posibilidad de que aumente o disminuya depediendo la temporada y las necesidades del momento.
+### 3. Flota y equipo de transportistas
+- **Capacidad operativa:** Cuentan con un equipo de 300 choferes y una flota de 200 camiones.
+- **Dinámica de trabajo:** Los transportistas poseen recorridos regulares y conocen las zonas que frecuentan a diario.
 
+### 4. Zonas geográficas y logística de retiro / acopio
+- **Cobertura territorial:** Su rango de acción abarca 35 partidos de la zona sur del Gran Buenos Aires y sus inmediaciones. Representa un territorio extenso con una altísima densidad de comercios y gran volumen diario de bultos.
+- **Puntos de acopio:** Disponen de 6 centros logísticos de acopio, divididos internamente en 4 o 5 áreas operativas donde se organizan los recorridos. (esto esta bien?)
+- **Horarios de carga y descarga:** Los choferes acuden a primera hora al centro logístico para retirar la hoja de ruta impresa correspondiente a la jornada y empezar con el recorrido. La descarga de los camiones se efectúa entre las 4:00 y las 10:00 de la mañana en el comercio remitente.
+- **Planificación temporal:** No atienden pedidos espontáneos en el día. Toda la distribución se programa con 24 horas de antelación. En caso de requerirse alguna entrega imprevista, se pacta de un día para el otro vía llamada telefónica o WhatsApp.
 
-En cuanto a las hojas de rutas, poseen rutas predefinidas para la realizacion de reparto a comercios de barrio tipo almacen, supermecados chinos. NO TRABAJAN CON SUPERMERCADOS GRANDES (nota catalina: supongo que se referira a comercios tipo coto, disco, carrefour). Cabe aclarar que todos los dias se arman rutas que seran usadas por transportistas al dia siguiente.
+### 5. Interacción con clientes finales
+- **Frontera de comunicación:** La empresa no mantiene ningún tipo de vínculo directo con el consumidor final ni con el área de marketing de las marcas. Su interlocución se circunscribe exclusivamente a los comercios receptores y a los proveedores a nivel comercial/administrativo.
 
-Los empleados administrativos, que son 10, se encargan de hacer las rutas, los remitos y verificar el exito de la transaccion de la venta a los clientes y gestionan el monto total.
+---
 
+## Bloque 2: Flujo Operativo Actual (AS-IS)
 
-En cuanto al transportista, este tiene sus remitos o facturas en papel, Martin hizo encapie de que se mantendra de esa forma por una cuestion legal. Dentro del remito se tiene presente el medio de pago (ya sea efectivo, tranferencia) y estan pensando en poner una opcion de QR. A veces la transaccion se hace en el momento (mas que nada si el medio de pago es efectivo).
+### 1. Entrada y recepción del pedido
+- **Previsibilidad de la demanda:** Los pedidos son rutinarios, programados y estables. La mayoría de los comercios solicita cantidades fijas en días determinados de la semana (por ejemplo, pedidos fijos de gaseosas cada sábado).
+- **Documentación comercial:** Cada entrega viaja amparada por su correspondiente remito y factura.
+- **Contenido del remito:** Incluye razón social del comercio, número de CUIT, domicilio de destino y el detalle cuantitativo de los artículos a entregar.
+- **Franjas horarias:** Los remitos no consignan horarios específicos de entrega, ya que los arribos se ordenan sobre la marcha según la secuencia óptima del recorrido matutino.
+- **Consolidación multimarca:** Un mismo vehículo de reparto puede transportar y entregar de manera simultánea artículos de diferentes compañías en una única parada.
 
+### 2. Diagramación y asignación de rutas
+- **Preparación diaria:** Por la tarde/noche previa, los 10 administrativos compaginan las hojas de ruta que los transportistas ejecutarán al día siguiente.
+- **Criterio de asignación:** Se asigna a cada transportista un área operativa. Cada chofer organiza su recorrido según su propio criterio. Ante una entrega excepcional o fuera de rutina, se delega en aquel chofer que circule habitualmente por la zona requerida.
 
-La carga y/o descarga de productos se realiza entre las 4am hasta las 9am, por este motivo el transportista dee llegar antres al centro de manejo de producto, donde ademas se le otorga la ruta de ese dia.
+### 3. Ejecución, monitoreo y documentación física
+- **Soporte legal obligatorio:** Toda la documentación (remitos y facturas) se traslada físicamente en papel. Martín enfatizó que este formato no puede eliminarse debido a exigencias legales, impositivas y de control en ruta.
+- **Seguimiento operativo:** En otra área existe un seguimiento activo o satelital en vivo de los camiones a lo largo del día. Pero al área de logistica no le interesa.
+- **Cierre de entrega:** Para certificar la recepción conforme, el encargado del comercio debe estampar obligatoriamente su firma en el remito físico.
 
+### 4. Cobranzas, rendiciones y flujo de fondos
+- **Cobranza por cuenta y orden:** Al momento de la entrega, los transportistas cobran el valor de los productos entregados actuando en nombre y representación de las marcas matrices. Posteriormente, la empresa transfiere y rinde los fondos recaudados a cada proveedor.
+- **Medios de cobro en destino:** Aceptan efectivo y transferencias bancarias directas. Prevén sumar próximamente pagos mediante código QR. En las operaciones con dinero en efectivo, el pago se realiza al instante de descargar el pedido.
+- **Remuneración del servicio logístico:** Los honorarios por el flete y distribución no se cobran al comercio de barrio, sino que se facturan mensualmente a las marcas a través del área de proveedores.
+- **Complejidad del cobro:** Constituye una de las áreas más problemáticas de la empresa, debido a la dispersión de microcobros en cientos de locales y a la necesidad de desglosar los montos de múltiples marcas dentro de un mismo remito.
 
-Para la zona geografica, Martin aclara que se manejan por zona sur del gran buenos aires y cercania. El comento que se trata de 35 partidos. Hay mucho volumen de entrega en una zona muy grande con muchos comercios. No suelen trabajar con demanda espontanea y si asi lo fuera, se hace de un dia para el otro por telefono o whatsapp.
+---
 
+## Bloque 3: Puntos de Dolor y Contingencias
 
-Martin deja en claro que no interactuan directamente con los clientes finales ni con la marca del producto.
+### 1. Foco de fricción operativo
+- **Evaluación de WhatsApp:** Contra lo esperado, Martín señaló que el intercambio de mensajes por WhatsApp no les genera mayores inconvenientes ni pérdidas de control considerables.
+- **El verdadero dolor (Arqueo y Conciliación):** El cuello de botella radica en el arqueo diario de las cobranzas. El continuo flujo de dinero fragmentado en sumas reducidas (microcobros en efectivo y transferencias) provenientes de una amplia red de comercios pequeños vuelve la conciliación y validación de las entregas una labor extenuante, lenta y propensa a descuidos.
 
+### 2. Contingencias e imprevistos en destino
+- **Ausencia del responsable:** No resulta indispensable que el dueño del comercio se encuentre presente para recibir la mercadería, siempre que alguien recepcione. Si por alguna eventualidad no logran concretar la entrega, el protocolo habitual no contempla la cancelación definitiva, sino la reprogramación prioritaria de una reentrega.
+- **Pérdida, faltante o rotura de mercadería:** Se considera una falta de gravedad que acarrea sanciones disciplinarias. El impacto económico y las responsabilidades son absorbidos y tramitados por el área legal de la firma, mientras que desde el sector logístico se gestiona una reentrega para no perjudicar al comercio.
 
+### 3. Trazabilidad y resguardo documental
+- **Certificación física:** El comprobante firmado por el receptor sirve como respaldo único de cumplimiento.
+- **Archivo legal:** Toda la documentación impresa se archiva y custodia obligatoriamente durante un lapso de 5 años para satisfacer requerimientos impositivos y contables.
 
-**BLOQUE 2**
+### 4. Expectativas sobre la aplicación del transportista
+- **Requerimientos móviles esenciales:** Se aspira a una aplicación para smartphone destinada a los choferes que muestre su itinerario asignado del día.
+- **Datos visibles:** No se precisa que el transportista visualice el desglose fino de los productos, sino la dirección del punto de entrega, el orden apróximado de visitas y, de manera primordial, el importe exacto a cobrar y el medio de pago establecido (para saber si debe recaudar efectivo o verificar los datos de la cuenta bancaria de destino).
+- **Respaldo:** La firma manuscrita sobre el remito físico se preserva como paso concluyente.
 
+---
 
-En cuanto a la pregunta troncal, esto es lo que nuestro cliente acoto: los comercios ya los tienen registrados. Los pedidos son planificados y estables, esto quiere decir que por ejemplo x comercio pide cierta bebida en una cierta cantidad todos los sabados.
+## Bloque 4: Alcance del Sistema (TO-BE) y Expectativas
 
-El area de proovedores es la encargada del stock, Martin en su area solo se encarga de ordenar las hojas de rutas en zona pedida (nota Catalina: dejo asentado que se nota una cierta importancia a las hojas de rutas y tranferencias de dinero).
+### 1. Fronteras del software y actores
+- **Usuarios prioritarios:**
+  1. **Transportistas:** Uso de la aplicación móvil para guía de ruta y gestión de cobranzas en parada.
+  2. **Personal Administrativo:** Panel de control para armado de rutas, registro y conciliación de cobros.
+- **Actores excluidos:** Los comercios minoristas y los clientes finales no tendrán acceso ni interactuarán de ninguna manera con el sistema.
 
+### 2. Volumen y proyección de escala
+- Capacidad de absorción probada sobre una estructura de 35 partidos, 6 depósitos de acopio, 200 camiones y 300 transportistas. El software debe sostener este nivel de concurrencia diaria.
 
-La entrada y recepcion del pedido es con remito y factura. El remito contiene los siguientes datos (proporcionado por Martin): razon social, CUIT, domicilio y conjuntos de items a entregar. Cabe aclarar que el horario de entrega no se encuentra en el remito por esto de que se hace de un dia para el otro.
+### 3. Funcionalidad crítica e irrenunciable
+- **Conciliación ágil de cobranzas:** La herramienta debe permitir contrastar de forma directa e inequívoca los remitos emitidos frente a las rendiciones de los choferes (efectivo ingresado y comprobantes de transferencia), automatizando el cuadre con los distintos proveedores.
 
+### 4. Infraestructura tecnológica previa
+- La empresa no cuenta con ningún software de gestión ni plataforma previa; todos los procedimientos se sustentan hoy en planillas aisladas, canales de mensajería y formularios en papel.
 
-Para la eleccion de transportista, deja en claro que cada transportista sabe su ruta, pero en el caso de un pedido espontaneo se eligira un transportista que frecuente la zona que se pide.
+---
 
+## Anexo: Aclaraciones Conceptuales para el Equipo
 
-El cobro de servicio de entrega de la empresa de Martin es a las marcas de forma mensual y se maneja a traves de los proovedores.
-
-Al tema de seguimientos de estados durante la jornada, Ian agrega que transfieren el dinero a cada marca (no entiendo muy bien).
-
- Deja en claro que su funcion no es coordinar la entrega. 
-
-Martin dice cobranza por cuenta y orden (Nota Catalina: no entiendo a que se refiere). Y afirma qe encuentra una dificultad en los cobros.
-
-
-Una entrega puede tener items de distintas marcas.
-
-
-
-**BLOQUE 3**
-
-
-Problemas frecuentes con whatsapp: dice Martin que no tienen mayor dificultad en cuanto a la comunicacion. Su mayor inconveniente se refleja en arquear los cobros porque internamente hay mucho manejo de dinero entre muchos comercios chicos, es decir que hay microcobros. Tambien es tedioso y minucioso la validacion de la entrega y la cobranza.
-
-
-Si hablamos de imprevistos en la entrega, no hace falta que el encargado este en el comercio, de todas formas no es habitual pero en el caso de que suceda se maneja por fuera y se intenta hacer una re-entrega como prioridad.
-
-Se le pregunto al cliente que pasaba si la entrega fracasa por perdida de producto a lo cual respondio que se trataria de un problema legal y repercute con sancion. La cuestion economica lo gesitona el area legal pero por su parte se intentara re entregar.
-
-
-En cuanto a registro historico, el repartidor lleva un papel donde se certifica el estado de la entrega. Esa informacion la guardan por 5 anios.
-
-
-Lo que se quiere conseguir para el repartidor es una app que le aparezca la ruta que le toca ese dia donde no figuren los items sino el envio y monto a cobrar para que este al tanto si debe manejar el dinero, en caso de elegir efectivo. Tambien saber a donde transferir. Como proceso final de una entrega exitosa, el comercio debe firmar el remito.
-
-
-
-**BLOQUE 4**
-
-
-Si de alcance de sistema hablamos, se necesitaria como prioridad una para el transportista. Deja claramente asentado que del COMERCIO NO. hay distintas areas pero no requieren ver el seguimiento del camion. Recomendado por el grupo: un seguimiento satelital de los camiones.
-
-
-Acerca del volumen, Martin especifico que en el mes de agosto se incorporaron 10 nuevos comercios, pero a veces hay altas y bajas.
-
-
-Como funcionalidad irrenunciable, Lautaro agrega que se debe chequear consiliacion de la cobranza.
-
-
-Le preguntamos si ya tenia en posesion algun sistema informatico, el cliente denego.
-
-
-
-
-
-
+1. **¿Qué es la "cobranza por cuenta y orden"?:**  
+   Significa que la empresa logística no es dueña de la mercadería ni le vende directamente al comercio; actúa como mandataria de la marca proveedora. Cobra el producto en el punto de venta en representación del fabricante y luego le rinde y transfiere el dinero neto recaudado. Por eso, cualquier desfasaje entre el dinero cobrado y el remito impacta directamente en la relación contractual con la marca proveedora.
+2. **Exclusión de grandes superficies:**  
+   Supermercados de gran escala (Coto, Carrefour, Jumbo) gestionan su propia logística de abastecimiento en centros de distribución mayoristas. La empresa de Martín se enfoca en el canal tradicional ("capilaridad barrial"), donde miles de pequeños comercios requieren una distribución puerta a puerta.
+3. **Múltiples marcas en un mismo remito / viaje:**  
+   Un mismo camión transporta mercadería consolidada de varios fabricantes para optimizar el flete. Esto explica por qué es tan engorroso el cuadre manual al final del día: un solo pago en efectivo de un comercio puede contener importes que deben transferirse a dos o más marcas distintas.

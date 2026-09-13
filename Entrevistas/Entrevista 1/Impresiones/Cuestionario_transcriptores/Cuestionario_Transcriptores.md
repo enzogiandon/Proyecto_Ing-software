@@ -1,7 +1,7 @@
 # Cuestionario de Entrevista N° 1 (Transcripción en Mesa)
 
-**Materia:** Ingeniería de Software 2026 — Facultad de Ingeniería (UNLP)  
-**Equipo:** Grupo N° 7  
+**Materia:** Ingeniería de Software 2026 — Facultad de Informática (UNLP)  
+**Equipo:** Softech  
 **Entrevistado:** Martín  
 **Fecha:** 04/09/2026 | **Hora:** 09:20 hs | **Modalidad:** Presencial  
 **Consentimiento de grabación:** [ &nbsp; ] SÍ &nbsp;&nbsp;&nbsp;&nbsp; [ &nbsp; ] NO  

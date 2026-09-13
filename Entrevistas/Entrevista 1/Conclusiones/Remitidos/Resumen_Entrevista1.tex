@@ -1,0 +1,169 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{spanish.ldf}{\usepackage[spanish,es-tabla]{babel}}{}
+\usepackage[a4paper, left=1.5cm, right=1.5cm, top=2.2cm, bottom=2.0cm]{geometry}
+\usepackage{lmodern}
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+% Rutas para búsqueda de imágenes y logos
+\graphicspath{{../../Logo_softech/}{../Logo_softech/}{./Logo_softech/}{Logo_softech/}}
+
+% Definición de tonos sobrios y formales
+\definecolor{grisCabecera}{gray}{0.92}
+\definecolor{grisBorde}{gray}{0.35}
+\definecolor{textoMuted}{gray}{0.25}
+\definecolor{azulPrimario}{RGB}{20, 45, 85}
+\definecolor{azulSecundario}{RGB}{40, 75, 125}
+
+% Configuración de hipervínculos
+\hypersetup{
+  colorlinks=true,
+  linkcolor=azulPrimario,
+  urlcolor=azulSecundario,
+  pdfborder={0 0 0}
+}
+
+% Configuración de listas compactas
+\setlist{nosep, leftmargin=1.35em, topsep=2pt, itemsep=2.5pt}
+
+% Configuración de títulos sobrios y discretos
+\titleformat{\section}
+  {\normalfont\large\bfseries\color{azulPrimario}}
+  {\thesection.}{0.5em}{}
+  [{\titlerule[0.7pt]}]
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries\color{azulSecundario}}
+  {\thesubsection.}{0.5em}{}
+
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titlespacing*{\subsection}{0pt}{7pt}{2pt}
+
+% Encabezados y pies de página formales
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{Softech} \textbar\ Soluciones y Consultoría de Software}
+\fancyhead[R]{\small\textsl{Entrevista 1}}
+\fancyfoot[L]{\footnotesize\textcolor{textoMuted}{Minuta de Entrevista 1 --- Relevamiento Operativo y de Negocio}}
+\fancyfoot[R]{\small Hoja \thepage\ de \pageref{LastPage}}
+
+\begin{document}
+
+% ENCABEZADO INSTITUCIONAL CON LOGO
+\noindent
+\begin{tabularx}{\textwidth}{@{} X r @{}}
+  {\LARGE\bfseries\color{azulPrimario} RESUMEN DE RELEVAMIENTO INICIAL}\\[4pt]
+  {\normalsize\textsl{Minuta de Entrevista 1 --- Relevamiento Operativo y de Negocio}}\\[3pt]
+  {\footnotesize\textcolor{textoMuted}{Softech \textbar\ Soluciones de Gestión y Logística}}
+  &
+  \raisebox{-0.35\height}{\includegraphics[height=1.7cm,keepaspectratio]{Logo_Softech_dark_no_background_crop}}
+\end{tabularx}
+\vspace{2pt}
+\hrule height 1.1pt
+\vspace{8pt}
+
+% FICHA TÉCNICA DEL ENCUENTRO
+\noindent
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l >{\raggedright\arraybackslash}X >{\bfseries}l >{\raggedright\arraybackslash}X @{}}
+\toprule[0.8pt]
+\textbf{Fecha:} & 04/09/2026 (09:20 hs) & \textbf{Modalidad:} & Presencial \\
+\textbf{Entrevistado:} & Martín Rodriguez (Centro de Distribución Logística) & \textbf{Contacto:} & \href{mailto:is.ic.unlp@gmail.com}{is.ic.unlp@gmail.com} \\
+\textbf{Equipo:} & Softech  \\
+\bottomrule[0.8pt]
+\end{tabularx}
+
+\vspace{8pt}
+
+% PROPÓSITO DEL DOCUMENTO
+\noindent
+\colorbox{grisCabecera}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
+    \vspace{3pt}%
+    \small\textbf{Objetivo del documento:} Dejar constancia formal y estructurada de los temas tratados en el primer encuentro, con el fin de validar el entendimiento mutuo sobre la operatoria del negocio, confirmar los procesos clave y fijar los puntos a profundizar en la segunda entrevista.%
+    \vspace{3pt}%
+  }%
+}
+
+\section{Contexto General y Modelo de Negocio}
+
+\begin{itemize}
+  \item \textbf{Actividad principal:} La empresa opera como un centro logístico tercerizado abocado a la distribución de grandes compañías de consumo masivo (principalmente bebidas, ej. Coca-Cola), cubriendo zonas secundarias o de difícil acceso que las marcas matrices delegan.
+  \item \textbf{Perfil de clientes destinatarios:} Se abastece con exclusividad al \textbf{canal minorista tradicional de cercanía} (almacenes de barrio, kioscos y autoservicios de proximidad). Quedan expresamente excluidas las grandes cadenas de supermercados e hipermercados (Carrefour, Coto, etc.), las cuales disponen de logística propia centralizada.
+  \item \textbf{Infraestructura y capacidad operativa:}
+  \begin{itemize}
+    \item Cobertura territorial sobre \textbf{35 partidos de la zona sur} del Gran Buenos Aires y adyacencias.
+    \item \textbf{6 centros logísticos de acopio}, organizados internamente en áreas operativas de salida.
+    \item Flota en calle de \textbf{200 camiones de reparto} y un equipo de \textbf{300 transportistas}.
+    \item Plantel de \textbf{10 administrativos} abocados al armado de hojas de ruta, emisión documental y cuadre global.
+  \end{itemize}
+  \item \textbf{Planificación de la demanda:} La distribución se programa con \textbf{24 horas de antelación} (demanda estable y previsible). No se atienden pedidos espontáneos en el día. Los camiones se cargan en depósito durante la madrugada y la descarga en los comercios se realiza de 4:00 a 10:00 AM.
+  \item \textbf{Fronteras de comunicación:} La empresa no interactúa con el consumidor final ni con el marketing de las marcas; su relación se limita estrictamente a los comercios receptores y a los proveedores a nivel administrativo.
+\end{itemize}
+
+\section{Flujo Operativo Actual}
+
+\begin{enumerate}
+  \item \textbf{Armado de hojas de ruta:} Por la tarde/noche previa, el personal administrativo compagina las hojas de ruta y la documentación física. Cada chofer conoce su zona asignada y define según su propio criterio el orden de visita más eficiente.
+  \item \textbf{Carga multimarca consolidada:} Para optimizar el flete, un mismo vehículo transporta mercadería consolidada de diferentes fabricantes para abastecer a un comercio en una única parada.
+  \item \textbf{Soporte legal obligatorio en papel:} Cada entrega viaja con remito y factura impresos en \textbf{papel físico}. Este requerimiento no puede sustituirse por cuestiones legales, impositivas y de control en tránsito. Además, es obligatorio conservar el archivo físico por un lapso de 5 años.
+  \item \textbf{Certificación de entrega:} La recepción conforme de la mercadería se certifica de manera excluyente mediante la firma de puño y letra del comerciante sobre el remito en papel.
+  \item \textbf{Cobranza por cuenta y orden:} Los choferes cobran el importe de los productos actuando en representación de las marcas matrices. Se acepta \textbf{efectivo} y \textbf{transferencias bancarias inmediatas} (con proyección de incorporar cobro por código QR).
+\end{enumerate}
+
+\section{Puntos de Dolor y Contingencias Críticas}
+
+\begin{itemize}
+  \item \textbf{Canales de mensajería (WhatsApp):} La comunicación vía WhatsApp no genera pérdidas de control ni constituye una dificultad relevante para la empresa.
+  \item \textbf{El cuello de botella principal (Arqueo y Conciliación):} El dolor más crítico radica en el arqueo diario de las cobranzas. La atomización en cientos de pequeños microcobros diarios (efectivo y transferencias), sumada a la necesidad de desglosar los fondos que corresponden a cada proveedor dentro de una misma entrega multimarca, vuelve la conciliación manual un proceso lento, extenuante y con riesgo de errores.
+  \item \textbf{Comercio cerrado o ausencia de responsable:} No se cancela el pedido de forma definitiva; se registra el motivo del inconveniente y se reprograma prioritariamente una \textbf{reentrega}.
+  \item \textbf{Faltantes, roturas o averías:} Se consideran faltas de gravedad tramitadas administrativamente, coordinando la reentrega de los productos para no perjudicar la atención al comercio.
+\end{itemize}
+
+\section{Alcance Acordado para la Solución}
+
+\begin{itemize}
+  \item \textbf{Usuarios directos del sistema:}
+  \begin{enumerate}
+    \item \textbf{Transportistas:} Aplicación ágil y sencilla para visualizar el itinerario diario, datos de paradas, importes exactos a cobrar y medio de pago establecido. Permite registrar el resultado de la entrega (adjuntando fotografía del remito firmado) y tipificar incidencias ante imprevistos.
+    \item \textbf{Personal Administrativo (Panel de Control):} Módulo para cargar rutas, seguir el avance de las entregas y asistir en el cuadre y conciliación ágil entre los remitos emitidos y los fondos rendidos.
+  \end{enumerate}
+  \item \textbf{Límites del alcance y exclusiones explícitas:}
+  \begin{itemize}
+    \item Los \textbf{comercios minoristas} y los \textbf{clientes finales} no tendrán acceso ni interactuarán con el sistema.
+    \item No se reemplaza el remito ni la factura en papel, ni la firma manuscrita de recepción.
+    \item No se incluirá en la aplicación el monitoreo satelital en tiempo real de los vehículos, que continuará operando de manera independiente.
+  \end{itemize}
+\end{itemize}
+\vspace{10pt}
+
+% NOTA DE VALIDACIÓN PARA EL CLIENTE
+\noindent
+\fcolorbox{grisBorde}{grisCabecera}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{%
+    \small\textbf{Validación y observaciones de la minuta:}\\
+    Agradecemos la revisión de este documento. En caso de requerir precisiones, rectificaciones o si desea añadir algún detalle antes de la segunda reunión, le solicitamos responder directamente al correo electrónico de contacto con sus comentarios.%
+  }%
+}
+
+\vfill
+
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{Equipo de Desarrollo Softech} & \textbf{Softech Software Solutions} \\
+  \textit{Área de Desarrollo e Implementación} & La Plata, Septiembre de 2026 \\
+\end{tabularx}
+
+\end{document}

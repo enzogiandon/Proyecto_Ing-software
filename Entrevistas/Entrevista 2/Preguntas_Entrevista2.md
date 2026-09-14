@@ -56,7 +56,7 @@ flowchart TD
 - **[Respuesta:]**
 
 #### 1.2. Punteo rápido de confirmación dimensional
-> *«Retomando con lo discutido en la primera entrevista, tomamos como referencia operativa: 35 partidos de la zona sur, 6 centros de acopio, una flota de 200 camiones, un equipo de 300 transportistas y 10 empleados administrativos dedicados a rutas y conciliación.»*
+> *«Retomando con lo discutido en la primera entrevista, tomamos como referencia operativa: 35 partidos de la zona sur, 6 centros de acopio, una flota de 200 camiones, un equipo de 300 transportistas y 10 empleados administrativos dedicados a rutas y conciliación. ¿Hasta ahí vamos bien?»*
 - **[Respuesta:]**
 
 #### 1.3. Punto de inicio del sistema en la cadena logística
@@ -68,6 +68,24 @@ flowchart TD
 > *«Revalidamos que los comercios minoristas y los clientes finales no van a tener acceso directo al sistema (solo interactúan con el chofer en el mostrador) y que el remito físico en papel se conserva de manera legal obligatoria. ¿Es así?»*
 
 - **[Respuesta:]**
+
+#### 1.5. Modificaciones con respecto a lo charlado previamente
+> *«Con esto terminamos de sintetizar lo que charlamos previamente. ¿Hay algo que quieras modificar o agregar antes de pasar al resto de las preguntas?»*
+
+
+- **[Respuesta:]**
+
+
+#### 1.6. Cierre de la idea inicial
+> *«Perfecto Martín. Te comentamos lo que pensamos implementar hasta el momento:* 
+ - *una plataforma móvil para transportistas en la cual se puedan agregar la información y documentaciones correspondientes a cada entrega, incluyendo dirección del comercio, foto de remito firmado y factura, y donde se pueda cargar los datos de pago.*
+ - *una plataforma de escritorio para la parte administrativa en la que puedan cargar los datos que necesiten los transportistas (cada entrega con su hoja de ruta y demás)».*
+
+
+- **[Respuesta:]**
+
+
+
 
 ---
 
@@ -92,19 +110,12 @@ flowchart TD
 
 ---
 
-### Bloque 3: Requerimientos No Funcionales (RNF) — Insumo Crítico para Entrega 1 (18 minutos)
+### Bloque 3: Requerimientos No Funcionales (RNF) 
 
-*Objetivo: Extraer métricas técnicas medibles para la plantilla SRS de la cátedra.*
+*Objetivo: Extraer métricas técnicas medibles.*
 
-#### 3.1. RNF de Conectividad y Disponibilidad (Modo Offline en Calle)
-> **P1:** *«En los 35 partidos donde reparten, ¿ocurre con frecuencia que los transportistas ingresen a zonas o locales con señal móvil nula o intermitente?»*
-- **[Respuesta:]**
-
-> **P2:** *«Ante una pérdida momentánea de conexión a internet, ¿la aplicación debe permitirle al chofer continuar operando normalmente (marcar la entrega, sacar la foto del remito y registrar el pago), guardando los datos en el teléfono para enviarlos en cuanto recupere señal o regrese al depósito?»*
-- **[Respuesta:]**
-
-#### 3.2. RNF de Dispositivos, Plataforma e Interfaces de Hardware
-> **P3 (Teléfonos y gama):** *«Los celulares que usan los 300 transportistas, ¿son equipos personales de cada uno (BYOD) o los provee la empresa? ¿Son todos con sistema Android? ¿Debemos considerar compatibilidad con teléfonos de gama media o modelos más antiguos?»*
+#### 3.1. RNF de Dispositivos, Plataforma e Interfaces de Hardware
+> **P3 (Teléfonos y gama):** *«Los celulares que usan los 300 transportistas, ¿son equipos personales de cada uno o los provee la empresa? ¿Son todos con sistema Android? ¿Debemos considerar compatibilidad con teléfonos de gama media o modelos más antiguos?»*
 - **[Respuesta:]**
 
 > **P4 (Cámara y almacenamiento):** *«Para la captura de la foto del remito firmado, ¿qué condiciones debemos contemplar? ¿Los choferes disponen de buena iluminación o conviene que la app permita encender el flash y comprima la imagen automáticamente para que no consuma memoria ni datos móviles excesivos?»*

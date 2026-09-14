@@ -56,8 +56,7 @@ flowchart TD
 - **[Respuesta:]**
 
 #### 1.2. Punteo rápido de confirmación dimensional
-> *«Para asegurar que estamos dimensionando la arquitectura sobre bases firmes, tomamos como referencia operativa: 35 partidos de la zona sur, 6 centros de acopio, una flota de 200 camiones, un equipo de 300 transportistas y 10 empleados administrativos dedicados a rutas y conciliación. ¿Siguen siendo estos los números de trabajo?»*
-
+> *«Retomando con lo discutido en la primera entrevista, tomamos como referencia operativa: 35 partidos de la zona sur, 6 centros de acopio, una flota de 200 camiones, un equipo de 300 transportistas y 10 empleados administrativos dedicados a rutas y conciliación.»*
 - **[Respuesta:]**
 
 #### 1.3. Punto de inicio del sistema en la cadena logística

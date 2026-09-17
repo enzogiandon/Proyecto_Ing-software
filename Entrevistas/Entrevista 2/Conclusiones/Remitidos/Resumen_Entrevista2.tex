@@ -1,0 +1,212 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{spanish.ldf}{\usepackage[spanish,es-tabla]{babel}}{}
+\usepackage[a4paper, left=1.5cm, right=1.5cm, top=2.2cm, bottom=2.0cm]{geometry}
+\usepackage{lmodern}
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+% Rutas para búsqueda de imágenes y logos
+\graphicspath{{../../../../Recursos_graficos/Logo_softech/}{../../../Recursos_graficos/Logo_softech/}{../../Logo_softech/}{../Logo_softech/}{./Logo_softech/}{Logo_softech/}}
+
+% Definición de tonos sobrios y formales
+\definecolor{grisCabecera}{gray}{0.92}
+\definecolor{grisBorde}{gray}{0.35}
+\definecolor{textoMuted}{gray}{0.25}
+\definecolor{azulPrimario}{RGB}{20, 45, 85}
+\definecolor{azulSecundario}{RGB}{40, 75, 125}
+
+% Configuración de hipervínculos
+\hypersetup{
+  colorlinks=true,
+  linkcolor=azulPrimario,
+  urlcolor=azulSecundario,
+  pdfborder={0 0 0}
+}
+
+% Configuración de listas compactas
+\setlist{nosep, leftmargin=1.35em, topsep=2pt, itemsep=2.5pt}
+
+% Configuración de títulos sobrios y discretos
+\titleformat{\section}
+  {\normalfont\large\bfseries\color{azulPrimario}}
+  {\thesection.}{0.5em}{}
+  [{\titlerule[0.7pt]}]
+
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries\color{azulSecundario}}
+  {\thesubsection.}{0.5em}{}
+
+\titlespacing*{\section}{0pt}{9pt}{3pt}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+
+% Encabezados y pies de página formales
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{Softech} \textbar\ Soluciones y Consultoría de Software}
+\fancyhead[R]{\small\textsl{Entrevista 2}}
+\fancyfoot[L]{\footnotesize\textcolor{textoMuted}{Minuta de Entrevista 2 --- Requisitos del Sistema y Circuito de Cobranzas}}
+\fancyfoot[R]{\small Hoja \thepage\ de \pageref{LastPage}}
+
+\begin{document}
+
+% ENCABEZADO INSTITUCIONAL CON LOGO
+\noindent
+\begin{tabularx}{\textwidth}{@{} X r @{}}
+  {\LARGE\bfseries\color{azulPrimario} RESUMEN DE RELEVAMIENTO Y DEFINICIONES}\\[4pt]
+  {\normalsize\textsl{Minuta de Entrevista 2 --- Requisitos del Sistema y Circuito de Cobranzas}}\\[3pt]
+  {\footnotesize\textcolor{textoMuted}{Softech \textbar\ Soluciones de Gestión y Logística}}
+  &
+  \raisebox{-0.35\height}{\includegraphics[height=1.7cm,keepaspectratio]{Logo_Softech_dark_no_background_crop}}
+\end{tabularx}
+\vspace{2pt}
+\hrule height 1.1pt
+\vspace{6pt}
+
+% FICHA TÉCNICA DEL ENCUENTRO
+\noindent
+\begin{tabularx}{\textwidth}{@{} >{\bfseries}l >{\raggedright\arraybackslash}X >{\bfseries}l >{\raggedright\arraybackslash}X @{}}
+\toprule[0.8pt]
+\textbf{Fecha:} & 14/09/2026 (17:00 hs) & \textbf{Modalidad:} & Virtual (Discord) \\
+\textbf{Entrevistado:} & Martín Rodríguez (Planificación Logística y Rutas) & \textbf{Canal:} & Discord (@ruso) \\
+\textbf{Equipo:} & Softech \\
+\bottomrule[0.8pt]
+\end{tabularx}
+
+\vspace{6pt}
+
+% PROPÓSITO DEL DOCUMENTO
+\noindent
+\colorbox{grisCabecera}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
+    \vspace{3pt}%
+    \small\textbf{Objetivo del documento:} Dejar constancia formal y estructurada de los acuerdos alcanzados en el segundo encuentro de relevamiento, consolidando la delimitación operativa del sistema, la dinámica de remitos y hojas de ruta, el circuito integral de cobranzas bimodal/combinado y los requisitos no funcionales (rendimiento, plataforma, auditoría y usabilidad).%
+    \vspace{3pt}%
+  }%
+}
+
+\section{Validación de Premisas y Delimitación Operativa}
+
+\begin{itemize}
+  \item \textbf{Revisión de la Minuta E1:} Se ratificó el contenido general del primer informe, con una aclaración operativa sustancial sobre los horarios:
+  \begin{itemize}
+    \item Los horarios de carga y descarga \textbf{no son fijos ni rígidos}.
+    \item Por razones de seguridad y para contemplar contingencias o demoras en la vía pública, la aplicación móvil \textbf{no debe imponer bloqueos ni restricciones horarias}, permitiendo registrar entregas en cualquier franja horaria si el reparto se prolonga.
+  \end{itemize}
+  \item \textbf{Confirmación de dimensiones operativas:} Se mantienen las métricas de escala de la red: 35 partidos de la zona sur del Gran Buenos Aires, 6 centros de acopio logístico, flota activa de 170 a 200 camiones, equipo de 300 transportistas y 10 empleados administrativos.
+  \item \textbf{Frontera inicial del sistema (Última Milla):} El software opera exclusivamente a partir de que los productos se encuentran en los centros de acopio y se diagraman las salidas de entrega a los comercios barriales. El abastecimiento preliminar desde las fábricas proveedoras hacia los depósitos queda expresamente excluido de este desarrollo (gestionado por compras/proveedores).
+  \item \textbf{Límites del alcance y soporte documental:}
+  \begin{itemize}
+    \item Los comercios minoristas y consumidores finales \textbf{no interactúan ni acceden} a la plataforma.
+    \item El \textbf{remito y la factura en papel físico} son de uso legal y fiscal obligatorio. El comercio debe certificar la recepción mediante firma manuscrita sobre el remito papel.
+  \end{itemize}
+\end{itemize}
+
+\section{Dinámica de Hojas de Ruta y Estructura Multiremito}
+
+\begin{itemize}
+  \item \textbf{Concepto operativo de ``Hoja de Ruta'':} La hoja de ruta no se concibe como un documento cerrado e indivisible, sino como un conjunto o ``taco'' de remitos asignados al transportista.
+  \item \textbf{Entregas multiremito por parada:} En una misma parada o comercio receptor es sumamente habitual entregar múltiples remitos juntos (habitualmente hasta 5 remitos correspondientes a diferentes marcas o líneas de productos).
+  \item \textbf{Ingreso masivo de datos al panel administrativo:}
+  \begin{itemize}
+    \item Las marcas proveedoras remiten los remitos digitales comprimidos junto con una planilla en formato \textbf{Excel} donde cada fila representa un remito a entregar.
+    \item El panel administrativo debe contemplar la \textbf{importación automatizada} de estas planillas para evitar la carga manual uno por uno por parte del personal, reservando la carga manual individual para excepciones o casos imprevistos.
+  \end{itemize}
+  \item \textbf{Secuenciación de paradas y trazabilidad histórica:}
+  \begin{itemize}
+    \item El chofer conserva total libertad para determinar y modificar el orden de visita según el tránsito y su experiencia diaria en la zona.
+    \item \textbf{Mejora funcional acordada:} El sistema registrará el orden efectivo en que el transportista efectúa las entregas a lo largo de la jornada, de manera que la plataforma pueda sugerir dicho orden histórico optimizado en futuros repartos.
+  \end{itemize}
+\end{itemize}
+
+\section{Perfiles de Usuario, Plataformas y Usabilidad}
+
+\begin{itemize}
+  \item \textbf{Plataformas según rol operativo:}
+  \begin{itemize}
+    \item \textbf{Transportistas:} Acceso exclusivo a través de la aplicación móvil para teléfonos celulares con sistema operativo \textbf{Android}.
+    \item \textbf{Personal Administrativo:} Acceso mediante navegadores web desde computadoras de escritorio en los centros de acopio.
+  \end{itemize}
+  \item \textbf{Segmentación de tareas administrativas:} No se precisan roles jerárquicos adicionales, pero sí la capacidad de configurar áreas funcionales dentro del perfil administrativo (ej. personal abocado a la importación y armado de rutas vs. personal asignado al control y conciliación de transferencias), así como la delimitación territorial por centro de acopio específico o visibilidad global de la red.
+  \item \textbf{Autenticación y gestión de accesos:}
+  \begin{itemize}
+    \item Cuentas individuales e intransferibles para cada chofer, permitiendo desvincular o inhabilitar accesos de manera inmediata desde el panel administrativo ante eventuales contingencias o cese laboral.
+    \item \textbf{Mecanismo ágil de recuperación de credenciales:} Para no entorpecer el reparto ni generar rechazo en el personal de calle, se acordó evitar esquemas engorrosos de cambio de claves. Se incorporará un mecanismo simplificado (por ejemplo, blanqueo y reseteo inmediato gestionado telefónicamente por un administrativo en base).
+  \end{itemize}
+  \item \textbf{Dispositivos propios (BYOD) y optimización de recursos:} Los choferes emplean sus teléfonos personales, predominando en el trabajo diario terminales antiguos, de gama básica y memoria reducida. La aplicación móvil debe ser sumamente liviana, eficiente en consumo de batería y datos, y tolerante a hardware modesto.
+  \item \textbf{Usabilidad y condiciones en ruta:} Se prioriza de forma estricta la legibilidad y operatividad en vía pública (botones amplios, fuentes de tamaño generoso, elevado contraste para luz solar directa y flujo lineal de mínimos toques). Los lineamientos de imagen corporativa se subordinan a la máxima simplicidad funcional.
+\end{itemize}
+
+\section{Circuito de Cobranzas, Medios de Pago y Conciliación}
+
+\begin{itemize}
+  \item \textbf{Definición del medio de pago en punto de entrega:} El sistema no fija un medio de pago predeterminado antes de la salida. El transportista arriba al comercio y efectúa el cobro según la modalidad que el cliente seleccione en el acto.
+  \item \textbf{Modalidades de cobro admitidas:}
+  \begin{enumerate}
+    \item \textbf{Efectivo:} El chofer percibe el dinero físico, ingresa el valor en la aplicación móvil y entrega los fondos en mano al personal administrativo en el centro logístico al concluir su turno para su conteo y arqueo.
+    \item \textbf{Transferencia Bancaria Inmediata:} El comercio transfiere a la cuenta de la distribuidora. Se contempla la integración con alertas bancarias automáticas para verificar la acreditación de fondos en tiempo real.
+    \item \textbf{Cobro con Código QR (Billeteras / MODO / Mercado Pago):} Se implementa mediante un \textbf{código QR estático de monto abierto} provisto por la empresa (no asociado a orden dinámica). El cliente escanea, ingresa el importe adeudado y el chofer registra en la aplicación que el pago fue concretado vía QR junto con el monto saldado.
+  \end{enumerate}
+  \item \textbf{Pagos combinados y desglose multiremito:} La aplicación admite que el importe consolidado de los remitos de una parada sea cancelado combinando múltiples medios de pago (ej. parte en efectivo y parte por transferencia o QR), registrando el desglose exacto por instrumento.
+  \item \textbf{Exclusión de saldos a favor o pagos parciales:} La empresa no opera bajo esquema de cuentas corrientes ni financiamiento barrial. El transportista \textbf{no da por concluida la parada ni entrega la mercadería hasta recibir el 100\% del importe adeudado}. Las diferencias o disputas bancarias posteriores son absorbidas y gestionadas exclusivamente por la administración central.
+  \item \textbf{Certificación digital del remito:} La captura de una \textbf{fotografía nítida del remito físico firmado y sellado} en papel constituye el comprobante concluyente y suficiente para cerrar la entrega en la app.
+  \item \textbf{Hacia una Conciliación Progresiva:} Frente al esquema actual donde todo el cuadre se ejecuta de forma manual al final del día cuando los camiones regresan, el software facilitará una conciliación continua durante la jornada a medida que los transportistas reporten cobros y remitos desde la calle.
+\end{itemize}
+
+\section{Métricas Cuantitativas y Requisitos No Funcionales (RNF)}
+
+\begin{itemize}
+  \item \textbf{Capacidad y volumen transaccional diario:}
+  \begin{itemize}
+    \item Promedio de 80 paradas/entregas por vehículo y hasta 400 remitos diarios por transportista.
+    \item En jornadas de alta demanda, con 170 a 180 camiones operativos simultáneos, el sistema debe soportar un volumen aproximado de \textbf{14.000 entregas} y el procesamiento de \textbf{70.000 remitos diarios}.
+  \end{itemize}
+  \item \textbf{Desempeño y tiempos de respuesta por franja horaria:}
+  \begin{itemize}
+    \item \textit{En ruta (horario de descarga):} La aplicación móvil del chofer requiere respuesta instantánea (menos de 2 segundos en registro de cobros) para no entorpecer la atención en mostrador.
+    \item \textit{Procesamiento nocturno en base (21:00 a 24:00 hs):} Carga e importación masiva de archivos de remitos y armado de recorridos por parte de los 10 administrativos.
+    \item \textit{Cuadre vespertino:} Actividad intensiva de conciliación en centros de acopio; tolera respuestas moderadas en operaciones de procesamiento complejo.
+  \end{itemize}
+  \item \textbf{Auditoría de arqueos y modificaciones:} Cualquier ajuste manual de montos o rectificación de arqueo efectuado por el personal administrativo debe registrar mandatoriamente fecha, hora, usuario interviniente, valores anterior/nuevo y justificativo en un log inmutable.
+  \item \textbf{Resguardo documental digital:} Las imágenes de remitos firmados y los comprobantes digitales se archivarán en el repositorio del sistema por un período mínimo de \textbf{5 años}, equiparando la exigencia fiscal del soporte papel.
+\end{itemize}
+
+\section{Próximos Pasos y Compromisos de Trabajo}
+
+\begin{itemize}
+  \item \textbf{Por parte de la empresa (Martín Rodríguez):} Facilitar al equipo de desarrollo una muestra anonimizada de los archivos de remitos y planillas Excel suministradas habitualmente por los proveedores de bebidas.
+  \item \textbf{Por parte de Softech:} Remitir el borrador del cuestionario estructurado para transportistas y personal administrativo para su validación previa antes de su distribución.
+\end{itemize}
+
+\vspace{10pt}
+
+% NOTA DE VALIDACIÓN PARA EL CLIENTE
+\noindent
+\fcolorbox{grisBorde}{grisCabecera}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{%
+    \small\textbf{Validación y observaciones de la minuta:}\\
+    Agradecemos la lectura de este informe de síntesis. En caso de detectar discrepancias, omisiones o precisiones que considere pertinente incorporar a los requerimientos asentados, le solicitamos comunicarlo directamente a través de nuestro canal de Discord para su ajuste formal.%
+  }%
+}
+
+\vfill
+
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  \textbf{Equipo de Desarrollo Softech} & \textbf{Softech Software Solutions} \\
+  \textit{Área de Desarrollo e Implementación} & La Plata, Septiembre de 2026 \\
+\end{tabularx}
+
+\end{document}

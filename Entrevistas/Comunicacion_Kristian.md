@@ -93,6 +93,32 @@ Este documento actúa como bitácora de todos los mensajes enviados y recibidos 
 
 ---
 
+### Mensaje 6 — Envío formal de Minuta de Entrevista 2 a Martín (Borrador / Pendiente de envío)
+- **Fecha y hora:** 17/09/2026
+- **De:** Enzo Giandon [wii] (`@grupo-07` / Rol: Softech)
+- **Para:** Martín Rodríguez (`@ruso` - Rol: Cliente)
+- **Adjuntos / Enlaces:** Enlace de Google Drive (con `Resumen_Entrevista2.pdf` y `Audio_Entrevista2`) y Enlace de Google Forms (Cuestionario)
+
+> Estimado Martín:
+>
+> Desde el equipo de desarrollo de Softech nos ponemos en contacto para agradecerte nuevamente por tu tiempo y predisposición durante nuestro segundo encuentro de relevamiento.
+>
+> Te hacemos llegar:
+> - **La carpeta de la reunión en Google Drive ([Link de Drive]):** donde encontrarás la minuta ejecutiva (**Resumen_Entrevista2.pdf**), que sintetiza los requerimientos del sistema, la dinámica de las hojas de ruta y el circuito de cobranzas; y el **registro de audio del encuentro**, para respaldo y constancia de todo lo conversado en la sesión.
+> - **El borrador del cuestionario complementario ([Link de Google Forms]):** elaborado para relevar hábitos de uso y cobranzas entre transportistas y administrativos, con el fin de contar con tu visto bueno previo a su distribución.
+>
+> Te solicitamos que, si observás alguna discrepancia o considerás necesario aclarar algún detalle tanto de la minuta como del formulario, nos lo hagas saber por este mismo medio para incorporarlo a la documentación de trabajo.
+>
+> Asimismo, quedamos a la espera de las muestras de archivos cuando te sea posible facilitárnoslas.
+>
+> Quedamos a tu entera disposición.
+>
+> Atentamente,  
+> **Equipo de Desarrollo Softech**  
+> @grupo-07
+
+---
+
 ## 3. Próximo Hito Agendado
 
 - **Evento:** Segunda Entrevista de Relevamiento y Validación (Entrevista 2).

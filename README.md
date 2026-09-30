@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="assets/logos/logo-softech-dark.png" alt="Softech Logo" width="320" />
 </p>
 
@@ -30,9 +30,10 @@ El equipo está conformado por 6 integrantes con roles metodológicos definidos 
 
 - **Enzo Giandon**
 - **Alan**
+- **Catalina**
 - **Ian Chica**
 - **Lautaro**
-- *(Integrantes del equipo Softech — Consultoría y Soluciones de Software)*
+- **Mayerly**
 
 ---
 
@@ -45,21 +46,18 @@ Proyecto_Ing-software/
 ├── assets/                             # Identidad visual y recursos gráficos
 │   └── logos/                          # Logotipos oficiales de Softech
 ├── docs/                               # Documentación de ingeniería y gestión
-│   ├── gestion/                        # Minutas internas, debates de equipo y pautas metodológicas
-│   │   ├── notas-preparacion.md        # Apuntes de preparación metodológica
-│   │   ├── debate-entrevistas.md       # Acuerdos y dinámicas grupales
-│   │   └── comunicacion-kristian.md    # Registro de comunicaciones
-│   └── entrevistas/                    # Ciclo de entrevistas y relevamiento de requisitos
-│       ├── README.md                   # Resumen del ciclo y accesos a audios en la nube
-│       ├── entrevista-01/              # Relevamiento operativo y modelo de negocio
-│       │   ├── preparacion/            # Guías de interlocutores y cuestionarios
-│       │   ├── remitidos/              # Documento formal elevado al cliente
-│       │   └── conclusiones/           # Minuta depurada y análisis interno
-│       └── entrevista-02/              # Requisitos de software y circuito financiero
-│           ├── preparacion/            # Guías, cuestionarios y baterías de preguntas
-│           ├── transcripciones/        # Notas de campo tomadas durante el encuentro
-│           ├── remitidos/              # Síntesis remitida para validación
-│           └── conclusiones/           # Conclusiones finales y acuerdos de alcance
+│   ├── entregas/                       # Paquetes formales de entregas para la cátedra
+│   │   ├── README.md                   # Resumen del estado de entregas del cuatrimestre
+│   │   ├── entrega-01/                 # Entrevistas + Cuestionario + Req. no funcionales (Finalizada)
+│   │   └── entrega-02/                 # Iniciativas + Épicas + HU (Taiga) + PGP (En desarrollo)
+│   ├── entrevistas/                    # Ciclo de entrevistas y relevamiento de campo
+│   │   ├── README.md                   # Resumen del ciclo y accesos a audios en la nube
+│   │   ├── entrevista-01/              # Relevamiento operativo y modelo de negocio
+│   │   └── entrevista-02/              # Requisitos de software y circuito financiero
+│   └── gestion/                        # Minutas internas, debates de equipo y pautas metodológicas
+│       ├── notas-preparacion.md        # Apuntes de preparación metodológica
+│       ├── debate-entrevistas.md       # Acuerdos y dinámicas grupales
+│       └── comunicacion-kristian.md    # Registro de comunicaciones
 └── src/                                # Código fuente del sistema (en desarrollo)
 ```
 

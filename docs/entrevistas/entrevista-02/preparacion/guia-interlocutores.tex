@@ -1,0 +1,218 @@
+\documentclass[10.5pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{spanish.ldf}{\usepackage[spanish,es-tabla]{babel}}{}
+\usepackage[a4paper, left=1.3cm, right=1.3cm, top=2.2cm, bottom=1.9cm]{geometry}
+\usepackage{lmodern}
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{amssymb}
+
+% Definición de tonos sobrios y profesionales
+\definecolor{grisCabecera}{gray}{0.92}
+\definecolor{grisSub}{gray}{0.96}
+\definecolor{azulPrimario}{RGB}{20, 45, 85}
+\definecolor{azulSecundario}{RGB}{35, 75, 130}
+\definecolor{textoMuted}{gray}{0.38}
+\definecolor{fondoGuion}{RGB}{248, 250, 253}
+\definecolor{bordeGuion}{RGB}{210, 222, 238}
+
+% Configuración de listas
+\setlist{nosep, leftmargin=1.2em, topsep=2pt, itemsep=2pt}
+
+% Configuración de títulos de bloques
+\titleformat{\section}
+  {\normalfont\normalsize\bfseries\color{azulPrimario}}
+  {}{0em}
+  {}
+  [{\titlerule[0.6pt]}]
+
+\titlespacing*{\section}{0pt}{7pt}{3pt}
+
+% Encabezados y pies de página
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{Softech} \textbar\ Guión de Lectura en Vivo \textbar\ \textbf{Entrevista 2}}
+\fancyhead[R]{\small\textsl{Modalidad: Discord (Voz)}}
+\fancyfoot[L]{\footnotesize\textcolor{textoMuted}{Guía para interlocutores y moderación oral en vivo (Duración total: 30 minutos)}}
+\fancyfoot[R]{\small Hoja \thepage\ de \pageref{LastPage}}
+
+% Comando estilizado para el texto a leer en voz alta
+\newcommand{\guionOral}[1]{%
+  \par\vspace{1.5pt}%
+  \noindent%
+  \fcolorbox{bordeGuion}{fondoGuion}{%
+    \parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{%
+      \hangindent=1.2em\hangafter=0%
+      {\small\itshape\color{black}#1}%
+    }%
+  }%
+  \par\vspace{3.5pt}%
+}
+
+% Indicación de moderador / rol
+\newcommand{\itemPregunta}[2]{%
+  \noindent\textbf{#1} \hfill {\footnotesize\sffamily\bfseries\color{azulSecundario}[#2]}\par\nopagebreak%
+}
+
+% Nota interna para no leer
+\newcommand{\notaInterna}[1]{%
+  \vspace{1pt}\noindent{\scriptsize\sffamily\color{textoMuted} $\blacktriangleright$ \textbf{Nota interna (no leer):} #1}\par\vspace{2pt}%
+}
+
+\begin{document}
+
+% ENCABEZADO INSTITUCIONAL
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  {\Large\bfseries\color{azulPrimario} PROTOCOLO Y GUIÓN DE LECTURA EN MESA} & \textbf{\normalsize ROL: INTERLOCUTORES} \\
+  \textit{Empresa: Softech \textbar\ Proyecto: Plataforma Logística y Conciliación} & \small Moderación \& Timekeeper (30 min) \\
+\end{tabularx}
+\vspace{1pt}
+\hrule height 1.1pt
+\vspace{3pt}
+
+% TABLA DE METADATOS TIPO FICHA
+\noindent
+\begin{tabularx}{\textwidth}{|X|X|X|X|}
+\hline
+\rowcolor{grisCabecera}
+\textbf{Entrevistado:} Martín Rodríguez & \textbf{Fecha:} 14/09/2026 & \textbf{Hora:} 17:00 hs & \textbf{Duración Máx:} 30 min \\
+\hline
+\end{tabularx}
+
+\vspace{2pt}
+
+\noindent
+\colorbox{grisSub}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
+    \scriptsize\textbf{Instrucciones de lectura para los interlocutores:}
+    \textbf{(1)} Los textos en los recuadros sombreados representan el \textbf{guión oral exacto} a pronunciar al micrófono.
+    \textbf{(2)} Mantener identidad 100\% \textbf{Softech} (no mencionar grupo ni facultad). 
+    \textbf{(3)} Si Martín plantea requisitos complejos, responder: \textit{«Anotamos esa característica para una ampliación posterior del sistema»}.
+  }%
+}
+
+\vspace{1pt}
+
+% BLOQUE 1
+\section*{Bloque 1: Apertura, Validación Rápida y Límites del Sistema \hfill \normalfont\footnotesize\sffamily [Tiempo sugerido: $\sim$5 min]}
+
+\itemPregunta{1.1. Recepción y revisión de la Minuta E1}{Interlocutor 1}
+\guionOral{«Buenas tardes Martín, gracias nuevamente por tu tiempo. ¿Pudiste darle una mirada al resumen y al audio que te enviamos por acá? ¿Considerás que refleja con fidelidad lo conversado en nuestro primer encuentro o hay algún detalle que quieras precisar?»}
+
+\itemPregunta{1.2. Punteo rápido de confirmación dimensional}{Interlocutor 1}
+\notaInterna{Leer de corrido para validar las dimensiones de la arquitectura sin abrir debate innecesario.}
+\guionOral{«Retomando con lo discutido en la primera entrevista, tomamos como referencia operativa: 35 partidos de la zona sur, 6 centros de acopio, una flota de 200 camiones, un equipo de 300 transportistas y 10 empleados administrativos dedicados a rutas y conciliación. ¿Hasta ahí vamos bien?»}
+
+\itemPregunta{1.3. Punto de inicio del sistema en la cadena logística}{Interlocutor 1}
+\guionOral{«Respecto a la logística: el sistema que vamos a desarrollar, ¿comienza a operar desde que la mercadería ya se encuentra en el centro de acopio y se diagraman las salidas a los comercios barriales (última milla), o necesitan registrar también el traslado previo desde las fábricas de las marcas matrices hacia el depósito?»}
+
+\itemPregunta{1.4. Exclusiones confirmadas de alcance}{Interlocutor 1}
+\guionOral{«Revalidamos que los comercios minoristas y los clientes finales no van a tener acceso directo al sistema (solo interactúan con el chofer en el mostrador) y que el remito físico en papel se conserva de manera legal obligatoria. ¿Es así?»}
+
+\itemPregunta{1.5. Modificaciones con respecto a lo charlado previamente}{Interlocutor 1}
+\guionOral{«Con esto terminamos de sintetizar lo que charlamos previamente. ¿Hay algo que quieras modificar o agregar antes de pasar al resto de las preguntas?»}
+
+\itemPregunta{1.6. Cierre de la idea inicial}{Interlocutor 1}
+\guionOral{«Perfecto Martín. Te comentamos lo que pensamos implementar hasta el momento:\\
+$\bullet$ una plataforma móvil para transportistas en la cual se puedan agregar la información y documentaciones correspondientes a cada entrega, incluyendo dirección del comercio, foto de remito firmado y factura, y donde se pueda cargar los datos de pago.\\
+$\bullet$ una plataforma de escritorio para la parte administrativa en la que puedan cargar los datos que necesiten los transportistas (cada entrega con su hoja de ruta y demás)».}
+
+% BLOQUE 2
+\section*{Bloque 2: Usuarios, Roles y Plataformas de Acceso \hfill \normalfont\footnotesize\sffamily [Tiempo sugerido: $\sim$5 min]}
+
+\itemPregunta{2.1. Tipos de roles en la empresa}{Interlocutor 2}
+\guionOral{«Nosotros identificamos principalmente dos roles operativos: el \textbf{Transportista} (en calle) y el \textbf{Personal Administrativo} (en base). ¿Existe algún otro rol que deba contemplar el sistema, por ejemplo un Supervisor de depósito, Jefe de logística o un Administrador general del sistema con permisos especiales?»}
+
+\itemPregunta{2.2. Plataformas de acceso por rol}{Interlocutor 2}
+\guionOral{«¿Está previsto que el personal administrativo trabaje exclusivamente desde computadoras de escritorio / notebooks en el centro de acopio, y que los transportistas utilicen exclusivamente la aplicación en sus teléfonos celulares durante el reparto?»}
+
+\itemPregunta{2.3. Unicidad de cuentas y altas/bajas de personal}{Interlocutor 2}
+\guionOral{«Dado que hay rotación de choferes y vehículos: ¿cada transportista debe tener un usuario único e intransferible (para evitar confusiones de quién cobró qué dinero)? ¿El panel administrativo debe permitir dar de alta, pausar o deshabilitar rápidamente a un chofer o camión?»}
+
+\clearpage
+
+% BLOQUE 3
+\section*{Bloque 3: Requerimientos No Funcionales (RNF) \hfill \normalfont\footnotesize\sffamily [Tiempo sugerido: $\sim$9 min]}
+
+\notaInterna{Insumo técnico obligatorio para la Especificación de Requisitos (SRS) de la Entrega 1.}
+
+\vspace{1pt}
+
+\itemPregunta{3.1. RNF de Dispositivos, Plataforma e Interfaces de Hardware}{Interlocutor 2}
+\guionOral{«Los celulares que usan los 300 transportistas, ¿son equipos personales de cada uno o los provee la empresa? ¿Son todos con sistema Android? ¿Debemos considerar compatibilidad con teléfonos de gama media o modelos más antiguos?»}
+
+\itemPregunta{3.2.1. RNF de Rendimiento y Horarios Pico}{Interlocutor 2}
+\guionOral{«¿En qué franja horaria se concentra el mayor uso simultáneo del sistema? ¿A primera hora de la mañana (4:00 a 9:00 AM) para descargar las hojas de ruta, o por la tarde (14:00 a 18:00 hs) cuando los camiones van terminando las entregas y rinden las cobranzas?»}
+
+\itemPregunta{3.2.2. RNF de Volumen Diario de Operaciones}{Interlocutor 2}
+\guionOral{«En un día de alta demanda, ¿cuántos remitos y cobros individuales estima que se gestionan en total entre los 200 camiones? (¿Un promedio de 25 a 35 paradas por camión, es decir unas 5.000 a 7.000 entregas diarias)?»}
+
+\itemPregunta{3.3.1. RNF de Seguridad y Auditoría de Arqueos}{Interlocutor 1}
+\guionOral{«Cuando la administración revisa las cobranzas al final del día y encuentra una diferencia de dinero que debe corregirse manualmente: ¿el sistema debe exigir un motivo obligatorio y dejar registrado qué usuario hizo el cambio, en qué fecha y el valor anterior?»}
+
+\itemPregunta{3.3.2. RNF de Resguardo Legal y Conservación de Fotos}{Interlocutor 1}
+\guionOral{«Sabemos que el remito físico de papel se archiva durante 5 años por disposiciones legales. En cuanto a las fotos digitales de los remitos que se suban al sistema, ¿cuánto tiempo como mínimo necesitan que se conserven accesibles en los servidores?»}
+
+\itemPregunta{3.4.1. RNF de Usabilidad en Calle / Condiciones Ambientales}{Interlocutor 1}
+\guionOral{«Considerando que los choferes operan en la vía pública, muchas veces apurados o bajo pleno sol: ¿prefieren una interfaz de alto contraste, con botones grandes y tipografías claras que requiera la menor cantidad posible de toques en pantalla?»}
+
+\itemPregunta{3.4.2. RNF de Identidad Visual y Colores Corporativos}{Interlocutor 1}
+\guionOral{«¿Existe alguna paleta de colores institucional, logotipo o lineamiento gráfico corporativo que debamos incorporar en el diseño visual de las pantallas?»}
+
+\clearpage
+
+% BLOQUE 4
+\section*{Bloque 4: Reglas de Negocio, Cobranzas y Flujo de Entrega \hfill \normalfont\footnotesize\sffamily [Tiempo sugerido: $\sim$8 min]}
+
+\itemPregunta{4.1.1. Formato de carga de las hojas de ruta}{Interlocutor 2}
+\guionOral{«¿En qué formato confecciona hoy la administración las hojas de ruta? (¿Planillas Excel, archivos de texto, o se cargan manualmente parada por parada?)»}
+
+\itemPregunta{4.1.2. Libre criterio en el orden de las paradas}{Interlocutor 2}
+\guionOral{«Confirmamos que el orden de las paradas es de libre criterio para el chofer según el tránsito y su experiencia barrial. ¿Estamos de acuerdo / Seguimos en la misma línea?»}
+
+\itemPregunta{4.1.3. Datos visibles en la pantalla de cada parada}{Interlocutor 2}
+\guionOral{«En la pantalla de cada parada: entendemos que el chofer no necesita ver el detalle fino ítem por ítem de mercadería en la app (eso ya está en el remito papel), sino los datos clave: Nombre del comercio, Dirección, Importe a cobrar y Medio de pago previsto. ¿Es correcto o necesita algún dato adicional?»}
+
+\itemPregunta{4.2. Validación del Remito (Físico vs Digital)}{Interlocutor 2}
+\guionOral{«Sobre el remito: ¿el transportista debe consultar algún remito digital en la aplicación antes de entregar, o la app simplemente le pide tomar la fotografía del remito en papel una vez que el comerciante lo firmó y selló físicamente?»}
+
+\itemPregunta{4.3.1. Cobro en Efectivo y Rendición en Depósito}{Interlocutor 1}
+\guionOral{«Al cobrar en efectivo, el chofer recibe el dinero en mano. En la aplicación, ¿simplemente tipea el importe que efectivamente cobró? Al terminar su jornada en el centro logístico, ¿entrega el dinero físico a un cajero/administrativo para que lo cuente y lo compare contra la app?»}
+
+\itemPregunta{4.3.2. Cobro por Transferencia Bancaria}{Interlocutor 1}
+\guionOral{«Cuando un comercio abona por transferencia, entendemos que transfiere a una cuenta bancaria central de la distribuidora, ¿es así?. Para acreditar que pagó, ¿el chofer debe subir una foto del comprobante de transferencia bancaria, o tipear el código de operación / número de transferencia?»}
+
+\itemPregunta{4.3.3. Pagos combinados y diferencias de cambio}{Interlocutor 1}
+\guionOral{«¿Ocurre que un cliente pague una parte en efectivo y otra por transferencia? ¿O que pague con una pequeña diferencia (por falta de cambio)? ¿Cómo debe registrarlo el chofer y qué tratamiento se le da a ese saldo?»}
+
+\itemPregunta{4.3.4. Cobro proyectado con QR (MODO / Mercado Pago)}{Interlocutor 1}
+\guionOral{«Mencionaste la proyección de cobrar con QR a futuro. Para esta etapa, ¿la app debe contar con un botón que genere o muestre el alias/QR de la cuenta correspondiente para que el comerciante escanee y el chofer confirme el pago? Nosotros pensábamos en que lleve impreso un QR fijo y el alias.»}
+
+\itemPregunta{4.3.5. Alertas visuales en el panel de conciliación}{Interlocutor 1}
+\notaInterna{Bifurcación: formular solo en caso de que se confirme el perfil de usuarios administrativos.}
+\guionOral{«Para los 10 administrativos que realizan el cuadre: ¿el sistema debe emitir alertas visuales automáticas cuando el dinero rendido por un transportista no coincida exactamente con la suma de los remitos entregados?»}
+
+% BLOQUE 5
+\section*{Bloque 5: Muestras Reales, Cuestionario y Cierre \hfill \normalfont\footnotesize\sffamily [Tiempo sugerido: $\sim$3 min]}
+
+\itemPregunta{5.1. Solicitud de documentación física de muestra}{Interlocutor 2}
+\guionOral{«Para asegurar que el diseño de nuestras pantallas y la base de datos se ajusten a su documentación real: ¿sería posible que nos faciliten una fotografía o copia anonimizada (con los nombres o datos sensibles tachados) de una \textbf{hoja de ruta real de un día típico}»}
+
+\itemPregunta{5.2. Cuestionario complementario para transportistas}{Interlocutor 2}
+\guionOral{«Para la próxima entrega documental debemos acompañar el relevamiento con un breve cuestionario estructurado dirigido a relevar hábitos de uso de celulares y cobros entre transportistas (y si corresponde, administrativos). ¿Te parecería bien si luego te enviamos el cuestionario para que nos des tu visto bueno antes de aplicarlo?»}
+
+\itemPregunta{5.3. Cierre y agradecimiento formal}{Interlocutor 1}
+\guionOral{«Muchísimas gracias Martín por tu tiempo y por la claridad en cada punto. Estaremos procesando estas definiciones para volcarlas en la documentación y te haremos llegar la minuta ejecutiva de esta reunión por nuestra vía de contacto habitual. ¡Que tengas muy buena tarde!»}
+
+\end{document}

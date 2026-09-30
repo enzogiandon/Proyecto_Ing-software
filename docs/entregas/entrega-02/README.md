@@ -1,4 +1,4 @@
-﻿# Entrega 2: Iniciativas, Épicas, Historias de Usuario (HU) y PGP
+# Entrega 2: Iniciativas, Épicas, Historias de Usuario (HU) y PGP
 
 **Estado:** 🟡 En Desarrollo  
 **Equipo:** Softech — Ingeniería de Software (UNLP)
@@ -43,6 +43,7 @@ entrega-02/
 ├── README.md                          <- Pautas, checklist y enlace a Taiga
 ├── final/                             <- Entregables consolidados finales
 ├── borradores/                        <- Trabajo colaborativo en curso
+│   └── iniciativas-y-epicas.md        <- [ACTUAL] Propuesta formal de 3 iniciativas y 11 épicas
 └── plantillas/                        <- Plantillas oficiales brindadas por la cátedra
 ```
 
@@ -51,7 +52,7 @@ entrega-02/
 ## ✅ Checklist de Progreso del Equipo
 
 - [ ] Descargar y colocar plantillas oficiales de la cátedra en `plantillas/`.
-- [ ] Definir iniciativas estratégicas y épicas del sistema logístico.
+- [x] Definir iniciativas estratégicas y épicas funcionales del sistema logístico ([Ver Borrador](borradores/iniciativas-y-epicas.md)).
 - [ ] Configurar el proyecto en Taiga y vincular a los 6 integrantes de Softech.
 - [ ] Escribir y priorizar el backlog de Historias de Usuario en Taiga con criterios de aceptación.
 - [ ] Completar el Plan de Gestión del Proyecto (PGP) con estimaciones y roles.

@@ -51,7 +51,7 @@ entrega-02/
 
 ## ✅ Checklist de Progreso del Equipo
 
-- [ ] Descargar y colocar plantillas oficiales de la cátedra en `plantillas/`.
+- [x] Descargar y colocar plantillas oficiales de la cátedra en `plantillas/` ([iniciativas-epicas-plantilla.doc](plantillas/iniciativas-epicas-plantilla.doc) y [pgp-plantilla.docx](plantillas/pgp-plantilla.docx)).
 - [x] Definir iniciativas estratégicas y épicas funcionales del sistema logístico ([Ver Borrador](borradores/iniciativas-y-epicas.md)).
 - [ ] Configurar el proyecto en Taiga y vincular a los 6 integrantes de Softech.
 - [ ] Escribir y priorizar el backlog de Historias de Usuario en Taiga con criterios de aceptación.

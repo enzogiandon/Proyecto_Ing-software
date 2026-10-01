@@ -23,17 +23,11 @@ Este repositorio contiene la ingeniería de requisitos, documentación de diseñ
 - **Canal destinatario:** Comercio minorista tradicional de cercanía (kioscos, almacenes y autoservicios de proximidad). Se excluyen cadenas de hipermercados.
 - **Desafío central (El Dolor del Negocio):** El cuello de botella no radica en WhatsApp, sino en el **arqueo diario y conciliación de cobranzas**. La atomización en miles de microcobros diarios (efectivo, transferencias, QR) por cuenta y orden de múltiples marcas hace que el cuadre manual en papel sea lento, extenuante y propenso a desfasajes con los proveedores.
 
-### 🛠️ Stack Tecnológico Preliminar
-- **Aplicación Móvil (Transportistas):** React Native con Expo (Android, interfaz liviana y de alto contraste para dispositivos personales BYOD de gama baja).
-- **Panel Administrativo Web (Oficina):** React con Vite.
-- **Backend / API Central:** NestJS.
-- **Base de Datos:** PostgreSQL.
-
 ---
 
 ## 👥 Integrantes — Equipo Softech
 
-El equipo está conformado por **6 integrantes**, organizados en 2 subgrupos de trabajo:
+El equipo está conformado por **7 integrantes**:
 
 - **Enzo Giandon**
 - **Alan Tolaba**
@@ -41,6 +35,7 @@ El equipo está conformado por **6 integrantes**, organizados en 2 subgrupos de 
 - **Ian Chica Herrero**
 - **Lautaro Giralde**
 - **Mayerly Sinion Mendoza**
+- **Aylén Carlos**
 
 ---
 

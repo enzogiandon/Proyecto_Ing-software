@@ -24,9 +24,7 @@ Este documento formaliza las iniciativas y épicas funcionales para la **Entrega
 | :--- | :---: | :--- | :--- | :--- |
 | **Iniciativa 1: Gestión Operativa y Conciliación Multimarca** | **EP-01** | Importación masiva y validación de planillas de remitos | Administrativo | Escritorio (PC) |
 | | **EP-02** | Diagramación y asignación de hojas de ruta a la flota | Administrativo | Escritorio (PC) |
-| | **EP-03** | Arqueo diario de caja y recepción de cobranzas de transportistas | Administrativo | Escritorio (PC) |
-| | **EP-04** | Conciliación financiera y liquidación a marcas matrices | Administrativo | Escritorio (PC) |
-| | **EP-05** | Tablero de monitoreo de estado de entregas y cobranzas | Administrativo | Escritorio (PC) |
+| | **EP-03** | Arqueo diario de caja y rendición de flota (Opción A / Opción B) | Administrativo | Escritorio (PC) |
 | **Iniciativa 2: Reparto de Última Milla y Cobranzas en Calle** | **EP-06** | Consulta y selección libre del itinerario de paradas | Transportista | Móvil (Celular) |
 | | **EP-07** | Registro y desglose de cobro multicanal en mostrador | Transportista | Móvil (Celular) |
 | | **EP-08** | Certificación digital de entrega mediante foto de remito | Transportista | Móvil (Celular) |
@@ -51,41 +49,38 @@ Este documento formaliza las iniciativas y épicas funcionales para la **Entrega
 
 #### Épica 1.2 (EP-02): Diagramación y Asignación de Hojas de Ruta a la Flota
 * **Descripción funcional:** El administrativo puede agrupar las paradas por zona operativa o centro de acopio y asignarlas al transportista y camión correspondiente para generar el recorrido del día siguiente.
-* **Valor para el cliente:** Asegura que los 200 camiones cuenten con su recorrido organizado y balanceado antes del horario de salida a primera hora de la mañana.
+* **Valor para el cliente:** Asegura que los camiones cuenten con su recorrido organizado y balanceado antes del horario de salida a primera hora de la mañana.
 
-#### Épica 1.3 (EP-03): Arqueo Diario de Caja y Rendición de Transportistas
-* **Descripción funcional:** Al regreso de los choferes, el cajero/administrativo puede registrar el efectivo físico entregado y los comprobantes de transferencia, contrastándolos al instante contra los remitos cerrados por el chofer en el sistema.
-* **Valor para el cliente:** Resuelve el cuello de botella más crítico de Martín: saber al instante si al chofer le sobra o le falta dinero antes de que se retire del depósito.
-
-#### Épica 1.4 (EP-04): Conciliación Financiera y Liquidación a Marcas Matrices
-* **Descripción funcional:** El sistema calcula automáticamente el desglose de fondos que corresponde liquidar y transferir a cada marca proveedora según las cobranzas confirmadas de los remitos multimarca del día.
-* **Valor para el cliente:** Da transparencia total en la relación contractual con las compañías matrices al justificar cada peso rendido sin necesidad de desglosar manualmente comprobantes mixtos.
-
-#### Épica 1.5 (EP-05): Tablero de Monitoreo del Estado de Entregas y Cobranzas
-* **Descripción funcional:** Pantalla global para que los supervisores sigan el avance de las entregas en tiempo real durante la jornada, detectando paradas pendientes, incidentes reportados y el volumen de dinero en calle.
-* **Valor para el cliente:** Proporciona control ejecutivo sobre las 14.000 entregas diarias sin necesidad de saturar al chofer con llamadas telefónicas.
+#### Épica 1.3 (EP-03):
+* **Opción A: Arqueo Diario de Caja y Rendición de Transportistas**
+  * **Descripción funcional:** Al regreso de los choferes, el cajero/administrativo puede registrar el efectivo físico entregado y los comprobantes de transferencia, contrastándolos al instante contra los remitos cerrados por el chofer en el sistema.
+  * **Valor para el cliente:** Saber al instante si al chofer le sobra o le falta dinero antes de que se retire del depósito.
+* **Opción B: Arqueo Diario de Caja, Rendición de Flota y Consolidación Multimarca**
+  * **Actor:** Administrativo / Cajero en Centro de Acopio.
+  * **Descripción funcional:** Permite al administrativo realizar la conciliación anticipada de transferencias bancarias durante la jornada. Al regreso de los choferes por la tarde, el cajero ingresa el efectivo físico rendido en mano y contrasta al instante la totalidad de lo cobrado frente a los remitos cerrados por el chofer en su aplicación móvil, detectando inmediatamente faltantes o sobrantes de caja. Al finalizar el día, el sistema totaliza la recaudación global discriminada por marca proveedora y emite el reporte consolidado de fondos cobrados por cuenta y orden de cada una.
+  * **Valor para el cliente:** Terminar con las colas y la incertidumbre en el arqueo vespertino al saber con exactitud si las cuentas cuadran antes de liberar al chofer, brindando además a la distribuidora el respaldo numérico exacto de lo recaudado para cada fabricante sin tener que desglosar comprobantes a mano.
 
 ---
 
 ## 📌 Iniciativa 2: Digitalización de la Operación de Reparto de Última Milla y Cobranzas en Calle
 
-* **Actor Principal:** Transportistas (300 choferes en calle).
-* **Plataforma:** Interfaz Móvil Android (Dispositivos personales BYOD de gama baja).
-* **Propósito que vende:** Dotar a los choferes de un asistente móvil ágil y de alto contraste que garantice el cobro exacto en mostrador, certifique las entregas multimarca mediante foto de remito y reporte locales cerrados sin anotaciones en papel ni demoras.
-* **Métrica medible de impacto:** Alcanzar el 100% de paradas cobradas en su totalidad en el momento de la descarga (cero saldos pendientes) y reducir a cero los remitos extraviados o sin comprobante firmado al retornar a base.
+* **Actor Principal:** Transportistas.
+* **Plataforma:** Interfaz Móvil (Smartphone).
+* **Propósito que vende:** Dotar a los choferes de un asistente móvil ligero que asegure el cobro exacto en cada comercio, respalde la entrega con el remito firmado y agilice el reporte de locales cerrados sin anotaciones en papel.
+* **Métrica medible de impacto:** Alcanzar el 100% de cobros registrados con su medio de pago en parada y reducir a cero los remitos extraviados o sin certificación al volver al depósito.
 
 ### Épicas Funcionales Asociadas:
 
 #### Épica 2.1 (EP-06): Consulta y Selección Libre del Itinerario de Paradas
 * **Descripción funcional:** El chofer puede consultar en su teléfono la lista de comercios a visitar en la jornada, visualizando nombre, dirección, cantidad de remitos asociados y el importe total a cobrar en la parada. El sistema ofrece un orden sugerido basado en el historial del recorrido, pero permite al chofer seleccionar y despachar cualquier parada con total autonomía según el tránsito.
-* **Valor para el cliente:** Ordena la jornada del chofer sin imponer rigideces operativas ni bloqueos horarios, asegurando fluidez y autonomía en calle.
+* **Valor para el cliente:** Ordena la jornada del chofer, asegurando fluidez y autonomía en calle.
 
 #### Épica 2.2 (EP-07): Registro y Desglose de Cobro Multicanal en Mostrador
 * **Descripción funcional:** Al concretar la entrega, el transportista registra el cobro desglosando los medios de pago utilizados por el comerciante (efectivo recibido, transferencias bancarias o escaneo de QR estático de la distribuidora), validando obligatoriamente que la suma cubra el 100% del total facturado antes de habilitar el cierre de la entrega.
 * **Valor para el cliente:** Cumple la regla estricta del negocio: no hay entrega sin cobro completo ni gestión de fiados, asegurando que el dinero recaudado coincida con la mercadería descargada.
 
 #### Épica 2.3 (EP-08): Certificación Digital de Entrega mediante Foto de Remito
-* **Descripción funcional:** El chofer captura mediante la cámara del móvil la fotografía del o los remitos físicos firmados y sellados por el comerciante, quedando asociados de forma inmutable a la entrega como constancia de recepción conforme.
+* **Descripción funcional:** El chofer captura mediante la cámara del celular la fotografía del o los remitos físicos firmados y sellados por el comerciante, quedando asociados de forma inmutable a la entrega como constancia de recepción conforme.
 * **Valor para el cliente:** Brinda respaldo legal inmediato ante desconocimientos de mercadería y agiliza la auditoría documental sin esperar a que el papel físico llegue al archivo.
 
 #### Épica 2.4 (EP-09): Reporte y Tipificación de Contingencias en Ruta
@@ -109,15 +104,17 @@ Este documento formaliza las iniciativas y épicas funcionales para la **Entrega
 
 #### Épica 3.2 (EP-11): Registro de Auditoría de Modificaciones Manuales de Dinero
 * **Descripción funcional:** Cada vez que un administrativo deba ajustar o corregir a mano un monto de arqueo o cobranza, el sistema le exige registrar un motivo y guarda de forma inalterable el usuario responsable, la fecha, hora y el valor previo.
-* **Valor para el cliente:** Responde al pedido explícito de Martín en la entrevista: *"Que quede registrado todo lo que se toca si se corrige plata a mano"*, blindando a la empresa contra fraudes internos.
+* **Valor para el cliente:** Responde al pedido explícito de Martín en la entrevista: “Que quede registrado todo lo que se toca si se corrige plata a mano”, blindando a la empresa contra fraudes internos.
 
 ---
 
 ## 💡 Criterio Estratégico para el Debate del Equipo
 
-Al presentar esta propuesta ante los 6 integrantes del equipo Softech, se contemplan dos alternativas de cierre:
+Al presentar esta propuesta ante los 6 integrantes del equipo Softech, se contemplan dos instancias de decisión:
 
-* **Opción A (Conservar las 3 Iniciativas):**  
-  Las 3 iniciativas tienen sustento funcional y responden a procesos claros (Operación Administrativa, Operación de Transporte, Gobierno y Auditoría).
-* **Opción B (Consolidar en 2 Iniciativas de Negocio Puras):**  
-  Si el grupo o el profesor consideran que 2 iniciativas son suficientes, las épicas **EP-10** (Usuarios) y **EP-11** (Auditoría) se incorporan como épicas administrativas complementarias dentro de la **Iniciativa 1**, y la Iniciativa 3 se elimina sin perder ningún requerimiento funcional.
+* **Sobre la Épica 1.3 (Arqueo y Cierre de Cobranzas):**
+  * **Opción A (Arqueo Diario de Caja y Rendición de Transportistas):** Focalizada estrictamente en el arqueo presencial de efectivo y comprobantes del chofer en ventanilla al volver del reparto.
+  * **Opción B (Arqueo Diario de Caja, Rendición de Flota y Consolidación Multimarca):** Alcance integral que incluye la conciliación anticipada de transferencias durante la jornada, el arqueo presencial vespertino y la consolidación de cobranzas agrupadas por marca proveedora.
+* **Sobre la Iniciativa 3 (Gobierno y Auditoría):**
+  * **Opción A (Conservar las 3 Iniciativas):** Las 3 iniciativas tienen sustento funcional y responden a procesos claros (Operación Administrativa, Operación de Transporte, Gobierno y Auditoría).
+  * **Opción B (Consolidar en 2 Iniciativas de Negocio Puras):** Si el grupo o el profesor consideran que 2 iniciativas son suficientes, las épicas **EP-10** (Usuarios) y **EP-11** (Auditoría) se incorporan como épicas administrativas complementarias dentro de la **Iniciativa 1**, y la Iniciativa 3 se elimina sin perder ningún requerimiento funcional.

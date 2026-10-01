@@ -5,19 +5,18 @@
 <h1 align="center">Sistema de Gestión Logística y Distribución</h1>
 
 <p align="center">
-  <strong>Proyecto de Cátedra — Ingeniería de Software</strong><br>
-  Facultad de Informática — Universidad Nacional de La Plata (UNLP)<br>
-  <em>Equipo de Desarrollo: Softech</em>
+  <strong>Solución Integral para Centro de Distribución Logística</strong><br>
+  <em>Desarrollado por Softech</em>
 </p>
 
 ---
 
 ## 📌 Acerca del Proyecto
 
-Este repositorio contiene la ingeniería de requisitos, documentación de diseño arquitectónico y el desarrollo del software para la optimización de procesos operativos, gestión de pedidos y circuito de cobranzas de un **centro de distribución logística tercerizada**.
+Este repositorio contiene la ingeniería de requisitos, documentación de diseño arquitectónico y el desarrollo del software para la optimización de procesos operativos, gestión de pedidos y circuito de cobranzas de **Centro de Distribución Logística**.
 
 ### Contexto del Negocio y Cliente
-- **Stakeholder / Cliente:** Martín Rodríguez (Responsable de Planificación Logística y Rutas).
+- **Cliente:** **Centro de Distribución Logística** — Martín Rodríguez (Responsable de Planificación Logística y Rutas).
 - **Actividad:** Operador logístico tercerizado para grandes marcas de consumo masivo y bebidas (ej. Coca-Cola).
 - **Escala de Operación:** 35 partidos de la zona sur del Gran Buenos Aires, 6 centros logísticos de acopio, flota de 200 camiones (170-180 activos diarios), 300 transportistas y 10 empleados administrativos en base.
 - **Canal destinatario:** Comercio minorista tradicional de cercanía (kioscos, almacenes y autoservicios de proximidad). Se excluyen cadenas de hipermercados.
@@ -65,17 +64,22 @@ Proyecto_Ing-software/
 
 ---
 
-## 🚀 Estado del Proyecto y Hoja de Ruta
+## 🚀 Cronograma y Estado de Entregas
 
-- [x] **Fase 1: Relevamiento y Validación Operativa (Entrevistas 1 y 2 — Entrega 1)**
-  - Relevamiento de infraestructura, flota de camiones, centros de acopio y perfil de clientes.
-  - Validación del circuito de cobranzas multimarca, reglas de entrega y RNF.
-- [ ] **Fase 2: Especificación Ágil y Planificación (Entrega 2 - En Progreso)**
-  - Definición de 3 Iniciativas y 9 Épicas funcionales.
-  - Backlog de 30 a 40 Historias de Usuario (HU) en Taiga con criterios de aceptación narrativos.
-  - Plan de Gestión del Proyecto (PGP) y matriz de roles.
-- [ ] **Fase 3: Diseño de Arquitectura y Prototipado UX/UI**
-- [ ] **Fase 4: Implementación del Sistema (Frontend & Backend)**
+- [x] **Entrega 1 (21/09) — Relevamiento y Requerimientos**
+  - Entrevistas documentadas con el cliente.
+  - Cuestionario de relevamiento.
+  - Catálogo de Requerimientos No Funcionales (RNF).
+- [ ] **Entrega 2 (05/10) — Especificación Ágil y Plan de Gestión**
+  - Iniciativas estratégicas y Épicas funcionales.
+  - Backlog de Historias de Usuario (HU) en Taiga con criterios de aceptación.
+  - Plan de Gestión de Proyecto (PGP).
+- [ ] **Sprint 1 (09/10 al 30/10) — Primer Incremento de Software**
+  - Desarrollo del incremento y seguimiento semanal.
+  - **Demo 1 (30/10):** Demostración funcional en vivo.
+- [ ] **Sprint 2 (30/10 al 20/11) — Incremento Final y Cierre**
+  - Desarrollo del incremento final y seguimiento semanal.
+  - **Demo 2 (20/11):** Demostración final del sistema terminado.
 
 ---
 

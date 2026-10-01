@@ -48,8 +48,8 @@ Antes de generar o auditar cualquier historia, el agente debe consultar los sigu
 ### Paso 1: Selección del Lote de Trabajo
 El backlog se genera en tres lotes consecutivos:
 * **Lote 1 (Iniciativa 1 - Gestión Operativa y Conciliación):** 13 HUs (`HU-01` a `HU-13`) divididas entre EP-01, EP-02 y EP-03.
-* **Lote 2 (Iniciativa 2 - Reparto de Última Milla en Calle):** 16 HUs (`HU-14` a `HU-29`) divididas entre EP-06, EP-07, EP-08 y EP-09.
-* **Lote 3 (Iniciativa 3 - Gobierno del Sistema y Auditoría):** 6 HUs (`HU-30` a `HU-35`) divididas entre EP-10 y EP-11.
+* **Lote 2 (Iniciativa 2 - Reparto de Última Milla en Calle):** 16 HUs (`HU-14` a `HU-29`) divididas entre EP-04, EP-05, EP-06 y EP-07.
+* **Lote 3 (Iniciativa 3 - Gobierno del Sistema y Auditoría):** 6 HUs (`HU-30` a `HU-35`) divididas entre EP-08 y EP-09.
 
 ---
 

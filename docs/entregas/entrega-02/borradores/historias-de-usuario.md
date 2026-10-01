@@ -27,15 +27,15 @@ Todas las historias de usuario redactadas en este documento siguen rigurosamente
 
 | Iniciativa | ID Épica | Nombre de la Épica | Actor | Cantidad de HUs Proyectadas | Rango de IDs |
 | :--- | :---: | :--- | :--- | :---: | :---: |
-| **Iniciativa 1: Operación y Cierre Multimarca** | **EP-01** | Importación masiva y validación de planillas de remitos | Administrativo | 4 HUs | `HU-01` a `HU-04` |
+| **Iniciativa 1: Operación y Cierre Multimarca** | **EP-01** | Carga y validación automática de pedidos de marcas proveedoras | Administrativo | 4 HUs | `HU-01` a `HU-04` |
 | | **EP-02** | Diagramación y asignación de hojas de ruta a la flota | Administrativo | 4 HUs | `HU-05` a `HU-08` |
 | | **EP-03** | Arqueo diario de caja, rendición de flota y consolidación multimarca | Administrativo | 5 HUs | `HU-09` a `HU-13` |
-| **Iniciativa 2: Reparto y Cobranzas en Calle** | **EP-06** | Consulta y selección libre del itinerario de paradas | Transportista | 4 HUs | `HU-14` a `HU-17` |
-| | **EP-07** | Registro y desglose de cobro multicanal en mostrador | Transportista | 5 HUs | `HU-18` a `HU-22` |
-| | **EP-08** | Certificación digital de entrega mediante foto de remito | Transportista | 3 HUs | `HU-23` a `HU-25` |
-| | **EP-09** | Reporte y tipificación de contingencias en ruta | Transportista | 4 HUs | `HU-26` a `HU-29` |
-| **Iniciativa 3: Gobierno y Auditoría** | **EP-10** | Administración de usuarios, roles operativos y credenciales | Administrativo | 3 HUs | `HU-30` a `HU-32` |
-| | **EP-11** | Registro de auditoría de modificaciones manuales de dinero | Administrativo | 3 HUs | `HU-33` a `HU-35` |
+| **Iniciativa 2: Reparto y Cobranzas en Calle** | **EP-04** | Consulta y selección libre del itinerario de paradas | Transportista | 4 HUs | `HU-14` a `HU-17` |
+| | **EP-05** | Registro y desglose de cobro multicanal en mostrador | Transportista | 5 HUs | `HU-18` a `HU-22` |
+| | **EP-06** | Certificación digital de entrega mediante foto de remito | Transportista | 3 HUs | `HU-23` a `HU-25` |
+| | **EP-07** | Reporte y tipificación de contingencias en ruta | Transportista | 4 HUs | `HU-26` a `HU-29` |
+| **Iniciativa 3: Gobierno y Auditoría** | **EP-08** | Administración de usuarios, roles operativos y credenciales | Administrativo | 3 HUs | `HU-30` a `HU-32` |
+| | **EP-09** | Registro de auditoría de modificaciones manuales de dinero | Administrativo | 3 HUs | `HU-33` a `HU-35` |
 | **TOTAL BACKLOG ESTIMADO** | | | | **35 HUs** | `HU-01` a `HU-35` |
 
 ---

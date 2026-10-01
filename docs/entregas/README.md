@@ -1,4 +1,4 @@
-# Entregas Académicas del Proyecto
+﻿# Entregas Académicas del Proyecto
 
 **Cátedra:** Ingeniería de Software  
 **Facultad de Informática — Universidad Nacional de La Plata (UNLP)**  
@@ -12,10 +12,9 @@ Este directorio centraliza todos los paquetes formales de entregas académicas p
 
 | Entrega | Contenido Principal | Estado | Enlace al Directorio |
 | :--- | :--- | :---: | :--- |
-| **Entrega 1** | Entrevistas documentadas + Cuestionario + Requerimientos No Funcionales | 🟢 **Completada** (21/09) | [Ver Entrega 1](entrega-01/) |
-| **Entrega 2** | Iniciativas + Épicas + Historias de Usuario (Taiga) + Plan de Gestión (PGP) | 🟡 **En Progreso** (05/10) | [Ver Entrega 2](entrega-02/) |
-| **Demo 1** | Demostración funcional en vivo del incremento de software (Fin de Sprint 1) | ⚪ *Próximamente* (30/10) | `src/` |
-| **Demo 2** | Demostración final del sistema terminado (Fin de Sprint 2) | ⚪ *Próximamente* (20/11) | `src/` |
+| **Entrega 1** | Entrevistas documentadas + Cuestionario + Requerimientos No Funcionales | 🟢 **Completada** | [Ver Entrega 1](entrega-01/) |
+| **Entrega 2** | Iniciativas + Épicas + Historias de Usuario (Taiga) + Plan de Gestión (PGP) | 🟡 **En Progreso** | [Ver Entrega 2](entrega-02/) |
+| **Fases Futuras** | Arquitectura, Prototipos y Código de Implementación | ⚪ *Próximamente* | `src/` y `docs/` |
 
 ---
 

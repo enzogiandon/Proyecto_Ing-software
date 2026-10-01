@@ -5,28 +5,28 @@
 <h1 align="center">Sistema de Gestión Logística y Distribución</h1>
 
 <p align="center">
-  <strong>Solución Integral para Centro de Distribución Logística</strong><br>
-  <em>Desarrollado por Softech</em>
+  <strong>Proyecto de Cátedra — Ingeniería de Software</strong><br>
+  Facultad de Informática — Universidad Nacional de La Plata (UNLP)<br>
+  <em>Equipo de Desarrollo: Softech</em>
 </p>
 
 ---
 
 ## 📌 Acerca del Proyecto
 
-Este repositorio contiene la ingeniería de requisitos, documentación de diseño arquitectónico y el desarrollo del software para la optimización de procesos operativos, gestión de pedidos y circuito de cobranzas de **Centro de Distribución Logística**.
+Este repositorio contiene la ingeniería de requisitos, documentación de diseño arquitectónico y el desarrollo del software para la optimización de procesos operativos, gestión de pedidos y circuito de cobranzas de un **centro de distribución logística tercerizada**.
 
 ### Contexto del Negocio y Cliente
-- **Cliente:** **Centro de Distribución Logística** — Martín Rodríguez (Responsable de Planificación Logística y Rutas).
-- **Actividad:** Operador logístico tercerizado para grandes marcas de consumo masivo y bebidas (ej. Coca-Cola).
-- **Escala de Operación:** 35 partidos de la zona sur del Gran Buenos Aires, 6 centros logísticos de acopio, flota de 200 camiones (170-180 activos diarios), 300 transportistas y 10 empleados administrativos en base.
-- **Canal destinatario:** Comercio minorista tradicional de cercanía (kioscos, almacenes y autoservicios de proximidad). Se excluyen cadenas de hipermercados.
-- **Desafío central (El Dolor del Negocio):** El cuello de botella no radica en WhatsApp, sino en el **arqueo diario y conciliación de cobranzas**. La atomización en miles de microcobros diarios (efectivo, transferencias, QR) por cuenta y orden de múltiples marcas hace que el cuadre manual en papel sea lento, extenuante y propenso a desfasajes con los proveedores.
+- **Stakeholder / Cliente:** Martín Rodríguez (Operaciones Logísticas).
+- **Actividad:** Distribución tercerizada de productos de consumo masivo (bebidas) cubriendo partidos de la zona sur del Gran Buenos Aires.
+- **Canal destinatario:** Comercio minorista tradicional de cercanía (kioscos, almacenes y autoservicios de proximidad).
+- **Desafío central:** Digitalizar la interacción comercial (reduciendo la fricción del uso de WhatsApp), automatizar la confección de hojas de ruta y optimizar el control de cobranzas en efectivo y billeteras electrónicas.
 
 ---
 
 ## 👥 Integrantes — Equipo Softech
 
-El equipo está conformado por **7 integrantes**:
+El equipo está conformado por 7 integrantes con roles metodológicos definidos para la interacción con el cliente:
 
 - **Enzo Giandon**
 - **Alan Tolaba**
@@ -64,22 +64,15 @@ Proyecto_Ing-software/
 
 ---
 
-## 🚀 Cronograma y Estado de Entregas
+## 🚀 Estado del Proyecto y Hoja de Ruta
 
-- [x] **Entrega 1 (21/09) — Relevamiento y Requerimientos**
-  - Entrevistas documentadas con el cliente.
-  - Cuestionario de relevamiento.
-  - Catálogo de Requerimientos No Funcionales (RNF).
-- [ ] **Entrega 2 (05/10) — Especificación Ágil y Plan de Gestión**
-  - Iniciativas estratégicas y Épicas funcionales.
-  - Backlog de Historias de Usuario (HU) en Taiga con criterios de aceptación.
-  - Plan de Gestión de Proyecto (PGP).
-- [ ] **Sprint 1 (09/10 al 30/10) — Primer Incremento de Software**
-  - Desarrollo del incremento y seguimiento semanal.
-  - **Demo 1 (30/10):** Demostración funcional en vivo.
-- [ ] **Sprint 2 (30/10 al 20/11) — Incremento Final y Cierre**
-  - Desarrollo del incremento final y seguimiento semanal.
-  - **Demo 2 (20/11):** Demostración final del sistema terminado.
+- [x] **Fase 1: Relevamiento y Validación Operativa (Entrevista 1)**
+  - Relevamiento de infraestructura, flota de camiones, centros de acopio y perfil de clientes.
+- [x] **Fase 2: Definición de Requisitos y Circuito de Cobranzas (Entrevista 2)**
+  - Definición de alternativas a WhatsApp, roles del sistema y gestión del efectivo.
+- [ ] **Fase 3: Especificación de Requerimientos de Software (SRS / Casos de Uso)**
+- [ ] **Fase 4: Diseño de Arquitectura y Prototipado UX/UI**
+- [ ] **Fase 5: Implementación del Sistema (Frontend & Backend)**
 
 ---
 

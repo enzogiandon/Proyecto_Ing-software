@@ -52,25 +52,28 @@ El propósito del proyecto es dotar a la empresa distribuidora de una solución 
 ## 2. Planes Generales
 
 ### 2.1. Entregables del Proyecto
-El proyecto se articula en entregables documentales y de software alineados a los hitos de la cátedra y al calendario de desarrollo del cuatrimestre (octubre – diciembre 2026):
+El proyecto se articula en entregables documentales y de software alineados al cronograma oficial y a los hitos de demostración operativa del sistema:
 
-| Hito / Entregable | Contenido Principal | Fecha Estimada | Destinatario |
+| Hito / Entregable | Contenido Principal | Fecha Oficial | Destinatario |
 | :--- | :--- | :---: | :--- |
-| **E1: Relevamiento Inicial y RNF** | Minutas de entrevistas 1 y 2, cuestionarios de campo, catálogo formal de Requerimientos No Funcionales (RNF). | Septiembre 2026 *(Completado)* | Docentes / Cliente |
-| **E2: Descomposición Ágil y PGP** | Iniciativas estratégicas, Épicas funcionales, Backlog priorizado en Taiga con Criterios de Aceptación, y Plan de Gestión de Proyecto (PGP). | Octubre 2026 | Docentes / Softech |
-| **E3: Arquitectura, Modelado y Prototipo** | Especificación de arquitectura, modelo de datos relacional/documental, diagramas de integración y prototipo navegable / MVP preliminar. | Noviembre 2026 | Docentes / Cliente |
-| **E4: Producto Funcional e Informe Final** | Software desplegado y verificable (módulo de escritorio y app móvil de choferes), pruebas de aceptación, manuales de usuario y lecciones aprendidas. | Diciembre 2026 | Docentes / Cliente |
+| **Entrega 1: Relevamiento y RNF** | Minutas de entrevistas 1 y 2, cuestionarios y catálogo de Requerimientos No Funcionales (RNF). | 21/09/2026 *(Completado)* | Docentes / Cliente |
+| **Entrega 2: Descomposición Ágil y PGP** | Iniciativas estratégicas, Épicas funcionales, Backlog en Taiga con Criterios de Aceptación y Plan de Gestión de Proyecto (PGP). | 05/10/2026 | Docentes / Softech |
+| **Demo 1: MVP Iteración 1 (Fin de Sprint 1)** | Demostración funcional en vivo del primer incremento: Ingesta masiva de planillas Excel (EP-01), diagramación de hojas de ruta (EP-02) e itinerario móvil de choferes (EP-06). | 30/10/2026 | Docentes / Cliente |
+| **Demo 2: Release Final (Fin de Sprint 2)** | Demostración integral del producto terminado: Cobranza multicanal (EP-07), certificación fotográfica (EP-08), contingencias en ruta (EP-09), arqueo de caja y consolidación multimarca (EP-03), y módulos de auditoría. | 20/11/2026 | Docentes / Cliente |
 
 ---
 
 ### 2.2. Calendario y Resumen del Presupuesto
-- **Duración proyectada del desarrollo:** 9 semanas de trabajo intensivo (octubre a diciembre de 2026), divididas en 4 Sprints quincenales de desarrollo e integración continua.
-- **Presupuesto económico total estimado:** **$13.430.000 ARS** (Trece millones cuatrocientos treinta mil pesos argentinos), compuesto por:
-  - **Costo de mano de obra (840 horas de ingeniería):** $12.600.000 ARS.
+- **Duración global del proyecto:** 12 semanas (del 31/08/2026 al 20/11/2026).
+- **Ciclo de Desarrollo Ágil (Scrum):** **6 semanas efectivas**, estructuradas estrictamente en **2 Sprints de 3 semanas cada uno**:
+  - **Sprint 1 (3 semanas):** Inicia el viernes 09/10/2026 (Planning), incluye reuniones de seguimiento (16/10 y 23/10) y concluye el viernes 30/10/2026 con la **Demo 1**.
+  - **Sprint 2 (3 semanas):** Inicia el viernes 30/10/2026 (Planning), incluye reuniones de seguimiento (06/11 y 13/11) y concluye el viernes 20/11/2026 con la **Demo 2 (Entrega Final)**.
+- **Presupuesto económico total estimado:** **$9.230.000 ARS** (Nueve millones doscientos treinta mil pesos argentinos), compuesto por:
+  - **Costo de mano de obra (560 horas de ingeniería):** $8.400.000 ARS.
   - **Costos directos de infraestructura y servicios de soporte:** $830.000 ARS.
 - **Restricciones del cliente e institucionales:**
-  - El software debe estar operativo y verificado antes del cierre del ciclo lectivo universitario (diciembre 2026).
-  - La solución para choferes debe funcionar en dispositivos móviles de gama baja y media con conectividad intermitente en calle.
+  - El producto debe ser completado, integrado y validado para la Demo 2 fijada el 20/11/2026.
+  - La aplicación de los choferes debe operar en calle bajo condiciones de baja o nula conectividad celular y en dispositivos móviles heterogéneos.
 
 ---
 
@@ -78,7 +81,7 @@ El proyecto se articula en entregables documentales y de software alineados a lo
 El equipo de **Softech** está conformado por **7 integrantes**. La organización y designación nominal de los roles internos se encuentra en proceso de consenso dentro del equipo y será formalizada junto al tablero Taiga. Para asegurar la viabilidad del proyecto, se establece un marco operativo de trabajo cruzado con dedicación semanal homogénea:
 
 - **Cantidad de personal:** 7 ingenieros / desarrolladores de software.
-- **Dedicación estimada:** 12 a 15 horas semanales por integrante a lo largo de las 9 semanas de ejecución (promedio de 120 horas de ingeniería totales por persona).
+- **Dedicación estimada:** 8 a 10 horas semanales por integrante a lo largo del cuatrimestre (promedio de 80 horas de ingeniería totales por persona = 560 horas de equipo).
 - **Estructura preliminar de áreas de responsabilidad (a ratificar con el grupo):**
   - **Coordinación y Gestión (Project Lead / Scrum Master):** Gestión del tablero Taiga, seguimiento de cronograma, mitigación de riesgos e interlocución con el cliente/cátedra.
   - **Ingeniería de Requerimientos y Aseguramiento de Calidad (QA Lead):** Validación de criterios de aceptación, diseño de escenarios de prueba y pruebas de integración.
@@ -91,21 +94,23 @@ El equipo de **Softech** está conformado por **7 integrantes**. La organizació
 ## 3. Presupuesto
 
 ### 3.1. Principales Actividades del Proyecto
-Las actividades abarcan el ciclo de vida completo de la solución, estructurando la fase de desarrollo en torno a las épicas funcionales definidas:
+Las actividades abarcan el ciclo de vida completo de la solución, adaptadas a los dos ciclos de desarrollo (Sprint 1 y Sprint 2):
 
-1. **Fase A — Relevamiento, Elicitación y Requerimientos:** Preparación y ejecución de entrevistas, análisis de problemas del negocio, definición de RNF, iniciativas y redacción del backlog de historias de usuario.
-2. **Fase B — Arquitectura y Diseño:** Definición de arquitectura frontend/mobile/backend, diseño de contratos de interfaz de datos, modelado de base de datos y diseño UX/UI en escritorio y celular.
-3. **Fase C — Desarrollo por Épicas Funcionales:**
+1. **Fase A — Relevamiento, Elicitación y Requerimientos (Entregas 1 y 2):** Entrevistas con Martín Rodríguez, análisis de problemas del negocio, definición de RNF, iniciativas estratégicas, épicas y redacción del backlog de historias de usuario en Taiga.
+2. **Fase B — Arquitectura y Diseño:** Definición de arquitectura desacoplada frontend/mobile/backend, diseño de contratos de interfaz de datos, modelado de persistencia y diseño UX/UI.
+3. **Fase C — Desarrollo Sprint 1 (Hacia Demo 1 - 30/10):**
    - **EP-01:** Importación masiva y validación de planillas de remitos (Excel).
    - **EP-02:** Diagramación y asignación de hojas de ruta a la flota.
-   - **EP-03:** Arqueo diario de caja, rendición de flota y consolidación multimarca.
    - **EP-06:** Consulta y selección libre del itinerario de paradas por el chofer.
+   - Pruebas integradas de Sprint 1 y preparación de la Demo 1.
+4. **Fase D — Desarrollo Sprint 2 (Hacia Demo 2 - 20/11):**
+   - **EP-03:** Arqueo diario de caja, rendición de flota y consolidación multimarca.
    - **EP-07:** Registro y desglose de cobro multicanal en mostrador (efectivo, transferencias, QR).
    - **EP-08:** Certificación digital de entrega mediante fotografía de remito firmado.
    - **EP-09:** Reporte y tipificación de contingencias en ruta (local cerrado, rechazo, reentrega).
    - **EP-10 & EP-11 (Gobierno y Auditoría):** Gestión de usuarios/roles y auditoría de ajustes manuales de dinero.
-4. **Fase D — Integración y Aseguramiento de Calidad (QA):** Pruebas de integración extremo a extremo (end-to-end), validación del flujo offline/online del chofer, pruebas de carga de planillas de remitos y homologación de criterios de aceptación.
-5. **Fase E — Despliegue, Capacitación y Entrega Final:** Puesta en marcha en entornos de prueba/producción, elaboración de manuales operativos y presentación final.
+   - Pruebas integradas de circuito completo (end-to-end) y preparación de la Demo 2.
+5. **Fase E — Despliegue, Manuales y Cierre de Proyecto:** Puesta en producción, documentación de usuario y lecciones aprendidas.
 
 ---
 
@@ -113,30 +118,31 @@ Las actividades abarcan el ciclo de vida completo de la solución, estructurando
 
 | Actividad / Módulo | Personal Asignado | Esfuerzo Unitario (hs) | Esfuerzo Total (hs) |
 | :--- | :---: | :---: | :---: |
-| **Elicitación, Entrevistas y Backlog (Fase A)** | 7 | 16 hs | 112 hs |
-| **Diseño Arquitectónico, Datos y UX/UI (Fase B)** | 7 | 14 hs | 98 hs |
-| **EP-01: Importación masiva de planillas Excel** | 2 | 26 hs | 52 hs |
-| **EP-02: Diagramación y asignación de rutas** | 2 | 24 hs | 48 hs |
-| **EP-03: Arqueo de caja y conciliación multimarca** | 3 | 28 hs | 84 hs |
-| **EP-06: Consulta de itinerario de paradas (Mobile)** | 2 | 20 hs | 40 hs |
-| **EP-07: Cobro multicanal en mostrador (Mobile)** | 3 | 28 hs | 84 hs |
-| **EP-08: Captura fotográfica de remito firmado (Mobile)** | 2 | 18 hs | 36 hs |
-| **EP-09: Gestión de contingencias en ruta (Mobile)** | 2 | 16 hs | 32 hs |
-| **EP-10 y EP-11: Gobierno del sistema y auditoría** | 2 | 18 hs | 36 hs |
-| **Pruebas Integradas, QA y Validación (Fase D)** | 7 | 18 hs | 126 hs |
-| **Despliegue, Manuales y Cierre de Proyecto (Fase E)** | 7 | 13 hs | 91 hs |
-| **TOTAL HORAS PROYECTO** | — | — | **840 hs** |
+| **Elicitación, Entrevistas y Backlog (Fase A)** | 7 | 12 hs | 84 hs |
+| **Diseño Arquitectónico, Datos y UX/UI (Fase B)** | 7 | 10 hs | 70 hs |
+| **EP-01: Importación masiva de planillas Excel (Sprint 1)** | 2 | 18 hs | 36 hs |
+| **EP-02: Diagramación y asignación de rutas (Sprint 1)** | 2 | 16 hs | 32 hs |
+| **EP-06: Consulta de itinerario de paradas - Mobile (Sprint 1)** | 2 | 18 hs | 36 hs |
+| **Testing, Integración y Validación Demo 1 (Sprint 1)** | 7 | 6 hs | 42 hs |
+| **EP-03: Arqueo de caja y conciliación multimarca (Sprint 2)** | 3 | 18 hs | 54 hs |
+| **EP-07: Cobro multicanal en mostrador - Mobile (Sprint 2)** | 2 | 16 hs | 32 hs |
+| **EP-08: Captura fotográfica de remito firmado (Sprint 2)** | 2 | 12 hs | 24 hs |
+| **EP-09: Gestión de contingencias en ruta - Mobile (Sprint 2)** | 2 | 10 hs | 20 hs |
+| **EP-10 y EP-11: Gobierno del sistema y auditoría (Sprint 2)** | 2 | 10 hs | 20 hs |
+| **Testing Extremo a Extremo y Validación Demo 2 (Sprint 2)** | 7 | 10 hs | 70 hs |
+| **Despliegue Final, Manuales y Cierre de Proyecto (Fase E)** | 7 | 6 hs | 42 hs |
+| **TOTAL HORAS PROYECTO** | — | — | **560 hs** |
 
-> **Nota:** Las 840 horas totales de proyecto representan una carga promedio de 120 horas por integrante a lo largo de las 9 a 10 semanas de ejecución del cuatrimestre (~12 a 13 hs semanales por persona).
+> **Nota:** Las 560 horas totales de proyecto representan una carga promedio de 80 horas por integrante a lo largo de las 12 semanas del cuatrimestre (~8 horas semanales por persona, ritmo altamente sostenible y compatible con la cursada).
 
 ---
 
 ### 3.3. Presupuesto Final
 
 #### Cálculo de Mano de Obra:
-- **Cantidad de horas del proyecto:** 840 hs.
+- **Cantidad de horas del proyecto:** 560 hs.
 - **Precio por hora estipulado por Softech:** **$15.000 ARS / hora** (tarifa de referencia en el mercado local argentino para desarrollo de software).
-- **Subtotal Mano de Obra:** $840 \text{ hs} \times \$15.000 = \mathbf{\$12.600.000\text{ ARS}}$.
+- **Subtotal Mano de Obra:** $560 \text{ hs} \times \$15.000 = \mathbf{\$8.400.000\text{ ARS}}$.
 
 #### Recursos Adicionales:
 Para garantizar la infraestructura durante el desarrollo, despliegue y pruebas del sistema, se contemplan los siguientes costos directos:
@@ -149,7 +155,7 @@ Para garantizar la infraestructura durante el desarrollo, despliegue y pruebas d
 | **Servicios de Build y Testing Móvil (Expo EAS / CI/CD)** | Pipelines de compilación de instaladores APK y testing en dispositivos Android. | $240.000 ARS |
 | **Subtotal Recursos Adicionales** | — | **$830.000 ARS** |
 
-$$\mathbf{Presupuesto\ Total} = \text{Mano de Obra (\$12.600.000)} + \text{Recursos Adicionales (\$830.000)} = \mathbf{\$13.430.000\text{ ARS}}$$
+$$\mathbf{Presupuesto\ Total} = \text{Mano de Obra (\$8.400.000)} + \text{Recursos Adicionales (\$830.000)} = \mathbf{\$9.230.000\text{ ARS}}$$
 
 ---
 
@@ -217,15 +223,16 @@ Se evalúa la **Probabilidad (P)** y el **Impacto (I)** en una escala de 1 a 5 (
 - **Plan de Contingencia (Reactiva):** 
   - Recurrir a librerías maduras y servicios BaaS gestionados (Firebase / Supabase / Auth prehecho) para no consumir horas del equipo en infraestructura genérica.
 
-#### R-05: Retrasos en el cronograma de entregables por superposición de compromisos académicos de los 7 miembros
+#### R-05: Retrasos en el cronograma de entregables por superposición de compromisos de evaluación de los 7 miembros
 - **Tipo:** Gestión de Proyecto.
 - **Responsable:** Project Manager / Scrum Master de Softech.
 - **Probabilidad:** 4 (Alta) | **Impacto:** 3 (Medio) | **Exposición:** 12.
+- **Contexto Crítico:** Identificado con mayor probabilidad ante los dos hitos de examen formal fijados en el cronograma: **Lunes 05/10/2026 (Parcialito 1, 12:30 hs)** coincidente con la Entrega 2, y **Lunes 16/11/2026 (Parcialito 2, 12:00 hs)** en la semana previa a la Demo 2 final (20/11/2026).
 - **Mitigación (Preventiva):** 
-  - Planificar sprints quincenales con margen de seguridad del 15% en las estimaciones horarias.
-  - Realizar sincronizaciones breves periódicas en Discord y registrar el avance en Taiga para detectar desvíos antes de las fechas límite.
+  - Estructurar los dos Sprints de 3 semanas con un colchón de seguridad del 15% en las estimaciones horarias y planificar la mayor carga de desarrollo en las primeras dos semanas de cada ciclo.
+  - Sincronización semanal en Discord los viernes y registro diario en el tablero Taiga para detectar desvíos con antelación a las semanas de exámenes.
 - **Plan de Contingencia (Reactiva):** 
-  - Reasignación dinámica de tareas entre los 7 integrantes ante picos de exámenes, y descopeo de épicas secundarias (ej. postergar la EP-11 de auditoría avanzada para priorizar el circuito troncal de cobros y remitos).
+  - Reasignación dinámica y compensatoria de tareas entre los 7 integrantes ante picos de evaluación, y descopeo controlado de funcionalidades accesorias (ej. postergar la EP-11 de auditoría avanzada para asegurar la integridad del circuito troncal de cobros y arqueo).
 
 #### R-06: Cobertura insuficiente de pruebas en el flujo crítico de arqueo de caja y conciliación de dinero
 - **Tipo:** Ingeniería de Software / Calidad.

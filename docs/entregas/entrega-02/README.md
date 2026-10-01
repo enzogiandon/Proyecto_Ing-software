@@ -42,15 +42,26 @@ Esta entrega formaliza el paso del relevamiento de necesidades hacia la descompo
 
 ```text
 entrega-02/
-├── README.md                          <- Pautas, checklist y enlace a Taiga
+├── README.md                          <- Pautas, cronograma, checklist y enlace a Taiga
 ├── guia-historias-de-usuario.md       <- Estándar metodológico de la cátedra para HUs
 ├── workflow-historias-de-usuario.md   <- Procedimiento operativo para agentes de IA
 ├── final/                             <- Entregables consolidados finales
 ├── borradores/                        <- Trabajo colaborativo en curso
 │   ├── iniciativas-y-epicas.md        <- Propuesta formal de iniciativas y épicas
-│   └── historias-de-usuario.md        <- [ACTUAL] Backlog de 30-40 HUs en construcción
+│   ├── historias-de-usuario.md        <- Backlog de 30-40 HUs en construcción
+│   └── pgp.md                         <- [ACTUAL] Borrador completo del Plan de Gestión de Proyecto (IEEE 1058)
 └── plantillas/                        <- Plantillas oficiales brindadas por la cátedra
 ```
+
+---
+
+## 📅 Hitos del Cronograma Oficial (Entrega 2 y Desarrollo)
+
+- **Lunes 05/10/2026 (12:30 hs):** **Entrega 2** (Iniciativas + Épicas + HU en Taiga + PGP) y **Parcialito 1**.
+- **Viernes 09/10/2026:** **Inicio de Sprint 1** (Planning).
+- **Viernes 30/10/2026:** **Demo 1** (Fin de Sprint 1) e **Inicio de Sprint 2** (Planning).
+- **Lunes 16/11/2026 (12:00 hs):** **Parcialito 2**.
+- **Viernes 20/11/2026:** **Demo 2 (Release Final del Producto)**.
 
 ---
 
@@ -58,8 +69,9 @@ entrega-02/
 
 - [x] Descargar y colocar plantillas oficiales de la cátedra en `plantillas/` ([iniciativas-epicas-plantilla.doc](plantillas/iniciativas-epicas-plantilla.doc) y [pgp-plantilla.docx](plantillas/pgp-plantilla.docx)).
 - [x] Definir iniciativas estratégicas y épicas funcionales del sistema logístico ([Ver Borrador](borradores/iniciativas-y-epicas.md)).
+- [x] Redactar el borrador formal del Plan de Gestión de Proyecto ([Ver Borrador PGP](borradores/pgp.md)).
 - [ ] Configurar el proyecto en Taiga y vincular a los 7 integrantes de Softech.
 - [ ] Escribir y priorizar el backlog de Historias de Usuario en Taiga con criterios de aceptación.
-- [ ] Completar el Plan de Gestión del Proyecto (PGP) con estimaciones y roles.
+- [ ] Asignar nominalmente los roles internos del equipo para el PGP en reunión de grupo.
 - [ ] Realizar revisión cruzada entre integrantes y generar versiones finales en `final/`.
 - [ ] Registrar la URL definitiva del proyecto Taiga en este documento.

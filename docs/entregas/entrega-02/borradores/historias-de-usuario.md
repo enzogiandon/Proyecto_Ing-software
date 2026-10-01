@@ -1,25 +1,24 @@
 # Backlog de Historias de Usuario (Entrega 2)
 
 **Proyecto:** Sistema de Gestión Logística y Liquidación de Cobranzas  
-**Cátedra:** Ingeniería de Software — Facultad de Informática (UNLP)  
+**Cliente:** Centro de Distribución Logística (Martín Rodríguez, Responsable de Planificación y Rutas)  
 **Equipo de Desarrollo:** Softech (Enzo Giandon, Alan Tolaba, Catalina Caruso, Ian Chica Herrero, Lautaro Giralde, Mayerly Sinion Mendoza, Aylén Carlos)  
 **Estado:** Borrador de Especificación y Construcción del Backlog  
-**Meta Cuantitativa Acordada:** **30 a 40 Historias de Usuario (HU)**  
 
 ---
 
-## 🎯 Directivas Metodológicas Aplicadas (Cátedra UNLP)
+## 🎯 Estándares Metodológicos y de Calidad de Softech
 
-Todas las historias de usuario redactadas en este documento siguen rigurosamente el estándar formal fijado en la [Guía de Especificación de Historias de Usuario](../guia-historias-de-usuario.md):
+Todas las historias de usuario redactadas en este documento siguen rigurosamente el estándar formal de **Softech** fijado en la [Guía de Especificación de Historias de Usuario](../guia-historias-de-usuario.md):
 
 1. **Estructura fija de 4 campos:**
    * **Campo 1:** `ID DE LA HISTORIA` (en mayúsculas con código `HU-XX`).
    * **Campo 2:** `Título` con la fórmula canónica `Como [Rol] quiero [Acción] para [Beneficio]` empleando roles del dominio del negocio.
    * **Campo 3:** `Reglas a considerar` exclusivas de la lógica de negocio del dominio (**estrictamente prohibido incluir validaciones de formularios: campos obligatorios, formatos de mail, longitud de contraseñas o campos vacíos**).
    * **Campo 4:** `Criterios de Aceptación` divididos en escenarios narrativos numerados (`ESCENARIO X: [Título]`), describiendo ubicación, acción, datos provistos y comportamiento observable del sistema con mensajes textuales exactos entre comillas (sin redactar escenarios de acciones que la UI imposibilita o deshabilita).
-2. **Distribución equilibrada del backlog (Meta: 30 a 40 HUs):**
-   * Promedio de 3 a 5 historias atómicas por épica.
-   * Cobertura completa del ciclo operativo: preparación de rutas (noche), ejecución y cobro en calle (mañana), arqueo/cierre (tarde) y gobierno/auditoría.
+2. **Cobertura integral del ciclo operativo:**
+   * Descomposición atómica de cada capacidad requerida por el negocio.
+   * Cobertura de las etapas clave: preparación de rutas (noche), ejecución y cobro en calle (mañana), arqueo/cierre (tarde) y gobierno/auditoría.
 
 ---
 

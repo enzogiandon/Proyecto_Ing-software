@@ -1,40 +1,39 @@
 # Entrega 2: Iniciativas, Épicas, Historias de Usuario (HU) y PGP
 
 **Estado:** 🟡 En Desarrollo  
-**Equipo:** Softech — Ingeniería de Software (UNLP)
+**Equipo:** Softech  
+**Cliente:** Centro de Distribución Logística (Martín Rodríguez)  
 
 ---
 
-## 📋 Requisitos y Pautas de la Cátedra
+## 📋 Requisitos y Pautas del Proyecto
 
 Esta entrega formaliza el paso del relevamiento de necesidades hacia la descomposición ágil de requerimientos y la planificación formal de la gestión del proyecto de software.
 
 ### 1. Iniciativas + Épicas
-- **Formato:** Deben ser entregadas utilizando la plantilla brindada por la cátedra.
+- **Formato:** Deben ser presentadas utilizando el formato estándar corporativo de Softech.
 - **Ubicación prevista:** `final/iniciativas-epicas.docx` (o formato provisto).
 - **Alcance esperado:**
-  - Agrupación por grandes capacidades de negocio (ej. Gestión de Pedidos de Comercios, Ruteo y Despacho de Flota, Circuito de Cobranzas y Rendiciones, Panel de Control Operativo).
+  - Agrupación por grandes capacidades de negocio (ej. Ingesta de Pedidos de Marcas Proveedoras, Ruteo y Despacho de Flota, Circuito de Cobranzas y Rendiciones, Panel de Control Operativo).
 
 ### 2. Historias de Usuario (HU) en Taiga
-- **Herramienta requerida:** [Taiga](https://taiga.io/) (herramienta oficial de gestión ágil de proyectos de la cátedra).
-- **Volumen meta acordado:** **30 a 40 Historias de Usuario** atómicas distribuidas entre las 9 épicas (un promedio de 3 a 5 HUs por épica).
-- **Estándar metodológico:** Estructura obligatoria de 4 campos según la [Guía de Especificación de Historias de Usuario](guia-historias-de-usuario.md):
+- **Criterio de descomposición:** Historias de Usuario atómicas descompuestas progresivamente para cubrir de forma integral cada una de las épicas definidas.
   1. ID de la Historia (en mayúsculas).
   2. Título (Como... quiero... para... con roles de dominio del negocio).
   3. Reglas a considerar (reglas de negocio del dominio; prohibidas validaciones de formularios).
   4. Criterios de Aceptación (escenarios narrativos numerados con pantalla, acción y mensajes textuales exactos).
 - **Acceso al Tablero Taiga del Equipo:**
   - **Enlace al Proyecto:** `[Pendiente de configurar URL]`
-  - **Permisos docentes:** Asegurarse de invitar a los docentes de la cátedra (`is.ic.unlp@gmail.com` o usuario correspondiente) con rol de visualizador/colaborador.
+  - **Permisos de auditoría:** Asegurarse de otorgar permisos de acceso y visualización a la dirección del proyecto y referentes designados.
 
 ### 3. Plan de Gestión del Proyecto (PGP)
-- **Formato:** Debe ser entregado utilizando la plantilla brindada por la cátedra.
+- **Formato:** Elaborado conforme al estándar internacional **IEEE Std 1058-1998**.
 - **Ubicación prevista:** `final/pgp.docx` (o formato provisto).
 - **Secciones clave:**
-  - Objetivos y alcance del proyecto.
-  - Estructura de descomposición del trabajo y planificación de sprints.
+  - Objetivos y alcance del proyecto para Centro de Distribución Logística.
+  - Estructura de descomposición del trabajo y planificación en 2 Sprints.
   - Matriz de roles del equipo Softech y responsabilidades.
-  - Identificación y mitigación de riesgos (riesgo de adopción por comerciantes, conectividad en calle de choferes, volumen de efectivo).
+  - Identificación y mitigación de riesgos de software y operativos de campo.
 
 ---
 
@@ -43,31 +42,30 @@ Esta entrega formaliza el paso del relevamiento de necesidades hacia la descompo
 ```text
 entrega-02/
 ├── README.md                          <- Pautas, cronograma, checklist y enlace a Taiga
-├── guia-historias-de-usuario.md       <- Estándar metodológico de la cátedra para HUs
+├── guia-historias-de-usuario.md       <- Estándar metodológico de calidad para HUs
 ├── workflow-historias-de-usuario.md   <- Procedimiento operativo para agentes de IA
 ├── final/                             <- Entregables consolidados finales
 ├── borradores/                        <- Trabajo colaborativo en curso
 │   ├── iniciativas-y-epicas.md        <- Propuesta formal de iniciativas y épicas
 │   ├── historias-de-usuario.md        <- Backlog de 30-40 HUs en construcción
 │   └── pgp.md                         <- [ACTUAL] Borrador completo del Plan de Gestión de Proyecto (IEEE 1058)
-└── plantillas/                        <- Plantillas oficiales brindadas por la cátedra
+└── plantillas/                        <- Plantillas base del proyecto
 ```
 
 ---
 
 ## 📅 Hitos del Cronograma Oficial (Entrega 2 y Desarrollo)
 
-- **Lunes 05/10/2026 (12:30 hs):** **Entrega 2** (Iniciativas + Épicas + HU en Taiga + PGP) y **Parcialito 1**.
-- **Viernes 09/10/2026:** **Inicio de Sprint 1** (Planning).
-- **Viernes 30/10/2026:** **Demo 1** (Fin de Sprint 1) e **Inicio de Sprint 2** (Planning).
-- **Lunes 16/11/2026 (12:00 hs):** **Parcialito 2**.
-- **Viernes 20/11/2026:** **Demo 2 (Release Final del Producto)**.
+- **Lunes 05/10/2026:** **Hito 2: Planificación y Backlog** (Iniciativas + Épicas + HU en Taiga + PGP).
+- **Viernes 09/10/2026:** **Lanzamiento de Sprint 1** (Planning).
+- **Viernes 30/10/2026:** **Demo 1 — MVP Iteración 1** (Fin de Sprint 1) y **Lanzamiento de Sprint 2** (Planning).
+- **Viernes 20/11/2026:** **Demo 2 — Release Final del Producto** (Fin de Sprint 2 e Implantación).
 
 ---
 
 ## ✅ Checklist de Progreso del Equipo
 
-- [x] Descargar y colocar plantillas oficiales de la cátedra en `plantillas/` ([iniciativas-epicas-plantilla.doc](plantillas/iniciativas-epicas-plantilla.doc) y [pgp-plantilla.docx](plantillas/pgp-plantilla.docx)).
+- [x] Configurar plantillas base de trabajo en `plantillas/` ([iniciativas-epicas-plantilla.doc](plantillas/iniciativas-epicas-plantilla.doc) y [pgp-plantilla.docx](plantillas/pgp-plantilla.docx)).
 - [x] Definir iniciativas estratégicas y épicas funcionales del sistema logístico ([Ver Borrador](borradores/iniciativas-y-epicas.md)).
 - [x] Redactar el borrador formal del Plan de Gestión de Proyecto ([Ver Borrador PGP](borradores/pgp.md)).
 - [ ] Configurar el proyecto en Taiga y vincular a los 7 integrantes de Softech.

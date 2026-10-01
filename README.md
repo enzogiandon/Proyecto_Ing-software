@@ -17,16 +17,23 @@
 Este repositorio contiene la ingeniería de requisitos, documentación de diseño arquitectónico y el desarrollo del software para la optimización de procesos operativos, gestión de pedidos y circuito de cobranzas de un **centro de distribución logística tercerizada**.
 
 ### Contexto del Negocio y Cliente
-- **Stakeholder / Cliente:** Martín Rodríguez (Operaciones Logísticas).
-- **Actividad:** Distribución tercerizada de productos de consumo masivo (bebidas) cubriendo partidos de la zona sur del Gran Buenos Aires.
-- **Canal destinatario:** Comercio minorista tradicional de cercanía (kioscos, almacenes y autoservicios de proximidad).
-- **Desafío central:** Digitalizar la interacción comercial (reduciendo la fricción del uso de WhatsApp), automatizar la confección de hojas de ruta y optimizar el control de cobranzas en efectivo y billeteras electrónicas.
+- **Stakeholder / Cliente:** Martín Rodríguez (Responsable de Planificación Logística y Rutas).
+- **Actividad:** Operador logístico tercerizado para grandes marcas de consumo masivo y bebidas (ej. Coca-Cola).
+- **Escala de Operación:** 35 partidos de la zona sur del Gran Buenos Aires, 6 centros logísticos de acopio, flota de 200 camiones (170-180 activos diarios), 300 transportistas y 10 empleados administrativos en base.
+- **Canal destinatario:** Comercio minorista tradicional de cercanía (kioscos, almacenes y autoservicios de proximidad). Se excluyen cadenas de hipermercados.
+- **Desafío central (El Dolor del Negocio):** El cuello de botella no radica en WhatsApp, sino en el **arqueo diario y conciliación de cobranzas**. La atomización en miles de microcobros diarios (efectivo, transferencias, QR) por cuenta y orden de múltiples marcas hace que el cuadre manual en papel sea lento, extenuante y propenso a desfasajes con los proveedores.
+
+### 🛠️ Stack Tecnológico Preliminar
+- **Aplicación Móvil (Transportistas):** React Native con Expo (Android, interfaz liviana y de alto contraste para dispositivos personales BYOD de gama baja).
+- **Panel Administrativo Web (Oficina):** React con Vite.
+- **Backend / API Central:** NestJS.
+- **Base de Datos:** PostgreSQL.
 
 ---
 
 ## 👥 Integrantes — Equipo Softech
 
-El equipo está conformado por 7 integrantes con roles metodológicos definidos para la interacción con el cliente:
+El equipo está conformado por **6 integrantes**, organizados en 2 subgrupos de trabajo:
 
 - **Enzo Giandon**
 - **Alan Tolaba**
@@ -34,7 +41,6 @@ El equipo está conformado por 7 integrantes con roles metodológicos definidos 
 - **Ian Chica Herrero**
 - **Lautaro Giralde**
 - **Mayerly Sinion Mendoza**
-- **Aylén Carlos**
 
 ---
 
@@ -66,13 +72,15 @@ Proyecto_Ing-software/
 
 ## 🚀 Estado del Proyecto y Hoja de Ruta
 
-- [x] **Fase 1: Relevamiento y Validación Operativa (Entrevista 1)**
+- [x] **Fase 1: Relevamiento y Validación Operativa (Entrevistas 1 y 2 — Entrega 1)**
   - Relevamiento de infraestructura, flota de camiones, centros de acopio y perfil de clientes.
-- [x] **Fase 2: Definición de Requisitos y Circuito de Cobranzas (Entrevista 2)**
-  - Definición de alternativas a WhatsApp, roles del sistema y gestión del efectivo.
-- [ ] **Fase 3: Especificación de Requerimientos de Software (SRS / Casos de Uso)**
-- [ ] **Fase 4: Diseño de Arquitectura y Prototipado UX/UI**
-- [ ] **Fase 5: Implementación del Sistema (Frontend & Backend)**
+  - Validación del circuito de cobranzas multimarca, reglas de entrega y RNF.
+- [ ] **Fase 2: Especificación Ágil y Planificación (Entrega 2 - En Progreso)**
+  - Definición de 3 Iniciativas y 9 Épicas funcionales.
+  - Backlog de 30 a 40 Historias de Usuario (HU) en Taiga con criterios de aceptación narrativos.
+  - Plan de Gestión del Proyecto (PGP) y matriz de roles.
+- [ ] **Fase 3: Diseño de Arquitectura y Prototipado UX/UI**
+- [ ] **Fase 4: Implementación del Sistema (Frontend & Backend)**
 
 ---
 

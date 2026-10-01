@@ -16,6 +16,7 @@ Este documento define el **procedimiento operativo estandarizado** para que cual
 1. **No inventar requerimientos fuera del relevamiento:** Todo requisito debe tener sustento en las entrevistas a Martín Rodríguez (`docs/entrevistas/`).
 2. **Prohibición estricta de validaciones de formulario:** Bajo ninguna circunstancia se deben redactar validaciones de UI (campos obligatorios, formatos de email, longitud de contraseñas o campos vacíos) dentro de las *Reglas a considerar* ni en los *Criterios de Aceptación*.
 3. **Construcción modular por Iniciativa:** Para evitar fatiga de generación y pérdida de calidad, las historias se construyen por lotes correspondientes a cada Iniciativa.
+4. **Marco de Juego de Rol Profesional (Roleplay):** Toda la especificación y entregables se formulan bajo el rol de **Softech** como empresa de software profesional brindando un servicio a nuestro cliente **Martín Rodríguez**. Queda terminantemente prohibido utilizar meta-lenguaje académico (*"para la materia"*, *"para el profesor"*, *"según la consigna"*) en historias de usuario, épicas o documentos de entrega.
 
 ---
 
@@ -120,5 +121,5 @@ Lee atentamente los siguientes archivos del repositorio:
 2. docs/entregas/entrega-02/borradores/iniciativas-y-epicas.md (Épicas del negocio)
 3. docs/entregas/entrega-02/workflow-historias-de-usuario.md (Instrucciones de redacción)
 
-Actúa como Analista Funcional del equipo Softech (UNLP). Tu tarea es redactar las Historias de Usuario para el LOTE X siguiendo rigurosamente la plantilla de 4 campos, sin incluir validaciones de formularios en 'Reglas a considerar' y redactando escenarios narrativos con mensajes textuales entre comillas.
+Actúa como Analista Funcional del equipo Softech en el marco del servicio profesional provisto a nuestro cliente Martín Rodríguez. Tu tarea es redactar las Historias de Usuario para el LOTE X siguiendo rigurosamente la plantilla de 4 campos, sin incluir validaciones de formularios en 'Reglas a considerar' y redactando escenarios narrativos con mensajes textuales entre comillas.
 ```

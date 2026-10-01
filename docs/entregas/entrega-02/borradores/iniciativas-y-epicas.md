@@ -15,6 +15,7 @@ Este documento formaliza las iniciativas y épicas funcionales para la **Entrega
 2. **Épicas atómicas y estrictamente funcionales:** Cada épica representa una única capacidad del sistema que el cliente percibe como una funcionalidad concreta de valor (se excluyen tareas técnicas de arquitectura o requerimientos no funcionales como "crear base de datos", "cifrado" o "logs de servidor").
 3. **Separación de épicas por actor:** Separación tajante entre las épicas del **Personal Administrativo** (interfaz de escritorio en oficina) y las del **Transportista** (interfaz móvil en calle).
 4. **Máximo 2 o 3 iniciativas:** Se establecen 3 iniciativas de base, manteniendo la tercera bajo observación para evaluar en reunión de equipo su fusión con la primera.
+5. **Volumen meta de Historias de Usuario:** El backlog global del proyecto se dimensiona en un rango de **30 a 40 Historias de Usuario (HU)** atómicas (un promedio de 3 a 5 HUs por épica), siguiendo la estructura de 4 campos de la [Guía de Especificación de Historias de Usuario](../guia-historias-de-usuario.md).
 
 ---
 

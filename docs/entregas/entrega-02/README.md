@@ -17,10 +17,12 @@ Esta entrega formaliza el paso del relevamiento de necesidades hacia la descompo
 
 ### 2. Historias de Usuario (HU) en Taiga
 - **Herramienta requerida:** [Taiga](https://taiga.io/) (herramienta oficial de gestión ágil de proyectos de la cátedra).
-- **Contenido:**
-  - Formulación estándar: *Como [Rol], quiero [Acción] para [Beneficio]*.
-  - Criterios de aceptación definidos para cada HU.
-  - Estimación y asignación a épicas/iniciativas correspondientes.
+- **Volumen meta acordado:** **30 a 40 Historias de Usuario** atómicas distribuidas entre las 9 épicas (un promedio de 3 a 5 HUs por épica).
+- **Estándar metodológico:** Estructura obligatoria de 4 campos según la [Guía de Especificación de Historias de Usuario](guia-historias-de-usuario.md):
+  1. ID de la Historia (en mayúsculas).
+  2. Título (Como... quiero... para... con roles de dominio del negocio).
+  3. Reglas a considerar (reglas de negocio del dominio; prohibidas validaciones de formularios).
+  4. Criterios de Aceptación (escenarios narrativos numerados con pantalla, acción y mensajes textuales exactos).
 - **Acceso al Tablero Taiga del Equipo:**
   - **Enlace al Proyecto:** `[Pendiente de configurar URL]`
   - **Permisos docentes:** Asegurarse de invitar a los docentes de la cátedra (`is.ic.unlp@gmail.com` o usuario correspondiente) con rol de visualizador/colaborador.

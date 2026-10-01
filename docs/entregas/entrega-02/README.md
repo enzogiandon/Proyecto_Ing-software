@@ -43,9 +43,12 @@ Esta entrega formaliza el paso del relevamiento de necesidades hacia la descompo
 ```text
 entrega-02/
 ├── README.md                          <- Pautas, checklist y enlace a Taiga
+├── guia-historias-de-usuario.md       <- Estándar metodológico de la cátedra para HUs
+├── workflow-historias-de-usuario.md   <- Procedimiento operativo para agentes de IA
 ├── final/                             <- Entregables consolidados finales
 ├── borradores/                        <- Trabajo colaborativo en curso
-│   └── iniciativas-y-epicas.md        <- [ACTUAL] Propuesta formal de 3 iniciativas y 11 épicas
+│   ├── iniciativas-y-epicas.md        <- Propuesta formal de iniciativas y épicas
+│   └── historias-de-usuario.md        <- [ACTUAL] Backlog de 30-40 HUs en construcción
 └── plantillas/                        <- Plantillas oficiales brindadas por la cátedra
 ```
 

@@ -2,7 +2,7 @@
 
 **Proyecto:** Sistema de Gestión Logística y Liquidación de Cobranzas  
 **Cátedra:** Ingeniería de Software — Facultad de Informática (UNLP)  
-**Equipo de Desarrollo:** Softech (Enzo Giandon, Alan, Catalina, Ian Chica, Lautaro, Mayerly)  
+**Equipo de Desarrollo:** Softech (Enzo Giandon, Alan Tolaba, Catalina Caruso, Ian Chica Herrero, Lautaro Giralde, Mayerly Sinion Mendoza, Aylén Carlos)  
 **Estado:** Borrador de Especificación y Construcción del Backlog  
 **Meta Cuantitativa Acordada:** **30 a 40 Historias de Usuario (HU)**  
 

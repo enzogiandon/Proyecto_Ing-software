@@ -26,7 +26,7 @@ Este repositorio contiene la ingeniería de requisitos, documentación de diseñ
 
 ## 👥 Integrantes — Equipo Softech
 
-El equipo está conformado por 6 integrantes con roles metodológicos definidos para la interacción con el cliente:
+El equipo está conformado por 7 integrantes con roles metodológicos definidos para la interacción con el cliente:
 
 - **Enzo Giandon**
 - **Alan Tolaba**

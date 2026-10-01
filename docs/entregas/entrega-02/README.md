@@ -58,7 +58,7 @@ entrega-02/
 
 - [x] Descargar y colocar plantillas oficiales de la cátedra en `plantillas/` ([iniciativas-epicas-plantilla.doc](plantillas/iniciativas-epicas-plantilla.doc) y [pgp-plantilla.docx](plantillas/pgp-plantilla.docx)).
 - [x] Definir iniciativas estratégicas y épicas funcionales del sistema logístico ([Ver Borrador](borradores/iniciativas-y-epicas.md)).
-- [ ] Configurar el proyecto en Taiga y vincular a los 6 integrantes de Softech.
+- [ ] Configurar el proyecto en Taiga y vincular a los 7 integrantes de Softech.
 - [ ] Escribir y priorizar el backlog de Historias de Usuario en Taiga con criterios de aceptación.
 - [ ] Completar el Plan de Gestión del Proyecto (PGP) con estimaciones y roles.
 - [ ] Realizar revisión cruzada entre integrantes y generar versiones finales en `final/`.

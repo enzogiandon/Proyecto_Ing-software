@@ -34,7 +34,6 @@ El propósito del proyecto es dotar a la empresa de una solución digital integr
 - **Arqueo de Caja:** Proceso de cotejo físico y digital al cierre de jornada donde se contrastan los fondos entregados por los choferes (efectivo y transferencias) contra los remitos despachados en el sistema.
 - **Conciliación Multimarca:** Agrupación y liquidación discriminada del dinero cobrado según la marca matriz o fabricante dueño de la mercadería (ej. Coca-Cola, Quilmes, etc.).
 - **Hoja de Ruta:** Conjunto ordenado o sugerido de paradas y comercios a abastecer por un camión y chofer en una fecha específica.
-- **BaaS:** *Backend as a Service* (servicios backend gestionados en la nube).
 
 ---
 

@@ -34,7 +34,6 @@ El propósito del proyecto es dotar a la empresa de una solución digital integr
 - **Arqueo de Caja:** Proceso de cotejo físico y digital al cierre de jornada donde se contrastan los fondos entregados por los choferes (efectivo y transferencias) contra los remitos despachados en el sistema.
 - **Conciliación Multimarca:** Agrupación y liquidación discriminada del dinero cobrado según la marca matriz o fabricante dueño de la mercadería (ej. Coca-Cola, Quilmes, etc.).
 - **Hoja de Ruta:** Conjunto ordenado o sugerido de paradas y comercios a abastecer por un camión y chofer en una fecha específica.
-- **BaaS:** *Backend as a Service* (servicios backend gestionados en la nube).
 
 ---
 
@@ -52,12 +51,21 @@ El propósito del proyecto es dotar a la empresa de una solución digital integr
 ### 2.1. Entregables del Proyecto
 El proyecto se articula en entregables documentales y de software alineados a los hitos de demostración operativa del sistema para Centro de Distribución Logística:
 
-| Hito / Entregable | Contenido Principal | Fecha Oficial | Destinatario |
-| :--- | :--- | :---: | :--- |
-| **Hito 1: Relevamiento y RNF** | Minutas de entrevistas 1 y 2, cuestionarios de relevamiento y catálogo formal de Requerimientos No Funcionales (RNF). | 21/09/2026 *(Completado)* | Centro de Distribución Logística / Softech |
-| **Hito 2: Descomposición Ágil y PGP** | Iniciativas estratégicas, Épicas funcionales, Backlog en Taiga con Criterios de Aceptación y Plan de Gestión de Proyecto (PGP). | 05/10/2026 | Centro de Distribución Logística / Softech |
-| **Demo 1: MVP Iteración 1 (Fin de Sprint 1)** | Demostración funcional en vivo del primer incremento: Ingesta masiva de planillas Excel (EP-01), diagramación de hojas de ruta (EP-02) e itinerario móvil de choferes (EP-06). | 30/10/2026 | Centro de Distribución Logística |
-| **Demo 2: Release Final (Fin de Sprint 2)** | Demostración integral del producto terminado: Cobranza multicanal (EP-07), certificación fotográfica (EP-08), contingencias en ruta (EP-09), arqueo de caja y consolidación multimarca (EP-03), y módulos de auditoría. | 20/11/2026 | Centro de Distribución Logística |
+- **Hito 1: Relevamiento y RNF** — `21/09/2026` *(Completado)*
+  Minutas de entrevistas 1 y 2, cuestionarios de relevamiento y catálogo formal de Requerimientos No Funcionales (RNF).
+  *Destinatario: Centro de Distribución Logística / Softech.*
+
+- **Hito 2: Descomposición Ágil y PGP** — `05/10/2026`
+  Iniciativas estratégicas, Épicas funcionales, Backlog en Taiga con Criterios de Aceptación y Plan de Gestión de Proyecto (PGP).
+  *Destinatario: Centro de Distribución Logística / Softech.*
+
+- **Demo 1: MVP Iteración 1 (Fin de Sprint 1)** — `30/10/2026`
+  Demostración funcional en vivo del primer incremento: Ingesta masiva de planillas Excel (EP-01), diagramación de hojas de ruta (EP-02) e itinerario móvil de choferes (EP-06).
+  *Destinatario: Centro de Distribución Logística.*
+
+- **Demo 2: Release Final (Fin de Sprint 2)** — `20/11/2026`
+  Demostración integral del producto terminado: Cobranza multicanal (EP-07), certificación fotográfica (EP-08), contingencias en ruta (EP-09), arqueo de caja y consolidación multimarca (EP-03), y módulos de auditoría.
+  *Destinatario: Centro de Distribución Logística.*
 
 ---
 

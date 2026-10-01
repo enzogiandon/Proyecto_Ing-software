@@ -29,11 +29,12 @@ Este repositorio contiene la ingeniería de requisitos, documentación de diseñ
 El equipo está conformado por 6 integrantes con roles metodológicos definidos para la interacción con el cliente:
 
 - **Enzo Giandon**
-- **Alan**
-- **Catalina**
-- **Ian Chica**
-- **Lautaro**
-- **Mayerly**
+- **Alan Tolaba**
+- **Catalina Caruso**
+- **Ian Chica Herrero**
+- **Lautaro Giralde**
+- **Mayerly Sinion Mendoza**
+- **Aylén Carlos**
 
 ---
 
@@ -77,4 +78,4 @@ Proyecto_Ing-software/
 
 ## 📄 Licencia y Uso Académico
 
-Documentación y código desarrollados con fines exclusivamente académicos en el marco de la carrera de Informática de la UNLP.
+Documentación y código desarrollados con fines exclusivamente académicos en el marco de la carrera de Ingeniería en Computación de la UNLP.

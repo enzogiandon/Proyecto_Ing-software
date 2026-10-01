@@ -1,4 +1,4 @@
-﻿# Especificación de Iniciativas y Épicas del Sistema (Entrega 2)
+# Especificación de Iniciativas y Épicas del Sistema (Entrega 2)
 
 **Proyecto:** Sistema de Gestión Logística y Liquidación de Cobranzas  
 **Cátedra:** Ingeniería de Software — Facultad de Informática (UNLP)  
@@ -27,9 +27,9 @@ Este documento formaliza las iniciativas y épicas funcionales para la **Entrega
 | | **EP-03** | Arqueo diario de caja y recepción de cobranzas de transportistas | Administrativo | Escritorio (PC) |
 | | **EP-04** | Conciliación financiera y liquidación a marcas matrices | Administrativo | Escritorio (PC) |
 | | **EP-05** | Tablero de monitoreo de estado de entregas y cobranzas | Administrativo | Escritorio (PC) |
-| **Iniciativa 2: Reparto de Última Milla y Cobranzas en Calle** | **EP-06** | Consulta y visualización del itinerario diario de paradas | Transportista | Móvil (Celular) |
-| | **EP-07** | Registro y desglose del cobro en punto de entrega | Transportista | Móvil (Celular) |
-| | **EP-08** | Certificación digital de entrega mediante foto del remito | Transportista | Móvil (Celular) |
+| **Iniciativa 2: Reparto de Última Milla y Cobranzas en Calle** | **EP-06** | Consulta y selección libre del itinerario de paradas | Transportista | Móvil (Celular) |
+| | **EP-07** | Registro y desglose de cobro multicanal en mostrador | Transportista | Móvil (Celular) |
+| | **EP-08** | Certificación digital de entrega mediante foto de remito | Transportista | Móvil (Celular) |
 | | **EP-09** | Reporte y tipificación de contingencias en ruta | Transportista | Móvil (Celular) |
 | **Iniciativa 3 (En evaluación): Gobierno del Sistema y Auditoría** | **EP-10** | Administración de usuarios, roles operativos y credenciales | Administrativo | Escritorio (PC) |
 | | **EP-11** | Registro de auditoría de modificaciones manuales de dinero | Administrativo | Escritorio (PC) |
@@ -70,27 +70,27 @@ Este documento formaliza las iniciativas y épicas funcionales para la **Entrega
 ## 📌 Iniciativa 2: Digitalización de la Operación de Reparto de Última Milla y Cobranzas en Calle
 
 * **Actor Principal:** Transportistas (300 choferes en calle).
-* **Plataforma:** Interfaz Móvil (Smartphone).
-* **Propósito que vende:** Dotar a los choferes de un asistente móvil ligero que asegure el cobro exacto en cada comercio, respalde la entrega con el remito firmado y agilice el reporte de locales cerrados sin anotaciones en papel.
-* **Métrica medible de impacto:** Alcanzar el 100% de cobros registrados con su medio de pago en parada y reducir a cero los remitos extraviados o sin certificación al volver al depósito.
+* **Plataforma:** Interfaz Móvil Android (Dispositivos personales BYOD de gama baja).
+* **Propósito que vende:** Dotar a los choferes de un asistente móvil ágil y de alto contraste que garantice el cobro exacto en mostrador, certifique las entregas multimarca mediante foto de remito y reporte locales cerrados sin anotaciones en papel ni demoras.
+* **Métrica medible de impacto:** Alcanzar el 100% de paradas cobradas en su totalidad en el momento de la descarga (cero saldos pendientes) y reducir a cero los remitos extraviados o sin comprobante firmado al retornar a base.
 
 ### Épicas Funcionales Asociadas:
 
-#### Épica 2.1 (EP-06): Consulta y Visualización del Itinerario Diario de Paradas
-* **Descripción funcional:** El chofer puede consultar en su teléfono la lista ordenada de comercios a visitar en el día, visualizando nombre del local, dirección y el importe exacto estipulado para cobrar.
-* **Valor para el cliente:** Ordena el trabajo del transportista en calle y le anticipa si debe preparar cambio en efectivo o solicitar comprobante bancario.
+#### Épica 2.1 (EP-06): Consulta y Selección Libre del Itinerario de Paradas
+* **Descripción funcional:** El chofer puede consultar en su teléfono la lista de comercios a visitar en la jornada, visualizando nombre, dirección, cantidad de remitos asociados y el importe total a cobrar en la parada. El sistema ofrece un orden sugerido basado en el historial del recorrido, pero permite al chofer seleccionar y despachar cualquier parada con total autonomía según el tránsito.
+* **Valor para el cliente:** Ordena la jornada del chofer sin imponer rigideces operativas ni bloqueos horarios, asegurando fluidez y autonomía en calle.
 
-#### Épica 2.2 (EP-07): Registro y Desglose de Cobro en Punto de Entrega
-* **Descripción funcional:** Al momento de la entrega, el transportista ingresa el importe cobrado desglosando el medio de pago utilizado por el comerciante (efectivo, transferencia bancaria o QR), validando que cubra el total del remito para cerrar la parada.
-* **Valor para el cliente:** Garantiza que no queden cobros en el aire ni saldos pendientes sin justificar en el momento mismo de la descarga.
+#### Épica 2.2 (EP-07): Registro y Desglose de Cobro Multicanal en Mostrador
+* **Descripción funcional:** Al concretar la entrega, el transportista registra el cobro desglosando los medios de pago utilizados por el comerciante (efectivo recibido, transferencias bancarias o escaneo de QR estático de la distribuidora), validando obligatoriamente que la suma cubra el 100% del total facturado antes de habilitar el cierre de la entrega.
+* **Valor para el cliente:** Cumple la regla estricta del negocio: no hay entrega sin cobro completo ni gestión de fiados, asegurando que el dinero recaudado coincida con la mercadería descargada.
 
-#### Épica 2.3 (EP-08): Certificación Digital de Entrega mediante Foto del Remito
-* **Descripción funcional:** El transportista puede capturar con la cámara del celular una fotografía clara del remito físico firmado y sellado por el comerciante, adjuntándola como comprobante digital irrefutable de la entrega.
-* **Valor para el cliente:** Resguarda a la empresa ante reclamos de comerciantes que afirmen no haber recibido la mercadería y agiliza la auditoría de remitos en papel.
+#### Épica 2.3 (EP-08): Certificación Digital de Entrega mediante Foto de Remito
+* **Descripción funcional:** El chofer captura mediante la cámara del móvil la fotografía del o los remitos físicos firmados y sellados por el comerciante, quedando asociados de forma inmutable a la entrega como constancia de recepción conforme.
+* **Valor para el cliente:** Brinda respaldo legal inmediato ante desconocimientos de mercadería y agiliza la auditoría documental sin esperar a que el papel físico llegue al archivo.
 
 #### Épica 2.4 (EP-09): Reporte y Tipificación de Contingencias en Ruta
-* **Descripción funcional:** Si no se puede concretar una entrega, el chofer puede seleccionar el motivo desde un menú rápido (comercio cerrado, mercadería dañada, rechazo por falta de fondos) para alertar a la base y reprogramar la visita.
-* **Valor para el cliente:** Evita demoras y permite a la oficina reaccionar inmediatamente para reprogramar la entrega al día siguiente.
+* **Descripción funcional:** Si no es posible realizar la entrega, el chofer tipifica el motivo desde un catálogo predefinido (comercio cerrado, mercadería dañada, rechazo por falta de fondos), cancelando la descarga y alertando a la administración para su inmediata reprogramación al día siguiente.
+* **Valor para el cliente:** Evita confusiones sobre por qué no se cobró o entregó un pedido, garantizando que el remito no quede en el limbo y vuelva al circuito de planificación.
 
 ---
 

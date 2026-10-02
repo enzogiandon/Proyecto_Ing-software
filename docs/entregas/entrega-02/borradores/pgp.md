@@ -57,19 +57,19 @@ El proyecto se articula en entregables documentales y de software alineados a lo
 - **Destinatario:** Centro de Distribución Logística / Softech.
 
 **Hito 2: Descomposición Ágil y PGP**
-05/10/2026
-Iniciativas estratégicas, Épicas funcionales, Backlog en Taiga con Criterios de Aceptación y Plan de Gestión de Proyecto (PGP).
-Destinatario: Centro de Distribución Logística / Softech.
+- _05/10/2026_
+- Iniciativas estratégicas, Épicas funcionales, Backlog en Taiga con Criterios de Aceptación y Plan de Gestión de Proyecto (PGP).
+- **Destinatario:** Centro de Distribución Logística / Softech.
 
 **Demo 1: MVP Iteración 1 (Fin de Sprint 1)**
-30/10/2026
-Demostración funcional en vivo del primer incremento: Ingesta masiva de planillas Excel (EP-01), diagramación de hojas de ruta (EP-02) e itinerario móvil de choferes (EP-06).
-Destinatario: Centro de Distribución Logística.
+- _30/10/2026_
+- Demostración funcional en vivo del primer incremento: Ingesta masiva de planillas Excel (EP-01), diagramación de hojas de ruta (EP-02) e itinerario móvil de choferes (EP-06).
+- **Destinatario:** Centro de Distribución Logística.
 
 **Demo 2: Release Final (Fin de Sprint 2)**
-20/11/2026
-Demostración integral del producto terminado: Cobranza multicanal (EP-07), certificación fotográfica (EP-08), contingencias en ruta (EP-09), arqueo de caja y consolidación multimarca (EP-03), y módulos de auditoría.
-Destinatario: Centro de Distribución Logística.
+- _20/11/2026_
+- Demostración integral del producto terminado: Cobranza multicanal (EP-07), certificación fotográfica (EP-08), contingencias en ruta (EP-09), arqueo de caja y consolidación multimarca (EP-03), y módulos de auditoría.
+- **Destinatario:** Centro de Distribución Logística.
 
 ---
 

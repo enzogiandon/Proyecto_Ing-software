@@ -52,9 +52,9 @@ El propósito del proyecto es dotar a la empresa de una solución digital integr
 El proyecto se articula en entregables documentales y de software alineados a los hitos de demostración operativa del sistema para Centro de Distribución Logística:
 
 **Hito 1: Relevamiento y RNF**
-21/09/2026 (Completado)
-Minutas de entrevistas 1 y 2, cuestionarios de relevamiento y catálogo formal de Requerimientos No Funcionales (RNF).
-Destinatario: Centro de Distribución Logística / Softech.
+- _21/09/2026 (Completado)_
+- Minutas de entrevistas 1 y 2, cuestionarios de relevamiento y catálogo formal de Requerimientos No Funcionales (RNF).
+- **Destinatario:** Centro de Distribución Logística / Softech.
 
 **Hito 2: Descomposición Ágil y PGP**
 05/10/2026

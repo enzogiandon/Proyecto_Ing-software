@@ -117,9 +117,45 @@ Son las pruebas funcionales concretas que se realizarán durante la **demostraci
 1. **Sin pruebas de formulario:** No redactar escenarios para probar campos vacíos, formatos de texto o botones deshabilitados por falta de datos en inputs.
 2. **Coherencia con la Interfaz de Usuario:** Si la interfaz del sistema impide realizar una acción (por ejemplo, el botón de confirmar está deshabilitado hasta cumplir una condición o no existe opción de elegir un producto ajeno), **ese escenario fallido NO debe redactarse**, ya que no podrá ser ejecutado/probado en la demo.
 
+> **⚠️ A tener en cuenta (literal de la cátedra):**  
+> *"Si la interfaz del sistema no me permite realizar las acciones de los escenarios 2 y/o 3, los escenarios deberían quitarse de la HU por no poder ser probados."*
+
+
 ---
 
-## 4. Plantilla Estándar en Markdown (Para copiar y usar)
+## 4. Proceso de Construcción de los Criterios de Aceptación (3 Pasos)
+
+La cátedra establece un procedimiento iterativo explícito para derivar correctamente los escenarios de una HU. **No se redactan directamente**: se construyen siguiendo esta secuencia:
+
+### Paso 1 — Tomar la HU
+Partir de la historia ya definida (ID + Título + Reglas a considerar).
+
+### Paso 2 — Listar todos los escenarios posibles
+Pensar en todas las pruebas posibles a realizar sobre la HU y, en base a eso, generar únicamente los **títulos** de los escenarios. En esta etapa se decide también qué escenarios se descartan.
+
+**Criterio de descarte de escenarios:**
+- ❌ Se descarta todo escenario de validación de formulario (campos vacíos, formato de email, etc.).
+- ❌ Se descarta todo escenario cuya acción la propia UI haga imposible (botón deshabilitado, opción inexistente, lista que solo muestra elementos válidos).
+
+**Ejemplo aplicado a `INGRESAR AL BLOG`:**
+
+| Escenario candidato | ¿Se conserva? | Motivo |
+|---|:---:|---|
+| Ingreso al blog exitoso | ✅ | Camino feliz del negocio |
+| Ingreso fallido por DNI no existente | ✅ | Error de negocio ejecutable en la UI |
+| ~~Ingreso fallido por campos en blanco~~ | ❌ | Prueba de formulario — descartada |
+| Ingreso fallido por contraseña inválida | ✅ | Error de negocio ejecutable en la UI |
+
+### Paso 3 — Detallar cada escenario en texto narrativo
+Por cada escenario conservado, redactar el texto con los pasos a realizar para poder llevar a cabo esa prueba, incluyendo:
+1. La **pantalla / módulo** donde se encuentra el usuario.
+2. Los **datos concretos** ingresados o seleccionados.
+3. La **acción ejecutada** (botón presionado, etc.).
+4. El **resultado observable exacto** del sistema: redirección, cambio de estado, o **mensaje textual entre comillas**.
+
+---
+
+## 5. Plantilla Estándar en Markdown (Para copiar y usar)
 
 ```markdown
 ### [ID_HISTORIA]: [NOMBRE DE LA HISTORIA]
@@ -144,44 +180,95 @@ Son las pruebas funcionales concretas que se realizarán durante la **demostraci
 
 ---
 
-## 5. Ejemplos Prácticos de Aplicación
+## 6. Ejemplos Prácticos de Aplicación
 
-### Ejemplo 1: Caso Canónico de la Cátedra (Dominio General)
+### Ejemplo 1: Caso Canónico de la Cátedra — `INGRESAR AL BLOG`
+
+Este ejemplo muestra el proceso completo de los 3 pasos sobre la HU canónica de la cátedra.
+
+**Paso 2 — Escenarios candidatos y decisión de descarte:**
+
+| Escenario candidato | ¿Se conserva? | Motivo |
+|---|:---:|---|
+| Ingreso al blog exitoso | ✅ | Camino feliz |
+| Ingreso fallido por DNI no existente | ✅ | Error de negocio, ejecutable en UI |
+| ~~Ingreso fallido por campos en blanco~~ | ❌ | Prueba de formulario — descartada |
+| Ingreso fallido por contraseña inválida | ✅ | Error de negocio, ejecutable en UI |
+
+**Paso 3 — HU final redactada:**
 
 ```markdown
-### HU-01: INGRESAR AL BLOG
+### INGRESAR AL BLOG
 
 **Título:**
-Como USUARIO REGISTRADO  
-quiero INICIAR SESIÓN EN EL BLOG  
-para ACCEDER AL CONTENIDO PRIVADO  
+Como USUARIO REGISTRADO
+quiero INICIAR SESIÓN EN EL BLOG
+para ACCEDER AL CONTENIDO PRIVADO
 
 **Reglas a considerar:**
 - El usuario que se loguea debe estar previamente registrado y activo en el sistema.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Ingreso al blog exitoso**  
+- **ESCENARIO 1: Ingreso al blog exitoso**
   En el formulario de inicio de sesión, se deberá ingresar un DNI ya existente en el sistema y la contraseña asociada a ese DNI. Al presionar "Iniciar sesión", el sistema deberá redirigir al home del sitio mostrando un mensaje "Iniciaste sesión exitosamente en el blog".
 
-- **ESCENARIO 2: Ingreso fallido por DNI no existente**  
+- **ESCENARIO 2: Ingreso fallido por DNI no existente**
   En el formulario de inicio de sesión, se deberá ingresar un DNI que no exista en el sistema y una contraseña. Al presionar "Iniciar sesión", el sistema deberá permanecer en la misma pantalla y mostrar el mensaje "El DNI ingresado no se encuentra registrado".
 
-- **ESCENARIO 3: Ingreso fallido por contraseña inválida**  
+- **ESCENARIO 3: Ingreso fallido por contraseña inválida**
   En el formulario de inicio de sesión, se deberá ingresar un DNI existente en el sistema y una contraseña incorrecta. Al presionar "Iniciar sesión", el sistema deberá permanecer en la misma pantalla y mostrar el mensaje "La contraseña no es válida. Intente nuevamente".
 ```
 
 ---
 
-### Ejemplo 2: Aplicación al Proyecto Softech (Módulo Móvil - Transportista)
+### Ejemplo 2: Caso Canónico de la Cátedra — `AGREGAR COMENTARIOS`
+
+Este ejemplo demuestra el **descarte de un escenario fallido por imposibilidad en la UI**. La regla de negocio dice que solo se permite 1 comentario por usuario, pero la manera en que el sistema impide una acción determina si el escenario puede o no redactarse.
+
+**Paso 2 — Escenarios candidatos y decisión de descarte:**
+
+| Escenario candidato | ¿Se conserva? | Motivo |
+|---|:---:|---|
+| Ingreso de comentario exitoso | ✅ | Camino feliz |
+| Ingreso fallido por superar el límite de 1 comentario por usuario | ✅ o ❌ | **Depende de la UI:** si el sistema oculta el botón "Agregar comentario" cuando el usuario ya comentó, este escenario se vuelve **inejecutable** y debe descartarse |
+| Ingreso fallido por ser mi propio producto | ✅ o ❌ | **Depende de la UI:** mismo razonamiento |
+
+**Paso 3 — HU final redactada (asumiendo que la UI no bloquea la acción):**
+
+```markdown
+### AGREGAR COMENTARIOS
+
+**Título:**
+Como USUARIO REGISTRADO
+quiero AGREGAR UN COMENTARIO
+para DEJAR MI OPINIÓN DEL PRODUCTO
+
+**Reglas a considerar:**
+- Solo se permite 1 comentario por usuario.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Ingreso de comentario exitoso**
+  [Descripción del camino feliz con pantalla, datos y mensaje observable del sistema.]
+
+- **ESCENARIO 2: Ingreso fallido por superar el límite de 1 comentario por usuario**
+  [Solo incluir si la UI permite intentar agregar un segundo comentario. De lo contrario, este escenario se elimina.]
+```
+
+> **⚠️ Regla práctica:** Si al usuario ya le aparece directamente la pantalla con su comentario publicado y sin botón para agregar otro, el Escenario 2 **no puede ejecutarse en la demo** y se elimina de la HU.
+
+---
+
+### Ejemplo 3: Aplicación al Proyecto Softech (Módulo Móvil — Transportista)
 
 ```markdown
 ### HU-07: REGISTRAR COBRO EN MOSTRADOR
 
 **Título:**
-Como TRANSPORTISTA  
-quiero REGISTRAR EL DESGLOSE DE COBRO DE UNA ENTREGA  
-para ASENTAR EL PAGO DEL CLIENTE Y HABILITAR EL CIERRE DEL REMITO  
+Como TRANSPORTISTA
+quiero REGISTRAR EL DESGLOSE DE COBRO DE UNA ENTREGA
+para ASENTAR EL PAGO DEL CLIENTE Y HABILITAR EL CIERRE DEL REMITO
 
 **Reglas a considerar:**
 - No se permiten cobros parciales ni fiados: la suma de los importes (efectivo + transferencia bancaria) debe coincidir con el total facturado del remito.
@@ -189,24 +276,24 @@ para ASENTAR EL PAGO DEL CLIENTE Y HABILITAR EL CIERRE DEL REMITO
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Registro de cobro exitoso con pago mixto**  
+- **ESCENARIO 1: Registro de cobro exitoso con pago mixto**
   Estando en el detalle de la entrega del comercio "Almacén Don Mario", el transportista ingresa $40.000 en efectivo y $20.000 con comprobante de transferencia bancaria, completando los $60.000 exigidos por el remito. Al presionar "Confirmar Cobro", el sistema asienta el desglose, marca el remito como "Cobrado" y habilita la pantalla de captura fotográfica del remito firmado.
 
-- **ESCENARIO 2: Cobro fallido por monto total insuficiente**  
+- **ESCENARIO 2: Cobro fallido por monto total insuficiente**
   Estando en el detalle de la entrega del comercio con total de $60.000, el transportista ingresa únicamente $45.000 en efectivo sin registrar comprobante por el saldo restante. Al intentar presionar "Confirmar Cobro", el sistema bloquea el registro, permanece en la pantalla y muestra la advertencia: "El monto ingresado ($45.000) no cubre el total de la entrega ($60.000). No se permiten entregas con saldo adeudado".
 ```
 
 ---
 
-### Ejemplo 3: Aplicación al Proyecto Softech (Módulo Escritorio - Administrativo)
+### Ejemplo 4: Aplicación al Proyecto Softech (Módulo Escritorio — Administrativo)
 
 ```markdown
 ### HU-03: ARQUEO DIARIO DE RENDICIÓN DE CHOFER
 
 **Título:**
-Como PERSONAL ADMINISTRATIVO  
-quiero REALIZAR EL ARQUEO DE FONDOS RENDIDOS POR EL CHOFER  
-para CONFRONTAR EL DINERO FÍSICO CONTRA LAS COBRANZAS REGISTRADAS EN LA JORNADA  
+Como PERSONAL ADMINISTRATIVO
+quiero REALIZAR EL ARQUEO DE FONDOS RENDIDOS POR EL CHOFER
+para CONFRONTAR EL DINERO FÍSICO CONTRA LAS COBRANZAS REGISTRADAS EN LA JORNADA
 
 **Reglas a considerar:**
 - El chofer debe haber cerrado la totalidad de las paradas de su hoja de ruta (como entregadas o como contingencias) para iniciar el arqueo.
@@ -214,16 +301,16 @@ para CONFRONTAR EL DINERO FÍSICO CONTRA LAS COBRANZAS REGISTRADAS EN LA JORNADA
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Arqueo sin diferencias (caja cuadrada)**  
+- **ESCENARIO 1: Arqueo sin diferencias (caja cuadrada)**
   En el módulo de rendición de caja, el administrativo selecciona al chofer y digita el total de billetes en mano ($150.000), coincidiendo con lo reportado por la aplicación móvil. Al presionar "Cerrar Rendición", el sistema emite el comprobante de conformidad con estado "Liquidación Cuadrada" y libera al transportista de la jornada.
 
-- **ESCENARIO 2: Detección de faltante de caja**  
+- **ESCENARIO 2: Detección de faltante de caja**
   En el módulo de rendición de caja, el administrativo ingresa un monto físico de $140.000 cuando el reporte de cobranzas exige $150.000. Al presionar "Validar Arqueo", el sistema muestra una alerta en rojo: "Faltante detectado de $10.000", exigiendo un comentario explicativo antes de permitir asentar la rendición con observaciones.
 ```
 
 ---
 
-## 6. Lista de Verificación (Checklist) para Agentes y Desarrolladores
+## 7. Lista de Verificación (Checklist) para Agentes y Desarrolladores
 
 Antes de dar por concluida la redacción de una Historia de Usuario, verificar:
 
@@ -231,6 +318,8 @@ Antes de dar por concluida la redacción de una Historia de Usuario, verificar:
 - [ ] ¿El título sigue estrictamente la fórmula **"Como... quiero... para..."** con un rol del dominio de negocio?
 - [ ] ¿Las **Reglas a considerar** corresponden a lógica de negocio del dominio y **NO** a validaciones de formularios (campos requeridos, formato de mails, etc.)?
 - [ ] ¿Los **Criterios de Aceptación** están separados en **Escenarios** numerados con título descriptivo?
+- [ ] ¿Se aplicó el proceso de **3 pasos** para derivar los escenarios (listar candidatos → descartar los inválidos → redactar los conservados)?
 - [ ] ¿Se contempla al menos un **caso de éxito** y los **casos de error de negocio / excepción** pertinentes?
 - [ ] ¿Cada escenario especifica **la pantalla, los datos de entrada, la acción del usuario y el resultado observable (incluyendo mensajes textuales)**?
 - [ ] ¿Se verificó que los escenarios fallidos puedan ser ejecutados en la UI (no describir un escenario si la UI deshabilita la acción o la hace imposible)?
+

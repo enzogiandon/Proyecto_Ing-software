@@ -27,7 +27,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 | Épica (Taiga ID) | Nombre de la Épica | Actor | Cantidad HUs | Historias de Usuario Asociadas |
 | :--- | :--- | :--- | :---: | :--- |
-| **Épica 1 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | 10 | HU-2, HU-3, HU-4, HU-5, HU-37, HU-38, HU-39, HU-40, HU-41, HU-42 |
+| **Épica 1 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | 9 *(10)* | HU-2 *(absorbe HU-3)*, HU-4, HU-5, HU-37, HU-38, HU-39, HU-40, HU-41, HU-42 |
 | **Épica 2 (#6)** | Gestión de personal y vehículos | Personal Administrativo | 7 | HU-7, HU-8, HU-9, HU-10, HU-11, HU-43, HU-45 |
 | **Épica 3 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | 6 | HU-13, HU-14, HU-15, HU-46, HU-47, HU-48 |
 | **Épica 4 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | 7 | HU-17, HU-18, HU-19, HU-20, HU-21, HU-49, HU-50 |
@@ -35,7 +35,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 | **Épica 6 (#29)** | Registro de entregas y cobranzas en destino | Transportista | 5 | HU-30, HU-31, HU-32, HU-33, HU-36 |
 | **Épica 7 (#34)** | Certificación digital de entregas mediante evidencias | Transportista | 0 | *(Sin HUs en Taiga)* |
 | **Épica 8 (#35)** | Registro y gestión de contingencias en ruta | Transportista | 0 | *(Sin HUs en Taiga)* |
-| **TOTAL** | | | **41 HUs** | |
+| **TOTAL** | | | **40 HUs** *(41 en Taiga)* | |
 
 ---
 
@@ -51,204 +51,207 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 #### HU-2: IMPORTAR PLANILLA DE REMITOS
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CARGA DOCUMENTAL      
-quiero IMPORTAR LAS PLANILLAS DE REMITOS DE LAS MARCAS PROVEEDORAS      
-para CARGAR AUTOMÁTICAMENTE LA INFORMACIÓN EN EL SISTEMA.
+*(Nota metodológica: Esta historia absorbe funcionalmente a la antigua HU-3 de Taiga, unificando la importación y el procesamiento automático e integral del lote en una sola operación atómica conforme al criterio INVEST).*
+
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** IMPORTAR LAS PLANILLAS DE REMITOS DE LAS MARCAS PROVEEDORAS
+- **para** CARGAR Y PROCESAR AUTOMÁTICAMENTE LA INFORMACIÓN EN EL SISTEMA.
 
 **Reglas a considerar:**
+- Las planillas son proporcionadas por las marcas proveedoras con una estructura de datos preestablecida.
+- Cada fila de la planilla representa un remito individual.
+- La importación y el procesamiento se ejecutan de manera integral y atómica; si una o más filas contienen datos vacíos o inconsistencias de negocio, no se registra ningún remito del archivo.
 
-Las planillas son proporcionadas por las marcas proveedoras con una estructura establecida.
+**Criterios de Aceptación:**
 
-Cada fila de la planilla representa un remito.
+- **ESCENARIO 1: Importación y procesamiento exitoso del lote**  
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' y adjunta una planilla con formato y datos válidos. El sistema procesa todos los remitos del archivo, permanece en la misma vista y muestra la notificación "Lote importado y procesado exitosamente".
 
-La información debe incorporarse mediante una carga masiva.
+- **ESCENARIO 2: Importación fallida por tipo de archivo incorrecto**  
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' e intenta adjuntar un archivo con formato no admitido (ej. PDF o imagen). El sistema bloquea la carga, permanece en la misma vista y muestra la notificación de error "Formato de archivo inválido: solo se admiten planillas de cálculo".
 
-**Criterios de aceptación:**
+- **ESCENARIO 3: Importación fallida por estructura de columnas errónea**  
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' y carga una planilla cuyas columnas o cabeceras no coinciden con la estructura requerida. El sistema rechaza el archivo, permanece en la misma vista y muestra la notificación de error "Importación fallida: la estructura del archivo seleccionado es inválida".
 
-ESCENARIO 1: Importación exitosa    
-En la vista ‘Importaciones masivas’, el administrativo selecciona la opción de ‘Nueva importación’ y selecciona la planilla proporcionada por la empresa que desea cargar. Cuando se procesa la planilla, el sistema debe permanecer en la misma vista y enviar una notificación de ‘Importación exitosa'.
-
-ESCENARIO 2: Importación fallida por estructura de datos errónea    
-En la vista ‘Importaciones masivas’, el administrativo selecciona la opción de ‘Nueva importación’ y selecciona un archivo con un formato invalido. Luego de validar la planilla el sistema deberá permanecer en la misma vista y enviar una notificación de error “Importación fallida, la estructura del archivo seleccionado es invalida”.
-
----
-
-#### HU-3: PROCESAR REMITOS IMPORTADOS
-
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CARGA DOCUMENTAL    
-quiero PROCESAR AUTOMÁTICAMENTE LOS REMITOS CONTENIDOS EN LA PLANILLA IMPORTADA    
-para INCORPORAR LA INFORMACIÓN NECESARIA PARA LA OPERACIÓN DIARIA.
-
-**Reglas a considerar:**
-
-Los registros de la planilla deben procesarse individualmente dentro de la operación masiva.
-
-Los registros procesados correctamente deben quedar disponibles para las operaciones posteriores.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Procesamiento exitoso del lote    
-En la vista ‘Importaciones masivas’, el administrativo toca el botón ‘Procesar’ correspondiente al archivo que quiere procesar. Al finalizar el procesamiento el sistema enviará una notificación de éxito “Lote procesado exitosamente”.
-
-ESCENARIO 2: Lote con registros incompletos   
-En la vista ‘Importaciones masivas’, el administrativo toca el botón ‘Procesar’ correspondiente al archivo que quiere procesar. Al finalizar el procesamiento el sistema enviará una notificación de error “Lote con campos inválidos junto con una descripción que indique las filas en las que falló". No se guardarán los registros incompletos.
+- **ESCENARIO 4: Importación fallida por filas con datos vacíos o inconsistentes**  
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' y carga una planilla que contiene filas con celdas vacías o datos inválidos. El sistema rechaza la totalidad del lote sin guardar ningún registro, permanece en la misma vista y muestra la notificación de error "Importación rechazada: se detectaron errores en las filas observadas. Corrija el archivo e intente nuevamente".
 
 ---
 
 #### HU-4: AGREGAR UN REMITO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CARGA DOCUMENTAL    
-quiero AGREGAR REMITOS INDIVIDUALMENTE    
-para COMPLETAR SU REGISTRO DE UNA CARGA MASIVA SIN AFECTAR A LOS REGISTROS QUE SE CARGARON CORRECTAMENTE.
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** AGREGAR UN REMITO DE FORMA INDIVIDUAL
+- **para** REGISTRAR MANUALMENTE REMITOS OBSERVADOS O REQUERIDOS CON POSTERIORIDAD A LA IMPORTACIÓN Y DEJARLOS DISPONIBLES PARA LA OPERACIÓN.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El número de remito debe ser único en el sistema.
+- El remito debe registrar un monto a cobrar mayor a cero.
+- Un remito agregado individualmente queda en estado pendiente de asignación a un itinerario.
 
-El número de remito no puede repetirse
+**Criterios de Aceptación:**
 
-El remito tiene que tener un monto mayor a cero
+- **ESCENARIO 1: Alta exitosa de remito**  
+  En la vista 'Listado de remitos', el administrativo presiona el botón 'Agregar un remito'. El sistema presenta el formulario de carga donde completa los datos requeridos y presiona 'Guardar'. El sistema registra el remito, regresa a la vista 'Listado de remitos' y muestra la notificación "El remito fue registrado correctamente".
 
-El remito tiene que tener productos
-
-El remito tiene que tener un destinatario
-
-**Criterios de aceptación**
-
-ESCENARIO 1: Agregar un remito exitosamente  
-En la vista ‘Listado de remitos’, se deberá presionar el botón 'Agregar un remito' el cual lo redirigirá a una vista donde tendrá que completar un formulario con los datos relacionados al registro del remito, . Una vez completado deberá presionar el botón ‘Guardar’ el cual lo devuelve a la vista ‘Listado de remitos’ y se envía una notificación de éxito “El remito fue registrado correctamente"
-
-ESCENARIO 2: Agregar un remito con un número de remito existente  
-En la vista ‘Listado de remitos’, se deberá presionar el botón 'Agregar un remito' el cual lo redirigirá a una vista donde tendrá que completar un formulario con los datos relacionados al registro del remito, deberá poner un número de remito que ya esté registrado. Una vez completado deberá presionar el botón ‘Guardar’ el cual lo devuelve a la vista ‘Listado de remitos’ y se envía una notificación de error “El número de remito ya existe”
-
-ESCENARIO 3: Descartar cambios  
-En la vista ‘Listado de remitos’, se deberá presionar el botón 'Agregar un remito' el cual lo redirigirá a una vista donde tendrá que completar un formulario con los datos relacionados al registro del remito y deberá presionar el botón ‘Descartar’ el cual lo devuelve a la vista ‘Listado de remitos’
+- **ESCENARIO 2: Intento de registro con número de remito duplicado**  
+  En el formulario de alta de remito, el administrativo ingresa un número de remito ya existente en el sistema y presiona el botón 'Guardar'. El sistema bloquea el registro, permanece en el formulario preservando los datos ingresados y muestra la notificación de error "El número de remito ya existe".
 
 ---
 
 #### HU-5: CONSULTAR REMITOS REGISTRADOS
 
-**Título:** Como ADMINISTRATIVO      
-quiero CONSULTAR LOS REMITOS REGISTRADOS EN EL SISTEMA      
-para CONTROLAR LA DOCUMENTACIÓN DISPONIBLE PARA LA OPERACIÓN.
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** CONSULTAR LOS REMITOS REGISTRADOS EN EL SISTEMA
+- **para** MONITOREAR LA DOCUMENTACIÓN DISPONIBLE Y CONOCER EL ESTADO OPERATIVO DE CADA REMITO.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El listado permite ordenar los registros según las columnas/parámetros visibles (fecha, número de remito, marca, estado, monto).
+- Los filtros permiten acotar la búsqueda combinando marca proveedora, estado del remito y rango de fechas.
 
-\-
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
+- **ESCENARIO 1: Consulta general y ordenamiento de remitos**  
+  En la vista 'Listado de remitos', el administrativo visualiza la tabla de remitos con sus datos clave (número de remito, estado, marca proveedora, monto a cobrar, cantidad de bultos/productos, destinatario y fecha). Al hacer clic en el encabezado de una columna, el sistema reordena los registros según dicho parámetro.
 
-ESCENARIO 1: Existe al menos un remito registrado      
-En la vista ‘Listado de remitos’, el administrativo verá una tabla con las características mas relevantes del remito (Nº de remito, estado, marca, monto a abonar, cantidad de productos, destinatario, fecha y acciones), en la columna de acciones tendrá un botón para entrar al detalle, un botón para editarlo y otro para eliminarlo.
+- **ESCENARIO 2: Consulta filtrada por parámetros**  
+  En la vista 'Listado de remitos', el administrativo selecciona uno o más criterios de filtro (ej. marca proveedora y estado) y presiona 'Filtrar'. El sistema actualiza la tabla mostrando únicamente los remitos que cumplen las condiciones seleccionadas.
 
-ESCENARIO 2: No hay ningún remito registrado     
-El administrativo en la vista de listado de remitos va a ver un mensaje “No hay remitos registrados”.
+- **ESCENARIO 3: Búsqueda sin coincidencias**  
+  En la vista 'Listado de remitos', el administrativo aplica filtros para los cuales no existen remitos coincidentes (o no hay remitos en el sistema). El sistema muestra la tabla vacía con el mensaje "No se encontraron remitos para los criterios seleccionados".
 
 ---
 
 #### HU-37: CONSULTAR IMPORTACIONES
 
-Título: Como ADMINISTRATIVO      
-quiero CONSULTAR LAS IMPORTACIONES REALIZADAS   
-para DECIDIR SI PROCESARLAS O ELIMINAR EL ARCHIVO IMPORTADO.
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** CONSULTAR EL HISTORIAL DE IMPORTACIONES MASIVAS
+- **para** VERIFICAR LOS LOTES PROCESADOS Y AUDITAR LAS CARGAS DOCUMENTALES REALIZADAS.
 
-Reglas a considerar
+**Reglas a considerar:**
+- El listado presenta las importaciones en orden cronológico descendente.
+- Cada lote detalla identificador, fecha y hora, nombre de archivo, marca proveedora, cantidad de remitos procesados y estado final.
 
-\-
+**Criterios de Aceptación:**
 
-Criterios de aceptación
+- **ESCENARIO 1: Historial con importaciones registradas**  
+  En la vista 'Importaciones masivas', el administrativo visualiza la tabla con los lotes cargados (ID, fecha/hora, archivo, marca, cantidad de remitos, estado y acciones). Cada fila incluye las acciones 'Ver detalle' y 'Eliminar'.
 
-ESCENARIO 1: Existe al menos una importación registrada     
-En la vista 'Importaciones masivas', el administrativo verá una tabla con 6 columnas (ID, fecha de importación, Nombre del archivo, Marca, Estado y Acción) de todas las importaciones realizadas. En la columna estado verá si el archivo fue procesado, y en caso de que haya fallado verá cuantos registros tienen problemas. En las acciones podrá ‘Ver detalle’, 'Procesar', 'Eliminar'   
-ESCENARIO 2: No hay ningún archivo importado   
-En la vista 'Importaciones masivas', el administrativo visualizará un mensaje “No hay archivos importados”.
+- **ESCENARIO 2: Historial sin importaciones registradas**  
+  En la vista 'Importaciones masivas', al no existir archivos o lotes importados en el sistema, el sistema muestra la tabla vacía con el mensaje "No hay archivos importados".
 
 ---
 
 #### HU-38: VER DETALLE DE UNA IMPORTACIÓN
 
-Título: Como ADMINISTRATIVO       
-quiero VER EL DETALLE DE LAS IMPORTACIONES REALIZADAS   
-para VER QUE FILAS NO PUDIERON SER PROCESADAS.
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** CONSULTAR EL DETALLE DE UNA IMPORTACIÓN
+- **para** CONOCER LOS REMITOS GENERADOS O REVISAR EL REPORTE DE ERRORES DEL LOTE.
 
-Reglas a considerar
+**Reglas a considerar:**
+- El detalle de un lote exitoso exhibe la relación de remitos incorporados al sistema con su número, destinatario y monto.
+- El detalle de un lote rechazado exhibe el reporte de inconsistencias indicando número de fila y motivo del rechazo, sin haber incorporado remitos a la operación.
 
-\-
+**Criterios de Aceptación:**
 
-Criterios de aceptación
+- **ESCENARIO 1: Detalle de lote importado exitosamente**  
+  En la vista 'Importaciones masivas', el administrativo presiona 'Ver detalle' sobre un lote procesado con éxito. El sistema muestra la vista de detalle con los metadatos del archivo y la tabla con los remitos incorporados al sistema.
 
-ESCENARIO 1: El procesamiento fue exitoso     
-En la vista 'Importaciones masivas', se debe presionar el botón “Ver detalle” el cual lo redirigirá a otra vista en la que se verá el listado de registros agregados por esa importación.  
-ESCENARIO 2: El procesamiento tuvo errores    
-En la vista 'Importaciones masivas', se debe presionar el botón “Ver detalle” el cual lo redirigirá a otra vista en la que se verá las filas en las que falló el procesamiento y el listado de registros agregados por esa importación.
+- **ESCENARIO 2: Detalle de lote rechazado por inconsistencias**  
+  En la vista 'Importaciones masivas', el administrativo presiona 'Ver detalle' sobre un lote en estado rechazado. El sistema muestra la vista de detalle indicando el estado "Rechazado (0 remitos guardados)" y la tabla con el reporte de filas con error y sus motivos observados.
 
 ---
 
-#### HU-39: VER DETALLE REMITOS
+#### HU-39: CONSULTAR DETALLE DE UN REMITO
 
-Título: Como ADMINISTRATIVO     
-quiero VER EL DETALLE DE UN REMITO     
-para VER LA INFORMACIÓN RELACIONADA AL REGISTRO Y LA DOCUMENTACIÓN FIRMADA
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** CONSULTAR LA INFORMACIÓN DETALLADA DE UN REMITO
+- **para** AUDITAR LOS DATOS DEL DOCUMENTO Y VERIFICAR SU ESTADO OPERATIVO O EVIDENCIA DE ENTREGA.
 
-Reglas a considerar:
+**Reglas a considerar:**
+- La consulta de detalle está disponible para cualquier remito registrado en el sistema.
+- La información de rendición de cobranza y evidencia digital (remito conformado firmado) se exhibe únicamente cuando el remito registra estado entregado.
 
-\-
+**Criterios de Aceptación:**
 
-Criterios de aceptación:
+- **ESCENARIO 1: Detalle de remito pendiente de entrega**  
+  En la vista 'Listado de remitos', el administrativo presiona 'Ver detalle' sobre un remito en estado pendiente. El sistema muestra la vista de detalle con la información del documento (número, marca proveedora, destinatario, domicilio, detalle de productos/bultos, monto a cobrar e itinerario asignado si corresponde).
 
-ESCENARIO 1: Ver el detalle     
-En la vista ‘Listado de remitos’, el administrativo toca el botón ‘Ver detalle’ correspondiente al remito que quiere ver. El sistema lo redirige a otra vista donde podrá ver la información en forma de mosaico y la entrega asociada
+- **ESCENARIO 2: Detalle de remito entregado con evidencias**  
+  En la vista 'Listado de remitos', el administrativo presiona 'Ver detalle' sobre un remito en estado entregado. El sistema muestra la vista de detalle con los datos del documento e incorpora la sección de rendición de entrega: fecha y hora de recepción, transportista interviniente, cobranza percibida y el archivo/imagen de la constancia física firmada.
 
 ---
 
 #### HU-40: ELIMINAR UNA IMPORTACIÓN
 
-Título: Como ADMINISTRATIVO     
-quiero ELIMINAR UNA IMPORTACIÓN  
-para CORREGIR UN ARCHIVO Y CARGARLO NUEVAMENTE
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** ELIMINAR UN LOTE DE IMPORTACIÓN
+- **para** REVERTIR UNA CARGA ERRÓNEA O PERMITIR SU CORRECCIÓN Y REINGRESO AL SISTEMA.
 
-Reglas a considerar
+**Reglas a considerar:**
+- Solo se permite eliminar una importación si la totalidad de sus remitos asociados se encuentran en estado pendiente y no han sido asignados a ningún itinerario de reparto.
+- La eliminación de una importación revierte la operación y elimina del sistema todos los remitos incorporados por dicho archivo.
 
--
+**Criterios de Aceptación:**
 
-Criterios de aceptación
+- **ESCENARIO 1: Eliminación exitosa de un lote disponible**  
+  En la vista 'Importaciones masivas', el administrativo presiona el botón 'Eliminar' en la fila de un lote cuyos remitos se encuentran en estado pendiente sin asignar a itinerarios. El sistema solicita confirmación advirtiendo la reversión y la eliminación en cascada de los remitos asociados. Al confirmar, el sistema elimina el lote junto a sus remitos, permanece en la misma vista y muestra la notificación "La importación y sus remitos asociados fueron eliminados exitosamente".
 
-ESCENARIO 1: Existe al menos una importación registrada    
-En la vista 'Importaciones masivas', deberá presionar el botón 'Eliminar' de la fila correspondiente a la importación que se desea eliminar. El sistema mostrará una confirmación advirtiendo que es un cambio irreversible y posteriormente enviará una notificación de éxito "La importación fue eliminada exitosamente" 
-ESCENARIO 2: No hay ningún archivo importado  
-En la vista 'Importaciones masivas', el administrativo visualizará un mensaje “No hay archivos importados”.
+- **ESCENARIO 2: Intento de eliminación de lote con remitos en operación**  
+  En la vista 'Importaciones masivas', el administrativo presiona el botón 'Eliminar' en un lote que contiene remitos ya asignados a una hoja de ruta o en proceso de entrega. El sistema bloquea la acción, no modifica los datos, permanece en la misma vista y emite la notificación de error "Operación no permitida: el lote contiene remitos asignados a itinerarios o en proceso de reparto".
 
 ---
 
 #### HU-41: EDITAR REMITO
 
-Título: Como ADMINISTRATIVO     
-quiero EDITAR UN REMITO EXISTENTE  
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** EDITAR LOS DATOS DE UN REMITO REGISTRADO
+- **para** SUBSANAR ERRORES DE CARGA O ACTUALIZAR INFORMACIÓN DE DESTINO ANTES DE QUE EL CAMIÓN SEA DESPACHADO A RUTA.
 
-Reglas a considerar
+**Reglas a considerar:**
+- Se permite editar remitos que se encuentren en estado pendiente o asignados a un itinerario antes de que la unidad sea despachada a la calle (mientras permanezca en centro de acopio).
+- Una vez que el itinerario pasa a estado 'En ruta' (con los remitos físicos viajando en el camión) o el remito registra estado 'Entregado', se bloquea la edición directa para garantizar la coincidencia estricta con el documento físico legal. Cualquier cambio en calle debe gestionarse como contingencia.
+- El número de remito y la marca proveedora son identificadores inmutables (solo lectura).
+- El monto a cobrar actualizado debe ser mayor a cero.
 
--
+**Criterios de Aceptación:**
 
-Criterios de aceptación
+- **ESCENARIO 1: Edición exitosa de remito previo al despacho**  
+  En la vista 'Listado de remitos', el administrativo presiona el botón 'Editar' en la fila de un remito que aún no ha sido despachado a ruta (en estado pendiente o asignado a un itinerario en preparación). El sistema presenta el formulario de edición con los datos actuales y el número de remito bloqueado para modificación. El administrativo modifica los datos requeridos (ej. domicilio de destino o monto a cobrar) y presiona 'Guardar'. El sistema guarda las modificaciones (actualizando la información en el itinerario si correspondiera), regresa a la vista 'Listado de remitos' y muestra la notificación "El remito fue actualizado exitosamente".
 
-ESCENARIO 1: Guardar edición    
-En la vista 'Listado de remitos', deberá presionar el botón 'Editar' el cual lo redirigirá a una vista donde se podrá visualizar la información cargada actualmente en el remito, permitiendo modificar los campos. Una vez hechas las modificaciones deberá presionar el botón 'Guardar' el cual lo redirigirá nuevamente al listado de remitos notificando que se guardó correctamente.
-ESCENARIO 2: Descartar cambios  
-En la vista 'Listado de remitos', deberá presionar el botón 'Editar' el cual lo redirigirá a una vista donde se podrá visualizar la información cargada actualmente en el remito, permitiendo modificar los campos. Si desea descartar los cambios realizados deberá presionar el botón 'Descartar' el cual lo redirigirá nuevamente al listado de remitos.
+- **ESCENARIO 2: Bloqueo de edición para remito en ruta o entregado**  
+  En la vista 'Listado de remitos', ante un remito asignado a un itinerario despachado a ruta o que ya registra estado entregado, la opción de editar se muestra deshabilitada, o al intentar acceder el sistema bloquea la acción y emite la notificación de error "Operación no permitida: no se pueden editar remitos correspondientes a itinerarios en ruta o ya entregados".
 
 ---
 
 #### HU-42: ELIMINAR REMITO
 
-Título: Como ADMINISTRATIVO ENCARGADO DE LA CARGA DOCUMENTAL     
-quiero ELIMINAR UN REMITO
+**Título:**
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** ELIMINAR UN REMITO DEL SISTEMA
+- **para** DAR DE BAJA DOCUMENTOS ERRÓNEOS O PEDIDOS CANCELADOS ANTES DEL DESPACHO DE LA UNIDAD.
 
-Reglas a considerar:
+**Reglas a considerar:**
+- Se permite eliminar remitos en estado pendiente o asignados a un itinerario antes de que el camión sea despachado a reparto.
+- Si el remito eliminado se encontraba asignado a un itinerario no despachado, el sistema lo desvincula automáticamente de la hoja de ruta correspondiente para retirar el documento físico del taco de remitos.
+- Una vez que la unidad es despachada 'En ruta', el remito físico viaja en la unidad y no puede eliminarse del sistema. Las cancelaciones en destino se tramitan mediante el módulo de contingencias.
+- Los remitos con entrega registrada son inmutables y no pueden eliminarse.
 
--
+**Criterios de Aceptación:**
 
-Criterios de aceptación:
+- **ESCENARIO 1: Eliminación exitosa de remito previo al despacho**  
+  En la vista 'Listado de remitos', el administrativo presiona el botón 'Eliminar' en la fila de un remito previo a su despacho a ruta (pendiente o asignado a un itinerario en preparación). El sistema muestra un mensaje de confirmación advirtiendo que la acción es definitiva y que se desvinculará del itinerario. Al confirmar, el sistema elimina el remito, actualiza el itinerario, permanece en la misma vista y muestra la notificación "El remito fue eliminado exitosamente".
 
-ESCENARIO 1: Eliminación exitosa   
-En la vista ‘Listado de remitos’, el administrativo deberá presionar el botón eliminar del remito deseado, el sistema mostrará una confirmación advirtiendo que el cambio es irreversible, una vez aceptada, el sistema debe permanecer en la misma vista y enviar una notificación de éxito "Remito eliminado exitosamente".
+- **ESCENARIO 2: Bloqueo de eliminación para remito despachado a ruta o entregado**  
+  En la vista 'Listado de remitos', ante un remito asignado a un itinerario en ruta o que ya registra estado entregado, la opción de eliminar se muestra deshabilitada, o al intentar ejecutarla el sistema bloquea la acción y emite la notificación de error "Operación no permitida: no se puede eliminar un remito correspondiente a un itinerario en ruta o ya entregado".
 
 ---
 

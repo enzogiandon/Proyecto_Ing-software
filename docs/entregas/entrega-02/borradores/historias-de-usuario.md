@@ -529,8 +529,8 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 **Título:**
 - **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
-- **quiero** AGREGAR UN ITINERARIO PARA EL REPARTO
-- **para** ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
+- **quiero** ELIMINAR UN ITINERARIO DE REPARTO
+- **para** CANCELAR PLANIFICACIONES OBSOLETAS Y RESTABLECER LOS REMITOS ASOCIADOS A ESTADO PENDIENTE.
 
 **Reglas a considerar:**
 - El itinerario debe existir.
@@ -559,7 +559,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 **Criterios de Aceptación:**
 
 - **ESCENARIO 1**  
-  En la vista ‘Editar itinerario’, el usuario podrá modificar el orden numérico de las paradas para cambiar su posición. Al presionar 'Guardar orden', el sistema actualizará la secuencia en la base de datos y mostrará la notificación de éxito: “Secuencia de paradas actualizada correctamente”.
+  En la vista ‘Editar itinerario’, el usuario podrá modificar el orden numérico de las paradas para cambiar su posición. Al presionar 'Guardar orden', el sistema actualizará la secuencia del itinerario y mostrará la notificación de éxito: “Secuencia de paradas actualizada correctamente”.
 
 ---
 
@@ -802,8 +802,9 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 #### HU-52: INICIAR SESIÓN COMO ADMINISTRATIVO
 
 **Título:**
-- **Como** ADMINISTRATIVO
-- **quiero** INGRESAR AL SISTEMA
+- **Como** PERSONAL ADMINISTRATIVO
+- **quiero** INICIAR SESIÓN EN EL SISTEMA
+- **para** ACCEDER A LAS FUNCIONALIDADES Y MÓDULOS DE GESTIÓN SEGÚN MIS PERMISOS.
 
 **Reglas a considerar:**
 - No se aplican restricciones de negocio adicionales.
@@ -824,8 +825,9 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 #### HU-54: CERRAR SESIÓN
 
 **Título:**
-- **Como** ADMINISTRATIVO
+- **Como** PERSONAL ADMINISTRATIVO
 - **quiero** CERRAR SESIÓN EN EL SISTEMA
+- **para** FINALIZAR LA ACTIVIDAD OPERATIVA Y RESGUARDAR LA SEGURIDAD DE LA CUENTA.
 
 **Reglas a considerar:**
 - No se aplican restricciones de negocio adicionales.
@@ -867,7 +869,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
   El transportista con cuenta habilitada o inhabilitada deberá ingresar credenciales inválidas. El sistema deberá impedir el acceso y mostrar el mensaje “Credenciales inválidas”.
 
 - **ESCENARIO 4: Múltiples intentos fallidos**  
-  El transportista con habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.
+  El transportista con cuenta habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.
 
 ---
 
@@ -951,7 +953,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 **Título:**
 - **Como** TRANSPORTISTA
-- **quiero** VER LOS RECORRIDOS QUE GUARDADOS
+- **quiero** VISUALIZAR LOS RECORRIDOS GUARDADOS
 - **para** EVALUAR EL RECORRIDO QUE MEJOR ME CONVIENE.
 
 **Reglas a considerar:**
@@ -1020,7 +1022,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 **Criterios de Aceptación:**
 
 - **ESCENARIO 1: Visualizar detalles de parada**  
-  El transportista deberá buscar la parada deseado. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.
+  El transportista deberá buscar la parada deseada. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.
 
 ---
 
@@ -1170,8 +1172,8 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 - **ESCENARIO 1: Adjuntar documento correctamente**  
   El transportista deberá adjuntar un documento correspondiente a una entrega. El sistema deberá guardar el archivo asociado a la operación.
 
-- **ESCENARIO 2: Consulta del documento adjunto**  
-  El administrativo deberá consultar una entrega con documentación adjunta. El sistema deberá mostrar el documento asociado.
+- **ESCENARIO 2: Verificación del documento adjunto**  
+  El transportista consulta la entrega realizada en su aplicación y verifica que el comprobante o fotografía permanece adjunto y disponible para la administración.
 
 ---
 

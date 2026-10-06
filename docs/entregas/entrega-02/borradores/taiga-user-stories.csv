@@ -313,7 +313,7 @@ El transportista con cuenta habilitada o inhabilitada deberá ingresar credencia
 
 ESCENARIO 4: Múltiples intentos fallidos
 
-El transportista con habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588257,1791059960137800,1791059960137801,2026-10-03 20:39:20.137806+00:00,2026-10-06 01:40:50.238229+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
+El transportista con cuenta habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588257,1791059960137800,1791059960137801,2026-10-03 20:39:20.137806+00:00,2026-10-06 01:40:50.238229+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
 9598182,24,Reordenar paradas,"**Título:** Como TRANSPORTISTA    
 quiero MODIFICAR EL ORDEN DE LAS PARADAS DE MI ITINERARIO    
 para ADAPTAR EL RECORRIDO A LAS CONDICIONES REALES DE LA JORNADA.
@@ -776,7 +776,7 @@ La secuencia establecida en esta vista determinará el orden numérico de entreg
 
 **Criterios de aceptación**
 
-ESCENARIO 1: En la vista ‘Editar itinerario’, el usuario podrá modificar el orden numérico de las paradas para cambiar su posición. Al presionar 'Guardar orden', el sistema actualizará la secuencia en la base de datos y mostrará la notificación de éxito: “Secuencia de paradas actualizada correctamente”.",,,,,catalinacaruso,Catalina Caruso,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791244011067047,1791244011067050,1791244011067052,2026-10-05 23:46:51.067056+00:00,2026-10-05 23:48:34.347509+00:00,,False,False,0,,,,,,,[],0,,,12
+ESCENARIO 1: En la vista ‘Editar itinerario’, el usuario podrá modificar el orden numérico de las paradas para cambiar su posición. Al presionar 'Guardar orden', el sistema actualizará la secuencia del itinerario y mostrará la notificación de éxito: “Secuencia de paradas actualizada correctamente”.",,,,,catalinacaruso,Catalina Caruso,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791244011067047,1791244011067050,1791244011067052,2026-10-05 23:46:51.067056+00:00,2026-10-05 23:48:34.347509+00:00,,False,False,0,,,,,,,[],0,,,12
 9603086,60,Listar itinerarios del dia,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN quiero CONSULTAR EL LISTADO DE ITINERARIOS CON SUS ESTADOS para MONITOREAR LA PLANIFICACIÓN OPERATIVA DE LA JORNADA.
 
 **Reglas a considerar**
@@ -815,7 +815,7 @@ ESCENARIO 2: Sin itinerario asignado
 
 El transportista con sesión iniciada e itinerario sin asignar visualiza en pantalla el mensaje “Itinerario sin asignar”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791244793190440,1791244793190443,1791244793190445,2026-10-05 23:59:53.190451+00:00,2026-10-06 00:19:15.738245+00:00,,False,False,0,,,,,,,[],0,,,22
 9603178,63,Mostrar recorridos guardados,"**Título:** Como TRANSPORTISTA   
-quiero VER LOS RECORRIDOS QUE GUARDADOS   
+quiero VISUALIZAR LOS RECORRIDOS GUARDADOS   
 para EVALUAR EL RECORRIDO QUE MEJOR ME CONVIENE.
 
 **Reglas a considerar:**
@@ -889,4 +889,4 @@ El itinerario muestra las paradas con dirección, nombre del comercio y monto a 
 **Criterios de aceptación:**
 
 ESCENARIO 1: Visualizar detalles de parada  
-El transportista deberá buscar la parada deseado. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791250457351238,1791250457351240,1791250457351242,2026-10-06 01:34:17.351246+00:00,2026-10-06 01:37:37.975415+00:00,,False,False,0,,,,,,,[],0,,,22
+El transportista deberá buscar la parada deseada. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791250457351238,1791250457351240,1791250457351242,2026-10-06 01:34:17.351246+00:00,2026-10-06 01:37:37.975415+00:00,,False,False,0,,,,,,,[],0,,,22

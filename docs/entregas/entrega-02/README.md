@@ -46,8 +46,8 @@ entrega-02/
 ├── workflow-historias-de-usuario.md   <- Procedimiento operativo para agentes de IA
 ├── final/                             <- Entregables consolidados finales
 ├── borradores/                        <- Trabajo colaborativo en curso
-│   ├── iniciativas-y-epicas.md        <- Propuesta formal de iniciativas y épicas
-│   ├── historias-de-usuario.md        <- Backlog consolidado de HUs desde Taiga (41 HUs)
+│   ├── iniciativas-y-epicas.md        <- Propuesta formal de iniciativas y épicas (7 Épicas)
+│   ├── historias-de-usuario.md        <- Backlog consolidado de HUs desde Taiga (51 HUs)
 │   ├── taiga-epics.csv                <- Exportación oficial de épicas desde Taiga
 │   ├── taiga-user-stories.csv         <- Exportación oficial de historias de usuario desde Taiga
 │   └── pgp.md                         <- [ACTUAL] Borrador completo del Plan de Gestión de Proyecto (IEEE 1058)

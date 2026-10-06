@@ -3,7 +3,7 @@
 **Proyecto:** Sistema de Gestión Logística y Liquidación de Cobranzas  
 **Cliente:** Centro de Distribución Logística (Martín Rodríguez, Responsable de Planificación y Rutas)  
 **Equipo de Desarrollo:** Softech (Enzo Giandon, Alan Tolaba, Catalina Caruso, Ian Chica Herrero, Lautaro Giralde, Mayerly Sinion Mendoza, Aylén Carlos)  
-**Estado:** Borrador consolidado desde Taiga (versión al 05/10/2026)
+**Estado:** Consolidado final desde Taiga (versión al 06/10/2026)
 
 ---
 
@@ -19,7 +19,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 2. **Cobertura integral del ciclo operativo:**
    * Cobertura de las etapas clave: preparación de rutas (noche), ejecución y cobro en calle (mañana) y arqueo/cierre (tarde).
 
-> **Nota de trazabilidad:** Este documento transcribe el estado actual del backlog registrado en Taiga por el equipo de Softech. Se preservan fielmente los textos, reglas y escenarios definidos colaborativamente.
+> **Nota de trazabilidad:** Este documento transcribe el estado final del backlog registrado en Taiga por el equipo de Softech, consolidando 51 historias de usuario distribuidas en 7 épicas funcionales.
 
 ---
 
@@ -27,15 +27,14 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 | Épica (Taiga ID) | Nombre de la Épica | Actor | Cantidad HUs | Historias de Usuario Asociadas |
 | :--- | :--- | :--- | :---: | :--- |
-| **Épica 1 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | 9 *(10)* | HU-2 *(absorbe HU-3)*, HU-4, HU-5, HU-37, HU-38, HU-39, HU-40, HU-41, HU-42 |
-| **Épica 2 (#6)** | Gestión de personal y vehículos | Personal Administrativo | 7 | HU-7, HU-8, HU-9, HU-10, HU-11, HU-43, HU-45 |
-| **Épica 3 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | 6 | HU-13, HU-14, HU-15, HU-46, HU-47, HU-48 |
-| **Épica 4 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | 7 | HU-17, HU-18, HU-19, HU-20, HU-21, HU-49, HU-50 |
-| **Épica 5 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | 6 | HU-23, HU-24, HU-25, HU-26, HU-27, HU-28 |
-| **Épica 6 (#29)** | Registro de entregas y cobranzas en destino | Transportista | 5 | HU-30, HU-31, HU-32, HU-33, HU-36 |
-| **Épica 7 (#34)** | Certificación digital de entregas mediante evidencias | Transportista | 0 | *(Sin HUs en Taiga)* |
-| **Épica 8 (#35)** | Registro y gestión de contingencias en ruta | Transportista | 0 | *(Sin HUs en Taiga)* |
-| **TOTAL** | | | **40 HUs** *(41 en Taiga)* | |
+| **EP-01 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | 9 | HU-2, HU-4, HU-5, HU-37, HU-38, HU-39, HU-40, HU-41, HU-42 |
+| **EP-02 (#6)** | Gestión de personal y vehículos | Personal Administrativo | 8 | HU-7, HU-8, HU-9, HU-10, HU-11, HU-43, HU-45, HU-66 |
+| **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | 8 | HU-13, HU-14, HU-46, HU-47, HU-48, HU-59, HU-60, HU-61 |
+| **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | 8 | HU-17, HU-18, HU-19, HU-20, HU-21, HU-49, HU-50, HU-58 |
+| **EP-05 (#51)** | Gestión de usuarios | Personal Administrativo | 2 | HU-52, HU-54 |
+| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | 9 | HU-23, HU-24, HU-25, HU-26, HU-62, HU-63, HU-64, HU-65, HU-67 |
+| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | 7 | HU-30, HU-31, HU-32, HU-33, HU-36, HU-55, HU-56 |
+| **TOTAL** | | | **51 HUs** | |
 
 ---
 
@@ -51,8 +50,6 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 #### HU-2: IMPORTAR PLANILLA DE REMITOS
 
-*(Nota metodológica: Esta historia absorbe funcionalmente a la antigua HU-3 de Taiga, unificando la importación y el procesamiento automático e integral del lote en una sola operación atómica conforme al criterio INVEST).*
-
 **Título:**
 - **Como** PERSONAL ADMINISTRATIVO
 - **quiero** IMPORTAR LAS PLANILLAS DE REMITOS DE LAS MARCAS PROVEEDORAS
@@ -61,7 +58,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 **Reglas a considerar:**
 - Las planillas son proporcionadas por las marcas proveedoras con una estructura de datos preestablecida.
 - Cada fila de la planilla representa un remito individual.
-- La importación y el procesamiento se ejecutan de manera integral y atómica; si una o más filas contienen datos vacíos o inconsistencias de negocio, no se registra ningún remito del archivo.
+- La importación y el procesamiento se ejecutan de manera integral y atómica. Si una o más filas contienen datos vacíos o inconsistencias de negocio, no se registra ningún remito del archivo.
 
 **Criterios de Aceptación:**
 
@@ -255,8 +252,6 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 ---
 
----
-
 ### ÉPICA: GESTIÓN DE PERSONAL Y VEHÍCULOS (Taiga #6)
 
 > **Descripción:** Módulo administrativo para registrar y gestionar el personal operativo y los vehículos disponibles para la distribución, permitiendo mantener actualizada la información utilizada en la asignación de las operaciones.
@@ -265,157 +260,173 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 #### HU-7: AGREGAR PERSONAL
 
-**Título:** Como ADMINISTRATIVO AUTORIZADO    
-quiero AGREGAR UN EMPLEADO AL SISTEMA    
-para MANTENER ACTUALIZADA LA INFORMACIÓN DE LOS TRANSPORTISTAS Y ADMINISTRATIVOS QUE INTERACTÚAN CON EL SISTEMA.
+**Título:**
+- **Como** ADMINISTRATIVO AUTORIZADO
+- **quiero** AGREGAR UN EMPLEADO AL SISTEMA
+- **para** MANTENER ACTUALIZADA LA INFORMACIÓN DE LOS TRANSPORTISTAS Y ADMINISTRATIVOS QUE INTERACTÚAN CON EL SISTEMA.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- Cada empleado debe disponer de una cuenta individual.
+- Los transportistas realizan las mismas funciones operativas.
+- Los administrativos se crean sin permisos
 
-Cada empleado debe disponer de una cuenta individual.
+**Criterios de Aceptación:**
 
-Los transportistas realizan las mismas funciones operativas.
+- **ESCENARIO 1: Registro exitoso**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ que lo redirigirá a una vista con un formulario, el cual será completado con la información personal de la persona. Una vez completo, el formulario deberá presionar el botón ‘Guardar’. El sistema lo devuelve al listado y envía una notificación de éxito “Empleado registrado correctamente”.
 
-Los administrativos se crean sin permisos
+- **ESCENARIO 2: Descartar cambios**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ que lo redirigirá a una vista con un formulario, el cual será completado con la información personal la persona. Posteriormente deberá presionar el botón ‘Descartar’. El sistema pide confirmación de la acción, una vez aceptada lo devuelve al listado de transportistas.
 
-**Criterios de aceptación**
-
-ESCENARIO 1: Registro exitoso    
-En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ que lo redirigirá a una vista con un formulario el cual sera completado con la información personal de la persona. Una vez completo el formulario deberá presionar el botón ‘Guardar’. El sistema lo devuelve al listado y envía una notificación de éxito “Empleado registrado correctamente”
-
-ESCENARIO 2: Descartar cambios   
-En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ que lo redirigirá a una vista con un formulario, el cual sera completado con la información personal la persona. Posteriormente deberá presionar el botón ‘Descartar’. El sistema pide confirmación de la acción, una vez aceptada lo devuelve al listado de transportistas
+- **ESCENARIO 3: Registro de empleado ya existente**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ y completar el formulario con los datos de una persona que ya posee una cuenta registrada en el sistema. Al presionar el botón ‘Guardar’, el sistema deberá impedir el registro de una cuenta duplicada e informar que el empleado ya se encuentra registrado.
 
 ---
 
 #### HU-8: ASIGNAR PERMISOS ADMINISTRATIVOS
 
-**Título:** Como ADMINISTRADOR DEL SISTEMA  
-quiero ASIGNAR PERMISOS SEGÚN LAS FUNCIONES DEL PERSONAL ADMINISTRATIVO  
-para RESTRINGIR EL ACCESO A LAS OPERACIONES QUE CORRESPONDAN A CADA USUARIO.
+**Título:**
+- **Como** ADMINISTRADOR DEL SISTEMA
+- **quiero** ASIGNAR PERMISOS SEGÚN LAS FUNCIONES DEL PERSONAL ADMINISTRATIVO
+- **para** RESTRINGIR EL ACCESO A LAS OPERACIONES QUE CORRESPONDAN A CADA USUARIO.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El personal administrativo tiene funciones diferenciadas.
+- Deben existir permisos para planificación/importación y para validación de cobros/conciliación.
+- Un usuario no debe acceder a operaciones para las que no tenga autorización.
 
-El personal administrativo tiene funciones diferenciadas.
+**Criterios de Aceptación:**
 
-Deben existir permisos para planificación/importación y para validación de cobros/conciliación.
+- **ESCENARIO 1: Asignación de permisos de planificación**  
+  El administrador deberá asignar a un usuario los permisos correspondientes a planificación e importación. El usuario deberá poder utilizar esas funciones.
 
-Un usuario no debe acceder a operaciones para las que no tenga autorización.
+- **ESCENARIO 2: Asignación de permisos de conciliación**  
+  El administrador deberá asignar a un usuario los permisos correspondientes a validación y conciliación. El usuario deberá poder utilizar esas funciones.
 
-**Criterios de aceptación**
-
-ESCENARIO 1: Asignación de permisos de planificación  
-El administrador deberá asignar a un usuario los permisos correspondientes a planificación e importación. El usuario deberá poder utilizar esas funciones.
-
-ESCENARIO 2: Asignación de permisos de conciliación  
-El administrador deberá asignar a un usuario los permisos correspondientes a validación y conciliación. El usuario deberá poder utilizar esas funciones.
-
-ESCENARIO 3: Acceso no autorizado  
-Un usuario deberá intentar acceder a una función para la cual no posee permiso. El sistema deberá impedir la operación.
+- **ESCENARIO 3: Acceso no autorizado**  
+  Un usuario deberá intentar acceder a una función para la cual no posee permiso. El sistema deberá impedir la operación.
 
 ---
 
 #### HU-9: AGREGAR VEHÍCULO
 
-**Título:** Como ADMINISTRATIVO AUTORIZADO    
-quiero REGISTRAR UN VEHÍCULO NUEVO   
-para MANTENER ACTUALIZADA LA FLOTA UTILIZADA EN EL REPARTO.
+**Título:**
+- **Como** ADMINISTRATIVO AUTORIZADO
+- **quiero** REGISTRAR UN VEHÍCULO NUEVO
+- **para** MANTENER ACTUALIZADA LA FLOTA UTILIZADA EN EL REPARTO.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- La patente del vehículo debe ser única en el sistema.
 
-Los vehículos deben poder identificarse individualmente.
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
+- **ESCENARIO 1: Registro de vehículo exitoso**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de éxito “Vehículo registrado exitosamente”
 
-ESCENARIO 1: Registro de vehículo exitoso  
-En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de éxito “Vehículo registrado exitosamente”
-
-ESCENARIO 2: Registro de vehículo repetido  
-En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante, colocando una patente ya registrada. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de error “Vehículo repetido”
+- **ESCENARIO 2: Registro de vehículo repetido**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante, colocando una patente ya registrada. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de error “Vehículo repetido”
 
 ---
 
 #### HU-10: ASIGNAR VEHÍCULO A TRANSPORTISTA
 
-**Título:** Como **ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN**  
-quiero **ASOCIAR UN VEHÍCULO A UN TRANSPORTISTA**  
-para **IDENTIFICAR LA UNIDAD CON LA QUE REALIZARÁ LA JORNADA DE REPARTO**.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** ASOCIAR UN VEHÍCULO A UN TRANSPORTISTA
+- **para** IDENTIFICAR LA UNIDAD CON LA QUE REALIZARÁ LA JORNADA DE REPARTO**.
 
 **Reglas a considerar:**
+- El vehículo debe encontrarse registrado y disponible.
+- El transportista debe encontrarse habilitado.
+- La asociación debe quedar registrada para la jornada correspondiente.
 
-El vehículo debe encontrarse registrado y disponible.
+**Criterios de Aceptación:**
 
-El transportista debe encontrarse habilitado.
+- **ESCENARIO 1: Asignación exitosa**  
+  El administrativo deberá seleccionar un transportista habilitado y un vehículo disponible. El sistema deberá registrar la asociación.
 
-La asociación debe quedar registrada para la jornada correspondiente.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Asignación exitosa  
-El administrativo deberá seleccionar un transportista habilitado y un vehículo disponible. El sistema deberá registrar la asociación.
-
-ESCENARIO 2: Vehículo no disponible  
-El administrativo deberá intentar asignar un vehículo marcado como no disponible. El sistema deberá impedir la asignación.
+- **ESCENARIO 2: Vehículo no disponible**  
+  El administrativo deberá intentar asignar un vehículo marcado como no disponible. El sistema deberá impedir la asignación.
 
 ---
 
 #### HU-11: RESTABLECER CREDENCIALES DEL TRANSPORTISTA
 
-**Título:** Como ADMINISTRATIVO AUTORIZADO   
-quiero RESTABLECER LAS CREDENCIALES DE UN TRANSPORTISTA   
-para PERMITIRLE RECUPERAR EL ACCESO A LA APLICACIÓN DURANTE LA OPERACIÓN.
+**Título:**
+- **Como** ADMINISTRATIVO AUTORIZADO
+- **quiero** RESTABLECER LAS CREDENCIALES DE UN TRANSPORTISTA
+- **para** PERMITIRLE RECUPERAR EL ACCESO A LA APLICACIÓN DURANTE LA OPERACIÓN.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El transportista debe tener una cuenta registrada.
+- Solo el personal administrativo autorizado puede realizar el restablecimiento.
 
-El transportista debe tener una cuenta registrada.
+**Criterios de Aceptación:**
 
-Solo el personal administrativo autorizado puede realizar el restablecimiento.
-
-**Criterios de aceptación**
-
-ESCENARIO 1: Restablecimiento exitoso   
-En la vista ‘Listado de empleados’ deberá presionar el botón ‘Editar’ del empleado deseado, el cual lo redirigirá a la vista de edición, luego debe presionar el botón ‘Recuperar credenciales’ donde se colocará la nueva contraseña nueva, luego deberá presionar el botón ‘Guardar’ el cual lo redirige al listado y envía una notificación de éxito “Contraseña cambiada exitosamente”
+- **ESCENARIO 1: Restablecimiento exitoso**  
+  En la vista ‘Listado de empleados’ deberá presionar el botón ‘Editar’ del empleado deseado, el cual lo redirigirá a la vista de edición, luego debe presionar el botón ‘Recuperar credenciales’, donde el sistema deberá realizar el restablecimiento de las credenciales del transportista y permitirle recuperar el acceso a la aplicación. Luego deberá presionar el botón ‘Guardar’ el cual lo redirige al listado y envía una notificación de éxito “Restablecimiento exitoso”
 
 ---
 
 #### HU-43: MODIFICAR PERSONAL
 
-**Título:** Como ADMINISTRATIVO AUTORIZADO    
-quiero EDITAR EL REGISTRO UN EMPLEADO    
-para MANTENER ACTUALIZADA LA INFORMACIÓN DE LOS TRANSPORTISTAS Y ADMINISTRATIVOS QUE INTERACTÚAN CON EL SISTEMA.
+**Título:**
+- **Como** ADMINISTRATIVO AUTORIZADO
+- **quiero** EDITAR EL REGISTRO UN EMPLEADO
+- **para** MANTENER ACTUALIZADA LA INFORMACIÓN DE LOS TRANSPORTISTAS Y ADMINISTRATIVOS QUE INTERACTÚAN CON EL SISTEMA.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- Los transportistas realizan las mismas funciones operativas.
 
-Los transportistas realizan las mismas funciones operativas.
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
+- **ESCENARIO 1: Edición exitosa**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Editar’ relacionado al empleado que se desea modificar, el cual lo redirigirá a una vista con un formulario completo con la información actual la persona. Una vez modificado el formulario deberá presionar el botón ‘Guardar’. El sistema lo devuelve al listado y envía una notificación de éxito “Empleado modificado correctamente”
 
-ESCENARIO 1: Edición exitosa    
-En la vista ‘Listado de empleados’, deberá presionar el botón ‘Editar’ relacionado al empleado que se desea modificar, el cual lo redirigirá a una vista con un formulario completo con la información actual la persona. Una vez modificado el formulario deberá presionar el botón ‘Guardar’. El sistema lo devuelve al listado y envía una notificación de éxito “Empleado modificado correctamente”
-
-ESCENARIO 2: Descartar cambios   
-En la vista ‘Listado de empleados’, deberá presionar el botón ‘Editar’ relacionado al empleado que se desea modificar, el cual lo redirigirá a una vista con un formulario completo con la información actual la persona, luego deberá presionar el botón ‘Descartar’. El sistema pide confirmación de la acción, una vez aceptada lo devuelve al listado.
+- **ESCENARIO 2: Descartar cambios**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Editar’ relacionado al empleado que se desea modificar, el cual lo redirigirá a una vista con un formulario completo con la información actual de la persona, luego deberá presionar el botón ‘Descartar’. El sistema pide confirmación de la acción, una vez aceptada lo devuelve al listado.
 
 ---
 
 #### HU-45: MODIFICAR VEHÍCULO
 
-**Título:** Como ADMINISTRATIVO AUTORIZADO     
-quiero MODIFICAR UN VEHÍCULO EXISTENTE    
-para MANTENER ACTUALIZADA LA FLOTA UTILIZADA EN EL REPARTO.
+**Título:**
+- **Como** ADMINISTRATIVO AUTORIZADO
+- **quiero** MODIFICAR UN VEHÍCULO EXISTENTE
+- **para** MANTENER ACTUALIZADA LA FLOTA UTILIZADA EN EL REPARTO.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El vehículo debe encontrarse registrado en el sistema.
+- El estado de disponibilidad del vehículo podrá modificarse y deberá quedar registrado para determinar si puede ser asignado a un transportista.
 
-\-
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
+- **ESCENARIO 1: Edición de vehículo exitosa**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos, incluido su estado de disponibilidad. Una vez modificado deberá presionar el botón ‘Guardar’, el cual lo redirige nuevamente al listado de vehículos y muestra una notificación de éxito “Vehículo modificado exitosamente”
 
-ESCENARIO 1: Edición de vehículo exitosa   
-En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos. Una vez modificado deberá presionar el botón ‘Guardar’, el cual lo redirige nuevamente al listado de vehículos y muestra una notificación de éxito “Vehículo modificado exitosamente”
-
-ESCENARIO 2: Descartar cambios    
-En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos. Luego deberá presionar el botón 'Descartar’, el sistema pide confirmación, una vez aceptada lo redirige nuevamente al listado de vehículos.
+- **ESCENARIO 2: Descartar cambios**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos. Luego deberá presionar el botón 'Descartar’, el sistema pide confirmación, una vez aceptada lo redirige nuevamente al listado de vehículos.
 
 ---
+
+#### HU-66: SUSPENDER O DESHABILITAR PERSONAL
+
+**Título:**
+- **Como** ADMINISTRATIVO AUTORIZADO
+- **quiero** SUSPENDER O DESHABILITAR LA CUENTA DE UN EMPLEADO
+- **para** IMPEDIR SU ACCESO AL SISTEMA CUANDO CORRESPONDA.
+
+**Reglas a considerar:**
+- El empleado debe tener una cuenta registrada.
+- La suspensión o deshabilitación no debe eliminar el registro del empleado del sistema.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Suspensión o deshabilitación exitosa**  
+  En la vista 'Listado de empleados', el administrativo deberá seleccionar un empleado registrado y elegir la opción para suspender o deshabilitar su cuenta. El sistema deberá registrar el cambio de estado e impedir el acceso de esa cuenta al sistema.
+
+- **ESCENARIO 2: Descartar cambios**  
+  El administrativo deberá iniciar la modificación del estado de una cuenta y seleccionar la opción 'Descartar'. El sistema deberá solicitar confirmación y, una vez aceptada, conservar el estado anterior de la cuenta.
 
 ---
 
@@ -427,135 +438,162 @@ En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo d
 
 #### HU-13: AGREGAR ITINERARIO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN     
-quiero AGREGAR UN ITINERARIO PARA EL REPARTO     
-para ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** AGREGAR UN ITINERARIO PARA EL REPARTO
+- **para** ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- La operación corresponde exclusivamente a la última milla.
+- El itinerario debe contener las visitas que correspondan a la jornada.
+- Las visitas pueden agrupar uno o varios remitos.
+- La asignación de transportista es opcional al momento de crear el itinerario.
+- Un itinerario NO puede superar el límite máximo de remitos en total.
 
-La operación corresponde exclusivamente a la última milla.
+**Criterios de Aceptación:**
 
-El itinerario debe contener las visitas que correspondan a la jornada.
+- **ESCENARIO 1**  
+  En la vista ‘Itinerarios’, al presionar el botón ‘Crear’, el sistema redirigirá a un formulario donde se mostrarán los domicilios de entrega resultantes de agrupar los remitos en estado 'Pendiente' por dirección de destino. El usuario seleccionará las direcciones deseadas, asignará opcionalmente un transportista y presionará 'Guardar'. El sistema marcará los remitos seleccionados como 'Asignado', creará el itinerario y redirigirá al listado mostrando la notificación de éxito: “Itinerario guardado correctamente”.
 
-Las visitas pueden agrupar uno o varios remitos.
+- **ESCENARIO 2: Itinerario con remito en estado 'Asignado'**  
+  En la vista ‘Itinerarios’ deberá presionar el botón ‘Crear’, el sistema redirigirá a una vista donde se mostrará un formulario que deberá completar y los domicilios de entrega resultantes de agrupar los remitos, que estén en estado 'Pendiente', por dirección de destino. El administrativo deberá seleccionar las direcciones que le correspondan al transportista elegido en el formulario, una vez finalizada la selección debe presionar el botón 'Guardar'. Si antes de guardar el itinerario otro administrativo asigna un remito seleccionado, el sistema lo redirigirá al listado enviando una notificación de error “Itinerario no guardado, remito X no disponible" sin cambiar el estado de ningún remito
 
-**Criterios de aceptación**
-
-ESCENARIO 1: Crear itinerario exitosamente    
-En la vista ‘Itinerarios’ deberá presionar el botón ‘Crear’, el sistema redirigirá a una vista donde se mostrará un formulario que deberá completar y los domicilios de entrega resultantes de agrupar los remitos, que estén en estado 'Pendiente', por dirección de destino. El administrativo deberá seleccionar las direcciones que le correspondan al transportista elegido en el formulario, una vez finalizada la selección debe presionar el botón 'Guardar'. El sistema marcará los remitos seleccionados como 'Asignado' de forma individual y lo redirigirá al listado enviando una notificación de éxito “Itinerario guardado correctamente”
-
-ESCENARIO 2: Itinerario con remito en estado 'Asignado'     
-En la vista ‘Itinerarios’ deberá presionar el botón ‘Crear’, el sistema redirigirá a una vista donde se mostrará un formulario que deberá completar y los domicilios de entrega resultantes de agrupar los remitos, que estén en estado 'Pendiente', por dirección de destino. El administrativo deberá seleccionar las direcciones que le correspondan al transportista elegido en el formulario, una vez finalizada la selección debe presionar el botón 'Guardar'. Si antes de guardar el itinerario otro administrativo asigna un remito seleccionado, el sistema lo redirigirá al listado enviando una notificación de error “Itinerario no guardado, remito X no disponible" sin cambiar el estado de ningún remito
-
----
-
-#### HU-14: CAMBIAR TRANSPORTISTA DE UN ITINERARIO
-
-**Título**
-
-Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN   
-quiero CAMBIAR EL TRANSPORTISTA ENCARGADO DE UN ITINERARIO  
-para DEFINIR QUIÉN REALIZARÁ EL REPARTO.
-
-**Reglas a considerar**
-
-El transportista debe encontrarse habilitado.
-
-Un itinerario debe quedar asociado a un solo transportista.
-
-**Criterios de aceptación**
-
-ESCENARIO 1: Asignación exitosa   
-En la vista 'Itinerarios' se mostrará un listado de itinerarios ordenados por nombre, deberá presionar el menú desplegable del itinerario deseado, el mismo mostrará el listado de transportistas que no tienen ningún itinerario asignado. Una vez seleccionado el transportista el sistema permanecerá en la misma vista y enviará una notificación de éxito “Transportista asignado con éxito”
-
-ESCENARIO 2: Asignación vacía   
-En la vista 'Itinerarios' se mostrará un listado de itinerarios ordenados por nombre, deberá presionar el menú desplegable del itinerario deseado, el mismo mostrará el listado de transportistas que no tienen ningún itinerario asignado. Una vez seleccionada la primer opción "Sin asignar"el sistema permanecerá en la misma vista y enviará una notificación de éxito “Transportista asignado con éxito”
-
-ESCENARIO 3: Asignación fallida   
-En la vista 'Itinerarios' se mostrará un listado de itinerarios ordenados por nombre, deberá presionar el menú desplegable del itinerario deseado, el mismo mostrará el listado de transportistas que no tienen ningún itinerario asignado. Una vez seleccionado el transportista, si el transportista ya no se encuentra disponible el sistema permanecerá en la misma vista y enviará una notificación de error “Transportista no asignado”
+- **ESCENARIO 3**  
+  Si al seleccionar direcciones el total de remitos supera el limite, el sistema bloqueará la acción de guardar o mostrará un mensaje de alerta: “No se puede crear el itinerario: supera el límite máximo permitido de remitos (Máx remitos: X)”, impidiendo el guardado hasta que se desmarquen remitos.
 
 ---
 
-#### HU-15: GESTIONAR PARADAS Y REMITOS DEL ITINERARIO
+#### HU-14: ASIGNAR / CAMBIAR TRANSPORTISTA DE UN ITINERARIO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN   
-quiero GESTIONAR LAS PARADAS Y LOS REMITOS QUE COMPONEN UN ITINERARIO   
-para ASEGURAR QUE LA JORNADA CONTENGA LAS VISITAS Y DOCUMENTOS CORRESPONDIENTES.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** ASIGNAR O CAMBIAR EL TRANSPORTISTA ENCARGADO DE UN ITINERARIO
+- **para** DEFINIR QUIÉN REALIZARÁ EL REPARTO.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El transportista debe encontrarse en estado 'Habilitado'.
+- Un itinerario solo puede tener un transportista asignado a la vez.
 
-Una misma parada puede contener varios remitos.
+**Criterios de Aceptación:**
 
-Los remitos deben quedar vinculados a la visita correspondiente.
+- **ESCENARIO 1: Asignación exitosa**  
+  En la vista 'Itinerarios' se mostrará un listado de itinerarios ordenados por nombre, deberá presionar el menú desplegable del itinerario deseado, el mismo mostrará el listado de transportistas que no tienen ningún itinerario asignado. Una vez seleccionado el transportista el sistema permanecerá en la misma vista y enviará una notificación de éxito “Transportista asignado con éxito”
 
-Las visitas pertenecen al itinerario asignado.
+- **ESCENARIO 2: Asignación vacía**  
+  En la vista 'Itinerarios' se mostrará un listado de itinerarios ordenados por nombre, deberá presionar el menú desplegable del itinerario deseado, el mismo mostrará el listado de transportistas que no tienen ningún itinerario asignado. Una vez seleccionada la primer opción "Sin asignar" el sistema permanecerá en la misma vista y enviará una notificación de éxito “Transportista asignado con éxito”
 
-**Criterios de aceptación**
-
-ESCENARIO 1: Incorporación de una parada   
-El administrativo deberá agregar una visita al itinerario. El sistema deberá incorporarla con sus remitos correspondientes.
-
-ESCENARIO 2: Parada con varios remitos   
-El administrativo deberá gestionar una visita que contenga varios remitos. El sistema deberá mantenerlos asociados a la misma parada.
+- **ESCENARIO 3: Asignación fallida**  
+  En la vista 'Itinerarios' se mostrará un listado de itinerarios ordenados por nombre, deberá presionar el menú desplegable del itinerario deseado, el mismo mostrará el listado de transportistas que no tienen ningún itinerario asignado. Una vez seleccionado el transportista, si el transportista ya no se encuentra disponible el sistema permanecerá en la misma vista y enviará una notificación de error “Transportista no asignado”
 
 ---
 
 #### HU-46: AGREGAR REMITOS A UN ITINERARIO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN    
-quiero AGREGAR REMITOS A UN ITINERARIO EXISTENTE    
-para ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** AGREGAR REMITOS A UN ITINERARIO EXISTENTE
+- **para** ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- Solo se podrán visualizar y seleccionar remitos que se encuentren en estado 'Pendiente'.
+- El itinerario no debe estar en estado 'Cerrado' o 'Finalizado'.
 
-\-
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
+- **ESCENARIO 1: Agregar remitos a un itinerario exitosamente**  
+  En la vista ‘Itinerarios’ se mostrará un listado de transportistas, al presionar el botón ‘Editar’ correspondiente a un transportista, el sistema redirigirá a la vista ‘Editar itinerario’ en la que se verá un listado de remitos asignados a ese itinerario ordenado por dirección de destino, en la cual deberá presionar el botón 'Agregar remito' que lo redirigirá a otra vista donde se mostrará un listado de los remitos que se encuentran en estado ‘Pendiente’, cuando seleccione los remitos que desea agregar al itinerario deberá presionar el botón 'Guardar'. Posteriormente el sistema lo redirigirá al listado enviando una notificación de éxito “Itinerario guardado correctamente”
 
-ESCENARIO 1: Agregar remitos a un itinerario exitosamente   
-En la vista ‘Itinerarios’ se mostrará un listado de transportistas, al presionar el botón ‘Editar’ correspondiente a un transportista, el sistema redirigirá a la vista ‘Editar itinerario’ en la que se verá un listado de remitos asignados a ese itinerario ordenado por dirección de destino, en la cual deberá presionar el botón 'Agregar remito' que lo redirigirá a otra vista donde se mostrará un listado de los remitos que se encuentran en estado ‘Pendiente’, cuando seleccione los remitos que desea agregar al itinerario deberá presionar el botón 'Guardar'. Posteriormente el sistema lo redirigirá al listado enviando una notificación de éxito “Itinerario guardado correctamente”
-
-ESCENARIO 2: Agregar remitos en estado 'Asignado' a un itinerario  
-En la vista ‘Itinerarios’ se mostrará un listado de transportistas, al presionar el botón ‘Editar’ correspondiente a un transportista, el sistema redirigirá a la vista ‘Editar itinerario’ en la que se verá un listado de remitos asignados a ese itinerario ordenado por dirección de destino, en la cual deberá presionar el botón 'Agregar remito' que lo redirigirá a otra vista donde se mostrará un listado de los remitos que se encuentran en estado ‘Pendiente’, cuando seleccione los remitos que desea agregar al itinerario deberá presionar el botón 'Guardar'. Si antes de guardar el itinerario otro administrativo asigna un remito seleccionado, el sistema lo redirigirá al listado enviando una notificación de error “Itinerario no guardado, remito X no disponible" sin cambiar el estado de ningún remito.
+- **ESCENARIO 2: Agregar remitos en estado 'Asignado' a un itinerario**  
+  En la vista ‘Itinerarios’ se mostrará un listado de transportistas, al presionar el botón ‘Editar’ correspondiente a un transportista, el sistema redirigirá a la vista ‘Editar itinerario’ en la que se verá un listado de remitos asignados a ese itinerario ordenado por dirección de destino, en la cual deberá presionar el botón 'Agregar remito' que lo redirigirá a otra vista donde se mostrará un listado de los remitos que se encuentran en estado ‘Pendiente’, cuando seleccione los remitos que desea agregar al itinerario deberá presionar el botón 'Guardar'. Si antes de guardar el itinerario otro administrativo asigna un remito seleccionado, el sistema lo redirigirá al listado enviando una notificación de error “Itinerario no guardado, remito X no disponible" sin cambiar el estado de ningún remito.
 
 ---
 
 #### HU-47: ELIMINAR REMITOS DE UN ITINERARIO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN     
-quiero ELIMINAR REMITOS DE UN ITINERARIO EXISTENTE     
-para ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** ELIMINAR REMITOS DE UN ITINERARIO EXISTENTE
+- **para** ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- Al desvincular un remito de un itinerario, su estado debe retornar automáticamente a 'Pendiente' para quedar disponible para nuevas planificaciones.
 
-\-
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
-
-ESCENARIO 1: Eliminar remitos a un itinerario exitosamente    
-En la vista ‘Itinerarios’ se mostrará un listado de transportistas, al presionar el botón ‘Editar’ correspondiente a un transportista, el sistema redirigirá a la vista ‘Editar itinerario’ en la que se verá un listado de remitos asignados a ese itinerario ordenado por dirección de destino, cuando seleccione los remitos que desea eliminar del itinerario deberá presionar el botón 'Eliminar'. Posteriormente el sistema pedirá confirmación, una vez aceptada lo redirigirá al listado enviando una notificación de éxito “Itinerario guardado correctamente”
+- **ESCENARIO 1: Eliminar remitos a un itinerario exitosamente**  
+  En la vista ‘Itinerarios’ se mostrará un listado de transportistas, al presionar el botón ‘Editar’ correspondiente a un transportista, el sistema redirigirá a la vista ‘Editar itinerario’ en la que se verá un listado de remitos asignados a ese itinerario ordenado por dirección de destino, cuando seleccione los remitos que desea eliminar del itinerario deberá presionar el botón 'Eliminar'. Tras solicitar y recibir confirmación, el sistema removerá los remitos del itinerario, actualizará su estado a 'Pendiente' y mostrará la notificación de éxito: “Itinerario guardado correctamente”
 
 ---
 
 #### HU-48: ELIMINAR ITINERARIO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN      
-quiero AGREGAR UN ITINERARIO PARA EL REPARTO      
-para ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** AGREGAR UN ITINERARIO PARA EL REPARTO
+- **para** ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El itinerario debe existir.
+- Al eliminar el itinerario, todos los remitos asociados deben cambiar automáticamente a estado 'Pendiente'.
 
-El itinerario debe existir
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
+- **ESCENARIO 1: Itinerario eliminado exitosamente**  
+  En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del itinerario deseado, el sistema pedirá confirmación de la acción advirtiendo que es irreversible, una vez aceptada el sistema permanece en el listado y envía una notificación de éxito "Itinerario eliminado exitosamente"
 
-ESCENARIO 1: Itinerario eliminado exitosamente     
-En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del itinerario deseado, el sistema pedirá confirmación de la acción advirtiendo que es irreversible, una vez aceptada el sistema permanece en el listado y envía una notificación de éxito "Itinerario eliminado exitosamente"
-
-ESCENARIO 2: Itinerario no encontrado   
-En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del itinerario deseado, el sistema pedirá confirmación de la acción advirtiendo que es irreversible, una vez aceptada. Si otro administrativo eliminó el itinerario el sistema permanece en el listado y envía una notificación de error "Itinerario no encontrado"
+- **ESCENARIO 2: Itinerario no encontrado**  
+  En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del itinerario deseado, el sistema pedirá confirmación de la acción advirtiendo que es irreversible, una vez aceptada. Si otro administrativo eliminó el itinerario el sistema permanece en el listado y envía una notificación de error "Itinerario no encontrado"
 
 ---
+
+#### HU-59: REORDENAR SECUENCIA DE PARADAS DEL ITINERARIO
+
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** REORDENAR LA SECUENCIA DE PARADAS DEL ITINERARIO
+- **para** OPTIMIZAR EL ORDEN DE VISITAS DEL TRANSPORTISTA.
+
+**Reglas a considerar:**
+- La secuencia establecida en esta vista determinará el orden numérico de entrega que visualizará el chofer en su App Móvil.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1**  
+  En la vista ‘Editar itinerario’, el usuario podrá modificar el orden numérico de las paradas para cambiar su posición. Al presionar 'Guardar orden', el sistema actualizará la secuencia en la base de datos y mostrará la notificación de éxito: “Secuencia de paradas actualizada correctamente”.
+
+---
+
+#### HU-60: LISTAR ITINERARIOS DEL DIA
+
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** CONSULTAR EL LISTADO DE ITINERARIOS CON SUS ESTADOS
+- **para** MONITOREAR LA PLANIFICACIÓN OPERATIVA DE LA JORNADA.
+
+**Reglas a considerar:**
+- Permitir filtrado por fecha, estado del itinerario (_Borrador, Asignado, En Ruta, Cerrado_) y transportista.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1**  
+  Al seleccionar la fecha actual, el sistema mostrará la grilla con los itinerarios creados, la cantidad de paradas/remitos asociados y el transportista asignado.
+
+---
+
+#### HU-61: EXPORTAR HOJA DE RUTA / ITINERARIO
+
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN
+- **quiero** EXPORTAR O IMPRIMIR LA HOJA DE RUTA DEL ITINERARIO
+- **para** ENTREGAR UN RESPALDO FÍSICO AL TRANSPORTISTA O PARA CONTROL INTERNO.
+
+**Reglas a considerar:**
+- El documento generado debe incluir: datos del transportista, vehículo, fecha, listado ordenado de paradas, remitos asociados y espacio para firmas/observaciones.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1**  
+  En la lista o detalle de un itinerario, al presionar 'Exportar Hoja de Ruta', el sistema generará un archivo PDF descargable con el resumen operativo del itinerario.
 
 ---
 
@@ -567,160 +605,235 @@ En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del iti
 
 #### HU-17: CONSULTAR ENTREGAS
 
-**Título:** Como ADMINISTRATIVO   
-quiero CONSULTAR LAS ENTREGAS REALIZADAS Y PENDIENTES  
-para REALIZAR EL SEGUIMIENTO DE LA OPERACIÓN DE REPARTO.
+**Título:**
+- **Como** ADMINISTRATIVO
+- **quiero** CONSULTAR LAS ENTREGAS REALIZADAS Y PENDIENTES
+- **para** REALIZAR EL SEGUIMIENTO DE LA OPERACIÓN DE REPARTO.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- El estado de cada entrega debe reflejar la situación registrada durante la operación.
+- Las entregas deben agruparse por dirección de destino.
+- Las entregas deben poder distinguirse según su estado.
 
-El estado debe reflejar la situación registrada durante la operación.
+**Criterios de Aceptación:**
 
-**Criterios de aceptación**
+- **ESCENARIO 1: Existe un pago registrado**  
+  En la vista “Pagos”, el sistema deberá mostrar el listado de pagos registrados. El administrativo deberá seleccionar un pago y el sistema deberá mostrar su detalle, incluyendo el importe, modalidad y operación asociada.
 
-ESCENARIO 1: Ver listado de entregas   
-En la vista ‘Entregas’ se verá un listado de los remitos ordenados por estado (primero los que tienen problemas relacionados, después los asignados y por ultimo los ‘Entregados’) y por transportista (alfabéticamente) y agrupados por dirección de destino, junto con la información relacionada a cada dirección (Monto total, cantidad de productos, ) donde se verá el estado en el que se encuentra cada entrega.
+- **ESCENARIO 2: Pago en efectivo agrupado**  
+  El administrativo deberá consultar un pago correspondiente a efectivo agrupado por itinerario. El sistema deberá mostrar el subtotal correspondiente y las entregas o comercios que componen dicho importe.
 
 ---
 
 #### HU-18: CONSULTAR DETALLE DE ENTREGA
 
-**Título:** Como ADMINISTRATIVO   
-quiero CONSULTAR EL DETALLE DE UNA ENTREGA Y SUS REMITOS ASOCIADOS   
-para CONTROLAR LA OPERACIÓN REALIZADA EN EL COMERCIO.
+**Título:**
+- **Como** ADMINISTRATIVO
+- **quiero** CONSULTAR EL DETALLE DE UNA ENTREGA Y SUS REMITOS ASOCIADOS
+- **para** CONTROLAR LA OPERACIÓN REALIZADA EN EL COMERCIO.
 
 **Reglas a considerar:**
+- Una visita puede contener varios remitos.
+- Los remitos deben estar asociados a la entrega correspondiente.
+- La información de la entrega debe incluir las evidencias y contingencias registradas.
 
-Una visita puede contener varios remitos.
+**Criterios de Aceptación:**
 
-Los remitos deben estar asociados a la entrega correspondiente.
+- **ESCENARIO 1: Existe una entrega registrada**  
+  Desde la vista “Entregas”, el administrativo deberá seleccionar una entrega. El sistema deberá mostrar el detalle de los remitos asociados, permitiendo acceder al detalle individual de cada remito, junto con las evidencias y contingencias registradas para la operación.
 
-**Criterios de aceptación:**
-
-ESCENARIO 1: Ver el detalle de una entrega   
-En la vista 'Entregas' se deberá presionar el comercio que se quiere detallar, posteriormente el sistema lo redirigirá a una vista donde se podrá visualizar el detalle de los remitos asociados a la entrega (si se presiona un remito lo lleva al detalle de ese remito), los documentos adjuntados en esa entrega y los problemas que haya agregado el transportista
+- **ESCENARIO 2: Entrega con varios remitos**  
+  El administrativo deberá seleccionar una entrega que contenga varios remitos. El sistema deberá mostrar todos los remitos asociados a esa entrega.
 
 ---
 
 #### HU-19: CONSULTAR Y VALIDAR COBRANZAS
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN  
-quiero CONSULTAR Y VALIDAR LAS COBRANZAS REGISTRADAS  
-para CONFIRMAR LOS IMPORTES RECAUDADOS DURANTE LA JORNADA.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN
+- **quiero** CONSULTAR Y VALIDAR LAS COBRANZAS REGISTRADAS
+- **para** QUE LOS IMPORTES RECAUDADOS DURANTE LA JORNADA CORRESPONDAN CON LOS REGISTRADOS EN EL SISTEMA.
 
 **Reglas a considerar:**
+- Cada cobranza debe estar asociada a una operación.
+- Se admiten cobranzas mediante efectivo, transferencia y QR estático.
+- Se permiten pagos combinados.
+- Las diferencias detectadas deben quedar identificadas.
 
-Cada cobranza debe estar asociada a una operación.
+**Criterios de Aceptación:**
 
-Se admiten efectivo, transferencia y QR estático.
+- **ESCENARIO 1: Existen cobranzas registradas**  
+  En la vista “Cobranzas”, el sistema deberá mostrar las cobranzas registradas, permitiendo al administrativo consultar su estado, importe y medios de pago utilizados.
 
-Se permiten pagos combinados.
+- **ESCENARIO 2: La cobranza coincide con el importe registrado**  
+  El administrativo deberá seleccionar una cobranza y verificar que el importe registrado coincida con el correspondiente a la operación. El sistema deberá permitir identificarla como válida.
 
-Las diferencias deben quedar identificadas.
+- **ESCENARIO 3: La cobranza presenta una diferencia**  
+  El administrativo deberá seleccionar una cobranza cuyo importe no coincida con el correspondiente a la operación. El sistema deberá identificar la diferencia para su posterior revisión.
 
-**Criterios de aceptación:**
-
-ESCENARIO 1: Cobranza validada  
-El administrativo deberá consultar una cobranza cuyo importe corresponda a la operación. El sistema deberá permitir validarla.
-
-ESCENARIO 2: Diferencia detectada  
-El administrativo deberá consultar una cobranza cuyo importe no coincida con el correspondiente. El sistema deberá identificar la diferencia.
-
-ESCENARIO 3: Cobranza combinada  
-El administrativo deberá consultar una cobranza realizada mediante más de una modalidad. El sistema deberá mostrar cada componente del pago.
+- **ESCENARIO 4: Cobranza mediante múltiples modalidades**  
+  El administrativo deberá consultar una cobranza realizada mediante más de un medio de pago. El sistema deberá mostrar cada modalidad y el importe correspondiente.
 
 ---
 
 #### HU-20: CONCILIAR COBRANZAS DURANTE LA JORNADA
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN  
-quiero CONCILIAR PROGRESIVAMENTE LAS COBRANZAS REGISTRADAS  
-para DETECTAR DIFERENCIAS ANTES DEL CIERRE DE LA JORNADA.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN
+- **quiero** CONCILIAR PROGRESIVAMENTE LAS COBRANZAS REGISTRADAS
+- **para** DETECTAR DIFERENCIAS ANTES DEL CIERRE DE LA JORNADA.
 
 **Reglas a considerar:**
+- La conciliación puede realizarse durante la jornada.
+- Las cobranzas deben poder revisarse a medida que se registran.
+- Las diferencias deben quedar identificadas para su revisión.
 
-La conciliación puede realizarse durante la jornada.
+**Criterios de Aceptación:**
 
-Las cobranzas deben poder revisarse a medida que se registran.
+- **ESCENARIO 1: Conciliación correcta durante la jornada**  
+  El administrativo deberá revisar una cobranza registrada durante la jornada. Si el importe registrado coincide con el importe correspondiente, el sistema deberá permitir marcarla como conciliada.
 
-Las diferencias deben quedar identificadas para su revisión.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Conciliación correcta  
-El administrativo deberá revisar una cobranza durante la jornada. Si los importes coinciden, el sistema deberá permitir marcarla como conciliada.
-
-ESCENARIO 2: Diferencia durante la jornada  
-El administrativo deberá revisar una cobranza con diferencia. El sistema deberá dejarla identificada para su revisión.
+- **ESCENARIO 2: Diferencia durante la conciliación**  
+  El administrativo deberá revisar una cobranza cuyo importe no coincida con el correspondiente. El sistema deberá identificarla como pendiente de revisión.
 
 ---
 
 #### HU-21: REALIZAR CUADRE Y ARQUEO DE LA CAJA
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DEL CIERRE  
-quiero REALIZAR EL CUADRE Y ARQUEO DE CAJA  
-para CONTROLAR LA RECAUDACIÓN DE LA JORNADA.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DEL CIERRE
+- **quiero** REALIZAR EL CUADRE Y ARQUEO DE CAJA
+- **para** CONTROLAR LA RECAUDACIÓN DE LA JORNADA.
 
 **Reglas a considerar:**
+- El cuadre debe considerar las cobranzas registradas durante la jornada.
+- El arqueo debe comparar la recaudación con los registros del sistema.
+- Las diferencias deben quedar identificadas.
 
-El cuadre debe considerar las cobranzas registradas.
+**Criterios de Aceptación:**
 
-El arqueo debe comparar la recaudación con los registros del sistema.
+- **ESCENARIO 1: La recaudación coincide con los registros**  
+  El administrativo deberá ingresar la recaudación correspondiente y compararla con los importes registrados en el sistema. Si ambos coinciden, el sistema deberá indicar que el cuadre es correcto y permitir finalizar el arqueo.
 
-Las diferencias deben quedar identificadas.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Cuadre correcto  
-El administrativo deberá comparar la recaudación con los registros del sistema. Si coinciden, deberá poder completar el cuadre.
-
-ESCENARIO 2: Diferencia en el arqueo  
-El administrativo deberá realizar el arqueo cuando exista una diferencia. El sistema deberá identificar la inconsistencia.
+- **ESCENARIO 2: Existe una diferencia en la recaudación**  
+  El administrativo deberá realizar el arqueo cuando exista una diferencia entre la recaudación y los registros del sistema. El sistema deberá mostrar la diferencia detectada y mantener el cuadre pendiente de revisión.
 
 ---
 
 #### HU-49: VALIDAR UN PAGO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN     
-quiero CONSULTAR Y VALIDAR UN PAGO     
-para CONFIRMAR LOS IMPORTES RECAUDADOS DURANTE LA JORNADA CORRESPONDEN CON LOS REGISTRADOS EN EL SISTEMA.
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN
+- **quiero** VALIDAR EL ESTADO DE UN PAGO
+- **para** CONFIRMAR QUE EL IMPORTE RECIBIDO CORRESPONDA CON EL IMPORTE REGISTRADO EN EL SISTEMA.
 
 **Reglas a considerar:**
+- La conciliación puede realizarse durante la jornada.
+- Las cobranzas deben poder revisarse a medida que se registran.
+- Las diferencias deben quedar identificadas para su revisión.
 
-Cada cobranza debe estar asociada a una entrega.
+**Criterios de Aceptación:**
 
-Se admiten efectivo, transferencia y QR estático.
+- **ESCENARIO 1: Pago validado correctamente**  
+  En la vista “Pagos”, el administrativo deberá seleccionar un pago y comparar el importe registrado en el sistema con el monto efectivamente recibido o rendido. Al indicar que los importes coinciden y guardar la operación, el sistema deberá cambiar el estado del pago a “Aprobado” y mostrar una confirmación de actualización exitosa.
 
-Las diferencias deben quedar identificadas.
+- **ESCENARIO 2: Existe una diferencia de importe**  
+  El administrativo deberá comparar el importe registrado con el monto efectivamente recibido y detectar una diferencia. Al guardar la operación, el sistema deberá cambiar el estado del pago a “Difiere” y registrar el importe efectivamente recibido.
 
-**Criterios de aceptación:**
-
-ESCENARIO 1: Pago validado     
-En la vista 'Pagos' se mostrará el listado de pagos realizados ordenados por estado, transportista y entrega. Unificando el total de efectivo por itinerario. El administrativo deberá presionar el botón ‘Cambiar estado’ lo que abrirá una ventana modal donde deberá comparar el monto recibido en la cuenta correspondiente o el efectivo rendido con el monto registrado en el sistema y cambiar el estado del pago a 'Aprobado' y presionar el botón ‘Guardar’, el sistema cerrará la ventana y mostrará una notificación de éxito “Pago validado" 
-
-ESCENARIO 2: Diferencia detectada    
-En la vista 'Pagos' se mostrará el listado de pagos realizados ordenados por estado, transportista y entrega. Unificando el total de efectivo por itinerario. El administrativo deberá presionar el botón ‘Cambiar estado’ lo que abrirá una ventana modal donde deberá comparar el monto recibido en la cuenta correspondiente o el efectivo rendido con el monto registrado en el sistema y cambiar el estado del pago a 'Difiere', el sistema mostrará un campo para completar con el monto efectivamente recibido. Posteriormente deberá presionar el botón ‘Guardar’, el sistema cerrará la ventana y mostrará una notificación de éxito “Pago validado"
-
-ESCENARIO 3: Pago no encontrado     
-En la vista 'Pagos' se mostrará el listado de pagos realizados ordenados por estado, transportista y entrega. Unificando el total de efectivo por itinerario. El administrativo deberá presionar el botón ‘Cambiar estado’ lo que abrirá una ventana modal donde deberá cambiar el estado del pago a 'No encontrado'. Posteriormente deberá presionar el botón ‘Guardar’, el sistema cerrará la ventana y mostrará una notificación de éxito “Pago validado"
+- **ESCENARIO 3: Pago no encontrado**  
+  El administrativo deberá seleccionar un pago que no pueda ser localizado o verificado. Al guardar la operación, el sistema deberá cambiar su estado a “No encontrado” y confirmar la actualización.
 
 ---
 
 #### HU-50: VER DETALLE DE UN PAGO
 
-**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN      
-quiero CONSULTAR EL DETALLE DE UN PAGO      
-para .
+**Título:**
+- **Como** ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN
+- **quiero** CONSULTAR EL DETALLE DE UN PAGO
+- **para** REVISAR LA INFORMACIÓN CORRESPONDIENTE DURANTE LA CONCILIACIÓN.
 
 **Reglas a considerar:**
+- Cada pago debe estar asociado a una operación de cobranza.
+- Los pagos pueden corresponder a efectivo, transferencia o QR estático.
+- Los pagos en efectivo pueden agrupar los importes correspondientes a distintas entregas de un mismo itinerario.
 
-\-
+**Criterios de Aceptación:**
 
-**Criterios de aceptación:**
+- **ESCENARIO 1: Existe un pago registrado**  
+  En la vista “Pagos”, el sistema deberá mostrar el listado de pagos registrados. El administrativo deberá seleccionar un pago y el sistema deberá mostrar su detalle, incluyendo el importe, modalidad y operación asociada.
 
-ESCENARIO 1: Ver detalle      
-En la vista 'Pagos' se mostrará el listado de pagos realizados ordenados por estado, transportista y entrega. Unificando el total de efectivo por itinerario. El administrativo deberá presionar en el pago que quiera detallar, el sistema lo redirigirá a una vista donde se verá el detalle del pago, en caso de ser efectivo mostrará el listado de comercios que pagaron para llegar a ese sub-total
+- **ESCENARIO 2: Pago en efectivo agrupado**  
+  El administrativo deberá consultar un pago correspondiente a efectivo agrupado por itinerario. El sistema deberá mostrar el subtotal correspondiente y las entregas o comercios que componen dicho importe.
 
 ---
+
+#### HU-58: GESTIONAR AJUSTES DE COBRANZAS
+
+**Título:**
+- **Como** ADMINISTRATIVO AUTORIZADO
+- **quiero** AJUSTAR UNA COBRANZA CUANDO SE DETECTE UNA DIFERENCIA
+- **para** CORREGIR EL IMPORTE REGISTRADO Y MANTENER ACTUALIZADA LA INFORMACIÓN FINANCIERA.
+
+**Reglas a considerar:**
+- Los ajustes solo pueden realizarse sobre cobranzas registradas.
+- El ajuste debe realizarse ante una diferencia detectada durante la validación o conciliación.
+- El administrativo debe indicar el motivo del ajuste.
+- El importe anterior y el nuevo importe deben quedar registrados.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Ajuste de cobranza exitoso**  
+  El administrativo deberá seleccionar una cobranza con diferencia, indicar el nuevo importe y registrar el motivo del ajuste. El sistema deberá actualizar el importe de la cobranza y confirmar la operación.
+
+- **ESCENARIO 2: Ajuste sin motivo**  
+  El administrativo deberá intentar modificar una cobranza sin indicar el motivo correspondiente. El sistema deberá impedir el registro del ajuste.
+
+- **ESCENARIO 3: Consulta del ajuste realizado**  
+  El administrativo deberá consultar una cobranza que haya sido ajustada. El sistema deberá mostrar el importe actualizado y la información correspondiente al ajuste realizado.
+
+---
+
+### ÉPICA: GESTIÓN DE USUARIOS (Taiga #51)
+
+> **Descripción:** Módulo web administrativo para gestionar el acceso de los usuarios al sistema, incluyendo autenticación, credenciales y permisos según sus funciones.
+> 
+> **Actor Principal:** Personal Administrativo | **Plataforma:** Escritorio (Web)
+
+#### HU-52: INICIAR SESIÓN COMO ADMINISTRATIVO
+
+**Título:**
+- **Como** ADMINISTRATIVO
+- **quiero** INGRESAR AL SISTEMA
+
+**Reglas a considerar:**
+- No se aplican restricciones de negocio adicionales.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Ingreso exitoso**  
+  En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario ya existente en el sistema y la contraseña correspondiente a ese usuario. Al presionar “Iniciar sesión”, el sistema lo redirigirá al home del sitio web
+
+- **ESCENARIO 2: Ingreso fallido por usuario inexistente**  
+  En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario inexistente en el sistema y una contraseña. Al presionar “Iniciar sesión”, el sistema debe permanecer en la misma vista y enviar una notificación de error “El nombre de usuario no existe”
+
+- **ESCENARIO 3: Ingreso fallido por contraseña invalida**  
+  En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario valido en el sistema y una contraseña que no sea la asociada a ese usuario. Al presionar “Iniciar sesión”, el sistema debe permanecer en la misma vista y enviar una notificación de error “La contraseña no es valida. Intente nuevamente”
+
+---
+
+#### HU-54: CERRAR SESIÓN
+
+**Título:**
+- **Como** ADMINISTRATIVO
+- **quiero** CERRAR SESIÓN EN EL SISTEMA
+
+**Reglas a considerar:**
+- No se aplican restricciones de negocio adicionales.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Sesión cerrada exitosamente**  
+  En cualquier vista deberá presionar el botón cerrar sesión. El sistema lo redirigirá al login sin mostrar ningún mensaje
 
 ---
 
@@ -730,149 +843,184 @@ En la vista 'Pagos' se mostrará el listado de pagos realizados ordenados por es
 > 
 > **Actor Principal:** Transportista | **Plataforma:** Móvil (Smartphone)
 
-#### HU-23: ACCEDER Y CONSULTAR ITINERARIO
+#### HU-23: INICIAR SESIÓN
 
-**Título:** Como TRANSPORTISTA  
-quiero INICIAR SESIÓN Y CONSULTAR EL ITINERARIO ASIGNADO  
-para CONOCER LAS VISITAS QUE DEBO REALIZAR DURANTE LA JORNADA.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** INICIAR SESIÓN Y CONSULTAR EL ITINERARIO ASIGNADO
+- **para** ACCEDER A LA APLICACIÓN Y REALIZAR MIS OPERACIONES
 
 **Reglas a considerar:**
+- Cada transportista utiliza una cuenta individual.
+- Solo las cuentas habilitadas pueden acceder.
+- El transportista solo debe visualizar el itinerario que le corresponde.
 
-Cada transportista utiliza una cuenta individual.
+**Criterios de Aceptación:**
 
-Solo las cuentas habilitadas pueden acceder.
+- **ESCENARIO 1: Acceso exitoso**  
+  El transportista con cuenta habilitada deberá ingresar credenciales válidas. El sistema deberá permitir el acceso.
 
-El transportista solo debe visualizar el itinerario que le corresponde.
+- **ESCENARIO 2: Cuenta no habilitada**  
+  El transportista con cuenta inhabilitada deberá ingresar credenciales válidas. El sistema deberá impedir el acceso.
 
-**Criterios de aceptación:**
+- **ESCENARIO 3: Credenciales inválidas**  
+  El transportista con cuenta habilitada o inhabilitada deberá ingresar credenciales inválidas. El sistema deberá impedir el acceso y mostrar el mensaje “Credenciales inválidas”.
 
-ESCENARIO 1: Acceso exitoso  
-El transportista deberá ingresar credenciales válidas de una cuenta habilitada. El sistema deberá permitir el acceso y mostrar su itinerario.
-
-ESCENARIO 2: Cuenta no habilitada  
-El transportista deberá intentar ingresar con una cuenta suspendida o deshabilitada. El sistema deberá impedir el acceso.
-
-ESCENARIO 3: Consulta de itinerario  
-El transportista deberá acceder al itinerario asignado. El sistema deberá mostrar sus visitas y remitos correspondientes.
+- **ESCENARIO 4: Múltiples intentos fallidos**  
+  El transportista con habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.
 
 ---
 
 #### HU-24: REORDENAR PARADAS
 
-**Título:** Como TRANSPORTISTA  
-quiero MODIFICAR EL ORDEN DE LAS PARADAS DE MI ITINERARIO  
-para ADAPTAR EL RECORRIDO A LAS CONDICIONES REALES DE LA JORNADA.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** MODIFICAR EL ORDEN DE LAS PARADAS DE MI ITINERARIO
+- **para** ADAPTAR EL RECORRIDO A LAS CONDICIONES REALES DE LA JORNADA.
 
 **Reglas a considerar:**
+- El orden de las paradas queda a criterio del transportista.
+- El sistema no debe imponer un orden rígido.
 
-El orden de las paradas queda a criterio del transportista.
+**Criterios de Aceptación:**
 
-El sistema no debe imponer un orden rígido.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Reordenamiento exitoso  
-El transportista deberá modificar el orden de las paradas. El sistema deberá guardar el nuevo orden.
-
-ESCENARIO 2: Continuación con el orden modificado  
-El transportista deberá continuar la jornada después del cambio. La aplicación deberá mostrar el itinerario actualizado.
+- **ESCENARIO 1: Reordenamiento exitoso**  
+  El transportista deslizará en la pantalla buscando la parada a modificar. Una vez la encuentre, mantendrá presionado la parada para mover su posición en la lista de paradas. Cuando este de acuerdo en su posición soltará la parada. El sistema deberá guardar el nuevo orden.
 
 ---
 
-#### HU-25: GESTIONAR VARIOS REMITOS EN UNA MISMA PARADA
+#### HU-25: VISUALIZAR LOS REMITOS AGRUPADOS POR PARADA
 
-**Título:** Como **TRANSPORTISTA**  
-quiero **GESTIONAR VARIOS REMITOS DE UN MISMO COMERCIO EN UNA SOLA VISITA**  
-para **REALIZAR LA OPERACIÓN DE FORMA ORDENADA**.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** VISUALIZAR LOS REMITOS DE UN MISMO COMERCIO EN UNA SOLA VISTA
+- **para** REALIZAR LA OPERACIÓN DE FORMA ORDENADA.
 
 **Reglas a considerar:**
+- Un comercio puede recibir varios remitos de distintas marcas.
+- Los remitos de un mismo comercio deben permanecer asociados a la misma parada.
 
-Un comercio puede recibir varios remitos de distintas marcas.
+**Criterios de Aceptación:**
 
-Los remitos de una misma visita deben permanecer asociados a la misma parada.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Parada con varios remitos  
-El transportista deberá seleccionar una parada con varios remitos. El sistema deberá mostrar todos los remitos asociados.
-
-ESCENARIO 2: Gestión de varios remitos  
-El transportista deberá gestionar varios remitos del mismo comercio. El sistema deberá mantenerlos dentro de la misma visita.
+- **ESCENARIO 1: Ver remitos**  
+  El transportista deberá tocar el botón “Ver remitos” de la parada deseada. El sistema deberá mostrar todos los remitos asociados en un sola vista.
 
 ---
 
-#### HU-26: REGISTRAR RECORRIDO Y UTILIZAR HISTORIAL
+#### HU-26: GUARDAR RECORRIDO
 
-**Título:** Como TRANSPORTISTA  
-quiero REGISTRAR EL RECORRIDO QUE REALIZO Y CONSERVAR SU HISTORIAL  
-para UTILIZAR LOS RECORRIDOS ANTERIORES COMO REFERENCIA PARA FUTURAS JORNADAS.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** GUARDAR EL RECORRIDO QUE ARMÉ
+- **para** USARLO DE REFERENCIA PARA FUTURAS JORNADAS.
 
 **Reglas a considerar:**
+- El recorrido debe corresponder a la jornada realizada.
+- El sistema debe conservar los recorridos registrados.
+- El transportista mantiene la autonomía para modificar las rutas.
 
-El recorrido debe corresponder a la jornada realizada.
+**Criterios de Aceptación:**
 
-El sistema debe conservar los recorridos registrados.
-
-El transportista mantiene la autonomía para modificar las rutas.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Registro de recorrido  
-El transportista deberá completar una jornada de reparto. El sistema deberá conservar el recorrido realizado.
-
-ESCENARIO 2: Consulta de recorrido histórico  
-El responsable de planificación deberá consultar un recorrido anterior. El sistema deberá mostrar la información almacenada.
-
-ESCENARIO 3: Utilización del historial  
-El administrativo deberá utilizar recorridos anteriores para una nueva planificación. El sistema deberá permitir tomar dicha información como referencia.
+- **ESCENARIO 1: Registro de recorrido**  
+  El transportista, con el orden de paradas establecido, deberá tocar el botón “Guardar recorrido”. El sistema mostrará un campo para ingresar texto. El transportista deberá un ingresar un nombre para el recorrido. Luego presionará “Guardar”. El sistema deberá almacenar el recorrido realizado.
 
 ---
 
-#### HU-27: OPERAR SIN CONECTIVIDAD Y SINCRONIZAR DATOS
+#### HU-62: CONSULTAR ITINERARIO
 
-**Título:** Como TRANSPORTISTA  
-quiero CONTINUAR LA OPERACIÓN SIN CONECTIVIDAD Y SINCRONIZAR LOS DATOS AL RECUPERAR LA RED  
-para NO INTERRUMPIR EL REPARTO EN CALLE.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** CONSULTAR EL ITINERARIO QUE TENGO ASIGNADO EN LA JORNADA
+- **para** CONOCER LAS PARADAS QUE DEBE VISITAR Y ORGANIZAR MI RECORRIDO.
 
 **Reglas a considerar:**
+- El transportista solo visualiza el itinerario que le corresponde.
+- Cada parada muestra la dirección, nombre del comercio y el monto total a cobrar.
 
-La pérdida temporal de conectividad no debe detener la operación.
+**Criterios de Aceptación:**
 
-Los datos registrados sin conexión deben conservarse.
+- **ESCENARIO 1: Consulta exitosa**  
+  El transportista con sesión iniciada e itinerario asignado visualiza en pantalla el itinerario que le corresponde donde se muestra, por cada parada, la dirección, nombre del comercio y el monto total a cobrar.
 
-La información debe sincronizarse al recuperar la conectividad.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Operación sin conectividad  
-El transportista deberá perder temporalmente la señal durante una visita. La aplicación deberá permitir continuar registrando la operación.
-
-ESCENARIO 2: Conservación de datos sin conexión  
-El transportista deberá registrar información sin conectividad. Los datos deberán permanecer disponibles para su sincronización.
-
-ESCENARIO 3: Sincronización al recuperar la red  
-El transportista deberá recuperar la conectividad después de registrar información. La aplicación deberá sincronizar automáticamente los datos pendientes.
+- **ESCENARIO 2: Sin itinerario asignado**  
+  El transportista con sesión iniciada e itinerario sin asignar visualiza en pantalla el mensaje “Itinerario sin asignar”.
 
 ---
 
-#### HU-28: REGISTRAR VISITAS SIN RESTRICCIÓN HORARIA
+#### HU-63: MOSTRAR RECORRIDOS GUARDADOS
 
-**Título:** Como TRANSPORTISTA  
-quiero REGISTRAR Y GESTIONAR VISITAS INDEPENDIENTEMENTE DEL HORARIO  
-para CONTINUAR LA OPERACIÓN ANTE DEMORAS Y CONTINGENCIAS DE RUTA.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** VER LOS RECORRIDOS QUE GUARDADOS
+- **para** EVALUAR EL RECORRIDO QUE MEJOR ME CONVIENE.
 
 **Reglas a considerar:**
+- El sistema conserva los recorridos guardados anteriormente con un nombre.
 
-El sistema no debe bloquear una visita por la hora en que se realice.
+**Criterios de Aceptación:**
 
-El transportista puede continuar la jornada ante demoras.
+- **ESCENARIO 1: Visualizar recorridos guardados**  
+  El transportista deberá tocar el botón “Recorridos guardados”. El sistema mostrará los nombre de los recorridos guardados.
 
-**Criterios de aceptación:**
-
-ESCENARIO 1: Visita fuera del horario habitual  
-El transportista deberá registrar una visita fuera de la franja habitual. El sistema deberá permitir continuar con la operación.
+- **ESCENARIO 2: No hay recorridos guardados**  
+  El transportista deberá tocar el botón “Recorridos guardados”. El sistema el mensaje “No hay recorridos guardados”.
 
 ---
+
+#### HU-64: CARGAR RECORRIDO
+
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** CARGAR UN RECORRIDO GUARDADO EN “RECORRIDOS GUARDADOS”
+- **para** MODIFICAR EL ORDEN DE PARADAS ACTUAL.
+
+**Reglas a considerar:**
+- El sistema almacena los recorridos guardados con anterioridad.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Cargar recorrido**  
+  El transportista, dentro de la sección “Recorridos guardados” con recorridos disponibles, tocará el recorrido deseado. En la pantalla aparecerá un botón “Cargar”. El transportista presiona “Cargar”. El sistema muestra el mensaje “Recorrido cargado”.
+
+- **ESCENARIO 2**  
+  El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles, verá el mensaje “No hay recorridos guardados”.
+
+---
+
+#### HU-65: ELIMINAR RECORRIDO
+
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** ELIMINAR UN RECORRIDO DENTRO DE “RECORRIDOS GUARDADOS”
+- **para** DESCARTAR UN RECORRIDO NO DESEADO.
+
+**Reglas a considerar:**
+- El sistema almacena los recorridos guardados con anterioridad
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Eliminar recorrido**  
+  El transportista, dentro de la sección “Recorridos guardados” con recorridos disponibles, tocará el recorrido deseado. En pantalla aparecerá un botón “Eliminar recorrido”. El transportista toca el botón “Eliminar recorrido”. En pantalla aparecerá el mensaje “Recorrido eliminado”.
+
+- **ESCENARIO 2: No hay recorridos guardados**  
+  El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles. El sistema mostrará el mensaje “No hay recorridos guardados”.
+
+---
+
+#### HU-67: VISUALIZAR DETALLE DE PARADA Y MONTO A COBRAR
+
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** VISUALIZAR LOS DETALLES DE LA PARADA Y EL MONTO A COBRAR
+- **para** OBTENER INFORMACIÓN SOBRE EL COMERCIO.
+
+**Reglas a considerar:**
+- El itinerario muestra las paradas con dirección, nombre del comercio y monto a cobrar.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Visualizar detalles de parada**  
+  El transportista deberá buscar la parada deseado. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.
 
 ---
 
@@ -884,136 +1032,168 @@ El transportista deberá registrar una visita fuera de la franja habitual. El si
 
 #### HU-30: REGISTRAR ENTREGA DE REMITOS
 
-**Título:** Como TRANSPORTISTA  
-quiero REGISTRAR LA ENTREGA DE LOS REMITOS EN UNA VISITA  
-para DEJAR CONSTANCIA DE LA DOCUMENTACIÓN EFECTIVAMENTE ENTREGADA.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** REGISTRAR LA ENTREGA DE LOS REMITOS EN UNA VISITA
+- **para** DEJAR CONSTANCIA DE LA DOCUMENTACIÓN EFECTIVAMENTE ENTREGADA.
 
 **Reglas a considerar:**
+- La entrega solo puede realizarse cuando se cumpla la condición de cobro íntegro.
+- Una visita puede contener uno o varios remitos.
+- Si no se completa el cobro, los remitos no deben registrarse como entregados.
 
-La entrega solo puede realizarse cuando se cumpla la condición de cobro íntegro.
+**Criterios de Aceptación:**
 
-Una visita puede contener uno o varios remitos.
+- **ESCENARIO 1: Entrega con cobro completo**  
+  El transportista deberá contar con el importe total cobrado y registrar la entrega. El sistema deberá registrar los remitos como entregados.
 
-Si no se completa el cobro, los remitos no deben registrarse como entregados.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Entrega con cobro completo  
-El transportista deberá contar con el importe total cobrado y registrar la entrega. El sistema deberá registrar los remitos como entregados.
-
-ESCENARIO 2: Intento de entrega sin cobro completo  
-El transportista deberá intentar registrar la entrega con un importe inferior al total. El sistema no deberá registrar los remitos como entregados.
+- **ESCENARIO 2: Intento de entrega sin cobro completo**  
+  El transportista deberá intentar registrar la entrega con un importe inferior al total. El sistema no deberá registrar los remitos como entregados.
 
 ---
 
 #### HU-31: REGISTRAR COBRANZA
 
-**Título:** Como TRANSPORTISTA  
-quiero REGISTRAR EL COBRO DE UNA ENTREGA SEGÚN LOS MEDIOS UTILIZADOS  
-para DEJAR CONSTANCIA DEL IMPORTE RECAUDADO EN DESTINO.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** REGISTRAR EL COBRO DE UNA ENTREGA SEGÚN LOS MEDIOS UTILIZADOS
+- **para** DEJAR CONSTANCIA DEL IMPORTE RECAUDADO EN DESTINO.
 
-**Reglas a considerar**
+**Reglas a considerar:**
+- Se admiten efectivo, transferencia y QR estático.
+- Se permiten pagos combinados.
+- El importe registrado debe corresponder al cobro realizado.
 
-Se admiten efectivo, transferencia y QR estático.
+**Criterios de Aceptación:**
 
-Se permiten pagos combinados.
+- **ESCENARIO 1: Cobro en efectivo**  
+  El transportista deberá registrar el importe recibido en efectivo. El sistema deberá asociarlo a la operación.
 
-El importe registrado debe corresponder al cobro realizado.
+- **ESCENARIO 2: Cobro mediante transferencia**  
+  El transportista deberá registrar el importe pagado mediante transferencia. El sistema deberá asociarlo a la operación.
 
-**Criterios de aceptación:**
+- **ESCENARIO 3: Cobro mediante QR**  
+  El transportista deberá registrar el importe pagado mediante QR estático. El sistema deberá asociarlo a la operación.
 
-ESCENARIO 1: Cobro en efectivo  
-El transportista deberá registrar el importe recibido en efectivo. El sistema deberá asociarlo a la operación.
-
-ESCENARIO 2: Cobro mediante transferencia  
-El transportista deberá registrar el importe pagado mediante transferencia. El sistema deberá asociarlo a la operación.
-
-ESCENARIO 3: Cobro mediante QR  
-El transportista deberá registrar el importe pagado mediante QR estático. El sistema deberá asociarlo a la operación.
-
-ESCENARIO 4: Pago combinado  
-El transportista deberá registrar una cobranza utilizando dos o más medios de pago. El sistema deberá registrar los importes correspondientes.
+- **ESCENARIO 4: Pago combinado**  
+  El transportista deberá registrar una cobranza utilizando dos o más medios de pago. El sistema deberá registrar los importes correspondientes.
 
 ---
 
 #### HU-32: VALIDAR COBRO ÍNTEGRO
 
-**Título:** Como TRANSPORTISTA  
-quiero VALIDAR QUE EL 100 % DEL IMPORTE HAYA SIDO COBRADO  
-para DETERMINAR SI LA OPERACIÓN PUEDE CONTINUAR.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** VALIDAR QUE EL 100 % DEL IMPORTE HAYA SIDO COBRADO
+- **para** DETERMINAR SI LA OPERACIÓN PUEDE CONTINUAR.
 
 **Reglas a considerar:**
+- La suma de los pagos debe ser igual al importe total.
+- No se permiten saldos pendientes.
+- No se permiten saldos a favor.
 
-La suma de los pagos debe ser igual al importe total.
+**Criterios de Aceptación:**
 
-No se permiten saldos pendientes.
+- **ESCENARIO 1: Cobro íntegro**  
+  El transportista deberá registrar pagos cuya suma sea igual al total. El sistema deberá reconocer la cobranza como completa.
 
-No se permiten saldos a favor.
+- **ESCENARIO 2: Cobro insuficiente**  
+  El transportista deberá registrar pagos cuya suma sea inferior al total. El sistema deberá indicar que la cobranza no está completa.
 
-**Criterios de aceptación:**
-
-ESCENARIO 1: Cobro íntegro  
-El transportista deberá registrar pagos cuya suma sea igual al total. El sistema deberá reconocer la cobranza como completa.
-
-ESCENARIO 2: Cobro insuficiente  
-El transportista deberá registrar pagos cuya suma sea inferior al total. El sistema debera indicar que la cobranza no está completa.
-
-ESCENARIO 3: Cobro superior al importe  
-El transportista deberá intentar registrar pagos superiores al total. El sistema no deberá generar un saldo a favor.
+- **ESCENARIO 3: Cobro superior al importe**  
+  El transportista deberá intentar registrar pagos superiores al total. El sistema no deberá generar un saldo a favor.
 
 ---
 
 #### HU-33: FINALIZAR VISITA SEGÚN RESULTADO DE COBRANZA
 
-**Título:** Como TRANSPORTISTA   
-quiero FINALIZAR LA VISITA DE ACUERDO CON EL RESULTADO DEL COBRO   
-para CERRAR LA OPERACIÓN SOLO CUANDO SE CUMPLAN LAS CONDICIONES DEL NEGOCIO.
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** FINALIZAR LA VISITA DE ACUERDO CON EL RESULTADO DEL COBRO
+- **para** CERRAR LA OPERACIÓN SOLO CUANDO SE CUMPLAN LAS CONDICIONES DEL NEGOCIO.
 
 **Reglas a considerar:**
+- La visita solo puede cerrarse cuando se haya cobrado el 100 %.
+- Si el comercio no paga el total, no se descarga la mercadería.
+- Si no se completa el cobro, los productos permanecen con el transportista.
+- No se generan saldos pendientes ni saldos a favor.
 
-La visita solo puede cerrarse cuando se haya cobrado el 100 %.
+**Criterios de Aceptación:**
 
-Si el comercio no paga el total, no se descarga la mercadería.
+- **ESCENARIO 1: Cierre con cobro completo**  
+  El transportista deberá registrar el 100 % del importe y completar la entrega correspondiente. El sistema deberá permitir finalizar la visita.
 
-Si no se completa el cobro, los productos permanecen con el transportista.
+- **ESCENARIO 2: Cierre con cobro incompleto**  
+  El transportista deberá intentar finalizar la visita sin haber cobrado el total. El sistema deberá impedir el cierre.
 
-No se generan saldos pendientes ni saldos a favor.
-
-**Criterios de aceptación:**
-
-ESCENARIO 1: Cierre con cobro completo   
-El transportista deberá registrar el 100 % del importe y completar la entrega correspondiente. El sistema deberá permitir finalizar la visita.
-
-ESCENARIO 2: Cierre con cobro incompleto   
-El transportista deberá intentar finalizar la visita sin haber cobrado el total. El sistema deberá impedir el cierre.
-
-ESCENARIO 3: Falta de pago total   
-El transportista deberá registrar un cobro inferior al total. La operación deberá quedar sin entrega de mercadería y los productos deberán permanecer con el transportista.
+- **ESCENARIO 3: Falta de pago total**  
+  El transportista deberá registrar un cobro inferior al total. La operación deberá quedar sin entrega de mercadería y los productos deberán permanecer con el transportista.
 
 ---
 
 #### HU-36: REGISTRO DE REMITOS
 
-*Descripción pendiente de carga en Taiga.*
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** REGISTRAR LOS REMITOS ASOCIADOS A UNA VISITA
+- **para** IDENTIFICAR LA DOCUMENTACIÓN QUE FORMA PARTE DE LA ENTREGA.
+
+**Reglas a considerar:**
+- Una visita puede contener uno o varios remitos.
+- Los remitos deben quedar asociados a la visita correspondiente.
+- Solo deben registrarse remitos pertenecientes a la operación.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Registro de un remito**  
+  El transportista deberá registrar un remito asociado a una visita. El sistema deberá vincularlo correctamente con la operación.
+
+- **ESCENARIO 2: Registro de varios remitos**  
+  El transportista deberá registrar varios remitos en una misma visita. El sistema deberá mantenerlos asociados a la operación correspondiente.
 
 ---
 
+#### HU-55: ADJUNTAR UN DOCUMENTO
+
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** ADJUNTAR UN DOCUMENTO A LA ENTREGA
+- **para** DEJAR CONSTANCIA DE LA DOCUMENTACIÓN RESPALDATORIA DE LA OPERACIÓN.
+
+**Reglas a considerar:**
+- El documento debe quedar asociado a la visita correspondiente.
+- El adjunto debe corresponder a la entrega registrada.
+- La documentación adjunta debe conservarse junto con la operación.
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Adjuntar documento correctamente**  
+  El transportista deberá adjuntar un documento correspondiente a una entrega. El sistema deberá guardar el archivo asociado a la operación.
+
+- **ESCENARIO 2: Consulta del documento adjunto**  
+  El administrativo deberá consultar una entrega con documentación adjunta. El sistema deberá mostrar el documento asociado.
+
 ---
 
-### ÉPICA: CERTIFICACIÓN DIGITAL DE ENTREGAS MEDIANTE EVIDENCIAS (Taiga #34)
+#### HU-56: REGISTRAR INCONVENIENTES CON LA ENTREGA
 
-> **Descripción:** Funcionalidad móvil para capturar fotografías de los remitos físicos firmados y sellados y asociarlas a las entregas correspondientes como evidencia digital de la operación realizada.
-> 
-> **Actor Principal:** Transportista | **Plataforma:** Móvil (Smartphone)
+**Título:**
+- **Como** TRANSPORTISTA
+- **quiero** REGISTRAR INCONVENIENTES CON LA ENTREGA
+- **para** DEJAR CONSTANCIA DE LAS SITUACIONES QUE IMPIDAN O AFECTEN LA OPERACIÓN.
 
-*Esta épica no posee aún historias de usuario desagregadas en Taiga.*
+**Reglas a considerar:**
+- El inconveniente debe quedar asociado a la visita correspondiente.
+- El transportista debe poder describir la situación ocurrida.
+- Si el inconveniente impide completar la entrega, la operación no debe registrarse como finalizada
+
+**Criterios de Aceptación:**
+
+- **ESCENARIO 1: Registro de inconveniente.**  
+  El transportista deberá registrar un inconveniente ocurrido durante una visita. El sistema deberá guardar la información asociada a la operación.
+
+- **ESCENARIO 2: Inconveniente que impide completar la entrega**  
+  El transportista deberá registrar un inconveniente que impida realizar la entrega. El sistema deberá conservar la visita con su situación registrada.
 
 ---
 
-### ÉPICA: REGISTRO Y GESTIÓN DE CONTINGENCIAS EN RUTA (Taiga #35)
-
-> **Descripción:** Funcionalidad móvil para registrar y tipificar las contingencias que impidan o afecten una entrega, dejando constancia de la situación ocurrida y asociándola a la visita correspondiente.
-> 
-> **Actor Principal:** Transportista | **Plataforma:** Móvil (Smartphone)
-
-*Esta épica no posee aún historias de usuario desagregadas en Taiga.*

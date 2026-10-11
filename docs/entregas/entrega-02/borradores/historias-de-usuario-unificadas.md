@@ -816,7 +816,7 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 
 ---
 
-#### HU-54: CERRAR SESIÓN
+#### HU-54: CERRAR SESIÓN COMO ADMINISTRATIVO
 
 **Título:**
 - **Como** PERSONAL ADMINISTRATIVO

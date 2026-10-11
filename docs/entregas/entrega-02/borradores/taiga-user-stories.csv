@@ -116,7 +116,7 @@ ESCENARIO 1: Registro de vehículo exitoso 
 En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de éxito “Vehículo registrado exitosamente”
 
 ESCENARIO 2: Registro de vehículo repetido   
-En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante, colocando una patente ya registrada. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de error “Vehículo repetido”",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588246,1791057459126618,1791057459126620,2026-10-03 19:57:39.126625+00:00,2026-10-06 01:06:58.702550+00:00,,False,False,0,,,,,,administrativos,[],0,,,6
+En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante, colocando una patente ya registrada. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de error “Vehículo repetido”",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,2.0,0.0,0.0,0.0,2.0,1791056514588246,1791057459126618,1791057459126620,2026-10-03 19:57:39.126625+00:00,2026-10-11 19:48:52.391981+00:00,,False,False,0,,,,,,administrativos,[],0,,,6
 9598152,10,Asignar vehículo a transportista,"**Título:** Como **ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN**  
 quiero **ASOCIAR UN VEHÍCULO A UN TRANSPORTISTA**  
 para **IDENTIFICAR LA UNIDAD CON LA QUE REALIZARÁ LA JORNADA DE REPARTO**.
@@ -253,7 +253,7 @@ ESCENARIO 3: La cobranza presenta una diferencia
 El administrativo deberá seleccionar una cobranza cuyo importe no coincida con el correspondiente a la operación. El sistema deberá identificar la diferencia para su posterior revisión.
 
 ESCENARIO 4: Cobranza mediante múltiples modalidades  
-El administrativo deberá consultar una cobranza realizada mediante más de un medio de pago. El sistema deberá mostrar cada modalidad y el importe correspondiente.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588253,1791059106944822,1791059106944824,2026-10-03 20:25:06.944829+00:00,2026-10-05 23:55:00.690355+00:00,,False,False,0,,,,,,administrativos,[],0,,,16
+El administrativo deberá consultar una cobranza realizada mediante más de un medio de pago. El sistema debérá mostrar cada modalidad y el importe correspondiente.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,8.0,0.0,0.0,0.0,8.0,1791056514588253,1791059106944822,1791059106944824,2026-10-03 20:25:06.944829+00:00,2026-10-11 19:49:53.643263+00:00,,False,False,0,,,,,,administrativos,[],0,,,16
 9598170,20,Conciliar cobranzas durante la jornada,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN   
 quiero CONCILIAR PROGRESIVAMENTE LAS COBRANZAS REGISTRADAS   
 para DETECTAR DIFERENCIAS ANTES DEL CIERRE DE LA JORNADA.
@@ -313,7 +313,7 @@ El transportista con cuenta habilitada o inhabilitada deberá ingresar credencia
 
 ESCENARIO 4: Múltiples intentos fallidos
 
-El transportista con cuenta habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588257,1791059960137800,1791059960137801,2026-10-03 20:39:20.137806+00:00,2026-10-06 01:40:50.238229+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
+El transportista con habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588257,1791059960137800,1791059960137801,2026-10-03 20:39:20.137806+00:00,2026-10-06 01:40:50.238229+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
 9598182,24,Reordenar paradas,"**Título:** Como TRANSPORTISTA    
 quiero MODIFICAR EL ORDEN DE LAS PARADAS DE MI ITINERARIO    
 para ADAPTAR EL RECORRIDO A LAS CONDICIONES REALES DE LA JORNADA.
@@ -401,7 +401,7 @@ ESCENARIO 3: Cobro mediante QR
 El transportista deberá registrar el importe pagado mediante QR estático. El sistema deberá asociarlo a la operación.
 
 ESCENARIO 4: Pago combinado  
-El transportista deberá registrar una cobranza utilizando dos o más medios de pago. El sistema deberá registrar los importes correspondientes.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588264,1791060618492282,1791060618492283,2026-10-03 20:50:18.492288+00:00,2026-10-03 22:15:59.797141+00:00,,False,False,0,,,,,,transportistas,[],0,,,29
+El transportista deberá registrar una cobranza utilizando dos o más medios de pago. El sistema debérá registrar los importes correspondientes.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588264,1791060618492282,1791060618492283,2026-10-03 20:50:18.492288+00:00,2026-10-03 22:15:59.797141+00:00,,False,False,0,,,,,,transportistas,[],0,,,29
 9598234,32,Validar cobro íntegro,"**Título:** Como TRANSPORTISTA  
 quiero VALIDAR QUE EL 100 % DEL IMPORTE HAYA SIDO COBRADO  
 para DETERMINAR SI LA OPERACIÓN PUEDE CONTINUAR.
@@ -423,7 +423,7 @@ ESCENARIO 2: Cobro insuficiente
 El transportista deberá registrar pagos cuya suma sea inferior al total. El sistema deberá indicar que la cobranza no está completa.
 
 ESCENARIO 3: Cobro superior al importe  
-El transportista deberá intentar registrar pagos superiores al total. El sistema no deberá generar un saldo a favor.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588265,1791060675308151,1791060675308152,2026-10-03 20:51:15.308159+00:00,2026-10-03 22:16:08.546959+00:00,,False,False,0,,,,,,transportistas,[],0,,,29
+El transportista debérá intentar registrar pagos superiores al total. El sistema no deberá generar un saldo a favor.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588265,1791060675308151,1791060675308152,2026-10-03 20:51:15.308159+00:00,2026-10-03 22:16:08.546959+00:00,,False,False,0,,,,,,transportistas,[],0,,,29
 9598235,33,Finalizar visita según resultado de cobranza,"**Título:** Como TRANSPORTISTA   
 quiero FINALIZAR LA VISITA DE ACUERDO CON EL RESULTADO DEL COBRO   
 para CERRAR LA OPERACIÓN SOLO CUANDO SE CUMPLAN LAS CONDICIONES DEL NEGOCIO.
@@ -583,7 +583,7 @@ ESCENARIO 1: Edición exitosa   
 En la vista ‘Listado de empleados’, deberá presionar el botón ‘Editar’ relacionado al empleado que se desea modificar, el cual lo redirigirá a una vista con un formulario completo con la información actual la persona. Una vez modificado el formulario deberá presionar el botón ‘Guardar’. El sistema lo devuelve al listado y envía una notificación de éxito “Empleado modificado correctamente”
 
 ESCENARIO 2: Descartar cambios    
-En la vista ‘Listado de empleados’, deberá presionar el botón ‘Editar’ relacionado al empleado que se desea modificar, el cual lo redirigirá a una vista con un formulario completo con la información actual de la persona, luego deberá presionar el botón ‘Descartar’. El sistema pide confirmación de la acción, una vez aceptada lo devuelve al listado.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588244,1791085996230246,1791085996230248,2026-10-04 03:53:16.230252+00:00,2026-10-06 01:05:10.942379+00:00,,False,False,0,,,,,,,[],0,,,6
+En la vista ‘Listado de empleados’, deberá presionar el botón ‘Editar’ relacionado al empleado que se desea modificar, el cual lo redirigirá a una vista con un formulario completo con la información actual de la persona, luego deberá presionar el botón ‘Descartar’. El sistema pide confirmación de la acción, una vez aceptada lo devuelve al listado.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588244,1791085996230246,1791085996230248,2026-10-04 03:53:16.230252+00:00,2026-10-06 02:33:59.226114+00:00,,False,False,0,,,,,,administrativos,[],0,,,6
 9598564,45,Modificar vehículo,"**Título:** Como ADMINISTRATIVO AUTORIZADO      
 quiero MODIFICAR UN VEHÍCULO EXISTENTE     
 para MANTENER ACTUALIZADA LA FLOTA UTILIZADA EN EL REPARTO.
@@ -600,7 +600,7 @@ ESCENARIO 1: Edición de vehículo exitosa  
 En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos, incluido su estado de disponibilidad. Una vez modificado deberá presionar el botón ‘Guardar’, el cual lo redirige nuevamente al listado de vehículos y muestra una notificación de éxito “Vehículo modificado exitosamente”
 
 ESCENARIO 2: Descartar cambios     
-En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos. Luego deberá presionar el botón 'Descartar’, el sistema pide confirmación, una vez aceptada lo redirige nuevamente al listado de vehículos.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588247,1791088265361604,1791088265361606,2026-10-04 04:31:05.361611+00:00,2026-10-06 01:09:51.690643+00:00,,False,False,0,,,,,,,[],0,,,6
+En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos. Luego deberá presionar el botón 'Descartar’, el sistema pide confirmación, una vez aceptada lo redirige nuevamente al listado de vehículos.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588247,1791088265361604,1791088265361606,2026-10-04 04:31:05.361611+00:00,2026-10-06 02:34:06.654004+00:00,,False,False,0,,,,,,administrativos,[],0,,,6
 9598622,46,Agregar remitos a un itinerario,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN     
 quiero AGREGAR REMITOS A UN ITINERARIO EXISTENTE     
 para ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
@@ -630,9 +630,9 @@ Al desvincular un remito de un itinerario, su estado debe retornar automáticame
 
 ESCENARIO 1: Eliminar remitos a un itinerario exitosamente     
 En la vista ‘Itinerarios’ se mostrará un listado de transportistas, al presionar el botón ‘Editar’ correspondiente a un transportista, el sistema redirigirá a la vista ‘Editar itinerario’ en la que se verá un listado de remitos asignados a ese itinerario ordenado por dirección de destino, cuando seleccione los remitos que desea eliminar del itinerario deberá presionar el botón 'Eliminar'. Tras solicitar y recibir confirmación, el sistema removerá los remitos del itinerario, actualizará su estado a 'Pendiente' y mostrará la notificación de éxito: “Itinerario guardado correctamente”",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791056514588269,1791096140920868,1791096140920869,2026-10-04 06:42:20.920874+00:00,2026-10-06 00:50:48.728015+00:00,,False,False,0,,,,,,administrativos,[],0,,,12
-9599213,48,Eliminar itinerario,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN       
-quiero AGREGAR UN ITINERARIO PARA EL REPARTO       
-para ORGANIZAR LAS VISITAS DE LA JORNADA DE ACUERDO CON LA OPERACIÓN.
+9599213,48,Eliminar itinerario,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN  
+quiero ELIMINAR UN ITINERARIO DE REPARTO  
+para CANCELAR PLANIFICACIONES OBSOLETAS Y RESTABLECER LOS REMITOS ASOCIADOS A ESTADO PENDIENTE.
 
 **Reglas a considerar**
 
@@ -642,11 +642,11 @@ Al eliminar el itinerario, todos los remitos asociados deben cambiar automática
 
 **Criterios de aceptación**
 
-ESCENARIO 1: Itinerario eliminado exitosamente      
+ESCENARIO 1: Itinerario eliminado exitosamente       
 En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del itinerario deseado, el sistema pedirá confirmación de la acción advirtiendo que es irreversible, una vez aceptada el sistema permanece en el listado y envía una notificación de éxito ""Itinerario eliminado exitosamente""
 
-ESCENARIO 2: Itinerario no encontrado    
-En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del itinerario deseado, el sistema pedirá confirmación de la acción advirtiendo que es irreversible, una vez aceptada. Si otro administrativo eliminó el itinerario el sistema permanece en el listado y envía una notificación de error ""Itinerario no encontrado""",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791134254219194,1791134254219196,1791134254219197,2026-10-04 17:17:34.219202+00:00,2026-10-06 00:51:15.574781+00:00,,False,False,0,,,,,,administrativos,[],0,,,12
+ESCENARIO 2: Itinerario no encontrado     
+En la vista ‘Itinerarios’ deberá presionar el botón ‘Eliminar’ del itinerario deseado, el sistema pedirá confirmación de la acción advirtiendo que es irreversible, una vez aceptada. Si otro administrativo eliminó el itinerario el sistema permanece en el listado y envía una notificación de error ""Itinerario no encontrado""",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791134254219194,1791134254219196,1791134254219197,2026-10-04 17:17:34.219202+00:00,2026-10-06 02:23:34.747786+00:00,,False,False,0,,,,,,administrativos,[],0,,,12
 9599359,49,Validar un pago,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA CONCILIACIÓN  
 quiero VALIDAR EL ESTADO DE UN PAGO  
 para CONFIRMAR QUE EL IMPORTE RECIBIDO CORRESPONDA CON EL IMPORTE REGISTRADO EN EL SISTEMA.
@@ -680,12 +680,13 @@ para REVISAR LA INFORMACIÓN CORRESPONDIENTE DURANTE LA CONCILIACIÓN.
 **Criterios de aceptación:**
 
 ESCENARIO 1: Existe un pago registrado  
-En la vista “Pagos”, el sistema deberá mostrar el listado de pagos registrados. El administrativo deberá seleccionar un pago y el sistema deberá mostrar su detalle, incluyendo el importe, modalidad y operación asociada.
+En la vista “Pagos”, el sistema deberá mostrar el listado de pagos registrados. El administrativo deberá seleccionar un pago y el sistema debérá mostrar su detalle, incluyendo el importe, modalidad y operación asociada.
 
 ESCENARIO 2: Pago en efectivo agrupado  
-El administrativo deberá consultar un pago correspondiente a efectivo agrupado por itinerario. El sistema deberá mostrar el subtotal correspondiente y las entregas o comercios que componen dicho importe.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791143052703841,1791143052703843,1791143052703845,2026-10-04 19:44:12.703849+00:00,2026-10-05 23:49:54.834963+00:00,,False,False,0,,,,,,,[],0,,,16
-9602853,52,Iniciar sesión como administrativo,"**Título:** Como ADMINISTRATIVO      
-quiero INGRESAR AL SISTEMA
+El administrativo deberá consultar un pago correspondiente a efectivo agrupado por itinerario. El sistema deberá mostrar el subtotal correspondiente y las entregas o comercios que componen dicho importe.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791143052703841,1791143052703843,1791143052703845,2026-10-04 19:44:12.703849+00:00,2026-10-06 02:33:21.039618+00:00,,False,False,0,,,,,,administrativos,[],0,,,16
+9602853,52,Iniciar sesión como administrativo,"**Título:** Como PERSONAL ADMINISTRATIVO   
+quiero INICIAR SESIÓN EN EL SISTEMA   
+para ACCEDER A LAS FUNCIONALIDADES Y MÓDULOS DE GESTIÓN SEGÚN MIS PERMISOS.
 
 **Reglas a considerar**
 
@@ -693,16 +694,17 @@ quiero INGRESAR AL SISTEMA
 
 **Criterios de aceptación**
 
-ESCENARIO 1: Ingreso exitoso     
+ESCENARIO 1: Ingreso exitoso      
 En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario ya existente en el sistema y la contraseña correspondiente a ese usuario. Al presionar “Iniciar sesión”, el sistema lo redirigirá al home del sitio web
 
-ESCENARIO 2: Ingreso fallido por usuario inexistente     
+ESCENARIO 2: Ingreso fallido por usuario inexistente      
 En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario inexistente en el sistema y una contraseña. Al presionar “Iniciar sesión”, el sistema debe permanecer en la misma vista y enviar una notificación de error “El nombre de usuario no existe”
 
-ESCENARIO 3: Ingreso fallido por contraseña invalida     
-En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario valido en el sistema y una contraseña que no sea la asociada a ese usuario. Al presionar “Iniciar sesión”, el sistema debe permanecer en la misma vista y enviar una notificación de error “La contraseña no es valida. Intente nuevamente”",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791236680871101,1791236680871103,1791236680871105,2026-10-05 21:44:40.871108+00:00,2026-10-05 22:30:55.491217+00:00,,False,False,0,,,,,,,[],0,,,51
-9602858,54,Cerrar sesión,"**Título:** Como ADMINISTRATIVO      
-quiero CERRAR SESIÓN EN EL SISTEMA
+ESCENARIO 3: Ingreso fallido por contraseña invalida      
+En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario valido en el sistema y una contraseña que no sea la asociada a ese usuario. Al presionar “Iniciar sesión”, el sistema debe permanecer en la misma vista y enviar una notificación de error “La contraseña no es valida. Intente nuevamente”",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,2.0,0.0,2.0,0.0,4.0,1791236680871101,1791236680871103,1791236680871105,2026-10-05 21:44:40.871108+00:00,2026-10-11 19:56:16.119598+00:00,,False,False,0,,,,,,administrativos,[],0,,,51
+9602858,54,Cerrar sesión como administrativo,"**Título:** Como PERSONAL ADMINISTRATIVO   
+quiero CERRAR SESIÓN EN EL SISTEMA   
+para FINALIZAR LA ACTIVIDAD OPERATIVA Y RESGUARDAR LA SEGURIDAD DE LA CUENTA
 
 **Reglas a considerar**
 
@@ -710,8 +712,8 @@ quiero CERRAR SESIÓN EN EL SISTEMA
 
 **Criterios de aceptación**
 
-ESCENARIO 1: Sesión cerrada exitosamente   
-En cualquier vista deberá presionar el botón cerrar sesión. El sistema lo redirigirá al login sin mostrar ningún mensaje",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791236745049270,1791236745049273,1791236745049275,2026-10-05 21:45:45.049281+00:00,2026-10-05 22:32:44.810862+00:00,,False,False,0,,,,,,,[],0,,,51
+ESCENARIO 1: Sesión cerrada exitosamente    
+En cualquier vista deberá presionar el botón cerrar sesión. El sistema lo redirigirá al login sin mostrar ningún mensaje",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,1.0,0.0,1.0,0.0,2.0,1791236745049270,1791236745049273,1791236745049275,2026-10-05 21:45:45.049281+00:00,2026-10-11 19:58:08.290342+00:00,,False,False,0,,,,,,administrativos,[],0,,,51
 9602859,55,Adjuntar un documento,"Título
 
 Como TRANSPORTISTA   
@@ -727,7 +729,7 @@ La documentación adjunta debe conservarse junto con la operación.
 Criterios de aceptación
 
 ESCENARIO 1: Adjuntar documento correctamente - El transportista deberá adjuntar un documento correspondiente a una entrega. El sistema deberá guardar el archivo asociado a la operación.   
-ESCENARIO 2: Consulta del documento adjunto  - El administrativo deberá consultar una entrega con documentación adjunta. El sistema deberá mostrar el documento asociado.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791236803743914,1791236803743917,1791236803743919,2026-10-05 21:46:43.743923+00:00,2026-10-06 00:38:30.940965+00:00,,False,False,0,,,,,,,[],0,,,29
+ESCENARIO 2: Consulta del documento adjunto  - El administrativo deberá consultar una entrega con documentación adjunta. El sistema deberá mostrar el documento asociado.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791236803743914,1791236803743917,1791236803743919,2026-10-05 21:46:43.743923+00:00,2026-10-06 02:36:42.524188+00:00,,False,False,0,,,,,,transportistas,[],0,,,29
 9602860,56,Registrar inconvenientes con la entrega,"Título
 
   
@@ -746,7 +748,7 @@ Si el inconveniente impide completar la entrega, la operación no debe registrar
   
 Criterios de aceptación  
 ESCENARIO 1: Registro de inconveniente. - El transportista deberá registrar un inconveniente ocurrido durante una visita. El sistema deberá guardar la información asociada a la operación.  
-ESCENARIO 2: Inconveniente que impide completar la entrega - El transportista deberá registrar un inconveniente que impida realizar la entrega. El sistema deberá conservar la visita con su situación registrada.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791236829124047,1791236829124051,1791236829124053,2026-10-05 21:47:09.124058+00:00,2026-10-06 00:37:20.411675+00:00,,False,False,0,,,,,,,[],0,,,29
+ESCENARIO 2: Inconveniente que impide completar la entrega - El transportista deberá registrar un inconveniente que impida realizar la entrega. El sistema deberá conservar la visita con su situación registrada.",,,,,lgiralde,Lautaro Giralde,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791236829124047,1791236829124051,1791236829124053,2026-10-05 21:47:09.124058+00:00,2026-10-06 02:34:28.252525+00:00,,False,False,0,,,,,,transportistas,[],0,,,29
 9603046,58,Gestionar ajustes de cobranzas,"**Título:** Como ADMINISTRATIVO AUTORIZADO  
 quiero AJUSTAR UNA COBRANZA CUANDO SE DETECTE UNA DIFERENCIA  
 para CORREGIR EL IMPORTE REGISTRADO Y MANTENER ACTUALIZADA LA INFORMACIÓN FINANCIERA.
@@ -767,7 +769,7 @@ ESCENARIO 2: Ajuste sin motivo
 El administrativo deberá intentar modificar una cobranza sin indicar el motivo correspondiente. El sistema deberá impedir el registro del ajuste.
 
 ESCENARIO 3: Consulta del ajuste realizado  
-El administrativo deberá consultar una cobranza que haya sido ajustada. El sistema deberá mostrar el importe actualizado y la información correspondiente al ajuste realizado.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791242650548915,1791242650548917,1791242650548919,2026-10-05 23:24:10.548924+00:00,2026-10-05 23:59:39.695043+00:00,,False,False,0,,,,,,,[],0,,,16
+El administrativo deberá consultar una cobranza que haya sido ajustada. El sistema deberá mostrar el importe actualizado y la información correspondiente al ajuste realizado.",,,,,msinion,Mayerly Sinion Mendoza,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791242650548915,1791242650548917,1791242650548919,2026-10-05 23:24:10.548924+00:00,2026-10-06 02:34:59.946852+00:00,,False,False,0,,,,,,administrativos,[],0,,,16
 9603078,59,Reordenar secuencia de paradas del itinerario,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN quiero REORDENAR LA SECUENCIA DE PARADAS DEL ITINERARIO para OPTIMIZAR EL ORDEN DE VISITAS DEL TRANSPORTISTA.
 
 **Reglas a considerar**
@@ -776,7 +778,7 @@ La secuencia establecida en esta vista determinará el orden numérico de entreg
 
 **Criterios de aceptación**
 
-ESCENARIO 1: En la vista ‘Editar itinerario’, el usuario podrá modificar el orden numérico de las paradas para cambiar su posición. Al presionar 'Guardar orden', el sistema actualizará la secuencia del itinerario y mostrará la notificación de éxito: “Secuencia de paradas actualizada correctamente”.",,,,,catalinacaruso,Catalina Caruso,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791244011067047,1791244011067050,1791244011067052,2026-10-05 23:46:51.067056+00:00,2026-10-05 23:48:34.347509+00:00,,False,False,0,,,,,,,[],0,,,12
+ESCENARIO 1: En la vista ‘Editar itinerario’, el usuario podrá modificar el orden numérico de las paradas para cambiar su posición. Al presionar 'Guardar orden', el sistema actualizará la secuencia en la base de datos y mostrará la notificación de éxito: “Secuencia de paradas actualizada correctamente”.",,,,,catalinacaruso,Catalina Caruso,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791244011067047,1791244011067050,1791244011067052,2026-10-05 23:46:51.067056+00:00,2026-10-05 23:48:34.347509+00:00,,False,False,0,,,,,,,[],0,,,12
 9603086,60,Listar itinerarios del dia,"**Título:** Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN quiero CONSULTAR EL LISTADO DE ITINERARIOS CON SUS ESTADOS para MONITOREAR LA PLANIFICACIÓN OPERATIVA DE LA JORNADA.
 
 **Reglas a considerar**
@@ -813,9 +815,9 @@ El transportista con sesión iniciada e itinerario asignado visualiza en pantall
 
 ESCENARIO 2: Sin itinerario asignado
 
-El transportista con sesión iniciada e itinerario sin asignar visualiza en pantalla el mensaje “Itinerario sin asignar”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791244793190440,1791244793190443,1791244793190445,2026-10-05 23:59:53.190451+00:00,2026-10-06 00:19:15.738245+00:00,,False,False,0,,,,,,,[],0,,,22
+El transportista con sesión iniciada e itinerario sin asignar visualiza en pantalla el mensaje “Itinerario sin asignar”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791244793190440,1791244793190443,1791244793190445,2026-10-05 23:59:53.190451+00:00,2026-10-06 02:35:22.468292+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
 9603178,63,Mostrar recorridos guardados,"**Título:** Como TRANSPORTISTA   
-quiero VISUALIZAR LOS RECORRIDOS GUARDADOS   
+quiero VER LOS RECORRIDOS QUE GUARDADOS   
 para EVALUAR EL RECORRIDO QUE MEJOR ME CONVIENE.
 
 **Reglas a considerar:**
@@ -830,7 +832,7 @@ El transportista deberá tocar el botón “Recorridos guardados”. El sistema 
 
 ESCENARIO 2: No hay recorridos guardados
 
-El transportista deberá tocar el botón “Recorridos guardados”. El sistema el mensaje “No hay recorridos guardados”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791248282831561,1791248282831565,1791248282831567,2026-10-06 00:58:02.831572+00:00,2026-10-06 01:11:34.007651+00:00,,False,False,0,,,,,,,[],0,,,22
+El transportista deberá tocar el botón “Recorridos guardados”. El sistema el mensaje “No hay recorridos guardados”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791248282831561,1791248282831565,1791248282831567,2026-10-06 00:58:02.831572+00:00,2026-10-06 02:35:32.243492+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
 9603195,64,Cargar recorrido,"**Título:** Como TRANSPORTISTA  
 quiero CARGAR UN RECORRIDO GUARDADO EN “RECORRIDOS GUARDADOS”  
 para MODIFICAR EL ORDEN DE PARADAS ACTUAL.
@@ -846,7 +848,7 @@ El transportista, dentro de la sección “Recorridos guardados” con recorrido
 
 ESCENARIO 2: 
 
-El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles, verá el mensaje “No hay recorridos guardados”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791248566043420,1791248566043423,1791248566043424,2026-10-06 01:02:46.043428+00:00,2026-10-06 01:09:30.157782+00:00,,False,False,0,,,,,,,[],0,,,22
+El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles, verá el mensaje “No hay recorridos guardados”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791248566043420,1791248566043423,1791248566043424,2026-10-06 01:02:46.043428+00:00,2026-10-06 02:35:44.302958+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
 9603231,65,Eliminar recorrido,"**Título:** Como TRANSPORTISTA  
 quiero ELIMINAR UN RECORRIDO DENTRO DE “RECORRIDOS GUARDADOS”  
 para DESCARTAR UN RECORRIDO NO DESEADO.
@@ -863,7 +865,7 @@ El transportista, dentro de la sección “Recorridos guardados” con recorrido
 
 ESCENARIO 2: No hay recorridos guardados
 
-El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles. El sistema mostrará el mensaje “No hay recorridos guardados”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791249131901663,1791249131901666,1791249131901667,2026-10-06 01:12:11.901671+00:00,2026-10-06 01:22:34.521675+00:00,,False,False,0,,,,,,,[],0,,,22
+El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles. El sistema mostrará el mensaje “No hay recorridos guardados”.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791249131901663,1791249131901666,1791249131901667,2026-10-06 01:12:11.901671+00:00,2026-10-06 02:35:55.081443+00:00,,False,False,0,,,,,,transportistas,[],0,,,22
 9603246,66,Suspender o deshabilitar personal,"**Título:** Como ADMINISTRATIVO AUTORIZADO   
 quiero SUSPENDER O DESHABILITAR LA CUENTA DE UN EMPLEADO   
 para IMPEDIR SU ACCESO AL SISTEMA CUANDO CORRESPONDA.
@@ -877,7 +879,7 @@ Criterios de aceptación
 En la vista 'Listado de empleados', el administrativo deberá seleccionar un empleado registrado y elegir la opción para suspender o deshabilitar su cuenta. El sistema deberá registrar el cambio de estado e impedir el acceso de esa cuenta al sistema.
 
 **ESCENARIO 2:** Descartar cambios   
-El administrativo deberá iniciar la modificación del estado de una cuenta y seleccionar la opción 'Descartar'. El sistema deberá solicitar confirmación y, una vez aceptada, conservar el estado anterior de la cuenta.",,,,,catalinacaruso,Catalina Caruso,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791249804167252,1791249804167255,1791249804167256,2026-10-06 01:23:24.167260+00:00,2026-10-06 01:24:01.360547+00:00,,False,False,0,,,,,,,[],0,,,6
+El administrativo deberá iniciar la modificación del estado de una cuenta y seleccionar la opción 'Descartar'. El sistema deberá solicitar confirmación y, una vez aceptada, conservar el estado anterior de la cuenta.",,,,,catalinacaruso,Catalina Caruso,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791249804167252,1791249804167255,1791249804167256,2026-10-06 01:23:24.167260+00:00,2026-10-06 02:36:06.208680+00:00,,False,False,0,,,,,,administrativos,[],0,,,6
 9603275,67,Visualizar detalle de parada y monto a cobrar,"**Título:** Como TRANSPORTISTA  
 quiero VISUALIZAR LOS DETALLES DE LA PARADA Y EL MONTO A COBRAR  
 para OBTENER INFORMACIÓN SOBRE EL COMERCIO.
@@ -889,4 +891,4 @@ El itinerario muestra las paradas con dirección, nombre del comercio y monto a 
 **Criterios de aceptación:**
 
 ESCENARIO 1: Visualizar detalles de parada  
-El transportista deberá buscar la parada deseada. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791250457351238,1791250457351240,1791250457351242,2026-10-06 01:34:17.351246+00:00,2026-10-06 01:37:37.975415+00:00,,False,False,0,,,,,,,[],0,,,22
+El transportista deberá buscar la parada deseado. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.",,,,,alan_tolaba,Alan Tolaba,,,,,New,False,,0.0,0.0,0.0,0.0,0.0,1791250457351238,1791250457351240,1791250457351242,2026-10-06 01:34:17.351246+00:00,2026-10-06 02:36:16.261224+00:00,,False,False,0,,,,,,transportistas,[],0,,,22

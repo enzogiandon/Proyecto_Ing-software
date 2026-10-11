@@ -822,7 +822,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 ---
 
-#### HU-54: CERRAR SESIÓN
+#### HU-54: CERRAR SESIÓN COMO ADMINISTRATIVO
 
 **Título:**
 - **Como** PERSONAL ADMINISTRATIVO

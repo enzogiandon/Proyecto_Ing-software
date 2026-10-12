@@ -6,14 +6,14 @@
 **Fecha:** 9 de octubre de 2026  
 **Hora:** 18:00 hs – 20:00 hs  
 **Canal:** Sala de Coordinación de Desarrollo Softech (Discord)  
-**Participantes (Equipo Softech):**
-- Enzo Giandon
-- Alan Tolaba
-- Catalina Caruso
-- Ian Chica Herrero
-- Lautaro Giralde
-- Mayerly Sinion Mendoza
-- Aylén Carlos
+**Participantes y Roles (Equipo Softech):**
+- **Enzo Giandon:** Scrum Master
+- **Mayerly Sinion Mendoza:** Backend
+- **Lautaro Giralde:** Backend
+- **Catalina Caruso:** Front Transportistas (Mobile)
+- **Aylén Carlos:** Front Transportistas (Mobile)
+- **Alan Tolaba:** Front Administrativos (Web)
+- **Ian Chica Herrero:** Front Administrativos (Web)
 
 ---
 
@@ -30,17 +30,24 @@ La presente sesión dio inicio formal al ciclo de desarrollo ágil del proyecto,
 
 ## 👥 2. Organización del Equipo: División en Subgrupos de Trabajo
 
-Para maximizar la eficiencia y permitir avances paralelos sin interferencias en el código, el equipo de Softech estructuró sus actividades en **tres subgrupos de especialización técnica**, manteniendo una colaboración transversal y dinámica durante la integración:
+Para maximizar la eficiencia y permitir avances paralelos sin interferencias en el código, el equipo de Softech estructuró sus actividades en **subgrupos de especialización técnica**, coordinados por el Scrum Master y manteniendo colaboración transversal durante la integración:
 
-### 🖥️ Subgrupo A — Web Administrativa (Panel de Gestión y Despacho)
+### 🛡️ Scrum Master / Facilitación y Gestión Ágil
+- **Responsable:** **Enzo Giandon**
+- **Alcance:** Coordinación del flujo de trabajo, gestión del backlog en Taiga, remoción de impedimentos, facilitación de las ceremonias Scrum (Dailies, Planning, Review, Retrospective) e interlocución directa con el cliente (Martín Rodríguez).
+
+### 🖥️ Subgrupo Front Administrativos (Web Oficina y Depósito)
+- **Integrantes:** **Alan Tolaba** e **Ian Chica Herrero**
 - **Alcance funcional:** Interfaz de escritorio para el personal de oficina y centro de acopio. Comprende la ingesta y validación de planillas de remitos (EP-01), administración de choferes y unidades de transporte (EP-02), diagramación de itinerarios (EP-03), monitoreo de entregas (EP-04) y autenticación/seguridad (EP-05).
 - **Foco en Sprint 1:** Carga masiva de Excel, alta/edición/baja de remitos individuales, pantallas de administración de personal y vehículos, e inicio/cierre de sesión administrativo.
 
-### 📱 Subgrupo B — Mobile Transportistas (Operación en Calle)
+### 📱 Subgrupo Front Transportistas (Mobile en Calle)
+- **Integrantes:** **Catalina Caruso** y **Aylén Carlos**
 - **Alcance funcional:** Aplicación móvil orientada a los conductores de reparto. Comprende la consulta de visitas asignadas, reordenamiento dinámico de paradas, guardado de recorridos habituales (EP-06), validación de cobro íntegro, registro de contingencias en destino y adjuntos respaldatorios (EP-07).
 - **Foco en Sprint 1:** Autenticación de choferes, consulta del itinerario de la jornada, gestión y guardado de recorridos, validación de cobro íntegro y captura de contingencias/documentos respaldatorios.
 
-### ⚙️ Subgrupo C — Backend, Persistencia y Servicios Comunes
+### ⚙️ Subgrupo Backend, Persistencia y Servicios Comunes
+- **Integrantes:** **Mayerly Sinion Mendoza** y **Lautaro Giralde**
 - **Alcance funcional:** Arquitectura de APIs REST, esquemas de bases de datos relacionales, motor de parseo atómico de planillas `.xlsx`, lógica de validación de negocio (unicidad de remitos, estados operativos, inmutabilidad tras despacho) y preparación de mecanismos de sincronización offline para la app móvil.
 - **Foco en Sprint 1:** Modelado de entidades maestras (`Remito`, `Empleado`, `Vehiculo`, `Itinerario`, `Parada`), endpoints de ingesta masiva y contratos de autenticación JWT.
 
@@ -88,34 +95,34 @@ Para el primer ciclo de desarrollo de 3 semanas (**09/10/2026 al 29/10/2026**), 
 
 | Ref | ID | Historia de Usuario | Épica Asociada | Puntos (Poker) | Subgrupo Responsable |
 | :---: | :---: | :--- | :--- | :---: | :---: |
-| 2 | HU-2 | Importar planilla de remitos | EP-01: Importación masiva (#1) | 5 pts | Web / Backend |
-| 4 | HU-4 | Agregar un remito | EP-01: Importación masiva (#1) | 3 pts | Web / Backend |
-| 5 | HU-5 | Consultar remitos registrados | EP-01: Importación masiva (#1) | 2 pts | Web |
-| 7 | HU-7 | Agregar personal | EP-02: Gestión de personal (#6) | 2 pts | Web / Backend |
-| 8 | HU-8 | Asignar permisos administrativos | EP-02: Gestión de personal (#6) | 3 pts | Web / Backend |
-| 9 | HU-9 | Agregar vehículo | EP-02: Gestión de personal (#6) | 2 pts | Web / Backend |
-| 13 | HU-13 | Agregar itinerario | EP-03: Diagramación itinerarios (#12) | 5 pts | Web / Backend |
-| 17 | HU-17 | Consultar entregas | EP-04: Monitoreo y cobranzas (#16) | 2 pts | Web |
-| 18 | HU-18 | Consultar detalle de entrega | EP-04: Monitoreo y cobranzas (#16) | 2 pts | Web |
-| 23 | HU-23 | Iniciar sesión | EP-06: Itinerarios en calle (#22) | 2 pts | Mobile / Backend |
-| 26 | HU-26 | Guardar recorrido | EP-06: Itinerarios en calle (#22) | 5 pts | Mobile |
-| 32 | HU-32 | Validar cobro íntegro | EP-07: Entregas y cobranzas (#29) | 3 pts | Mobile / Backend |
-| 37 | HU-37 | Consultar importaciones | EP-01: Importación masiva (#1) | 2 pts | Web |
-| 38 | HU-38 | Ver detalle de una importación | EP-01: Importación masiva (#1) | 2 pts | Web |
-| 39 | HU-39 | Consultar detalle de un remito | EP-01: Importación masiva (#1) | 2 pts | Web |
-| 40 | HU-40 | Eliminar una importación | EP-01: Importación masiva (#1) | 5 pts | Web / Backend |
-| 41 | HU-41 | Editar remito | EP-01: Importación masiva (#1) | 3 pts | Web / Backend |
-| 42 | HU-42 | Eliminar remito | EP-01: Importación masiva (#1) | 2 pts | Web / Backend |
-| 43 | HU-43 | Modificar personal | EP-02: Gestión de personal (#6) | 2 pts | Web / Backend |
-| 45 | HU-45 | Modificar vehículo | EP-02: Gestión de personal (#6) | 2 pts | Web / Backend |
-| 52 | HU-52 | Iniciar sesión como administrativo | EP-05: Gestión de usuarios (#51) | 2 pts | Web / Backend |
-| 54 | HU-54 | Cerrar sesión como administrativo | EP-05: Gestión de usuarios (#51) | 2 pts | Web / Backend |
-| 55 | HU-55 | Adjuntar un documento | EP-07: Entregas y cobranzas (#29) | 2 pts | Mobile / Backend |
-| 56 | HU-56 | Registrar inconvenientes con la entrega | EP-07: Entregas y cobranzas (#29) | 1 pt | Mobile |
-| 62 | HU-62 | Consultar itinerario | EP-06: Itinerarios en calle (#22) | 2 pts | Mobile |
-| 63 | HU-63 | Mostrar recorridos guardados | EP-06: Itinerarios en calle (#22) | 3 pts | Mobile |
-| 65 | HU-65 | Eliminar recorrido | EP-06: Itinerarios en calle (#22) | 1 pt | Mobile |
-| 66 | HU-66 | Suspender o deshabilitar personal | EP-02: Gestión de personal (#6) | 2 pts | Web / Backend |
+| 2 | HU-2 | Importar planilla de remitos | EP-01: Importación masiva (#1) | 5 pts | Front Administrativos / Backend |
+| 4 | HU-4 | Agregar un remito | EP-01: Importación masiva (#1) | 3 pts | Front Administrativos / Backend |
+| 5 | HU-5 | Consultar remitos registrados | EP-01: Importación masiva (#1) | 2 pts | Front Administrativos |
+| 7 | HU-7 | Agregar personal | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
+| 8 | HU-8 | Asignar permisos administrativos | EP-02: Gestión de personal (#6) | 3 pts | Front Administrativos / Backend |
+| 9 | HU-9 | Agregar vehículo | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
+| 13 | HU-13 | Agregar itinerario | EP-03: Diagramación itinerarios (#12) | 5 pts | Front Administrativos / Backend |
+| 17 | HU-17 | Consultar entregas | EP-04: Monitoreo y cobranzas (#16) | 2 pts | Front Administrativos |
+| 18 | HU-18 | Consultar detalle de entrega | EP-04: Monitoreo y cobranzas (#16) | 2 pts | Front Administrativos |
+| 23 | HU-23 | Iniciar sesión | EP-06: Itinerarios en calle (#22) | 2 pts | Front Transportistas / Backend |
+| 26 | HU-26 | Guardar recorrido | EP-06: Itinerarios en calle (#22) | 5 pts | Front Transportistas |
+| 32 | HU-32 | Validar cobro íntegro | EP-07: Entregas y cobranzas (#29) | 3 pts | Front Transportistas / Backend |
+| 37 | HU-37 | Consultar importaciones | EP-01: Importación masiva (#1) | 2 pts | Front Administrativos |
+| 38 | HU-38 | Ver detalle de una importación | EP-01: Importación masiva (#1) | 2 pts | Front Administrativos |
+| 39 | HU-39 | Consultar detalle de un remito | EP-01: Importación masiva (#1) | 2 pts | Front Administrativos |
+| 40 | HU-40 | Eliminar una importación | EP-01: Importación masiva (#1) | 5 pts | Front Administrativos / Backend |
+| 41 | HU-41 | Editar remito | EP-01: Importación masiva (#1) | 3 pts | Front Administrativos / Backend |
+| 42 | HU-42 | Eliminar remito | EP-01: Importación masiva (#1) | 2 pts | Front Administrativos / Backend |
+| 43 | HU-43 | Modificar personal | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
+| 45 | HU-45 | Modificar vehículo | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
+| 52 | HU-52 | Iniciar sesión como administrativo | EP-05: Gestión de usuarios (#51) | 2 pts | Front Administrativos / Backend |
+| 54 | HU-54 | Cerrar sesión como administrativo | EP-05: Gestión de usuarios (#51) | 2 pts | Front Administrativos / Backend |
+| 55 | HU-55 | Adjuntar un documento | EP-07: Entregas y cobranzas (#29) | 2 pts | Front Transportistas / Backend |
+| 56 | HU-56 | Registrar inconvenientes con la entrega | EP-07: Entregas y cobranzas (#29) | 1 pt | Front Transportistas |
+| 62 | HU-62 | Consultar itinerario | EP-06: Itinerarios en calle (#22) | 2 pts | Front Transportistas |
+| 63 | HU-63 | Mostrar recorridos guardados | EP-06: Itinerarios en calle (#22) | 3 pts | Front Transportistas |
+| 65 | HU-65 | Eliminar recorrido | EP-06: Itinerarios en calle (#22) | 1 pt | Front Transportistas |
+| 66 | HU-66 | Suspender o deshabilitar personal | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
 | **TOTAL** | | **28 Historias de Usuario Comprometidas** | | **71 pts** | |
 
 ---

@@ -26,18 +26,18 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 
 ---
 
-## 📊 Matriz Resumen de Distribución por Épicas
+## 📊 Matriz Resumen de Distribución por Épicas y Estimación (Planning Poker)
 
-| Código Épica | Nombre de la Épica | Actor Principal | Plataforma | Cantidad HUs | Historias de Usuario Comprendidas |
-| :---: | :--- | :--- | :--- | :---: | :--- |
-| **EP-01 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | Escritorio (Web) | 9 | HU-02, HU-04, HU-05, HU-37, HU-38, HU-39, HU-40, HU-41, HU-42 |
-| **EP-02 (#6)** | Gestión de personal y vehículos | Personal Administrativo | Escritorio (Web) | 8 | HU-07, HU-08, HU-09, HU-10, HU-11, HU-43, HU-45, HU-66 |
-| **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | Escritorio (Web) | 8 | HU-13, HU-14, HU-46, HU-47, HU-48, HU-59, HU-60, HU-61 |
-| **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | Escritorio (Web) | 8 | HU-17, HU-18, HU-19, HU-20, HU-21, HU-49, HU-50, HU-58 |
-| **EP-05 (#51)** | Gestión de usuarios | Personal Administrativo | Escritorio (Web) | 2 | HU-52, HU-54 |
-| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | Móvil (Smartphone) | 9 | HU-23, HU-24, HU-25, HU-26, HU-62, HU-63, HU-64, HU-65, HU-67 |
-| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | Móvil (Smartphone) | 7 | HU-30, HU-31, HU-32, HU-33, HU-36, HU-55, HU-56 |
-| **TOTAL** | | | | **51 HUs** | |
+| Código Épica | Nombre de la Épica | Actor Principal | Plataforma | Cantidad HUs | Puntos Totales | HUs Sprint 1 | Pts Sprint 1 | HUs Backlog | Pts Backlog | Historias de Usuario Comprendidas (pts) |
+| :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **EP-01 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | Escritorio (Web) | 9 | 26 pts | 9 | 26 pts | 0 | 0 pts | HU-02 (5), HU-04 (3), HU-05 (2), HU-37 (2), HU-38 (2), HU-39 (2), HU-40 (5), HU-41 (3), HU-42 (2) |
+| **EP-02 (#6)** | Gestión de personal y vehículos | Personal Administrativo | Escritorio (Web) | 8 | 18 pts | 6 | 13 pts | 2 | 5 pts | HU-07 (2), HU-08 (3), HU-09 (2), HU-10 (2), HU-11 (3), HU-43 (2), HU-45 (2), HU-66 (2) |
+| **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | Escritorio (Web) | 8 | 25 pts | 1 | 5 pts | 7 | 20 pts | HU-13 (5), HU-14 (2), HU-46 (5), HU-47 (3), HU-48 (2), HU-59 (3), HU-60 (2), HU-61 (3) |
+| **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | Escritorio (Web) | 8 | 30 pts | 2 | 4 pts | 6 | 26 pts | HU-17 (2), HU-18 (2), HU-19 (8), HU-20 (3), HU-21 (3), HU-49 (5), HU-50 (2), HU-58 (5) |
+| **EP-05 (#51)** | Gestión de usuarios | Personal Administrativo | Escritorio (Web) | 2 | 4 pts | 2 | 4 pts | 0 | 0 pts | HU-52 (2), HU-54 (2) |
+| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | Móvil (Smartphone) | 9 | 25 pts | 5 | 13 pts | 4 | 12 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3) |
+| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | Móvil (Smartphone) | 7 | 20 pts | 3 | 6 pts | 4 | 14 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
+| **TOTAL** | | | | **51 HUs** | **148 pts** | **28 HUs** | **71 pts** | **23 HUs** | **77 pts** | |
 
 ---
 

@@ -70,8 +70,8 @@ entrega-02/
 - [x] Configurar plantillas base de trabajo en `plantillas/` ([iniciativas-epicas-plantilla.doc](plantillas/iniciativas-epicas-plantilla.doc) y [pgp-plantilla.docx](plantillas/pgp-plantilla.docx)).
 - [x] Definir iniciativas estratégicas y épicas funcionales del sistema logístico ([Ver Borrador](borradores/iniciativas-y-epicas.md)).
 - [x] Redactar el borrador formal del Plan de Gestión de Proyecto ([Ver Borrador PGP](borradores/pgp.md)).
-- [ ] Configurar el proyecto en Taiga y vincular a los 7 integrantes de Softech.
-- [ ] Escribir y priorizar el backlog de Historias de Usuario en Taiga con criterios de aceptación.
+- [x] Configurar el proyecto en Taiga y vincular a los 7 integrantes de Softech.
+- [x] Escribir, estimar (Planning Poker) y priorizar el backlog de Historias de Usuario en Taiga (Sprint 1 planificado con 28 HUs y 71 pts).
 - [ ] Asignar nominalmente los roles internos del equipo para el PGP en reunión de grupo.
 - [ ] Realizar revisión cruzada entre integrantes y generar versiones finales en `final/`.
 - [ ] Registrar la URL definitiva del proyecto Taiga en este documento.

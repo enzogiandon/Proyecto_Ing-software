@@ -1,4 +1,4 @@
-# Minuta de Reunión — Primer Scrum: Sprint Planning 1
+# Minuta de Reunión — Planificación del Sprint 1 (Sprint Planning 1)
 
 **Empresa:** Softech  
 **Proyecto:** Sistema de Gestión Logística y Liquidación de Cobranzas  

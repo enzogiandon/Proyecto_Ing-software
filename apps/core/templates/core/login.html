@@ -1,0 +1,95 @@
+{% extends "core/base_login.html" %}
+{% load static %}
+{% block title %}Iniciar Sesión{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'core/css/login.css' %}">
+{% endblock %}
+{% block content %}
+    {% if messages %}
+        <div class="toast-container">
+            {% for message in messages %}
+                <div class="toast {% if message.tags == 'error' %}toast-danger{% else %}toast-info{% endif %} show"
+                     role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}"
+                     aria-live="{% if message.tags == 'error' %}assertive{% else %}polite{% endif %}"
+                     aria-atomic="true"
+                     data-bs-autohide="true"
+                     data-bs-delay="6000">
+                    <div class="toast-header">
+                        {% if message.tags == "error" %}
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <strong class="me-auto">Error</strong>
+                        {% else %}
+                            <i class="fas fa-paper-plane me-2"></i>
+                            <strong class="me-auto">Informacion</strong>
+                        {% endif %}
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">{{ message }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% if form.non_field_errors %}
+        <div class="toast-container">
+            <div class="toast toast-danger"
+                 role="alert"
+                 aria-live="assertive"
+                 aria-atomic="true"
+                 data-bs-autohide="true"
+                 data-bs-delay="8000">
+                <div class="toast-header">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong class="me-auto">Error</strong>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                </div>
+                <div class="toast-body">{{ form.non_field_errors.0 }}</div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="login-container">
+        <div class="logo-container">
+            <img src="{% static 'core/img/logo.svg' %}" alt="Logo" class="logo">
+        </div>
+        <br>
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            <!-- Usuario -->
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                {{ form.username }}
+            </div>
+            <!-- Contraseña -->
+            <div class="input-group position-relative">
+                <i class="fas fa-lock"></i>
+                {{ form.password }}
+                <button type="button"
+                        id="togglePassword"
+                        class="btn btn-sm btn-no-bg position-absolute end-10 !important top-50"
+                        aria-label="Mostrar contraseña">
+                    <i class="fas fa-eye" id="togglePasswordIcon" aria-hidden="true"></i>
+                </button>
+            </div>
+            {% if form.captcha %}
+                <!-- CAPTCHA -->
+                <div class="captcha-box"
+                     style="display:flex;
+                            align-items:center;
+                            gap:12px;
+                            border-radius:10px;
+                            padding:16px;
+                            justify-content:center">{{ form.captcha }}</div>
+                <br>
+            {% endif %}
+            <button type="submit" class="login-button">Iniciar Sesión</button>
+        </form>
+    </div>
+{% endblock %}
+{% block extra_js %}
+    <script type="module" src="{% static 'core/js/toggle_password.js' %}"></script>
+{% endblock %}

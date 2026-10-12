@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block content %}
+    <!-- Hero Section -->
+    <section class="hero-section" style="background: #f8f9fa; text-align: center">
+        <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Bienvenido a Nuestra Plataforma</h1>
+        <p style="font-size: 1.2rem;
+                  color: #555;
+                  max-width: 600px;
+                  margin: 0 auto 2rem">
+            Diseñamos soluciones modernas para potenciar tus proyectos web con la mejor velocidad y experiencia de usuario.
+        </p>
+        <button style="padding: 0.8rem 1.8rem;
+                       font-size: 1rem;
+                       border: none;
+                       background: #0066cc;
+                       color: #fff;
+                       border-radius: 6px;
+                       cursor: pointer">Explorar Servicios</button>
+    </section>
+    <!-- Características principales -->
+    <section class="features-section"
+             style="padding: 4rem 2rem;
+                    max-width: 1100px;
+                    margin: 0 auto">
+        <h2 style="text-align: center; margin-bottom: 3rem;">Lo que nos distingue</h2>
+        <div style="display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 2rem">
+            <div style="padding: 2rem;
+                        border: 1px solid #eee;
+                        border-radius: 8px;
+                        background: #fff">
+                <h3>Diseño Responsivo</h3>
+                <p style="color: #666; margin-top: 0.5rem;">
+                    Nuestras interfaces se adaptan automáticamente a cualquier resolución de pantalla.
+                </p>
+            </div>
+            <div style="padding: 2rem;
+                        border: 1px solid #eee;
+                        border-radius: 8px;
+                        background: #fff">
+                <h3>Rendimiento Optimizado</h3>
+                <p style="color: #666; margin-top: 0.5rem;">
+                    Código limpio y optimizado desde cero para minimizar los tiempos de carga.
+                </p>
+            </div>
+            <div style="padding: 2rem;
+                        border: 1px solid #eee;
+                        border-radius: 8px;
+                        background: #fff">
+                <h3>Arquitectura Escalable</h3>
+                <p style="color: #666; margin-top: 0.5rem;">
+                    Estructuras modulares preparadas para crecer al ritmo de tus necesidades.
+                </p>
+            </div>
+        </div>
+    </section>
+    <!-- Banner oscuro -->
+    <section style="padding: 4rem 2rem;
+                    background: #111;
+                    color: #fff;
+                    text-align: center">
+        <div style="max-width: 800px; margin: 0 auto;">
+            <h2>Construido para desarrolladores y creativos</h2>
+            <p style="margin-top: 1rem; line-height: 1.6; color: #aaa;">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+            </p>
+        </div>
+    </section>
+    <!-- Artículos extensos -->
+    <section style="padding: 4rem 2rem; max-width: 1000px; margin: 0 auto;">
+        <h2 style="text-align: center; margin-bottom: 2.5rem;">Nuestras Soluciones Integrales</h2>
+        <article style="margin-bottom: 2rem;
+                        padding: 1.5rem;
+                        background: #f9f9f9;
+                        border-left: 4px solid #0066cc">
+            <h3>1. Desarrollo Frontend a Medida</h3>
+            <p style="color: #555; margin-top: 0.5rem;">
+                Implementación de interfaces de usuario interactivas utilizando estándares modernos.
+            </p>
+        </article>
+        <article style="margin-bottom: 2rem;
+                        padding: 1.5rem;
+                        background: #f9f9f9;
+                        border-left: 4px solid #0066cc">
+            <h3>2. Integración de APIs y Backend</h3>
+            <p style="color: #555; margin-top: 0.5rem;">Conexión fluida con arquitecturas RESTful y Microservicios.</p>
+        </article>
+        <article style="margin-bottom: 2rem;
+                        padding: 1.5rem;
+                        background: #f9f9f9;
+                        border-left: 4px solid #0066cc">
+            <h3>3. Auditoría de Experiencia de Usuario (UX)</h3>
+            <p style="color: #555; margin-top: 0.5rem;">Análisis exhaustivo del flujo de navegación para reducir fricciones.</p>
+        </article>
+        <article style="margin-bottom: 2rem;
+                        padding: 1.5rem;
+                        background: #f9f9f9;
+                        border-left: 4px solid #0066cc">
+            <h3>4. Mantenimiento y Optimización Continua</h3>
+            <p style="color: #555; margin-top: 0.5rem;">Monitoreo constante de rendimiento y actualización de dependencias.</p>
+        </article>
+    </section>
+    <!-- Preguntas Frecuentes -->
+    <section style="padding: 4rem 2rem; background: #f4f4f6;">
+        <div style="max-width: 800px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Preguntas Frecuentes</h2>
+            <div style="margin-bottom: 1.5rem;">
+                <h4>¿Cómo afecta el scroll al menú desplegable?</h4>
+                <p style="color: #666; margin-top: 0.3rem;">
+                    Con el evento en JS, tan pronto scrolees más de 50px, el menú se cerrará automáticamente.
+                </p>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <h4>¿El contenido vuelve a su lugar sin position fixed?</h4>
+                <p style="color: #666; margin-top: 0.3rem;">
+                    Sí, empujará o subirá el resto del contenido dentro del flujo natural del documento.
+                </p>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

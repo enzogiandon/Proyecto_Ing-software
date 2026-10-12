@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Sistema de gestión{% endblock %}</title>
+        <!-- Favicon -->
+        <link rel="icon"
+              type="image/x-icon"
+              href="{% static 'core/img/favicon.ico' %}">
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+              rel="stylesheet">
+        <!-- Font Awesome -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+              rel="stylesheet"
+              crossorigin="anonymous">
+        <!-- Fuentes (CDN + Fallback nativo CSS) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+              rel="stylesheet">
+        <style>
+        /* Definición de fuentes locales como fallback */
+        @font-face {
+            font-family: 'Roboto-Local';
+            src: url('{% static "core/fonts/Roboto-Regular.woff2" %}') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Roboto-Local';
+            src: url('{% static "core/fonts/Roboto-Bold.woff2" %}') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'Roboto', 'Roboto-Local', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+        </style>
+        <!-- CSS PROPIO -->
+        <link href="{% static 'core/css/paletas.css' %}" rel="stylesheet">
+        <link href="{% static 'core/css/base.css' %}" rel="stylesheet">
+        {% block extra_css %}{% endblock %}
+        <!-- <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        <script src="https://unpkg.com/htmx-ext-ws@2.0.1/ws.js"></script> -->
+    </head>
+    <body class="d-flex flex-column vh-100 pt-0">
+        <header class="site-header">
+            <div class="header-container">
+                <!-- BOTON HAMBURGUESA -->
+                <div class="header-item">
+                    <button class="nav-toggle" id="navbar-toggle" aria-label="Abrir menú">
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                    </button>
+                    <a href="{% url 'core:inicio' %}" class="brand-logo">
+                        <img src="{% static 'core/img/logo.svg' %}" alt="Logo Gestion" height="40">
+                    </a>
+                </div>
+                <div class="header-item d-flex">
+                    <a href="{% url 'core:inicio' %}" class="user-link">
+                        <span class="user-greeting">{{ user.username }}</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+        <!-- FONDO OSCURO -->
+        <div class="navbar-overlay" id="navbar-overlay"></div>
+        <!-- ERRORES -->
+        <!-- NAVBAR -->
+        <nav class="nav-menu" id="navbar-menu">
+            <div class="nav-content">
+                {% for aplicacion in aplicaciones %}
+                    <div class="nav-item border-bottom">
+                        {% if aplicacion.acciones %}
+                            <!-- BOTON DESPLEGABLE -->
+                            <button class="nav-item-btn d-flex justify-content-between align-items-center w-100 p-2"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#subitem-{{ forloop.counter }}"
+                                    aria-expanded="false">
+                                <span>{{ aplicacion.nombre }}</span>
+                                <i class="fas fa-chevron-right icon-arrow"></i>
+                            </button>
+                            <!-- SUBITEMS -->
+                            <div id="subitem-{{ forloop.counter }}"
+                                 class="collapse nav-subitems-container">
+                                <ul class="list-unstyled mb-0">
+                                    {% for accion in aplicaciones.acciones %}
+                                        <li>
+                                            <a href="{{ accion.url }}"
+                                               class="d-block py-1 ps-4 text-decoration-none">{{ aplicacion.nombre }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% else %}
+                            <!-- LINK DIRECTO SI NO TIENE SUBITEMS -->
+                            <a href="{{ aplicacion.url }}"
+                               class="nav-item-link d-block p-2 text-decoration-none">{{ aplicacion.nombre }}</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'core:logout' %}" class="nav-item">
+                        {% csrf_token %}
+                        <button class="nav-item-btn btn-logout d-flex justify-content-between align-items-center w-100 p-2"
+                                type="submit">
+                            <i class="fas fa-sign-out-alt me-1"></i><span>Cerrar sesión</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'core:inicio' %}"
+                       class="nav-item-btn d-block p-2 text-decoration-none">Iniciar sesión</a>
+                {% endif %}
+            </div>
+        </nav>
+        <!-- MAIN -->
+        <main role="main" class="d-flex flex-column flex-grow-1 w-100">
+            {% block content %}{% endblock %}
+        </main>
+        {% block footer %}
+            <footer class="site-footer flex-shrink-0 mt-auto py-3">
+                <div class="container text-center">
+                    <span>© 2026 sistema de gestión y administración de datos - v1.0</span>
+                </div>
+            </footer>
+        {% endblock %}
+        {% block extra_js %}{% endblock %}
+        <script src="{% static 'core/js/base.js' %}"></script>
+        <script src="{% static 'core/js/toast.js' %}"></script>
+        <!-- Script para desplegar colapsables -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>

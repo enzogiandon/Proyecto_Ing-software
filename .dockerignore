@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Entornos virtuales locales
+.venv/
+venv/
+env/
+
+# Caché de Python y bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Archivos estáticos y media locales
+staticfiles/
+media/
+
+# Base de datos local (si llegaras a usar SQLite)
+*.sqlite3
+*.db
+
+# Logs y volcados
+*.log
+
+# Editores y sistema operativo
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store

@@ -23,18 +23,58 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 ---
 
-## 📊 Matriz de Distribución y Planificación del Backlog
+## 📊 Matriz de Distribución y Estimación del Backlog (Planning Poker)
 
-| Épica (Taiga ID) | Nombre de la Épica | Actor | Cantidad HUs | Historias de Usuario Asociadas |
-| :--- | :--- | :--- | :---: | :--- |
-| **EP-01 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | 9 | HU-2, HU-4, HU-5, HU-37, HU-38, HU-39, HU-40, HU-41, HU-42 |
-| **EP-02 (#6)** | Gestión de personal y vehículos | Personal Administrativo | 8 | HU-7, HU-8, HU-9, HU-10, HU-11, HU-43, HU-45, HU-66 |
-| **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | 8 | HU-13, HU-14, HU-46, HU-47, HU-48, HU-59, HU-60, HU-61 |
-| **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | 8 | HU-17, HU-18, HU-19, HU-20, HU-21, HU-49, HU-50, HU-58 |
-| **EP-05 (#51)** | Gestión de usuarios | Personal Administrativo | 2 | HU-52, HU-54 |
-| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | 9 | HU-23, HU-24, HU-25, HU-26, HU-62, HU-63, HU-64, HU-65, HU-67 |
-| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | 7 | HU-30, HU-31, HU-32, HU-33, HU-36, HU-55, HU-56 |
-| **TOTAL** | | | **51 HUs** | |
+| Épica (Taiga ID) | Nombre de la Épica | Actor | Cantidad HUs | Puntos Totales | HUs Sprint 1 | Pts Sprint 1 | HUs Backlog | Pts Backlog | Historias de Usuario Asociadas (pts) |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **EP-01 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | 9 | 26 pts | 9 | 26 pts | 0 | 0 pts | HU-2 (5), HU-4 (3), HU-5 (2), HU-37 (2), HU-38 (2), HU-39 (2), HU-40 (5), HU-41 (3), HU-42 (2) |
+| **EP-02 (#6)** | Gestión de personal y vehículos | Personal Administrativo | 8 | 18 pts | 6 | 13 pts | 2 | 5 pts | HU-7 (2), HU-8 (3), HU-9 (2), HU-10 (2), HU-11 (3), HU-43 (2), HU-45 (2), HU-66 (2) |
+| **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | 8 | 25 pts | 1 | 5 pts | 7 | 20 pts | HU-13 (5), HU-14 (2), HU-46 (5), HU-47 (3), HU-48 (2), HU-59 (3), HU-60 (2), HU-61 (3) |
+| **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | 8 | 30 pts | 2 | 4 pts | 6 | 26 pts | HU-17 (2), HU-18 (2), HU-19 (8), HU-20 (3), HU-21 (3), HU-49 (5), HU-50 (2), HU-58 (5) |
+| **EP-05 (#51)** | Gestión de usuarios | Personal Administrativo | 2 | 4 pts | 2 | 4 pts | 0 | 0 pts | HU-52 (2), HU-54 (2) |
+| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | 9 | 25 pts | 5 | 13 pts | 4 | 12 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3) |
+| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | 7 | 20 pts | 3 | 6 pts | 4 | 14 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
+| **TOTAL** | | | **51 HUs** | **148 pts** | **28 HUs** | **71 pts** | **23 HUs** | **77 pts** | |
+
+---
+
+### 🚀 Planificación y Compromiso: Sprint 1 (09/10/2026 – 29/10/2026)
+
+> **Nota Metodológica de Estimación:** Los puntos asignados corresponden a la sesión de **Planning Poker** del equipo de **Softech**, representando la complejidad general y de implementación de cada historia de usuario. En el gestor Taiga se asientan sobre la columna base de puntos, reflejando el esfuerzo integral de la historia.
+> 
+> Para el **Sprint 1**, el equipo seleccionó **28 Historias de Usuario** que totalizan **71 puntos de historia** (48% del esfuerzo global del backlog), cubriendo el flujo operativo prioritario: ingesta de planillas, gestión de flota/personal, control de acceso, y consulta móvil de itinerarios.
+
+| Ref | ID | Historia de Usuario | Épica Asociada | Puntos (Poker) | Estado de Planificación |
+| :---: | :---: | :--- | :--- | :---: | :---: |
+| 2 | HU-2 | Importar planilla de remitos | EP-01 (#1) | 5 pts | Compromiso Sprint 1 |
+| 4 | HU-4 | Agregar un remito | EP-01 (#1) | 3 pts | Compromiso Sprint 1 |
+| 5 | HU-5 | Consultar remitos registrados | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
+| 7 | HU-7 | Agregar personal | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
+| 8 | HU-8 | Asignar permisos administrativos | EP-02 (#6) | 3 pts | Compromiso Sprint 1 |
+| 9 | HU-9 | Agregar vehículo | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
+| 13 | HU-13 | Agregar itinerario | EP-03 (#12) | 5 pts | Compromiso Sprint 1 |
+| 17 | HU-17 | Consultar entregas | EP-04 (#16) | 2 pts | Compromiso Sprint 1 |
+| 18 | HU-18 | Consultar detalle de entrega | EP-04 (#16) | 2 pts | Compromiso Sprint 1 |
+| 23 | HU-23 | Iniciar sesión | EP-06 (#22) | 2 pts | Compromiso Sprint 1 |
+| 26 | HU-26 | Guardar recorrido | EP-06 (#22) | 5 pts | Compromiso Sprint 1 |
+| 32 | HU-32 | Validar cobro íntegro | EP-07 (#29) | 3 pts | Compromiso Sprint 1 |
+| 37 | HU-37 | Consultar importaciones | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
+| 38 | HU-38 | Ver detalle de una importación | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
+| 39 | HU-39 | Consultar detalle de un remito | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
+| 40 | HU-40 | Eliminar una importación | EP-01 (#1) | 5 pts | Compromiso Sprint 1 |
+| 41 | HU-41 | Editar remito | EP-01 (#1) | 3 pts | Compromiso Sprint 1 |
+| 42 | HU-42 | Eliminar remito | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
+| 43 | HU-43 | Modificar personal | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
+| 45 | HU-45 | Modificar vehículo | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
+| 52 | HU-52 | Iniciar sesión como administrativo | EP-05 (#51) | 2 pts | Compromiso Sprint 1 |
+| 54 | HU-54 | Cerrar sesión como administrativo | EP-05 (#51) | 2 pts | Compromiso Sprint 1 |
+| 55 | HU-55 | Adjuntar un documento | EP-07 (#29) | 2 pts | Compromiso Sprint 1 |
+| 56 | HU-56 | Registrar inconvenientes con la entrega | EP-07 (#29) | 1 pt | Compromiso Sprint 1 |
+| 62 | HU-62 | Consultar itinerario | EP-06 (#22) | 2 pts | Compromiso Sprint 1 |
+| 63 | HU-63 | Mostrar recorridos guardados | EP-06 (#22) | 3 pts | Compromiso Sprint 1 |
+| 65 | HU-65 | Eliminar recorrido | EP-06 (#22) | 1 pt | Compromiso Sprint 1 |
+| 66 | HU-66 | Suspender o deshabilitar personal | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
+| **TOTAL** | | **28 Historias de Usuario asignadas** | | **71 pts** | |
 
 ---
 
@@ -822,7 +862,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 ---
 
-#### HU-54: CERRAR SESIÓN
+#### HU-54: CERRAR SESIÓN COMO ADMINISTRATIVO
 
 **Título:**
 - **Como** PERSONAL ADMINISTRATIVO

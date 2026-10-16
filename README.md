@@ -26,15 +26,15 @@ Este repositorio contiene la ingeniería de requisitos, documentación de diseñ
 
 ## 👥 Integrantes — Equipo Softech
 
-El equipo está conformado por 7 integrantes con roles metodológicos definidos para la interacción con el cliente:
+El equipo está conformado por 7 integrantes, organizados en las siguientes áreas de desarrollo y gestión:
 
-- **Enzo Giandon**
-- **Alan Tolaba**
-- **Catalina Caruso**
-- **Ian Chica Herrero**
-- **Lautaro Giralde**
-- **Mayerly Sinion Mendoza**
-- **Aylén Carlos**
+- **Enzo Giandon** — Scrum Master
+- **Mayerly Sinion Mendoza** — Backend
+- **Lautaro Giralde** — Backend
+- **Catalina Caruso** — Front Transportistas (Mobile)
+- **Aylén Carlos** — Front Transportistas (Mobile)
+- **Alan Tolaba** — Front Administrativos (Web)
+- **Ian Chica Herrero** — Front Administrativos (Web)
 
 ---
 

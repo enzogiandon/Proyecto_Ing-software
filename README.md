@@ -26,15 +26,15 @@ Este repositorio contiene la ingeniería de requisitos, documentación de diseñ
 
 ## 👥 Integrantes — Equipo Softech
 
-El equipo está conformado por 7 integrantes con roles metodológicos definidos para la interacción con el cliente:
+El equipo está conformado por 7 integrantes, organizados en las siguientes áreas de desarrollo y gestión:
 
-- **Enzo Giandon**
-- **Alan Tolaba**
-- **Catalina Caruso**
-- **Ian Chica Herrero**
-- **Lautaro Giralde**
-- **Mayerly Sinion Mendoza**
-- **Aylén Carlos**
+- **Enzo Giandon** — Scrum Master
+- **Mayerly Sinion Mendoza** — Backend
+- **Lautaro Giralde** — Backend
+- **Catalina Caruso** — Front Transportistas (Mobile)
+- **Aylén Carlos** — Front Transportistas (Mobile)
+- **Alan Tolaba** — Front Administrativos (Web)
+- **Ian Chica Herrero** — Front Administrativos (Web)
 
 ---
 
@@ -58,7 +58,8 @@ Proyecto_Ing-software/
 │   └── gestion/                        # Minutas internas, debates de equipo y pautas metodológicas
 │       ├── notas-preparacion.md        # Apuntes de preparación metodológica
 │       ├── debate-entrevistas.md       # Acuerdos y dinámicas grupales
-│       └── comunicacion-kristian.md    # Registro de comunicaciones
+│       ├── comunicacion-kristian.md    # Registro de comunicaciones
+│       └── sprint-01/                  # Planificación y actas de reuniones del Sprint 1
 └── src/                                # Código fuente del sistema (en desarrollo)
 ```
 

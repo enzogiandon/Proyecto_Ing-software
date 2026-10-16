@@ -88,16 +88,15 @@ El proyecto se articula en entregables documentales y de software alineados a lo
 ---
 
 ### 2.3. Plan del Personal
-El equipo de **Softech** está conformado por **7 integrantes**. La organización y designación nominal de los roles internos se encuentra en proceso de formalización final en la herramienta Taiga. Para asegurar la viabilidad del proyecto, se establece un marco operativo de trabajo cruzado con dedicación semanal homogénea:
+El equipo de **Softech** está conformado por **7 integrantes**. La organización y designación nominal de los roles internos se formalizó a partir de la sesión de Sprint Planning 1, estableciendo un marco operativo de trabajo cruzado con dedicación semanal homogénea:
 
 - **Cantidad de personal:** 7 ingenieros / desarrolladores de software.
 - **Dedicación estimada:** 8 a 10 horas semanales por integrante a lo largo de las 12 semanas del proyecto (promedio de 80 horas de ingeniería totales por persona = 560 horas de equipo).
-- **Estructura preliminar de áreas de responsabilidad:**
-  - **Coordinación y Gestión (Project Lead / Scrum Master):** Gestión del tablero Taiga, seguimiento de cronograma, mitigación de riesgos e interlocución directa con el cliente (Martín Rodríguez).
-  - **Ingeniería de Requerimientos y Aseguramiento de Calidad (QA Lead):** Validación de criterios de aceptación, diseño de escenarios de prueba y pruebas de integración.
-  - **Desarrollo Backend, Datos y Servicios Cloud:** Modelado de persistencia, desarrollo de APIs, lógica de conciliación multimarca y parseo de archivos Excel.
-  - **Desarrollo Frontend Web (Módulo Administrativo):** Interfaz para personal de depósito, diagramación de rutas y pantalla de arqueo vespertino.
-  - **Desarrollo Mobile (Módulo Transportistas):** Aplicación para choferes, soporte offline, interacción con cámara y registro de cobros en mostrador.
+- **Asignación de roles y áreas de responsabilidad técnica:**
+  - **Scrum Master / Facilitación y Gestión de Proyecto:** **Enzo Giandon** (Gestión del backlog en Taiga, remoción de impedimentos, seguimiento de cronograma e interlocución directa con el cliente Martín Rodríguez).
+  - **Desarrollo Backend, Persistencia y Servicios Comunes:** **Mayerly Sinion Mendoza** y **Lautaro Giralde** (Modelado de persistencia relacional PostgreSQL, desarrollo de endpoints REST, motor de parseo de planillas Excel y contratos de autenticación).
+  - **Desarrollo Frontend Web (Módulo Administrativo):** **Alan Tolaba** e **Ian Chica Herrero** (Panel de gestión para oficina y depósito, importación masiva de remitos, diagramación de hojas de ruta y conciliación de cobranzas).
+  - **Desarrollo Mobile (Módulo Transportistas):** **Catalina Caruso** y **Aylén Carlos** (Aplicación para choferes en campo, interfaz táctil simplificada, persistencia offline con SQLite/AsyncStorage, registro de cobranzas y certificación documental).
 
 ---
 

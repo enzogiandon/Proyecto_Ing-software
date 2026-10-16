@@ -58,7 +58,8 @@ Proyecto_Ing-software/
 │   └── gestion/                        # Minutas internas, debates de equipo y pautas metodológicas
 │       ├── notas-preparacion.md        # Apuntes de preparación metodológica
 │       ├── debate-entrevistas.md       # Acuerdos y dinámicas grupales
-│       └── comunicacion-kristian.md    # Registro de comunicaciones
+│       ├── comunicacion-kristian.md    # Registro de comunicaciones
+│       └── sprint-01/                  # Planificación y actas de reuniones del Sprint 1
 └── src/                                # Código fuente del sistema (en desarrollo)
 ```
 

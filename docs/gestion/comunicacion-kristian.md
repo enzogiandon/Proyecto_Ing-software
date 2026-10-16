@@ -119,12 +119,22 @@ Este documento actúa como bitácora de todos los mensajes enviados y recibidos 
 
 ---
 
-## 3. Próximo Hito Agendado
+## 3. Consultas Pedagógicas y Técnicas con el Ayudante (@ruso)
 
-- **Evento:** Segunda Entrevista de Relevamiento y Validación (Entrevista 2).
-- **Fecha y hora:** **Lunes 14/09/2026 a las 17:00 hs**.
-- **Modalidad:** Presencial (en la Facultad, post explicación práctica).
-- **Objetivo central:** Relevar y validar en detalle el circuito de cobranzas (efectivo, transferencias, QR), arqueo y conciliación, hoja de ruta del transportista, reglas ante contingencias/reentrega y comportamiento en modo offline.
+### Consulta — Alternativas de Integración (App Transportistas vs. Módulo Administrativo)
+
+En conversación con el ayudante de cátedra respecto al desafío técnico de integrar la aplicación de los transportistas en calle con la de administración en oficina, se relevaron las siguientes apreciaciones y alternativas arquitectónicas (dejando la elección a criterio del equipo):
+
+- **Opción A — Expo (React Native / Mobile):** *(Recomendada desde la perspectiva del ayudante)*
+  - **Descripción:** Framework para desarrollar y probar la aplicación celular en tiempo real. Requiere un backend con base de datos, facilitado por Firebase u otros servicios en la nube.
+  - **Ventajas (Pros):** Independencia total y desacople entre ambas aplicaciones; experiencia nativa en el dispositivo del chofer.
+  - **Desventajas (Contras):** Requiere backend mockeado o APIs bien definidas con un compromiso estricto de contrato entre aplicaciones para lograr su integración efectiva (riesgo de que la app móvil quede desenganchada de la administración de remitos).
+
+- **Opción B — Aplicación Web con Vista Especial para Celular (Web Responsiva / PWA):**
+  - **Descripción:** Desarrollar una solución web unificada con diseño adaptado a pantallas móviles para la operativa del chofer.
+  - **Ventajas (Pros):** Todo el equipo trabaja sobre el mismo stack tecnológico y se minimizan sustancialmente los problemas de integración entre sistemas.
+  - **Desventajas (Contras):** Todo el equipo de desarrollo debe concurrir y trabajar sobre un único backend común.
+
 
 
 

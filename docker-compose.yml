@@ -17,7 +17,7 @@ services:
   #     interval: 3s
   #     timeout: 3s
   #     retries: 5
-
+  #
   # redis:
   #   image: redis:7-alpine
   #   container_name: st_redis
@@ -46,5 +46,5 @@ services:
     #   redis:
     #     condition: service_started
 
-volumes:
-  postgres_data:
+# volumes:
+#   postgres_data:

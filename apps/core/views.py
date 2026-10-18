@@ -3,6 +3,7 @@ from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import TemplateView
+from django.core.exceptions import ObjectDoesNotExist
 
 from .forms import LoginForm
 from .models import Usuario
@@ -38,7 +39,7 @@ class CustomLoginView(LoginView):
                     user.is_active = False
             user.save(update_fields=["intentos_fallidos", "is_active"])
 
-        except Usuario.DoesNotExist:
+        except ObjectDoesNotExist:
             pass
         return super().form_invalid(form)
 
@@ -51,4 +52,5 @@ class Inicio(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         context["username"] = user.first_name or user.username
+        context["hola"] = "hola como estas?"
         return context

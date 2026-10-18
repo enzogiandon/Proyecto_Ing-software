@@ -49,8 +49,13 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     # Propias
+    "apps.api",
+    "apps.cobranza",
     "apps.core",
-    "apps.api"
+    "apps.entregas",
+    "apps.flota",
+    "apps.itinerarios",
+    "apps.remitos",
 ]
 
 REST_FRAMEWORK = {
@@ -188,6 +193,10 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = []
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_ROOT = BASE_DIR / "media"
+
+MEDIA_URL = "/media/"
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

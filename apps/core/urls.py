@@ -7,6 +7,7 @@ from .views import (
     EditarEmpleado,
     Inicio,
     ListaEmpleados,
+    SuspenderEmpleado,
 )
 
 app_name = "core"
@@ -21,6 +22,11 @@ urlpatterns = [
         "empleados/<int:pk>/editar/",
         EditarEmpleado.as_view(),
         name="empleado_editar",
+    ),
+    path(
+        "empleados/<int:pk>/suspender/",
+        SuspenderEmpleado.as_view(),
+        name="empleado_suspender",
     ),
     path("usuarios/crear", CrearEmpleado.as_view(), name="crear_usuario"),
 ]

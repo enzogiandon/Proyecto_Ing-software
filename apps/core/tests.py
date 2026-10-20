@@ -138,3 +138,53 @@ class EmpleadoViewsTests(TestCase):
         employee.refresh_from_db()
         self.assertEqual(employee.first_name, "Nombre")
         self.assertTrue(employee.check_password("Original-Password-42!"))
+
+    def test_suspend_employee_disables_account_without_deleting_it(self):
+        employee = get_user_model().objects.create_user(
+            username="empleado_a_suspender",
+            password="Employee-Password-42!",
+            dni="67890123",
+            rol=Roles.TRANSPORTISTA,
+        )
+
+        response = self.client.post(
+            reverse("core:empleado_suspender", args=[employee.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:empleado_lista"),
+            fetch_redirect_response=False,
+        )
+        employee.refresh_from_db()
+        self.assertFalse(employee.is_active)
+        self.assertTrue(
+            get_user_model().objects.filter(pk=employee.pk).exists()
+        )
+        self.client.logout()
+        self.assertFalse(
+            self.client.login(
+                username="empleado_a_suspender",
+                password="Employee-Password-42!",
+            )
+        )
+        self.assertEqual(
+            [message.message for message in get_messages(response.wsgi_request)],
+            ["Cuenta del empleado deshabilitada."],
+        )
+
+    def test_suspend_employee_does_not_change_account_on_get(self):
+        employee = get_user_model().objects.create_user(
+            username="empleado_sin_cambios",
+            password="Employee-Password-42!",
+            dni="78901234",
+            rol=Roles.TRANSPORTISTA,
+        )
+
+        response = self.client.get(
+            reverse("core:empleado_suspender", args=[employee.pk])
+        )
+
+        self.assertEqual(response.status_code, 405)
+        employee.refresh_from_db()
+        self.assertTrue(employee.is_active)

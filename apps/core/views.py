@@ -1,9 +1,12 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.views import View
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from .forms import EmpleadoCreateForm, EmpleadoUpdateForm, LoginForm
@@ -67,6 +70,17 @@ class EditarEmpleado(
     success_url = reverse_lazy("core:empleado_lista")
     success_message = "Empleado modificado correctamente"
     permission_required = "core.change_usuario"
+
+
+class SuspenderEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "core.change_usuario"
+
+    def post(self, request, pk):
+        empleado = get_object_or_404(Usuario, pk=pk)
+        empleado.is_active = False
+        empleado.save(update_fields=["is_active"])
+        messages.success(request, "Cuenta del empleado deshabilitada.")
+        return redirect("core:empleado_lista")
 
 
 class Inicio(LoginRequiredMixin, TemplateView):

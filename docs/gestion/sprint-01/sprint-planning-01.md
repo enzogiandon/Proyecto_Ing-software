@@ -1,19 +1,30 @@
-# Minuta de Reunión — Planificación del Sprint 1 (Sprint Planning 1)
+# Minuta de Reunión — Planeamiento del 1er Sprint
+**Lanzamiento y Compromiso de Desarrollo del Sprint 1 (09/10/2026 al 29/10/2026)**
 
-**Empresa:** Softech  
-**Proyecto:** Sistema de Gestión Logística y Liquidación de Cobranzas  
-**Cliente:** Centro de Distribución Logística (Martín Rodríguez, Responsable de Planificación y Rutas)  
-**Fecha:** 9 de octubre de 2026  
-**Hora:** 18:00 hs – 20:00 hs  
-**Canal:** Sala de Coordinación de Desarrollo Softech (Discord)  
-**Participantes y Roles (Equipo Softech):**
-- **Enzo Giandon:** Scrum Master
-- **Mayerly Sinion Mendoza:** Backend
-- **Lautaro Giralde:** Backend
-- **Catalina Caruso:** Front Transportistas (Mobile)
-- **Aylén Carlos:** Front Transportistas (Mobile)
-- **Alan Tolaba:** Front Administrativos (Web)
-- **Ian Chica Herrero:** Front Administrativos (Web)
+| **Proyecto:** Sistema de Gestión Logística | **Softech** — Octubre de 2026 |
+| :--- | ---: |
+| **Identificación del Equipo:**<br>• Carlos, Aylén — 03538/0<br>• Caruso, Catalina — 03298/4<br>• Chica Herrero, Ian<br>• Giandon, Enzo Agustín — 03532/4<br>• Giralde, Lautaro — 03568/7<br>• Sinion Mendoza, Mayerly<br>• Tolaba, Alan — 4122/3 | <img src="assets/logo-softech-scrum.png" alt="Softech Logo" width="80" /> |
+
+- **Empresa:** Softech — Consultoría y Desarrollo de Software  
+- **Proyecto:** Sistema Integral de Gestión Logística y Liquidación de Cobranzas  
+- **Cliente:** Centro de Distribución Logística (Martín Rodríguez, Responsable de Planificación y Rutas)  
+- **Fecha:** 9 de octubre de 2026  
+- **Hora:** 18:00 hs – 20:00 hs  
+- **Canal:** Sala de Coordinación de Desarrollo Softech (Discord)  
+
+---
+
+## 👥 Participantes y Roles (Equipo Softech)
+
+| Nombre y Apellido | Legajo / Identificación | Rol en el Proyecto | Subgrupo Técnico |
+| :--- | :--- | :--- | :--- |
+| **Enzo Giandon** | 03532/4 | Scrum Master | Facilitación y Coordinación Ágil |
+| **Mayerly Sinion Mendoza** | — | Desarrolladora Backend | Backend, Persistencia y APIs |
+| **Lautaro Giralde** | 03568/7 | Desarrollador Backend | Backend, Persistencia y APIs |
+| **Catalina Caruso** | 03298/4 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile) |
+| **Aylén Carlos** | 03538/0 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile) |
+| **Alan Tolaba** | 4122/3 | Desarrollador Frontend Web | Front Administrativos (Web) |
+| **Ian Chica Herrero** | — | Desarrollador Frontend Web | Front Administrativos (Web) |
 
 ---
 
@@ -124,6 +135,9 @@ Para el primer ciclo de desarrollo de 3 semanas (**09/10/2026 al 29/10/2026**), 
 | 65 | HU-65 | Eliminar recorrido | EP-06: Itinerarios en calle (#22) | 1 pt | Front Transportistas |
 | 66 | HU-66 | Suspender o deshabilitar personal | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
 | **TOTAL** | | **28 Historias de Usuario Comprometidas** | | **71 pts** | |
+
+\* El número # indica el número de épica en el proyecto de Taiga.  
+\*\* El resto de las historias de usuario se puede consultar en el gestor Taiga o en esta [tabla de seguimiento de historias de usuario](https://docs.google.com/spreadsheets/d/1XJ9v3v1gFjtmCFSVoAJ0DIv9F_JfRK5rYsCCYx7bvo8/edit?usp=drive_link).
 
 ---
 

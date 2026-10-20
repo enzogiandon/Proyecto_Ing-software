@@ -26,15 +26,15 @@ Este repositorio contiene la ingeniería de requisitos, documentación de diseñ
 
 ## 👥 Integrantes — Equipo Softech
 
-El equipo está conformado por 7 integrantes, organizados en las siguientes áreas de desarrollo y gestión:
+El equipo está conformado por 7 integrantes, organizados en subgrupos de desarrollo y gestión ágil:
 
-- **Enzo Giandon** — Scrum Master
-- **Mayerly Sinion Mendoza** — Backend
-- **Lautaro Giralde** — Backend
-- **Catalina Caruso** — Front Transportistas (Mobile)
-- **Aylén Carlos** — Front Transportistas (Mobile)
-- **Alan Tolaba** — Front Administrativos (Web)
+- **Enzo Giandon** (03532/4) — Scrum Master / Facilitación y Gestión Ágil
+- **Alan Tolaba** (4122/3) — Front Administrativos (Web)
 - **Ian Chica Herrero** — Front Administrativos (Web)
+- **Catalina Caruso** (03298/4) — Front Transportistas (Mobile)
+- **Aylén Carlos** (03538/0) — Front Transportistas (Mobile)
+- **Lautaro Giralde** (03568/7) — Backend y Persistencia
+- **Mayerly Sinion Mendoza** — Backend y Persistencia
 
 ---
 
@@ -50,7 +50,7 @@ Proyecto_Ing-software/
 │   ├── entregas/                       # Paquetes formales de entregas para la cátedra
 │   │   ├── README.md                   # Resumen del estado de entregas del cuatrimestre
 │   │   ├── entrega-01/                 # Entrevistas + Cuestionario + Req. no funcionales (Finalizada)
-│   │   └── entrega-02/                 # Iniciativas + Épicas + HU (Taiga) + PGP (En desarrollo)
+│   │   └── entrega-02/                 # Iniciativas + Épicas + HU (Taiga) + PGP (Finalizada)
 │   ├── entrevistas/                    # Ciclo de entrevistas y relevamiento de campo
 │   │   ├── README.md                   # Resumen del ciclo y accesos a audios en la nube
 │   │   ├── entrevista-01/              # Relevamiento operativo y modelo de negocio
@@ -59,7 +59,13 @@ Proyecto_Ing-software/
 │       ├── notas-preparacion.md        # Apuntes de preparación metodológica
 │       ├── debate-entrevistas.md       # Acuerdos y dinámicas grupales
 │       ├── comunicacion-kristian.md    # Registro de comunicaciones
+│       ├── plantilla-scrum.md          # Plantilla estándar para ceremonias Scrum (#XX)
 │       └── sprint-01/                  # Planificación y actas de reuniones del Sprint 1
+│           ├── README.md               # Resumen del Sprint 1, métricas y estado
+│           ├── sprint-planning-01.md   # Acta de Planning y compromiso (28 HUs - 71 pts)
+│           ├── daily-scrum-01.md       # Scrum #1: Validación con cliente Martín Rodríguez
+│           ├── daily-scrum-02.md       # Scrum #2: Sincronización técnica interna y bloqueos
+│           └── assets/                 # Capturas de maquetas y logotipos de minutas
 └── src/                                # Código fuente del sistema (en desarrollo)
 ```
 
@@ -71,9 +77,13 @@ Proyecto_Ing-software/
   - Relevamiento de infraestructura, flota de camiones, centros de acopio y perfil de clientes.
 - [x] **Fase 2: Definición de Requisitos y Circuito de Cobranzas (Entrevista 2)**
   - Definición de alternativas a WhatsApp, roles del sistema y gestión del efectivo.
-- [ ] **Fase 3: Especificación de Requerimientos de Software (SRS / Casos de Uso)**
-- [ ] **Fase 4: Diseño de Arquitectura y Prototipado UX/UI**
-- [ ] **Fase 5: Implementación del Sistema (Frontend & Backend)**
+- [x] **Fase 3: Especificación de Requerimientos y Backlog Ágil (Entrega 2)**
+  - Iniciativas y épicas funcionales (EP-01 a EP-07), 51 HUs en Taiga (148 pts) y Plan de Gestión de Proyecto (PGP - IEEE 1058).
+- [x] **Fase 4: Diseño UX/UI y Prototipado Interactivo (Figma)**
+  - Vistas administrativas web por rol y app móvil Android (login, itinerario, recorridos y cobros).
+- [ ] **Fase 5: Construcción e Implementación del Sistema (Sprint 1 en curso)**
+  - Sprint 1 (09/10 al 29/10/2026): 28 HUs comprometidas (71 pts). Hacia la Demo 1 (MVP Iteración 1 — 30/10/2026).
+  - Sprint 2 (30/10 al 20/11/2026): 23 HUs remanentes (77 pts). Hacia la Demo 2 (Release Final).
 
 ---
 

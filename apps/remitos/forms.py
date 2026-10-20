@@ -4,7 +4,7 @@ from decimal import Decimal
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import ImportacionRemitos, ItemRemito, Remito
+from .models import Comercio, ImportacionRemitos, ItemRemito, Marca, Producto, Remito
 
 
 class RemitoForm(forms.ModelForm):
@@ -93,11 +93,81 @@ ItemRemitoFormSet = forms.inlineformset_factory(
     can_delete=True,
 )
 
+
 class ImportacionRemitosForm(forms.ModelForm):
     class Meta:
         model = ImportacionRemitos
         fields = ["archivo", "marca"]
         widgets = {
             "marca": forms.Select(attrs={"class": "form-select"}),
-            "archivo": forms.FileInput(attrs={"class": "form-control", "accept": ".csv, xlsx, xls"}),
+            "archivo": forms.FileInput(
+                attrs={"class": "form-control", "accept": ".csv, xlsx, xls"}
+            ),
+        }
+
+
+class ProductoForm(forms.ModelForm):
+    activo = forms.BooleanField(
+        label="Estado",
+        initial=True,
+        required=False,
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
+
+    class Meta:
+        model = Producto
+        fields = ["nombre", "marca", "codigo", "activo"]
+        widgets = {
+            "nombre": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Detergente Vajilla Citrus 750ml (Caja x12)",
+                }
+            ),
+            "marca": forms.Select(
+                attrs={"class": "form-select", "placeholder": "Marca"}
+            ),
+            "codigo": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "1234 1234"}
+            ),
+        }
+
+
+class ComercioForm(forms.ModelForm):
+    class Meta:
+        model = Comercio
+        fields = ["razon_social", "cuit", "domicilio", "telefono"]
+        widgets = {
+            "razon_social": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Coca-Cola"}
+            ),
+            "cuit": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "20123456783"}
+            ),
+            "domicilio": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Calle falsa 123"}
+            ),
+            "telefono": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "11 1234 1234"}
+            ),
+        }
+
+
+class MarcaForm(forms.ModelForm):
+    class Meta:
+        model = Marca
+        fields = ["nombre", "cuit", "telefono", "email"]
+        widgets = {
+            "nombre": forms.TextInput(
+                attrs={"class": "form-select", "placeholder": "Razon social"}
+            ),
+            "cuit": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "CUIT"}
+            ),
+            "telefono": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "11 1234 1234"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control", "placeholder": "email@mail.com"}
+            ),
         }

@@ -36,6 +36,7 @@
                 <td>{{ remito.comercio.razon_social }}</td>
                 <td>${{ remito.monto_total }}</td>
                 <td>{{ remito.get_estado_display }}</td>
+                <td>{{ remito.eliminado }}</td>
                 <td>{{ remito.fecha_emision|date:"d/m/Y" }}</td>
                 <td>{{ remito.fecha_pactada|date:"d/m/Y"|default:"-" }}</td>
                 <td>

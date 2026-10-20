@@ -23,7 +23,6 @@ class EstadoRemito(models.TextChoices):
 class Marca(models.Model):
     nombre = models.CharField(max_length=50, unique=True)
     cuit = models.CharField(max_length=11, unique=True)
-    contacto = models.CharField(max_length=50, blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.CharField(max_length=50, blank=True, null=True)
     fecha_creacion = models.DateField(auto_now_add=True)
@@ -64,13 +63,20 @@ class Producto(models.Model):
     def __str__(self):
         return f"{self.nombre} - {self.codigo}" if self.codigo else self.nombre
 
+    def delete(self, using=None, keep_parents=False):
+        self.activo = False
+        self.save(update_fields=["activo"])
+
+        return (1, {self._meta.label: 1})
+
 
 def ruta_lote(instance, filename):
-  _, extension = os.path.splitext(filename)
-  fecha_str = timezone.now().strftime("%Y-%m-%d_%H-%M-%S")
-  nuevo_nombre = f"lote_{fecha_str}{extension}"
+    _, extension = os.path.splitext(filename)
+    fecha_str = timezone.now().strftime("%Y-%m-%d_%H-%M-%S")
+    nuevo_nombre = f"lote_{fecha_str}{extension}"
 
-  return os.path.join("importaciones", nuevo_nombre)
+    return os.path.join("importaciones", nuevo_nombre)
+
 
 class ImportacionRemitos(models.Model):
     archivo = models.FileField(
@@ -138,12 +144,16 @@ class Remito(models.Model):
         related_name="remitos",
     )
     fecha_creacion = models.DateField(auto_now_add=True)
+    eliminado = models.BooleanField(default=False)
     history = HistoricalRecords()
 
+    def delete(self, using=None, keep_parents=False):
+        self.eliminado = True
+        self.save(update_fields=["eliminado"])
+        return (1, {self._meta.label: 1})
+
     def __str__(self):
-        return (
-            f"Remito #{self.numero} - {self.comercio.razon_social}"
-        )
+        return f"Remito #{self.numero} - {self.comercio.razon_social}"
 
 
 class ItemRemito(models.Model):

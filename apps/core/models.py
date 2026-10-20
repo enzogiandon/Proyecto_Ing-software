@@ -5,12 +5,21 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 phone_validator = RegexValidator(
-    regex=r'^\+?[\d\s\-()]{7,20}$',
-    message="El número de teléfono debe ingresarse en un formato válido (ej: +54 9 11 1234-5678 o 1112345678)."
+    regex=r"^\+?[\d\s\-()]{7,20}$",
+    message="El número de teléfono debe ingresarse en un formato válido (ej: +54 9 11 1234-5678 o 1112345678).",
 )
 
+
+class Roles(models.TextChoices):
+    ADMINISTRATIVO = "administrativo", "Administrativo"
+    TRANSPORTISTA = "transportista", "Transportista"
+    ADMINISTRADOR = "administrador", "Administrador"
+
+
 class Usuario(AbstractUser):
-    telefono = models.CharField(max_length=20, validators=[phone_validator], blank=True, null=True)
+    telefono = models.CharField(
+        max_length=20, validators=[phone_validator], blank=True, null=True
+    )
     dni = models.CharField(
         max_length=8,
         unique=True,
@@ -22,13 +31,18 @@ class Usuario(AbstractUser):
         ],
     )
     intentos_fallidos = models.IntegerField(default=0)
+    rol = models.CharField(
+        max_length=20, choices=Roles.choices, default=Roles.TRANSPORTISTA
+    )
     history = HistoricalRecords()
 
 
 class CentroAcopio(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     direccion = models.CharField(max_length=255)
-    telefono = models.CharField(max_length=20, validators=[phone_validator], blank=True, null=True)
+    telefono = models.CharField(
+        max_length=20, validators=[phone_validator], blank=True, null=True
+    )
     activo = models.BooleanField(default=True)
     history = HistoricalRecords()
 
@@ -39,7 +53,10 @@ class Transportista(models.Model):
         on_delete=models.CASCADE,
         related_name="perfil_transportista",
     )
-    habilitado = models.BooleanField(default=True)
-    centro = models.ForeignKey(CentroAcopio, on_delete=models.CASCADE, blank=True, null=True)
-    vehiculo = models.ForeignKey('flota.Vehiculo', on_delete=models.CASCADE, blank=True, null=True)
+    centro = models.ForeignKey(
+        CentroAcopio, on_delete=models.CASCADE, blank=True, null=True
+    )
+    vehiculo = models.ForeignKey(
+        "flota.Vehiculo", on_delete=models.CASCADE, blank=True, null=True
+    )
     history = HistoricalRecords()

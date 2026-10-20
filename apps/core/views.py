@@ -1,21 +1,16 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import TemplateView
-from django.core.exceptions import ObjectDoesNotExist
+from django.views.generic import CreateView, TemplateView
 
-from .forms import LoginForm
+from .forms import LoginForm, UserRegisterForm
 from .models import Usuario
 
 # Create your views here.
 
 class CustomLoginView(LoginView):
-    """
-    Verifica que el dispositivo este en la white-list de dispositivos y en caso de
-    no estarlo envia un codigo a los administradores para que lo validen
-    """
-
     template_name = "core/login.html"
     form_class = LoginForm
     #redirect_authenticated_user = True
@@ -43,6 +38,14 @@ class CustomLoginView(LoginView):
             pass
         return super().form_invalid(form)
 
+class CrearUsuario(CreateView):
+    form_class = UserRegisterForm
+    template_name = "core/crear_usuario.html"
+
+    success_url = reverse_lazy("")
+
+    permission_required = ""
+    raise_exception = True
 
 class Inicio(LoginRequiredMixin, TemplateView):
     template_name = "core/inicio.html"
@@ -52,5 +55,4 @@ class Inicio(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         context["username"] = user.first_name or user.username
-        context["hola"] = "hola como estas?"
         return context

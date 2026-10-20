@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Usuario
+from .models import Transportista, Usuario
 
 
 @admin.register(Usuario)
@@ -53,3 +53,13 @@ class UsuarioAdmin(UserAdmin):
         ),
         ("Fechas importantes", {"fields": ("last_login", "date_joined")}),
     )
+
+@admin.register(Transportista)
+class TransportistaAdmin(admin.ModelAdmin):
+  list_display = ("usuario", "centro", "vehiculo")
+  search_fields = (
+      "usuario__username",
+      "usuario__first_name",
+      "usuario__last_name",
+      "usuario__dni",
+  )

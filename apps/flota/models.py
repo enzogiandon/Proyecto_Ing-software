@@ -2,15 +2,14 @@
 
 from django.db import models
 
-# Create your models here.
+
+class EstadoVehiculo(models.TextChoices):
+    DISPONIBLE = "disponible", "Disponible"
+    ASIGNADO = "asignado", "Asignado"
+    NO_OPERATIVO = "no_operativo", "No operativo"
 
 
 class Vehiculo(models.Model):
-    class EstadoVehiculo(models.TextChoices):
-        DISPONIBLE = "disponible", "Disponible"
-        ASIGNADO = "asignado", "Asignado"
-        NO_OPERATIVO = "no_operativo", "No operativo"
-
     patente = models.CharField(
         max_length=7,
         unique=True,
@@ -19,6 +18,9 @@ class Vehiculo(models.Model):
     modelo = models.CharField(
         max_length=50, blank=True, null=True, help_text="Marca y modelo del camión"
     )
+    poliza = models.CharField(
+        max_length=20, blank=True, null=True, help_text="Numero de poliza de seguro"
+    )
     estado = models.CharField(
         max_length=20,
         choices=EstadoVehiculo.choices,
@@ -26,9 +28,9 @@ class Vehiculo(models.Model):
         help_text="Estado operativo para la planificacion de rutas",
     )
 
-    class Meta:
-        verbose_name = 'Vehículo'
-        verbose_name_plural = "Vehículos"
-
     def __str__(self):
-        return f"Camion {self.patente} ({self.get_estado_display()})"
+        return self.patente
+
+    class Meta:
+        verbose_name = "Vehículo"
+        verbose_name_plural = "Vehículos"

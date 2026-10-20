@@ -4,55 +4,83 @@ from django.db import models
 
 from config import settings
 
-# Create your models here.
+
+class EstadoItinerario(models.TextChoices):
+    PENDIENTE = "pendiente", "Pendiente"
+    ASIGNADO = "asignado", "Asignado"
+    EN_RUTA = "en_ruta", "En ruta"
+    FINALIZADO = "finalizado", "Finalizado"
+
+
+class EstadoParada(models.TextChoices):
+    PENDIENTE = "pendiente", "Pendiente"
+    FINALIZADA = "finalizada", "Finalizada"
+    ERROR = "error", "Error"
+
 
 class DetalleRutaGuardada(models.Model):
-    ruta_guardada = models.ForeignKey('RutaGuardada', on_delete=models.CASCADE)
-    comercio = models.ForeignKey('remitos.Comercio', on_delete=models.CASCADE)
+    ruta_guardada = models.ForeignKey("RutaGuardada", on_delete=models.CASCADE)
+    comercio = models.ForeignKey("remitos.Comercio", on_delete=models.CASCADE)
     prioridad = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ('-prioridad')
+        ordering = ("-prioridad",)
+
 
 class RutaGuardada(models.Model):
-    transportista = models.ForeignKey('core.Transportista', on_delete=models.CASCADE)
+    transportista = models.ForeignKey("core.Transportista", on_delete=models.CASCADE)
     nombre = models.CharField(max_length=50)
-    comercios = models.ManyToManyField('remitos.Comercio', through='DetalleRutaGuardada', related_name='rutas_guardadas')
+    comercios = models.ManyToManyField(
+        "remitos.Comercio",
+        through="DetalleRutaGuardada",
+        related_name="rutas_guardadas",
+    )
 
     def __str__(self):
         return f"{self.nombre} - Transportista: {self.transportista}"
 
-class Itinerario(models.Model):
-    class EstadoItinerario(models.TextChoices):
-        PENDIENTE = "pendiente", "Pendiente"
-        ASIGNADO = "asignado", "Asignado"
-        EN_RUTA = "en_ruta", "En ruta"
-        FINALIZADO = "finalizado", "Finalizado"
 
+class Itinerario(models.Model):
     fecha = models.DateField(help_text="Fecha de la entrega")
-    estado = models.CharField(max_length=20, choices=EstadoItinerario.choices, default=EstadoItinerario.PENDIENTE)
-    transportista = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, blank=True, null=True, related_name="itinerarios")
-    vehiculo = models.ForeignKey("flota.Vehiculo", on_delete=models.PROTECT, blank=True, null=True)
+    estado = models.CharField(
+        max_length=20,
+        choices=EstadoItinerario.choices,
+        default=EstadoItinerario.PENDIENTE,
+    )
+    transportista = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="itinerarios",
+    )
+    vehiculo = models.ForeignKey(
+        "flota.Vehiculo", on_delete=models.PROTECT, blank=True, null=True
+    )
 
     class Meta:
         verbose_name = "Itinerario"
         verbose_name_plural = "Itinerarios"
-        ordering = ("-fecha")
-    
+        ordering = ("-fecha",)
+
     def __str__(self):
-        return f"Itinerario #{self.id} - {self.fecha} ({self.get_estado_display()})"
+        return f"Itinerario #{self.id} - {self.transportista.user.full_name} {self.fecha})"
+
 
 class Parada(models.Model):
-    class EstadoParada(models.TextChoices):
-        PENDIENTE = "pendiente", "Pendiente"
-        FINALIZADA = "finalizada", "Finalizada"
-        ERROR = "error", "Error"
-
-    itinerario = models.ForeignKey(Itinerario, on_delete=models.CASCADE, related_name="paradas")
-    comercio = models.ForeignKey('remitos.Comercio', on_delete=models.CASCADE, related_name='paradas')
+    itinerario = models.ForeignKey(
+        Itinerario, on_delete=models.CASCADE, related_name="paradas"
+    )
+    comercio = models.ForeignKey(
+        "remitos.Comercio", on_delete=models.CASCADE, related_name="paradas"
+    )
     orden = models.PositiveIntegerField(default=0)
-    estado = models.CharField(max_length=20, choices=EstadoParada.choices, default=EstadoParada.PENDIENTE)
+    estado = models.CharField(
+        max_length=20, choices=EstadoParada.choices, default=EstadoParada.PENDIENTE
+    )
 
     class Meta:
-        ordering = ("itinerario", "orden")
-
+        ordering = (
+            "itinerario",
+            "orden",
+        )

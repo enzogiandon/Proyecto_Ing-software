@@ -2,7 +2,6 @@
 
 from django.db import models
 
-# Create your models here.
 
 class Entrega(models.Model):
     parada = models.OneToOneField('itinerarios.Parada', on_delete=models.CASCADE, related_name="entrega")
@@ -44,7 +43,7 @@ class ProblemaEntrega(models.Model):
     class Meta:
         verbose_name = "Problema en parada"
         verbose_name_plural = "Problemas en paradas"
-        ordering = ('-fecha')
+        ordering = ('-fecha',)
 
     def __str__(self):
         return f"Problema [{self.get_tipo_display()}] - Parada #{self.parada.id} ({self.parada.comercio.nombre})"

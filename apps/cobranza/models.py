@@ -3,16 +3,21 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-# Create your models here.
+
+class MedioPago(models.TextChoices):
+    EFECTIVO = "efectivo", "Efectivo"
+    TRANSFERENCIA = "transferencia", "Transferencia"
+    QR = "qr", "QR"
+
+
+class EstadoCobranza(models.TextChoices):
+    REGISTRADO = "registrado", "Registrado"
+    APROBADO = "aprobado", "Aprobado"
+    DIFIERE = "difiere", "Difiere"
+    NO_ENCONTRADO = "no_encontrado", "No encontrado"
 
 
 class Cobranza(models.Model):
-    class EstadoCobranza(models.TextChoices):
-        REGISTRADO = "registrado", "Registrado"
-        APROBADO = "aprobado", "Aprobado"
-        DIFIERE = "difiere", "Difiere"
-        NO_ENCONTRADO = "no_encontrado", "No encontrado"
-
     parada = models.OneToOneField(
         "itinerarios.Parada",
         on_delete=models.PROTECT,
@@ -51,12 +56,8 @@ class Cobranza(models.Model):
     def __str__(self):
         return f"Comercio {self.parada.comercio.razon_social} - Declarado ${self.total_recibido} | Verificado ${self.total_verificado}"
 
-class DetallePago(models.Model):
-    class MedioPago(models.TextChoices):
-        EFECTIVO = "efectivo", "Efectivo"
-        TRANSFERENCIA = "transferencia", "Transferencia"
-        QR = "qr", "QR"
 
+class DetallePago(models.Model):
     cobranza = models.ForeignKey(
         Cobranza, on_delete=models.CASCADE, related_name="detalles"
     )

@@ -1,5 +1,9 @@
-# Minuta de Reunión — Segundo Scrum del Sprint 1
+# Minuta de Reunión — Scrum #2 del Sprint 1
 **Sincronización Técnica Interna de Desarrollo (Sin Cliente)**
+
+| **Proyecto:** Sistema de Gestión Logística | **Softech** — Octubre de 2026 |
+| :--- | ---: |
+| **Identificación del Equipo:**<br>• Carlos, Aylén — 03538/0<br>• Caruso, Catalina — 03298/4<br>• Chica Herrero, Ian<br>• Giandon, Enzo Agustín — 03532/4<br>• Giralde, Lautaro — 03568/7<br>• Sinion Mendoza, Mayerly<br>• Tolaba, Alan — 4122/3 | <img src="assets/logo-softech-scrum.png" alt="Softech Logo" width="80" /> |
 
 - **Empresa:** Softech — Consultoría y Desarrollo de Software  
 - **Proyecto:** Sistema Integral de Gestión Logística y Liquidación de Cobranzas  
@@ -11,17 +15,17 @@
 
 ---
 
-## 👥 Participantes
+## 👥 Participantes y Roles
 
-| Nombre y Apellido | Rol en el Proyecto | Subgrupo Técnico |
-| :--- | :--- | :--- |
-| **Enzo Giandon** | Scrum Master | Facilitación y Coordinación Ágil |
-| **Alan Tolaba** | Desarrollador Frontend Web | Front Administrativos (Web) |
-| **Ian Chica Herrero** | Desarrollador Frontend Web | Front Administrativos (Web) |
-| **Mayerly Sinion Mendoza** | Desarrolladora Backend | Backend, Persistencia y APIs |
-| **Lautaro Giralde** | Desarrollador Backend | Backend, Persistencia y APIs |
-| **Catalina Caruso** | Desarrolladora Frontend Mobile | Front Transportistas (Mobile Android) |
-| **Aylén Carlos** | Desarrolladora Frontend Mobile | Front Transportistas (Mobile Android) |
+| Nombre y Apellido | Legajo / Identificación | Rol en el Proyecto | Subgrupo Técnico |
+| :--- | :--- | :--- | :--- |
+| **Enzo Giandon** | 03532/4 | Scrum Master | Facilitación y Coordinación Ágil |
+| **Alan Tolaba** | 4122/3 | Desarrollador Frontend Web | Front Administrativos (Web) |
+| **Ian Chica Herrero** | — | Desarrollador Frontend Web | Front Administrativos (Web) |
+| **Mayerly Sinion Mendoza** | — | Desarrolladora Backend | Backend, Persistencia y APIs |
+| **Lautaro Giralde** | 03568/7 | Desarrollador Backend | Backend, Persistencia y APIs |
+| **Catalina Caruso** | 03298/4 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile Android) |
+| **Aylén Carlos** | 03538/0 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile Android) |
 
 ---
 

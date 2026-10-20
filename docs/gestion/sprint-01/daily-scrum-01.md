@@ -1,5 +1,9 @@
-# Minuta de Reunión — Primer Scrum del Sprint 1
+# Minuta de Reunión — Scrum #1 del Sprint 1
 **Sesión de Validación y Sincronización con el Cliente**
+
+| **Proyecto:** Sistema de Gestión Logística | **Softech** — Octubre de 2026 |
+| :--- | ---: |
+| **Identificación del Equipo:**<br>• Carlos, Aylén — 03538/0<br>• Caruso, Catalina — 03298/4<br>• Chica Herrero, Ian<br>• Giandon, Enzo Agustín — 03532/4<br>• Giralde, Lautaro — 03568/7<br>• Sinion Mendoza, Mayerly<br>• Tolaba, Alan — 4122/3 | <img src="assets/logo-softech-scrum.png" alt="Softech Logo" width="80" /> |
 
 - **Empresa:** Softech — Consultoría y Desarrollo de Software  
 - **Proyecto:** Sistema Integral de Gestión Logística y Liquidación de Cobranzas  
@@ -12,18 +16,18 @@
 
 ---
 
-## 👥 Participantes
+## 👥 Participantes y Roles
 
-| Nombre y Apellido | Rol en el Proyecto | Subgrupo / Área |
-| :--- | :--- | :--- |
-| **Martín Rodríguez** | Responsable de Planificación Logística y Rutas | Cliente / Interlocutor Clave |
-| **Enzo Giandon** | Scrum Master | Gestión Ágil y Facilitación Softech |
-| **Alan Tolaba** | Desarrollador Frontend Web | Front Administrativos (Web) |
-| **Ian Chica Herrero** | Desarrollador Frontend Web | Front Administrativos (Web) |
-| **Catalina Caruso** | Desarrolladora Frontend Mobile | Front Transportistas (Mobile) |
-| **Aylén Carlos** | Desarrolladora Frontend Mobile | Front Transportistas (Mobile) |
-| **Mayerly Sinion Mendoza** | Desarrolladora Backend | Backend, Persistencia y APIs |
-| **Lautaro Giralde** | Desarrollador Backend | Backend, Persistencia y APIs |
+| Nombre y Apellido | Legajo / Identificación | Rol en el Proyecto | Subgrupo / Área |
+| :--- | :--- | :--- | :--- |
+| **Martín Rodríguez** | — | Responsable de Planificación Logística y Rutas | Cliente / Interlocutor Clave |
+| **Enzo Giandon** | 03532/4 | Scrum Master | Gestión Ágil y Facilitación Softech |
+| **Alan Tolaba** | 4122/3 | Desarrollador Frontend Web | Front Administrativos (Web) |
+| **Ian Chica Herrero** | — | Desarrollador Frontend Web | Front Administrativos (Web) |
+| **Catalina Caruso** | 03298/4 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile) |
+| **Aylén Carlos** | 03538/0 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile) |
+| **Mayerly Sinion Mendoza** | — | Desarrolladora Backend | Backend, Persistencia y APIs |
+| **Lautaro Giralde** | 03568/7 | Desarrollador Backend | Backend, Persistencia y APIs |
 
 ---
 
@@ -44,15 +48,21 @@ Los objetivos fijados para la reunión fueron:
 - **Incremento expuesto:** Proyecto interactivo en Figma que modela las interfaces de usuario preliminares:
   - Pantalla de inicio de sesión único para el personal administrativo (HU-52).
   - Vistas de inicio (dashboards modulares) adaptadas a los distintos roles operativos definidos en la organización:
-    1. **Planificación de Rutas:** Área responsable de la diagramación de itinerarios y asignación de hojas de ruta.
+    1. **Planificación de Rutas:** Área responsable de la diagramación de itinerarios y asignación de hojas de ruta (Figura 1: Vista de la pantalla de inicio de Planificación).
     2. **Conciliación de Pagos:** Área contable encargada del control de cobranzas, arqueos y rendiciones de choferes.
     3. **Administración de Flota:** Gestión del parque automotor, estados de unidades y capacidad de carga.
     4. **Administración de Personal:** Padrón de transportistas, choferes y operadores internos.
 
 ### 📱 Subgrupo Front Transportistas (Catalina Caruso y Aylén Carlos)
 - **Incremento expuesto:** Prototipo en Figma enfocado en la aplicación móvil para choferes en calle (EP-06):
-  - Pantalla de inicio de sesión móvil (HU-23).
+  - Pantalla de inicio de sesión móvil (HU-23) (Figura 2).
   - Flujos y pantallas correspondientes a los **escenarios fallidos de autenticación** (credenciales inválidas, bloqueo de acceso y validaciones de formato en campo).
+
+<p align="center">
+  <img src="assets/figura-2-login-mobile.png" alt="Figura 2: Vista de inicio de sesión de la app Android" width="280" />
+  <br>
+  <em>Figura 2: Vista de inicio de sesión de la app Android.</em>
+</p>
 
 ### ⚙️ Subgrupo Backend (Mayerly Sinion Mendoza y Lautaro Giralde)
 - **Estado de avance:** 
@@ -111,5 +121,5 @@ A partir de las conclusiones de la reunión, se establecieron las siguientes met
 
 La sesión resultó altamente constructiva, logrando validar tempranamente la dirección del diseño de interfaces y previniendo desfasajes conceptuales de negocio en la gestión de estados y asignaciones de flota. El cliente manifestó su conformidad con la modalidad de trabajo y el ritmo del equipo.
 
-- **Próxima Ceremonia:** Scrum Diario de Sincronización Interna (Softech).
+- **Próxima Ceremonia:** Scrum Diario N° 2 de Sincronización Interna (Softech).
 - **Hito de Entrega:** Demo 1 (MVP Iteración 1) — 30 de octubre de 2026.

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle Remito #{{ remito.numero }}</title>
+</head>
+<body>
+
+    <h1>Detalle del Remito #{{ remito.numero }}</h1>
+
+    <ul>
+        <li><strong>Número:</strong> {{ remito.numero }}</li>
+        <li><strong>Marca:</strong> {{ remito.marca.nombre }}</li>
+        <li><strong>Comercio:</strong> {{ remito.comercio.razon_social }} ({{ remito.comercio.domicilio }})</li>
+        <li><strong>Monto Total:</strong> ${{ remito.monto_total }}</li>
+        <li><strong>Estado:</strong> {{ remito.get_estado_display }}</li>
+        <li><strong>Fecha de Emisión:</strong> {{ remito.fecha_emision|date:"d/m/Y" }}</li>
+        <li><strong>Fecha Pactada:</strong> {{ remito.fecha_pactada|date:"d/m/Y"|default:"No asignada" }}</li>
+        <li><strong>Fecha de Creación:</strong> {{ remito.fecha_creacion|date:"d/m/Y" }}</li>
+        <li><strong>Parada asignada:</strong> {{ remito.parada|default:"Sin asignar a itinerario" }}</li>
+    </ul>
+
+    <h2>Ítems / Productos</h2>
+    <ul>
+        {% for item in remito.items.all %}
+            <li>{{ item.cantidad }}x {{ item.producto.nombre }} - ${{ item.precio_unitario }} c/u</li>
+        {% empty %}
+            <li>No hay ítems registrados en este remito.</li>
+        {% endfor %}
+    </ul>
+
+    <p>
+        <a href="{% url 'remitos:remito_editar' remito.pk %}">Editar este remito</a> | 
+        <a href="{% url 'core:inicio' %}">Volver al listado</a>
+    </p>
+
+</body>
+</html>

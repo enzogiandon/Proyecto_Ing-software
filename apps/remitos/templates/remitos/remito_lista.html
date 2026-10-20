@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Remitos</title>
+</head>
+<body>
+
+    <h1>Listado de Remitos</h1>
+
+    <p>
+        <a href="{% url 'remitos:remito_crear' %}">+ Crear nuevo remito</a>
+    </p>
+
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Número</th>
+                <th>Marca</th>
+                <th>Comercio</th>
+                <th>Monto Total</th>
+                <th>Estado</th>
+                <th>Fecha Emisión</th>
+                <th>Fecha Pactada</th>
+                <th>Parada</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for remito in remitos %}
+            <tr>
+                <td>{{ remito.id }}</td>
+                <td>{{ remito.numero }}</td>
+                <td>{{ remito.marca.nombre }}</td>
+                <td>{{ remito.comercio.razon_social }}</td>
+                <td>${{ remito.monto_total }}</td>
+                <td>{{ remito.get_estado_display }}</td>
+                <td>{{ remito.fecha_emision|date:"d/m/Y" }}</td>
+                <td>{{ remito.fecha_pactada|date:"d/m/Y"|default:"-" }}</td>
+                <td>
+                    {% if remito.parada %}
+                        Parada #{{ remito.parada.orden }} (Itin: #{{ remito.parada.itinerario_id }})
+                    {% else %}
+                        Pendiente
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'remitos:remito_detalle' remito.pk %}">Ver</a> | 
+                    <a href="{% url 'remitos:remito_editar' remito.pk %}">Editar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10">No hay remitos registrados en el sistema.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Controles de Paginación estándar de Django -->
+    {% if is_paginated %}
+    <p>
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; Primera</a> | 
+            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a> | 
+        {% endif %}
+
+        <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+            | <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+            | <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+        {% endif %}
+    </p>
+    {% endif %}
+
+</body>
+</html>

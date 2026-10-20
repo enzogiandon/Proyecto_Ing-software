@@ -23,9 +23,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/", include("apps.api.urls")),
     path("", include("apps.core.urls")),
-    path("remitos/", include("apps.remitos.urls"))
+    path("remitos/", include("apps.remitos.urls")),
+    path("flota/", include("apps.flota.urls")),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

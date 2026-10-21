@@ -1,43 +1,48 @@
 :root {
     /* Fondos */
-    --bg: #FDFDFD;
-    --bg-footer: #F5F6F7;
-    --bg-danger: #dc3545;
+    --bg: #F8FAFC;
+    --bg-app: #F8FAFC;
+    --bg-surface: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    --bg-footer: #FFFFFF;
+    --bg-danger: #EF4444;
 
     /* Textos */
-    --text-primary: #212529;
-    --text-muted: #6c757d;
-    --text-white: #fff;
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+    --text-white: #FFFFFF;
+
     /* Sombras */
-    --shadow: rgba(0, 0, 0, 0.25);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 
     /* Bordes y Líneas */
-    --line-color: #eaeaea;
-    --border-color: #333;
-    /* Colores de marca / Acción */
-    --primary-color: #1CA3BB;
-    --primary-hover: #5970F4;
+    --line-color: #E2E8F0;
+    --border-color: #E2E8F0;
+    --border-radius-sm: 6px;
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
 
-    /* TOASTS */
-    --toast-bg-info: rgba(238, 238, 238, 0.85);
-    --toast-bg-danger: rgba(255, 92, 92, 0.8);
-}
+    /* Colores de marca / Acción (RepartosYA) */
+    --primary-color: #1D64F2;
+    --primary-hover: #1553CE;
+    --primary-light: #EFF6FF;
+    --primary-active: #DBEAFE;
 
-[data-theme="dark"] {
-    /* Fondos */
-    --bg: #0F1214;
-    --bg-surface: #1e1e1e;
-    --bg-header: #101314;
+    /* Estados y badges */
+    --status-success-bg: #DCFCE7;
+    --status-success-text: #166534;
+    --status-warning-bg: #FEF9C3;
+    --status-warning-text: #854D0E;
+    --status-danger-bg: #FEE2E2;
+    --status-danger-text: #991B1B;
+    --status-info-bg: #E0F2FE;
+    --status-info-text: #0369A1;
 
-    /* Textos */
-    --text-primary: #ECEEF0;
-    --text-muted: #ECEEF0;
-
-    /* Bordes y Líneas */
-    --border-color: #2d2d2d;
-
-    /* Colores de marca / Acción */
-    --primary-color: #3d8bfd;
-    --primary-hover: #0b5ed7;
+    /* Toasts */
+    --toast-bg-info: rgba(255, 255, 255, 0.95);
+    --toast-bg-danger: rgba(239, 68, 68, 0.95);
 }
 

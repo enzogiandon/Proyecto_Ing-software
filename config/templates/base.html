@@ -1,141 +1,196 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Sistema de gestión{% endblock %}</title>
-        <!-- Favicon -->
-        <link rel="icon"
-              type="image/x-icon"
-              href="{% static 'core/img/favicon.ico' %}">
-        <!-- Bootstrap CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-              rel="stylesheet">
-        <!-- Font Awesome -->
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-              rel="stylesheet"
-              crossorigin="anonymous">
-        <!-- Fuentes (CDN + Fallback nativo CSS) -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
-              rel="stylesheet">
-        <style>
-        /* Definición de fuentes locales como fallback */
-        @font-face {
-            font-family: 'Roboto-Local';
-            src: url('{% static "core/fonts/Roboto-Regular.woff2" %}') format('woff2');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Roboto-Local';
-            src: url('{% static "core/fonts/Roboto-Bold.woff2" %}') format('woff2');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RepartosYA - Panel de Gestión{% endblock %}</title>
 
-        body {
-            font-family: 'Roboto', 'Roboto-Local', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-        }
-        </style>
-        <!-- CSS PROPIO -->
-        <link href="{% static 'core/css/paletas.css' %}" rel="stylesheet">
-        <link href="{% static 'core/css/base.css' %}" rel="stylesheet">
-        {% block extra_css %}{% endblock %}
-        <!-- <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-        <script src="https://unpkg.com/htmx-ext-ws@2.0.1/ws.js"></script> -->
-    </head>
-    <body class="d-flex flex-column vh-100 pt-0">
-        <header class="site-header">
-            <div class="header-container">
-                <!-- BOTON HAMBURGUESA -->
-                <div class="header-item">
-                    <button class="nav-toggle" id="navbar-toggle" aria-label="Abrir menú">
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                        <span class="bar"></span>
-                    </button>
-                    <a href="{% url 'core:inicio' %}" class="brand-logo">
-                        <img src="{% static 'core/img/logo.svg' %}" alt="Logo Gestion" height="40">
-                    </a>
-                </div>
-                <div class="header-item d-flex">
-                    <a href="{% url 'core:inicio' %}" class="user-link">
-                        <span class="user-greeting">{{ user.username }}</span>
-                    </a>
-                </div>
-            </div>
-        </header>
-        <!-- FONDO OSCURO -->
-        <div class="navbar-overlay" id="navbar-overlay"></div>
-        <!-- ERRORES -->
-        <!-- NAVBAR -->
-        <nav class="nav-menu" id="navbar-menu">
-            <div class="nav-content">
-                {% for aplicacion in aplicaciones %}
-                    <div class="nav-item border-bottom">
-                        {% if aplicacion.acciones %}
-                            <!-- BOTON DESPLEGABLE -->
-                            <button class="nav-item-btn d-flex justify-content-between align-items-center w-100 p-2"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#subitem-{{ forloop.counter }}"
-                                    aria-expanded="false">
-                                <span>{{ aplicacion.nombre }}</span>
-                                <i class="fas fa-chevron-right icon-arrow"></i>
-                            </button>
-                            <!-- SUBITEMS -->
-                            <div id="subitem-{{ forloop.counter }}"
-                                 class="collapse nav-subitems-container">
-                                <ul class="list-unstyled mb-0">
-                                    {% for accion in aplicaciones.acciones %}
-                                        <li>
-                                            <a href="{{ accion.url }}"
-                                               class="d-block py-1 ps-4 text-decoration-none">{{ aplicacion.nombre }}</a>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        {% else %}
-                            <!-- LINK DIRECTO SI NO TIENE SUBITEMS -->
-                            <a href="{{ aplicacion.url }}"
-                               class="nav-item-link d-block p-2 text-decoration-none">{{ aplicacion.nombre }}</a>
-                        {% endif %}
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'core/img/favicon.ico' %}">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS Propios basados en Figma -->
+    <link href="{% static 'core/css/paletas.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/base.css' %}" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Telón de fondo para dispositivos móviles -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+        <!-- ==============================================
+             BARRA LATERAL DE NAVEGACIÓN (SIDEBAR)
+        =============================================== -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <!-- Cabecera del Sidebar con Logo -->
+            <div class="sidebar-header">
+                <a href="{% url 'core:inicio' %}" class="brand-link">
+                    <div class="brand-icon-box">
+                        <i class="fas fa-truck-fast"></i>
                     </div>
-                {% endfor %}
+                    <div>
+                        <div class="brand-text">RepartosYA</div>
+                        <div class="brand-subtext">Panel administrativo</div>
+                    </div>
+                </a>
+                <button class="btn btn-sm btn-light d-lg-none" id="sidebar-close-btn" aria-label="Cerrar menú">
+                    <i class="fas fa-times text-muted"></i>
+                </button>
+            </div>
+
+            <!-- Navegación interna con categorías -->
+            <nav class="sidebar-nav">
+                <!-- Enlace Inicio -->
+                <a href="{% url 'core:inicio' %}" class="sidebar-link {% if request.resolver_match.url_name == 'inicio' %}active{% endif %}">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                </a>
+
+                <!-- Sección: PLANIFICACIÓN -->
+                <div class="nav-section-title">Planificación</div>
+                <a href="{% url 'remitos:importacion_lista' %}" class="sidebar-link {% if 'importacion' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-file-import"></i>
+                    <span>Importaciones</span>
+                </a>
+                <a href="{% url 'remitos:remito_lista' %}" class="sidebar-link {% if 'remito' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-receipt"></i>
+                    <span>Remitos</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-route"></i>
+                    <span>Itinerarios</span>
+                </a>
+
+                <!-- Sección: CONCILIACIÓN -->
+                <div class="nav-section-title">Conciliación</div>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-truck-ramp-box"></i>
+                    <span>Entregas</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Cobranzas</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Pagos</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Arqueo de caja</span>
+                </a>
+
+                <!-- Sección: ADMINISTRACIÓN -->
+                <div class="nav-section-title">Administración</div>
+                <a href="{% url 'core:empleado_lista' %}" class="sidebar-link {% if 'empleado' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    <span>Empleados</span>
+                </a>
+                <a href="{% url 'flota:vehiculo_lista' %}" class="sidebar-link {% if 'vehiculo' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-truck"></i>
+                    <span>Flota</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>Permisos</span>
+                </a>
+            </nav>
+
+            <!-- Pie del Sidebar: Datos de Usuario y Botón de Salir -->
+            <div class="sidebar-footer">
                 {% if user.is_authenticated %}
-                    <form method="post" action="{% url 'core:logout' %}" class="nav-item">
+                    <div class="user-profile-badge">
+                        <div class="user-avatar-circle">
+                            {{ user.first_name|first|default:user.username|first|upper }}
+                        </div>
+                        <div class="user-info-text">
+                            <div class="user-display-name">
+                                {{ user.get_full_name|default:user.username }}
+                            </div>
+                            <div class="user-role-label">
+                                {{ user.get_rol_display|default:"Administración" }}
+                            </div>
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'core:logout' %}" class="m-0">
                         {% csrf_token %}
-                        <button class="nav-item-btn btn-logout d-flex justify-content-between align-items-center w-100 p-2"
-                                type="submit">
-                            <i class="fas fa-sign-out-alt me-1"></i><span>Cerrar sesión</span>
+                        <button type="submit" class="btn-logout-clean">
+                            <i class="fas fa-arrow-right-from-bracket"></i>
+                            <span>Cerrar sesión</span>
                         </button>
                     </form>
                 {% else %}
-                    <a href="{% url 'core:inicio' %}"
-                       class="nav-item-btn d-block p-2 text-decoration-none">Iniciar sesión</a>
+                    <a href="{% url 'core:login' %}" class="sidebar-link">
+                        <i class="fas fa-arrow-right-to-bracket"></i>
+                        <span>Iniciar sesión</span>
+                    </a>
                 {% endif %}
             </div>
-        </nav>
-        <!-- MAIN -->
-        <main role="main" class="d-flex flex-column flex-grow-1 w-100">
-            {% block content %}{% endblock %}
-        </main>
-        {% block footer %}
-            <footer class="site-footer flex-shrink-0 mt-auto py-3">
-                <div class="container text-center">
-                    <span>© 2026 sistema de gestión y administración de datos - v1.0</span>
+        </aside>
+
+        <!-- ==============================================
+             CONTENIDO PRINCIPAL DE LA PÁGINA
+        =============================================== -->
+        <main class="app-main">
+            <!-- Barra superior móvil (Hamburguesa) -->
+            <div class="mobile-topbar d-lg-none">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="brand-icon-box" style="width: 30px; height: 30px; font-size: 0.9rem;">
+                        <i class="fas fa-truck-fast"></i>
+                    </div>
+                    <span class="fw-bold">RepartosYA</span>
                 </div>
-            </footer>
-        {% endblock %}
-        {% block extra_js %}{% endblock %}
-        <script src="{% static 'core/js/base.js' %}"></script>
-        <script src="{% static 'core/js/toast.js' %}"></script>
-        <!-- Script para desplegar colapsables -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+                <button class="mobile-toggle-btn" id="sidebar-toggle-btn" aria-label="Abrir menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Contenedor central -->
+            <div class="content-container">
+                <!-- NOTIFICACIONES Y MENSAJES GLOBALES -->
+                {% if messages %}
+                    <div class="global-alerts-container">
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}primary{% endif %} alert-clean alert-dismissible fade show p-3" role="alert">
+                                {% if message.tags == 'success' %}
+                                    <i class="fas fa-check-circle text-success me-2 fs-5"></i>
+                                {% elif message.tags == 'error' %}
+                                    <i class="fas fa-exclamation-circle text-danger me-2 fs-5"></i>
+                                {% elif message.tags == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle text-warning me-2 fs-5"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle text-primary me-2 fs-5"></i>
+                                {% endif %}
+                                <div class="flex-grow-1">{{ message }}</div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Bloque donde se inyecta el contenido de cada pantalla -->
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script de control del sidebar -->
+    <script src="{% static 'core/js/base.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
 </html>

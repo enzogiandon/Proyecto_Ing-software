@@ -152,10 +152,13 @@ class ListaImportacion(ListView):
         )
 
 
-class DetalleImportacion(View):
+class DetalleImportacion(DetailView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_detalle.html"
     context_object_name = "importacion"
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("errores")
 
 
 class EliminarImportacion(DeleteView):

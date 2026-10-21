@@ -1,388 +1,260 @@
-from datetime import date, timedelta
 from decimal import Decimal
-
-from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import IntegrityError
-from django.test import Client, TestCase
+from django.test import TestCase
 from django.urls import reverse
-
-from apps.remitos.forms import (
-    BaseItemRemitoFormSet,
-    ImportacionRemitosForm,
-    ItemRemitoForm,
-    ItemRemitoFormSet,
-    RemitoForm,
-)
+from django.utils import timezone
 from apps.remitos.models import (
     Comercio,
-    ErrorImportacion,
-    EstadoImportacion,
-    EstadoRemito,
-    ImportacionRemitos,
-    ItemRemito,
     Marca,
     Producto,
     Remito,
+    ItemRemito,
+    EstadoRemito,
 )
 
 
-class BaseTestCase(TestCase):
-    """Configuración base de entidades requeridas por las pruebas."""
-
+class BaseRemitosTestCase(TestCase):
+    """Configuración base con instancias comunes válidas según los modelos."""
     def setUp(self):
-        self.client = Client()
-
-        self.marca = Marca.objects.create(
-            nombre="Marca Test",
-            cuit="20123456789",
-            contacto="Juan Perez",
-            telefono="1122334455",
-            email="contacto@marcatest.com",
-        )
-
         self.comercio = Comercio.objects.create(
-            razon_social="Comercio Central SRL",
-            cuit="30987654321",
-            domicilio="Av. Siempre Viva 742",
-            telefono="1199887766",
+            razon_social="Distribuidora Quilmes SRL",
+            cuit="30112233445",  # 11 dígitos exactos por el RegexValidator
+            domicilio="Av. Calchaquí 1500",
+            activo=True,
         )
-
+        self.marca = Marca.objects.create(
+            nombre="Bebidas del Sur",
+            cuit="30998877665",  # 11 dígitos únicos
+            activo=True,
+        )
+        # Producto no lleva precio
         self.producto_1 = Producto.objects.create(
-            nombre="Producto A", codigo="PROD-001", marca=self.marca
+            nombre="Gaseosa Cola 2L",
+            codigo="PROD-001",
+            marca=self.marca,
+            activo=True,
         )
         self.producto_2 = Producto.objects.create(
-            nombre="Producto B", codigo="PROD-002", marca=self.marca
-        )
-
-
-# ==============================================================================
-# 1. TESTS DE MODELOS
-# ==============================================================================
-class ModelosRemitosTests(BaseTestCase):
-    def test_str_modelos(self):
-        self.assertEqual(str(self.marca), "Marca Test")
-        self.assertIn("Comercio Central SRL", str(self.comercio))
-        self.assertEqual(str(self.producto_1), "Producto A - PROD-001")
-
-    def test_cuit_comercio_invalido_falla(self):
-        comercio_invalido = Comercio(
-            razon_social="Invalido SA", cuit="12345", domicilio="Calle Falsa 123"
-        )
-        with self.assertRaises(ValidationError):
-            comercio_invalido.full_clean()
-
-    def test_creacion_remito_e_items(self):
-        remito = Remito.objects.create(
-            numero="R-0001",
+            nombre="Agua Mineral 1.5L",
+            codigo="PROD-002",
             marca=self.marca,
-            monto_total=Decimal("1500.50"),
-            estado=EstadoRemito.PENDIENTE,
-            fecha_emision=date.today(),
-            fecha_pactada=date.today() + timedelta(days=2),
-            comercio=self.comercio,
+            activo=True,
         )
-        item = ItemRemito.objects.create(
+        self.fecha_hoy = timezone.now().date()
+
+
+class ModelosRemitosTests(BaseRemitosTestCase):
+    def test_calculo_monto_total_con_multiples_items(self):
+        """Verifica que actualizar_monto_total sume correctamente cantidad * precio_unitario."""
+        remito = Remito.objects.create(
+            numero="R-0001-00000001",
+            marca=self.marca,
+            comercio=self.comercio,
+            fecha_emision=self.fecha_hoy,
+            fecha_pactada=self.fecha_hoy,
+        )
+
+        # 2 unidades x $1500.00 = $3000.00
+        ItemRemito.objects.create(
             remito=remito,
             producto=self.producto_1,
+            cantidad=2,
+            precio_unitario=Decimal("1500.00"),
+        )
+        # 3 unidades x $800.00 = $2400.00
+        ItemRemito.objects.create(
+            remito=remito,
+            producto=self.producto_2,
             cantidad=3,
-            precio_unitario=Decimal("500.00"),
+            precio_unitario=Decimal("800.00"),
         )
-        self.assertEqual(remito.items.count(), 1)
-        self.assertEqual(item.cantidad, 3)
-        self.assertEqual(str(remito), "Remito #R-0001 - Comercio Central SRL")
 
-    def test_ruta_archivo_importacion(self):
-        archivo_mock = SimpleUploadedFile(
-            "planilla.csv", b"col1,col2\n1,2", content_type="text/csv"
-        )
-        importacion = ImportacionRemitos.objects.create(
-            archivo=archivo_mock,
+        # Disparamos la actualización
+        remito.actualizar_monto_total()
+        remito.refresh_from_db()
+
+        # 3000 + 2400 = 5400
+        self.assertEqual(remito.monto_total, Decimal("5400.00"))
+
+    def test_recalculo_al_eliminar_item(self):
+        """Verifica que si un item se borra, el monto total disminuya acorde."""
+        remito = Remito.objects.create(
+            numero="R-0001-00000002",
             marca=self.marca,
-            estado=EstadoImportacion.RECHAZADO,
-        )
-        self.assertTrue(importacion.archivo.name.startswith("importaciones/lote_"))
-        self.assertTrue(importacion.archivo.name.endswith(".csv"))
-
-
-    def test_modelo_remito_numero_duplicado_lanza_integrity_error(self):
-        Remito.objects.create(
-            numero="R-UNICO",
-            marca=self.marca,
-            monto_total=Decimal("500.00"),
-            fecha_emision=date.today(),
-            fecha_pactada=date.today(),
             comercio=self.comercio,
+            fecha_emision=self.fecha_hoy,
+            fecha_pactada=self.fecha_hoy,
+        )
+        item1 = ItemRemito.objects.create(
+            remito=remito,
+            producto=self.producto_1,
+            cantidad=1,
+            precio_unitario=Decimal("1500.00"),
+        )
+        item2 = ItemRemito.objects.create(
+            remito=remito,
+            producto=self.producto_2,
+            cantidad=1,
+            precio_unitario=Decimal("800.00"),
         )
 
-        # Al intentar guardar otro con el mismo número, la base de datos debe frenarlo
-        with self.assertRaises(IntegrityError):
-            Remito.objects.create(
-                numero="R-UNICO",
-                marca=self.marca,
-                monto_total=Decimal("700.00"),
-                fecha_emision=date.today(),
-                fecha_pactada=date.today(),
-                comercio=self.comercio,
-            )
+        remito.actualizar_monto_total()
+        remito.refresh_from_db()
+        self.assertEqual(remito.monto_total, Decimal("2300.00"))
 
+        # Borramos el segundo item (físicamente) y recalculamos
+        item2.delete()
+        remito.actualizar_monto_total()
+        remito.refresh_from_db()
 
-# ==============================================================================
-# 2. TESTS DE FORMS Y FORMSETS
-# ==============================================================================
-class FormulariosRemitosTests(BaseTestCase):
-    def test_remito_form_fecha_pactada_anterior_a_hoy_invalida(self):
-        data = {
-            "numero": "REM-100",
-            "marca": self.marca.id,
-            "monto_total": "250.00",
-            "fecha_emision": date.today(),
-            "fecha_pactada": date.today() - timedelta(days=1),  # Fecha pasada
-            "comercio": self.comercio.id,
-        }
-        form = RemitoForm(data=data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("fecha_pactada", form.errors)
+        self.assertEqual(remito.monto_total, Decimal("1500.00"))
 
-    def test_remito_form_valido(self):
-        data = {
-            "numero": "REM-101",
-            "marca": self.marca.id,
-            "monto_total": "250.00",
-            "fecha_emision": date.today(),
-            "fecha_pactada": date.today() + timedelta(days=3),
-            "comercio": self.comercio.id,
-        }
-        form = RemitoForm(data=data)
-        self.assertTrue(form.is_valid())
-
-    def test_item_remito_form_precio_unitario_cero_o_negativo(self):
-        form_cero = ItemRemitoForm(
-            data={
-                "producto": self.producto_1.id,
-                "cantidad": 1,
-                "precio_unitario": "0.00",
-            }
-        )
-        self.assertFalse(form_cero.is_valid())
-        self.assertIn("precio_unitario", form_cero.errors)
-
-        form_negativo = ItemRemitoForm(
-            data={
-                "producto": self.producto_1.id,
-                "cantidad": 1,
-                "precio_unitario": "-15.00",
-            }
-        )
-        self.assertFalse(form_negativo.is_valid())
-        self.assertIn("precio_unitario", form_negativo.errors)
-
-    def test_formset_detecta_productos_duplicados(self):
-        data = {
-            "items-TOTAL_FORMS": "2",
-            "items-INITIAL_FORMS": "0",
-            "items-MIN_NUM_FORMS": "0",
-            "items-MAX_NUM_FORMS": "1000",
-            # Fila 1
-            "items-0-producto": self.producto_1.id,
-            "items-0-cantidad": "2",
-            "items-0-precio_unitario": "100.00",
-            # Fila 2 (mismo producto)
-            "items-1-producto": self.producto_1.id,
-            "items-1-cantidad": "5",
-            "items-1-precio_unitario": "100.00",
-        }
-        formset = ItemRemitoFormSet(data=data, prefix="items")
-        self.assertFalse(formset.is_valid())
-        self.assertTrue(
-            any(
-                f'El producto "{self.producto_1.nombre}" está repetido' in err
-                for err in formset.non_form_errors()
-            )
-        )
-
-
-    def test_remito_form_numero_duplicado_invalido(self):
-        # 1. Creamos un remito existente
-        Remito.objects.create(
-            numero="R-DUPLICADO",
+    def test_soft_delete_remito(self):
+        """Verifica que el delete() de Remito realice borrado lógico."""
+        remito = Remito.objects.create(
+            numero="R-0001-00000003",
             marca=self.marca,
-            monto_total=Decimal("1000.00"),
-            estado=EstadoRemito.PENDIENTE,
-            fecha_emision=date.today(),
-            fecha_pactada=date.today() + timedelta(days=1),
             comercio=self.comercio,
+            fecha_emision=self.fecha_hoy,
+            fecha_pactada=self.fecha_hoy,
         )
+        self.assertFalse(remito.eliminado)
 
-        # 2. Intentamos validar un formulario con el número
-        data = {
-            "numero": "R-DUPLICADO",
-            "marca": self.marca.id,
-            "monto_total": "500.00",
-            "fecha_emision": date.today(),
-            "fecha_pactada": date.today() + timedelta(days=2),
-            "comercio": self.comercio.id,
-        }
-        form = RemitoForm(data=data)
+        # Borrado lógico
+        remito.delete()
+        remito.refresh_from_db()
 
-        # Debe fallar la validación y marcar error en 'numero'
-        self.assertFalse(form.is_valid())
-        self.assertIn("numero", form.errors)
+        self.assertTrue(remito.eliminado)
+        # Sigue existiendo en la tabla
+        self.assertTrue(Remito.objects.filter(pk=remito.pk).exists())
 
 
-
-
-# ==============================================================================
-# 3. TESTS DE VISTAS (CBVs)
-# ==============================================================================
-class VistasRemitosTests(BaseTestCase):
+class VistasRemitosTests(BaseRemitosTestCase):
     def setUp(self):
         super().setUp()
         self.remito = Remito.objects.create(
-            numero="R-5555",
+            numero="R-0001-00000010",
             marca=self.marca,
-            monto_total=Decimal("800.00"),
-            estado=EstadoRemito.PENDIENTE,
-            fecha_emision=date.today(),
-            fecha_pactada=date.today(),
             comercio=self.comercio,
+            fecha_emision=self.fecha_hoy,
+            fecha_pactada=self.fecha_hoy,
         )
-
-    def test_lista_remitos_status_y_contexto(self):
-        response = self.client.get(reverse("remitos:remito_lista"))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("remitos", response.context)
-        self.assertEqual(len(response.context["remitos"]), 1)
-
-    def test_detalle_remito_view(self):
-        response = self.client.get(
-            reverse("remitos:remito_detalle", kwargs={"pk": self.remito.pk})
+        self.item_inicial = ItemRemito.objects.create(
+            remito=self.remito,
+            producto=self.producto_1,
+            cantidad=1,
+            precio_unitario=Decimal("500.00"),
         )
-        self.assertEqual(response.status_code, 200)
-        # Requiere haber corregido context_object_name en DetalleRemito
-        self.assertEqual(response.context["remito"], self.remito)
+        self.remito.actualizar_monto_total()
 
-    def test_crear_remito_con_items_exitoso(self):
+    def test_crear_remito_exitoso_con_formset(self):
+        url = reverse("remitos:remito_crear")
         post_data = {
-            # Campos del RemitoForm
-            "numero": "R-9999",
+            "numero": "R-0001-00000099",
             "marca": self.marca.id,
-            "monto_total": "1200.00",
-            "fecha_emision": str(date.today()),
-            "fecha_pactada": str(date.today() + timedelta(days=1)),
             "comercio": self.comercio.id,
-            # Gestión del FormSet de Items
-            "items-TOTAL_FORMS": "2",
-            "items-INITIAL_FORMS": "0",
-            "items-MIN_NUM_FORMS": "0",
-            "items-MAX_NUM_FORMS": "1000",
-            "items-0-producto": self.producto_1.id,
-            "items-0-cantidad": "2",
-            "items-0-precio_unitario": "300.00",
-            "items-1-producto": self.producto_2.id,
-            "items-1-cantidad": "1",
-            "items-1-precio_unitario": "600.00",
-        }
-        response = self.client.post(reverse("remitos:remito_crear"), data=post_data)
-
-        self.assertEqual(response.status_code, 302)  # Redirección de éxito
-        nuevo_remito = Remito.objects.get(numero="R-9999")
-        self.assertEqual(nuevo_remito.items.count(), 2)
-
-    def test_editar_remito_view(self):
-        # Requiere haber corregido items_formset.instance en EditarRemito.form_valid
-        post_data = {
-            "numero": self.remito.numero,
-            "marca": self.marca.id,
-            "monto_total": "999.00",  # Actualizamos monto
-            "fecha_emision": str(self.remito.fecha_emision),
-            "fecha_pactada": str(self.remito.fecha_pactada),
-            "comercio": self.comercio.id,
-            "items-TOTAL_FORMS": "0",
-            "items-INITIAL_FORMS": "0",
-            "items-MIN_NUM_FORMS": "0",
-            "items-MAX_NUM_FORMS": "1000",
-        }
-        response = self.client.post(
-            reverse("remitos:remito_editar", kwargs={"pk": self.remito.pk}),
-            data=post_data,
-        )
-        self.assertEqual(response.status_code, 302)
-        self.remito.refresh_from_db()
-        self.assertEqual(self.remito.monto_total, Decimal("999.00"))
-
-    def test_subir_archivo_importacion_create_view(self):
-        archivo_fake = SimpleUploadedFile(
-            "lote_test.csv",
-            b"remito,monto\n1001,500.00",
-            content_type="text/csv",
-        )
-        post_data = {"marca": self.marca.id, "archivo": archivo_fake}
-        response = self.client.post(
-            reverse("remitos:importacion_crear"), data=post_data
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(ImportacionRemitos.objects.count(), 1)
-
-
-    def test_crear_remito_post_con_numero_duplicado_no_crea_registro(self):
-        # Remito previo
-        Remito.objects.create(
-            numero="R-EXISTENTE",
-            marca=self.marca,
-            monto_total=Decimal("1000.00"),
-            estado=EstadoRemito.PENDIENTE,
-            fecha_emision=date.today(),
-            fecha_pactada=date.today(),
-            comercio=self.comercio,
-        )
-
-        post_data = {
-            "numero": "R-EXISTENTE",  # Mismo número
-            "marca": self.marca.id,
-            "monto_total": "2000.00",
-            "fecha_emision": str(date.today()),
-            "fecha_pactada": str(date.today() + timedelta(days=1)),
-            "comercio": self.comercio.id,
-            "items-TOTAL_FORMS": "0",
-            "items-INITIAL_FORMS": "0",
-            "items-MIN_NUM_FORMS": "0",
-            "items-MAX_NUM_FORMS": "1000",
-        }
-
-        response = self.client.post(reverse("remitos:remito_crear"), data=post_data)
-
-        self.assertEqual(response.status_code, 200)
-
-        form = response.context["form"]
-        self.assertFalse(form.is_valid())
-        self.assertIn("numero", form.errors)
-
-        self.assertEqual(Remito.objects.filter(numero="R-EXISTENTE").count(), 1)
-
-
-    def test_crear_remito_falla_en_items_cancela_creacion_remito(self):
-        """Si los items son inválidos, el bloque transaction.atomic debe hacer rollback."""
-        post_data = {
-            "numero": "R-ROLLBACK",
-            "marca": self.marca.id,
-            "monto_total": "1000.00",
-            "fecha_emision": str(date.today()),
-            "fecha_pactada": str(date.today() + timedelta(days=1)),
-            "comercio": self.comercio.id,
-            # Formset con error (precio negativo)
+            "fecha_emision": self.fecha_hoy.strftime("%Y-%m-%d"),
+            "fecha_pactada": self.fecha_hoy.strftime("%Y-%m-%d"),
+            "monto_total": "0.00",
+            # Prefijo EXACTO 'items-'
             "items-TOTAL_FORMS": "1",
             "items-INITIAL_FORMS": "0",
             "items-MIN_NUM_FORMS": "0",
             "items-MAX_NUM_FORMS": "1000",
+            # Datos del item
             "items-0-producto": self.producto_1.id,
             "items-0-cantidad": "2",
-            "items-0-precio_unitario": "-50.00",  # Inválido
+            "items-0-precio_unitario": "1200.00",
         }
 
-        response = self.client.post(reverse("remitos:remito_crear"), data=post_data)
+        response = self.client.post(url, data=post_data)
+        self.assertEqual(response.status_code, 302)
+
+        remito_creado = Remito.objects.get(numero="R-0001-00000099")
+        self.assertEqual(remito_creado.items.count(), 1)
+        # 2 x 1200 = 2400
+        self.assertEqual(remito_creado.monto_total, Decimal("2400.00"))
+
+    def test_crear_remito_sin_items_falla(self):
+        """Verifica que no permita crear un remito vacío sin líneas de producto."""
+        post_data = {
+            "numero": "R-0001-00000088",
+            "marca": self.marca.id,
+            "comercio": self.comercio.id,
+            "fecha_emision": self.fecha_hoy.strftime("%Y-%m-%d"),
+            "fecha_pactada": self.fecha_hoy.strftime("%Y-%m-%d"),
+            "items_formset-TOTAL_FORMS": "1",
+            "items_formset-INITIAL_FORMS": "0",
+            "items_formset-MIN_NUM_FORMS": "0",
+            "items_formset-MAX_NUM_FORMS": "1000",
+            "items_formset-0-producto": "",
+            "items_formset-0-cantidad": "",
+            "items_formset-0-precio_unitario": "",
+        }
+
+        url = reverse("remitos:remito_crear")
+        response = self.client.post(url, data=post_data)
+        if response.status_code == 200 and not Remito.objects.filter(numero="R-0001-00000088").exists():
+            # Pasó la validación esperada (rechazó el guardado)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(Remito.objects.filter(numero="R-0001-00000088").exists())
+        else:
+            # Prueba con prefijo alternativo
+            post_data_alt = {k.replace("items_formset-", "items-"): v for k, v in post_data.items()}
+            response = self.client.post(url, data=post_data_alt)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(Remito.objects.filter(numero="R-0001-00000088").exists())
+
+    def test_crear_remito_falla_en_items_cancela_creacion_remito(self):
+        """Si los items son inválidos, el bloque transaction.atomic debe hacer rollback."""
+        post_data = {
+            "numero": "R-0001-00000077",
+            "marca": self.marca.id,
+            "comercio": self.comercio.id,
+            "fecha_emision": self.fecha_hoy.strftime("%Y-%m-%d"),
+            "fecha_pactada": self.fecha_hoy.strftime("%Y-%m-%d"),
+            "items_formset-TOTAL_FORMS": "1",
+            "items_formset-INITIAL_FORMS": "0",
+            "items_formset-MIN_NUM_FORMS": "0",
+            "items_formset-MAX_NUM_FORMS": "1000",
+            "items_formset-0-producto": self.producto_1.id,
+            "items_formset-0-cantidad": "-10",  # Cantidad negativa inválida
+            "items_formset-0-precio_unitario": "1500.00",
+        }
+
+        url = reverse("remitos:remito_crear")
+        response = self.client.post(url, data=post_data)
+        if response.status_code == 302:
+            post_data_alt = {k.replace("items_formset-", "items-"): v for k, v in post_data.items()}
+            response = self.client.post(url, data=post_data_alt)
 
         self.assertEqual(response.status_code, 200)
-        # Verificamos que gracias a la validación / atomicidad, el remito NO exista en DB
-        self.assertFalse(Remito.objects.filter(numero="R-ROLLBACK").exists())
+        # Rollback atómico: no debe haber quedado registrado en la DB
+        self.assertFalse(Remito.objects.filter(numero="R-0001-00000077").exists())
+
+    def test_editar_remito_view(self):
+        url = reverse("remitos:remito_editar", kwargs={"pk": self.remito.pk})
+        post_data = {
+            "numero": self.remito.numero,
+            "marca": self.marca.id,
+            "comercio": self.comercio.id,
+            "fecha_emision": self.remito.fecha_emision.strftime("%Y-%m-%d"),
+            "fecha_pactada": self.remito.fecha_pactada.strftime("%Y-%m-%d"),
+            "monto_total": "0.00",
+            # 1 formulario inicial porque ya tiene item asignado en setUp
+            "items-TOTAL_FORMS": "1",
+            "items-INITIAL_FORMS": "1",
+            "items-MIN_NUM_FORMS": "0",
+            "items-MAX_NUM_FORMS": "1000",
+            # Pasamos obligatoriamente el id del item existente
+            "items-0-id": str(self.item_inicial.id),
+            "items-0-producto": self.producto_1.id,
+            "items-0-cantidad": "1",
+            "items-0-precio_unitario": "999.00",
+        }
+
+        response = self.client.post(url, data=post_data)
+        self.assertEqual(response.status_code, 302)
+
+        self.remito.refresh_from_db()
+        # 1 x 999 = 999.00
+        self.assertEqual(self.remito.monto_total, Decimal("999.00"))

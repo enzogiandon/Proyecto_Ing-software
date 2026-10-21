@@ -19,12 +19,18 @@ class EstadoParada(models.TextChoices):
 
 
 class DetalleRutaGuardada(models.Model):
-    ruta_guardada = models.ForeignKey("RutaGuardada", on_delete=models.CASCADE)
+    ruta_guardada = models.ForeignKey("RutaGuardada", on_delete=models.CASCADE, related_name="detalles")
     comercio = models.ForeignKey("remitos.Comercio", on_delete=models.CASCADE)
     prioridad = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ("-prioridad",)
+        ordering = ("prioridad",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ruta_guardada", "comercio"],
+                name="unique_comercio"
+            )
+        ]
 
 
 class RutaGuardada(models.Model):
@@ -48,7 +54,7 @@ class Itinerario(models.Model):
         default=EstadoItinerario.PENDIENTE,
     )
     transportista = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        "core.transportista",
         on_delete=models.PROTECT,
         blank=True,
         null=True,

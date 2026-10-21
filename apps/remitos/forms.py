@@ -19,7 +19,6 @@ class RemitoForm(forms.ModelForm):
         fields = [
             "numero",
             "marca",
-            "monto_total",
             "fecha_emision",
             "fecha_pactada",
             "comercio",
@@ -29,9 +28,6 @@ class RemitoForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "Nº de remito"}
             ),
             "marca": forms.Select(attrs={"class": "form-select"}),
-            "monto_total": forms.NumberInput(
-                attrs={"class": "form-control", "step": "0.01"}
-            ),
             "fecha_emision": forms.DateInput(
                 attrs={"class": "form-control", "type": "date"}
             ),

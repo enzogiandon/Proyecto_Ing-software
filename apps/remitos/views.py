@@ -42,13 +42,30 @@ class CrearRemito(CreateView):
         context = self.get_context_data()
         items_formset = context["items_formset"]
         if items_formset.is_valid():
+            items_validos = [
+                f
+                for f in items_formset.forms
+                if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+            ]
+            if not items_validos:
+                form.add_error(
+                    None, "El remito tiene que tener por lo menos un producto"
+                )
+
+                return self.form_invalid(form)
+
             with transaction.atomic():
                 self.object = form.save()
                 items_formset.instance = self.object
                 items_formset.save()
+                assert self.object is not None
+                self.object.actualizar_monto_total()
+
             return super().form_valid(form)
         else:
-            return self.render_to_response(self.get_context_data(form=form))
+            context = self.get_context_data(form=form)
+            context["items_formset"] = items_formset
+            return self.render_to_response(context)
 
 
 class EditarRemito(UpdateView):
@@ -77,11 +94,14 @@ class EditarRemito(UpdateView):
         if items_formset.is_valid():
             with transaction.atomic():
                 self.object = form.save()
-                items_formset.instance = self.object
                 items_formset.save()
+                self.object.actualizar_monto_total()
+
             return super().form_valid(form)
         else:
-            return self.render_to_response(self.get_context_data(form=form))
+            context = self.get_context_data(form=form)
+            context["items_formset"] = items_formset
+            return self.render_to_response(context)
 
 
 class DetalleRemito(DetailView):
@@ -136,6 +156,12 @@ class DetalleImportacion(View):
     model = ImportacionRemitos
     template_name = "remitos/importacion_detalle.html"
     context_object_name = "importacion"
+
+
+class EliminarImportacion(DeleteView):
+    model = ImportacionRemitos
+    template_name = "remitos/importacion_eliminar.html"
+    success_url = reverse_lazy("remitos:importacion_lista")
 
 
 class CrearProducto(SuccessMessageMixin, CreateView):

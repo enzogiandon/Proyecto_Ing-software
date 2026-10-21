@@ -53,3 +53,21 @@ Thumbs.db
 # ==========================================
 ~$*
 *.tmp
+
+# ==========================================
+# Node.js / Dependencias
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ==========================================
+# Expo / React Native
+# ==========================================
+.expo/
+dist/
+web-build/
+.env*.local
+*.orig.*

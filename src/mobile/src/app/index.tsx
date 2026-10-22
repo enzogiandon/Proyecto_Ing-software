@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CHOFERES_PRUEBA } from '../data/mockData';
+import { loginTransportista } from '../services/authService';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -24,14 +25,15 @@ export default function LoginScreen() {
   const [dni, setDni] = useState('');
   const [clave, setClave] = useState('');
   const [mostrarClave, setMostrarClave] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   // Estados de errores visuales (Figma)
   const [errorDni, setErrorDni] = useState('');
   const [errorClave, setErrorClave] = useState('');
   const [modalInhabilitadoVisible, setModalInhabilitadoVisible] = useState(false);
 
-  // Función de autenticación alineada con core_usuario y core_transportista
-  const handleIngresar = () => {
+  // Función de autenticación conectada al Backend (JWT) con Fallback Mock
+  const handleIngresar = async () => {
     // 1. Limpiar estados previos de error
     setErrorDni('');
     setErrorClave('');
@@ -46,48 +48,43 @@ export default function LoginScreen() {
       return;
     }
 
-    // 2. Buscar chofer por DNI (core_usuario.dni - max 8 digitos)
-    const choferEncontrado = CHOFERES_PRUEBA.find((c) => c.dni === dni.trim());
+    setCargando(true);
+    try {
+      const resultado = await loginTransportista(dni, clave);
 
-    if (!choferEncontrado) {
-      // Estado Figma: Acceso · DNI incorrecto.png
-      setErrorDni('El DNI es incorrecto. Intentá nuevamente.');
-      return;
-    }
-
-    // 3. Validar clave/PIN (core_usuario.password)
-    if (choferEncontrado.password !== clave.trim()) {
-      // Simular incremento de intentos fallidos en core_usuario
-      choferEncontrado.intentos_fallidos += 1;
-      // Estado Figma: Acceso · Clave incorrecta.png
-      setErrorClave('La clave es incorrecta. Intentá nuevamente.');
-      return;
-    }
-
-    // 4. Validar estado de habilitación (core_transportista.habilitado y core_usuario.is_active)
-    if (!choferEncontrado.habilitado || !choferEncontrado.is_active) {
-      // Estado Figma: Acceso · Cuenta inhabilitada.png
-      setModalInhabilitadoVisible(true);
-      return;
-    }
-
-    // 5. Restablecer contador de fallos tras login exitoso
-    choferEncontrado.intentos_fallidos = 0;
-
-    // 6. Autenticación exitosa -> Continuar al Itinerario (HU-62)
-    Alert.alert(
-      '¡Acceso Autorizado!',
-      `Chofer: ${choferEncontrado.first_name} ${choferEncontrado.last_name}\nVehículo: ${choferEncontrado.vehiculo.modelo} (${choferEncontrado.vehiculo.patente})`,
-      [
-        {
-          text: 'Continuar a Hoja de Ruta',
-          onPress: () => {
-            // Navega a la ruta del itinerario
-            router.push('/explore');
-          }
+      if (!resultado.success) {
+        if (resultado.tipoError === 'DNI') {
+          setErrorDni(resultado.error || 'El DNI es incorrecto. Intentá nuevamente.');
+        } else if (resultado.tipoError === 'CLAVE') {
+          setErrorClave(resultado.error || 'La clave es incorrecta. Intentá nuevamente.');
+        } else if (resultado.tipoError === 'INHABILITADO') {
+          setModalInhabilitadoVisible(true);
+        } else {
+          Alert.alert('Aviso', resultado.error || 'No se pudo iniciar sesión.');
         }
-      ]
-    );
+        return;
+      }
+
+      // Autenticación exitosa
+      const nombreMostrar = resultado.user?.first_name 
+        ? `${resultado.user.first_name} ${resultado.user.last_name || ''}`
+        : 'Transportista';
+
+      Alert.alert(
+        '¡Acceso Autorizado!',
+        `Bienvenido, ${nombreMostrar}.\nCredenciales verificadas exitosamente.`,
+        [
+          {
+            text: 'Continuar a Hoja de Ruta',
+            onPress: () => {
+              router.push('/explore');
+            }
+          }
+        ]
+      );
+    } finally {
+      setCargando(false);
+    }
   };
 
   // Función de contacto a Base Logística / Soporte
@@ -203,12 +200,15 @@ export default function LoginScreen() {
 
             {/* BOTÓN INGRESAR */}
             <TouchableOpacity
-              style={styles.botonIngresar}
+              style={[styles.botonIngresar, cargando && { opacity: 0.7 }]}
               onPress={handleIngresar}
+              disabled={cargando}
               activeOpacity={0.85}
             >
-              <Text style={styles.textoBotonIngresar}>Ingresar a la Jornada</Text>
-              <Text style={styles.flechaBoton}>➔</Text>
+              <Text style={styles.textoBotonIngresar}>
+                {cargando ? 'Verificando...' : 'Ingresar a la Jornada'}
+              </Text>
+              <Text style={styles.flechaBoton}>{cargando ? '⏳' : '➔'}</Text>
             </TouchableOpacity>
 
             {/* ENLACE CONTACTO A BASE / SOPORTE */}

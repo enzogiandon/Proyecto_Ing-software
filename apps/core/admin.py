@@ -56,7 +56,7 @@ class UsuarioAdmin(UserAdmin):
 
 @admin.register(Transportista)
 class TransportistaAdmin(admin.ModelAdmin):
-  list_display = ("usuario", "centro", "vehiculo")
+  list_display = ("usuario",  "vehiculo")
   search_fields = (
       "usuario__username",
       "usuario__first_name",

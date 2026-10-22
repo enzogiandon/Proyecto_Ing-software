@@ -2,8 +2,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import serializers
 
-from apps.itinerarios import Itinerario, Parada
-from apps.remitos import Comercio, Remito
+from apps.itinerarios.models import Itinerario, Parada
+from apps.remitos.models import Comercio, Remito
 
 User = get_user_model()
 

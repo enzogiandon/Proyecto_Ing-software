@@ -67,7 +67,7 @@ class Itinerario(models.Model):
         related_name="itinerarios",
     )
     vehiculo = models.ForeignKey(
-        "flota.Vehiculo", on_delete=models.PROTECT, blank=True, null=True
+        "core.Vehiculo", on_delete=models.PROTECT, blank=True, null=True
     )
 
     class Meta:

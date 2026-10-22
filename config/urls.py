@@ -25,6 +25,7 @@ urlpatterns = [
     path("", include("apps.core.urls")),
     path("remitos/", include("apps.remitos.urls")),
     path("flota/", include("apps.flota.urls")),
+    path("itinerarios/", include("apps.itinerarios.urls")),
 ]
 
 if settings.DEBUG:

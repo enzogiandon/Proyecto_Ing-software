@@ -68,7 +68,13 @@ class Itinerario(models.Model):
         ordering = ("-fecha",)
 
     def __str__(self):
-        return f"Itinerario #{self.id} - {self.transportista.user.full_name} {self.fecha})"
+        transportista = (
+            self.transportista.usuario.get_full_name()
+            or self.transportista.usuario.username
+            if self.transportista
+            else "Sin transportista"
+        )
+        return f"Itinerario #{self.id} - {transportista} - {self.fecha}"
 
 
 class Parada(models.Model):

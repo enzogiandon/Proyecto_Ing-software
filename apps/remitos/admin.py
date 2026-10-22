@@ -76,7 +76,6 @@ class RemitoAdmin(SimpleHistoryAdmin):
       "numero",
       "marca",
       "comercio",
-      "monto_total",
       "estado",
       "fecha_emision",
       "fecha_pactada",

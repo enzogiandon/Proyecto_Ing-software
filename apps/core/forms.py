@@ -9,17 +9,25 @@ from .models import Roles, Transportista, Usuario
 
 class LoginForm(AuthenticationForm):
     error_messages = {
-        "invalid_login": "El usuario o la contraseña ingresados son incorrectos. Inténtalo de nuevo.",
-        "inactive": "Esta cuenta se encuentra suspendida.",
+        "invalid_login": "Usuario o contraseña incorrectos.",
+        "inactive": "Tu cuenta está deshabilitada. Contactá a un administrador.",
     }
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fields["username"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Usuario"}
+            {
+                "class": "form-control",
+                "placeholder": "Ingresá tu usuario",
+                "autocomplete": "username",
+            }
         )
         self.fields["password"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Contraseña"}
+            {
+                "class": "form-control",
+                "placeholder": "Ingresá tu contraseña",
+                "autocomplete": "current-password",
+            }
         )
 
     def get_user(self) -> Usuario:

@@ -6,7 +6,6 @@ from django.db import models
 class Entrega(models.Model):
     parada = models.OneToOneField('itinerarios.Parada', on_delete=models.CASCADE, related_name="entrega")
     hora_recepcion = models.DateTimeField(auto_now_add=True)
-    transportista = models.ForeignKey('core.Transportista', on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = "Entrega"

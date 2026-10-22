@@ -24,21 +24,6 @@ class Cobranza(models.Model):
         related_name="cobranza",
         help_text="Parada donde se efectuo la cobranza",
     )
-    total_esperado = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        help_text="Total de los remitos de la parada que debían cobrearse",
-    )
-    total_recibido = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        help_text="Total declarado por el transportista",
-    )
-    total_verificado = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        help_text="Monto confirmado por el administrativo después de revisar los movimientos",
-    )
     estado = models.CharField(
         max_length=20,
         choices=EstadoCobranza.choices,

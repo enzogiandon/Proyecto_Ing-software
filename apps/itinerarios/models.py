@@ -2,8 +2,6 @@
 
 from django.db import models
 
-from config import settings
-
 
 class EstadoItinerario(models.TextChoices):
     PENDIENTE = "pendiente", "Pendiente"
@@ -21,10 +19,10 @@ class EstadoParada(models.TextChoices):
 class DetalleRutaGuardada(models.Model):
     ruta_guardada = models.ForeignKey("RutaGuardada", on_delete=models.CASCADE, related_name="detalles")
     comercio = models.ForeignKey("remitos.Comercio", on_delete=models.CASCADE)
-    prioridad = models.IntegerField(default=0)
+    prioridad = models.IntegerField(null=True, blank=True)
 
     class Meta:
-        ordering = ("prioridad",)
+        ordering = (models.F("prioridad").asc(nulls_last=True),)
         constraints = [
             models.UniqueConstraint(
                 fields=["ruta_guardada", "comercio"],

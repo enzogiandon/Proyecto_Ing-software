@@ -1,41 +1,164 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Iniciar Sesión</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión - RepartosYA</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'core/img/favicon.ico' %}">
+
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS Propios -->
+    <link href="{% static 'core/css/paletas.css' %}" rel="stylesheet">
+    <link href="{% static 'core/css/login.css' %}" rel="stylesheet">
 </head>
-<body class="bg-light d-flex align-items-center justify-content-center vh-100">
-
-    <div class="card shadow-sm p-4" style="width: 100%; max-width: 400px;">
-        <h4 class="text-center mb-3">Acceso al Sistema</h4>
-
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger py-2">
-                {% for error in form.non_field_errors %}
-                    <div>{{ error }}</div>
-                {% endfor %}
+<body>
+    <div class="login-page">
+        <!-- ==============================================
+             PANEL IZQUIERDO (AZUL FIGMA)
+        =============================================== -->
+        <section class="login-brand-panel">
+            <div class="login-brand-box">
+                <i class="fas fa-truck-fast"></i>
             </div>
-        {% endif %}
+            <h1 class="login-brand-title">RepartosYA</h1>
+            <p class="login-brand-subtitle">Panel administrativo de distribución</p>
+        </section>
 
-        <form method="post">
-            {% csrf_token %}
+        <!-- ==============================================
+             PANEL DERECHO (FORMULARIO BLANCO FIGMA)
+        =============================================== -->
+        <section class="login-form-panel">
+            <div class="login-form-card">
+                <h2 class="login-form-title">Iniciar sesión</h2>
+                <p class="login-form-subtitle">Ingresá con tu usuario y contraseña.</p>
 
-            <div class="mb-3">
-                <label class="form-label">Usuario</label>
-                {{ form.username }}
-                {{ form.username.errors }}
+                <!-- ALERTAS DE ERROR / ADVERTENCIA SEGÚN FIGMA -->
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <div class="login-alert {% if 'deshabilitada' in error or 'suspendida' in error %}login-alert-warning{% else %}login-alert-danger{% endif %}" role="alert">
+                            <i class="fas fa-triangle-exclamation"></i>
+                            <div>{{ error }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="login-alert {% if message.tags == 'error' %}login-alert-danger{% elif message.tags == 'warning' %}login-alert-warning{% else %}login-alert-danger{% endif %}" role="alert">
+                            <i class="fas fa-triangle-exclamation"></i>
+                            <div>{{ message }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- FORMULARIO DE ACCESO -->
+                <form method="post" action="{% url 'core:login' %}" id="loginForm">
+                    {% csrf_token %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+
+                    <!-- CAMPO USUARIO -->
+                    <div class="login-form-group">
+                        <label for="id_username" class="login-label">Usuario</label>
+                        <input type="text"
+                               name="username"
+                               id="id_username"
+                               class="login-input {% if form.username.errors or form.non_field_errors %}is-invalid{% endif %}"
+                               placeholder="Ingresá tu usuario"
+                               value="{{ form.username.value|default:'' }}"
+                               autocomplete="username"
+                               required
+                               autofocus>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- CAMPO CONTRASEÑA -->
+                    <div class="login-form-group">
+                        <label for="id_password" class="login-label">Contraseña</label>
+                        <div class="password-field-wrapper">
+                            <input type="password"
+                                   name="password"
+                                   id="id_password"
+                                   class="login-input {% if form.password.errors or form.non_field_errors %}is-invalid{% endif %}"
+                                   placeholder="Ingresá tu contraseña"
+                                   autocomplete="current-password"
+                                   required>
+                            <button type="button" class="btn-toggle-eye" id="togglePasswordBtn" aria-label="Mostrar u ocultar contraseña">
+                                <i class="far fa-eye" id="togglePasswordIcon"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- BOTÓN DE INGRESO (CON ESTADO DE CARGA FIGMA) -->
+                    <button type="submit" class="btn-login-submit" id="submitBtn">
+                        <span id="btnText">Iniciar sesión</span>
+                        <span id="btnLoading" class="d-none">
+                            <i class="fas fa-rotate fa-spin me-2"></i>Ingresando...
+                        </span>
+                    </button>
+
+                    <!-- ENLACE DE SOPORTE WHATSAPP -->
+                    <div class="text-center mt-4">
+                        <a href="https://wa.me/" target="_blank" class="login-help-link">
+                            ¿Problemas para ingresar? Contactá al administrador por WhatsApp
+                        </a>
+                    </div>
+                </form>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label">Contraseña</label>
-                {{ form.password }}
-                {{ form.password.errors }}
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-        </form>
+        </section>
     </div>
 
+    <!-- SCRIPT INTERACTIVO: TOGGLE CONTRASEÑA Y ESTADO DE CARGA -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('id_password');
+            const toggleBtn = document.getElementById('togglePasswordBtn');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+            const loginForm = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnLoading = document.getElementById('btnLoading');
+
+            // Mostrar / Ocultar contraseña
+            if (toggleBtn && passwordInput && toggleIcon) {
+                toggleBtn.addEventListener('click', () => {
+                    const isPassword = passwordInput.getAttribute('type') === 'password';
+                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                    toggleIcon.classList.toggle('fa-eye', !isPassword);
+                    toggleIcon.classList.toggle('fa-eye-slash', isPassword);
+                });
+            }
+
+            // Animación de estado "Ingresando..." al enviar
+            if (loginForm && submitBtn) {
+                loginForm.addEventListener('submit', () => {
+                    if (loginForm.checkValidity()) {
+                        submitBtn.disabled = true;
+                        if (btnText) btnText.classList.add('d-none');
+                        if (btnLoading) btnLoading.classList.remove('d-none');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

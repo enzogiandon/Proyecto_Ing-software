@@ -59,7 +59,7 @@ class CrearVehiculo(
     model = Vehiculo
     form_class = VehiculoForm
     template_name = "core/vehiculo_form.html"
-    success_url = reverse_lazy("flota:vehiculo_lista")
+    success_url = reverse_lazy("core:vehiculo_lista")
     success_message = "Vehículo registrado exitosamente"
     permission_required = "core.add_vehiculo"
 

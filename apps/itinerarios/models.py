@@ -16,8 +16,17 @@ class EstadoParada(models.TextChoices):
     ERROR = "error", "Error"
 
 
+class TipoProblema(models.TextChoices):
+    MERCADERIA_DANADA = "mercaderia_danada", "Mercadería dañada o faltante"
+    RECHAZO_PARCIAL = "rechazo_parcial", "Rechazo parcial"
+    RECHAZO_TOTAL = "rechazo_total", "Rechazo total"
+    OTRO = "otro", "Otro problema"
+
+
 class DetalleRutaGuardada(models.Model):
-    ruta_guardada = models.ForeignKey("RutaGuardada", on_delete=models.CASCADE, related_name="detalles")
+    ruta_guardada = models.ForeignKey(
+        "RutaGuardada", on_delete=models.CASCADE, related_name="detalles"
+    )
     comercio = models.ForeignKey("remitos.Comercio", on_delete=models.CASCADE)
     prioridad = models.IntegerField(null=True, blank=True)
 
@@ -25,8 +34,7 @@ class DetalleRutaGuardada(models.Model):
         ordering = (models.F("prioridad").asc(nulls_last=True),)
         constraints = [
             models.UniqueConstraint(
-                fields=["ruta_guardada", "comercio"],
-                name="unique_comercio"
+                fields=["ruta_guardada", "comercio"], name="unique_comercio"
             )
         ]
 
@@ -88,9 +96,61 @@ class Parada(models.Model):
     estado = models.CharField(
         max_length=20, choices=EstadoParada.choices, default=EstadoParada.PENDIENTE
     )
+    hora_entrega = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = (
-            "itinerario",
+            "-itinerario",
             "orden",
         )
+
+
+class EvidenciaParada(models.Model):
+    parada = models.ForeignKey(
+        Parada, on_delete=models.CASCADE, related_name="evidencias"
+    )
+    archivo = models.ImageField(upload_to="remitos_firmados/")
+    fecha = models.DateTimeField(
+        auto_now_add=True, help_text="Fecha en la que se subio la imagen"
+    )
+
+    class Meta:
+        verbose_name = "Evidencia de entrega"
+        verbose_name_plural = "Evidencia de entregas"
+
+    def __str__(self):
+        return f"evidencia #{self.id} para la entrega #{self.parada.id}"
+
+
+class ProblemaParada(models.Model):
+    parada = models.ForeignKey(
+        Parada,
+        on_delete=models.CASCADE,
+        related_name="problemas",
+        help_text="Parada donde ocurrio el problema",
+    )
+    remito = models.ForeignKey(
+        "remitos.Remito",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="problemas",
+    )
+    tipo = models.CharField(
+        max_length=30, choices=TipoProblema.choices, default=TipoProblema.OTRO
+    )
+    imagen = models.ImageField(
+        upload_to="problemas_parada/",
+        blank=True,
+        null=True,
+        help_text="Foto de la mercaderia dañada",
+    )
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Problema en parada"
+        verbose_name_plural = "Problemas en parada"
+        ordering = ("-fecha",)
+
+    def __str__(self):
+        return f"Problema [{self.get_tipo_display()}] - Parada #{self.parada.id} ({self.parada.comercio.nombre})"

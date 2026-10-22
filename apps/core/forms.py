@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Roles, Transportista, Usuario
+from .models import Roles, Transportista, Usuario, Vehiculo
 
 
 class LoginForm(AuthenticationForm):
@@ -135,3 +135,30 @@ class EmpleadoUpdateForm(forms.ModelForm):
         if commit and user.rol == Roles.TRANSPORTISTA:
             Transportista.objects.get_or_create(usuario=user)
         return user
+
+class VehiculoForm(forms.ModelForm):
+    class Meta:
+        model = Vehiculo
+        fields = ["patente", "modelo", "poliza", "estado"]
+        widgets = {
+            "patente": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Patente"}
+            ),
+            "modelo": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Marca y modelo"}
+            ),
+            "poliza": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Número de póliza"}
+            ),
+            "estado": forms.Select(attrs={"class": "form-select"}),
+        }
+
+    def clean_patente(self):
+        patente = self.cleaned_data["patente"].strip().upper()
+        vehiculos = Vehiculo.objects.filter(patente__iexact=patente)
+        if self.instance.pk:
+            vehiculos = vehiculos.exclude(pk=self.instance.pk)
+        if vehiculos.exists():
+            raise ValidationError("Vehículo repetido")
+        return patente
+

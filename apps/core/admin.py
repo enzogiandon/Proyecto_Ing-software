@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Transportista, Usuario
+from .models import Transportista, Usuario, Vehiculo
 
 
 @admin.register(Usuario)
@@ -63,3 +63,9 @@ class TransportistaAdmin(admin.ModelAdmin):
       "usuario__last_name",
       "usuario__dni",
   )
+
+@admin.register(Vehiculo)
+class VehiculoAdmin(admin.ModelAdmin):
+    list_display = ("patente", "modelo", "estado")
+    search_fields = ("patente", "modelo")
+

@@ -12,17 +12,28 @@ export default function AppTabs() {
       screenOptions={{
         tabBarStyle: { backgroundColor: colors.background },
         tabBarActiveTintColor: colors.text,
-        // tabBarInactiveTintColor: '#9CA3AF', // Opcional: color para el inactivo
-        headerShown: false, // Oculta el título superior si no lo necesitas
+        headerShown: false,
       }}>
       
       <Tabs.Screen 
         name="index" 
         options={{
-          title: 'Home',
+          title: 'Acceso',
           tabBarIcon: ({ color }) => (
             <Image 
               source={require('@/assets/images/tabIcons/home.png')} 
+              style={{ width: 24, height: 24, tintColor: color }} 
+            />
+          )
+        }} 
+      />
+      <Tabs.Screen 
+        name="itinerario" 
+        options={{
+          title: 'Itinerario',
+          tabBarIcon: ({ color }) => (
+            <Image 
+              source={require('@/assets/images/tabIcons/explore.png')} 
               style={{ width: 24, height: 24, tintColor: color }} 
             />
           )

@@ -7,7 +7,6 @@ from django.views.generic import (
     DetailView,
     ListView,
     UpdateView,
-    View,
 )
 
 from .forms import (
@@ -210,7 +209,7 @@ class CrearComercio(SuccessMessageMixin, CreateView):
 class ListaComercio(ListView):
     model = Comercio
     template_name = "remitos/comercio_lista.html"
-    context_object_name = "productos"
+    context_object_name = "comercios"
     paginate_by = 25
 
     def get_queryset(self):
@@ -218,7 +217,7 @@ class ListaComercio(ListView):
 
 
 class EditarComercio(UpdateView):
-    form_class = ProductoForm
+    form_class = ComercioForm
     model = Comercio
     template_name = "remitos/comercio_form.html"
     success_url = reverse_lazy("remitos:comercio_lista")
@@ -242,7 +241,7 @@ class CrearMarca(SuccessMessageMixin, CreateView):
 class ListaMarca(ListView):
     model = Marca
     template_name = "remitos/marca_lista.html"
-    context_object_name = "productos"
+    context_object_name = "marcas"
     paginate_by = 25
 
     def get_queryset(self):
@@ -250,7 +249,7 @@ class ListaMarca(ListView):
 
 
 class EditarMarca(UpdateView):
-    form_class = ProductoForm
+    form_class = MarcaForm
     model = Marca
     template_name = "remitos/marca_form.html"
     success_url = reverse_lazy("remitos:marca_lista")

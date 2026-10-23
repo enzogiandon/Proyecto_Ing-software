@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .forms import EmpleadoCreateForm
-from .models import Roles, Transportista
+from .models import EstadoVehiculo, Roles, Transportista, Vehiculo
 
 
 class EmpleadoViewsTests(TestCase):
@@ -189,16 +189,6 @@ class EmpleadoViewsTests(TestCase):
         employee.refresh_from_db()
         self.assertTrue(employee.is_active)
 
-
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
-from django.contrib.messages import get_messages
-from django.test import TestCase
-from django.urls import reverse
-
-from .models import EstadoVehiculo, Vehiculo
-
-
 class VehiculoViewsTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
@@ -209,13 +199,13 @@ class VehiculoViewsTests(TestCase):
             rol="administrativo",
         )
         self.add_permission = Permission.objects.get(
-            content_type__app_label="flota", codename="add_vehiculo"
+            content_type__app_label="core", codename="add_vehiculo"
         )
         self.change_permission = Permission.objects.get(
-            content_type__app_label="flota", codename="change_vehiculo"
+            content_type__app_label="core", codename="change_vehiculo"
         )
         self.view_permission = Permission.objects.get(
-            content_type__app_label="flota", codename="view_vehiculo"
+            content_type__app_label="core", codename="view_vehiculo"
         )
         self.user.user_permissions.add(
             self.add_permission, self.change_permission, self.view_permission
@@ -224,7 +214,7 @@ class VehiculoViewsTests(TestCase):
 
     def test_create_vehicle_redirects_to_list_and_shows_success(self):
         response = self.client.post(
-            reverse("flota:vehiculo_crear"),
+            reverse("core:vehiculo_crear"),
             {
                 "patente": "ab123cd",
                 "modelo": "Camión de reparto",
@@ -234,7 +224,7 @@ class VehiculoViewsTests(TestCase):
         )
 
         self.assertRedirects(
-            response, reverse("flota:vehiculo_lista"), fetch_redirect_response=False
+            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
         )
         self.assertTrue(
             Vehiculo.objects.filter(
@@ -250,7 +240,7 @@ class VehiculoViewsTests(TestCase):
         Vehiculo.objects.create(patente="AB123CD")
 
         response = self.client.post(
-            reverse("flota:vehiculo_crear"),
+            reverse("core:vehiculo_crear"),
             {
                 "patente": "ab123cd",
                 "modelo": "Otro camión",
@@ -260,7 +250,7 @@ class VehiculoViewsTests(TestCase):
         )
 
         self.assertRedirects(
-            response, reverse("flota:vehiculo_lista"), fetch_redirect_response=False
+            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
         )
         self.assertEqual(Vehiculo.objects.count(), 1)
         self.assertEqual(
@@ -272,7 +262,7 @@ class VehiculoViewsTests(TestCase):
         vehiculo = Vehiculo.objects.create(patente="AB123CD")
 
         response = self.client.post(
-            reverse("flota:vehiculo_editar", args=[vehiculo.pk]),
+            reverse("core:vehiculo_editar", args=[vehiculo.pk]),
             {
                 "patente": "ab123cd",
                 "modelo": "Camión actualizado",
@@ -282,7 +272,7 @@ class VehiculoViewsTests(TestCase):
         )
 
         self.assertRedirects(
-            response, reverse("flota:vehiculo_lista"), fetch_redirect_response=False
+            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
         )
         vehiculo.refresh_from_db()
         self.assertEqual(vehiculo.modelo, "Camión actualizado")
@@ -295,11 +285,10 @@ class VehiculoViewsTests(TestCase):
     def test_create_vehicle_requires_login(self):
         self.client.logout()
 
-        response = self.client.get(reverse("flota:vehiculo_crear"))
+        response = self.client.get(reverse("core:vehiculo_crear"))
 
         self.assertRedirects(
             response,
-            f"{reverse('core:login')}?next={reverse('flota:vehiculo_crear')}",
+            f"{reverse('core:login')}?next={reverse('core:vehiculo_crear')}",
             fetch_redirect_response=False,
         )
-

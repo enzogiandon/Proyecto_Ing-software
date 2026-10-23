@@ -6,8 +6,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
-from apps.core.models import Roles, Transportista
-from apps.flota.models import Vehiculo
+from apps.core.models import Roles, Transportista, Vehiculo
 from apps.remitos.models import Comercio, EstadoRemito, Marca, Remito
 
 from .models import EstadoItinerario, Itinerario, Parada

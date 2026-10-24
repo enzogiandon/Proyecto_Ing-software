@@ -1,48 +1,272 @@
+/* ===================================================
+   RepartosYA - TOKENS DE DISEÑO
+   Fuente de verdad: Figma "Wireframes" (G1PJmHYu5WhelAknOA5p1z)
+
+   Estructura del archivo:
+   1) Tokens de Figma           (nombres nuevos, valores exactos)
+   2) Alias heredados           (mantienen funcionando base.css, login.css
+                                 e inicio.html sin tocarlos)
+   3) Mapeo a Bootstrap 5.3     (para que .btn-primary, .badge, .alert, etc.
+                                 usen la paleta de Figma)
+   4) Estilos de texto de Figma (clases .text-*)
+=================================================== */
+
+/* ---------------------------------------------------
+   1) TOKENS DE FIGMA
+--------------------------------------------------- */
 :root {
-    /* Fondos */
-    --bg: #F8FAFC;
-    --bg-app: #F8FAFC;
-    --bg-surface: #FFFFFF;
-    --bg-sidebar: #FFFFFF;
-    --bg-footer: #FFFFFF;
-    --bg-danger: #EF4444;
+  /* Color / base */
+  --color-primary: #1d4ed8;
+  --color-primary-tint: #dbeafe;
+  --color-surface: #ffffff;
+  --color-bg: #f3f4f6;
+  --color-border: #d1d5db;
+  --color-skeleton: #e5e7eb;
 
-    /* Textos */
-    --text-primary: #1E293B;
-    --text-secondary: #475569;
-    --text-muted: #64748B;
-    --text-white: #FFFFFF;
+  /* Color / texto */
+  --color-text: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
 
-    /* Sombras */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  /* Color / estados */
+  --color-success: #15803d;
+  --color-success-tint: #dcfce7;
+  --color-error: #b91c1c;
+  --color-error-tint: #fee2e2;
+  --color-warning: #b45309;
+  --color-warning-tint: #fef3c7;
+  --color-info: #0369a1;
+  --color-info-tint: #e0f2fe;
 
-    /* Bordes y Líneas */
-    --line-color: #E2E8F0;
-    --border-color: #E2E8F0;
-    --border-radius-sm: 6px;
-    --border-radius: 8px;
-    --border-radius-lg: 12px;
+  /* Spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
 
-    /* Colores de marca / Acción (RepartosYA) */
-    --primary-color: #1D64F2;
-    --primary-hover: #1553CE;
-    --primary-light: #EFF6FF;
-    --primary-active: #DBEAFE;
+  /* Radius */
+  --radius-md: 8px;
+  --radius-pill: 999px;
 
-    /* Estados y badges */
-    --status-success-bg: #DCFCE7;
-    --status-success-text: #166534;
-    --status-warning-bg: #FEF9C3;
-    --status-warning-text: #854D0E;
-    --status-danger-bg: #FEE2E2;
-    --status-danger-text: #991B1B;
-    --status-info-bg: #E0F2FE;
-    --status-info-text: #0369A1;
+  /* Tipografía */
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial,
+    sans-serif;
 
-    /* Toasts */
-    --toast-bg-info: rgba(255, 255, 255, 0.95);
-    --toast-bg-danger: rgba(239, 68, 68, 0.95);
+  /* ---- Valores DERIVADOS (no existen en Figma) ----
+     Figma solo define un azul primario. Para hover/active se usan los tonos
+     inmediatamente más oscuros de la misma escala. Pedir al equipo de diseño
+     que los agregue como variables y reemplazar estos valores. */
+  --color-primary-hover: #1e40af;
+  --color-primary-active: #1e3a8a;
+  --color-primary-focus-ring: rgba(29, 78, 216, 0.25);
 }
 
+/* ---------------------------------------------------
+   2) ALIAS HEREDADOS (nombres anteriores -> tokens de Figma)
+   Se pueden ir eliminando a medida que los CSS/templates pasen a
+   usar los nombres --color-* y --spacing-*.
+--------------------------------------------------- */
+:root {
+  /* Fondos */
+  --bg: var(--color-bg);
+  --bg-app: var(--color-bg);
+  --bg-surface: var(--color-surface);
+  --bg-sidebar: var(--color-surface);
+  --bg-footer: var(--color-surface);
+  --bg-danger: var(--color-error);
+
+  /* Textos */
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --text-white: var(--color-surface);
+
+  /* Bordes y líneas */
+  --line-color: var(--color-border);
+  --border-color: var(--color-border);
+
+  /* Radios: Figma solo define 8px (md). Antes había 6 / 8 / 12. */
+  --border-radius-sm: var(--radius-md);
+  --border-radius: var(--radius-md);
+  --border-radius-lg: var(--radius-md);
+
+  /* Marca / acción */
+  --primary-color: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --primary-light: var(--color-primary-tint);
+  --primary-active: var(--color-primary-tint);
+
+  /* Estados y badges */
+  --status-success-bg: var(--color-success-tint);
+  --status-success-text: var(--color-success);
+  --status-warning-bg: var(--color-warning-tint);
+  --status-warning-text: var(--color-warning);
+  --status-danger-bg: var(--color-error-tint);
+  --status-danger-text: var(--color-error);
+  --status-info-bg: var(--color-info-tint);
+  --status-info-text: var(--color-info);
+
+  /* Sombras: el diseño de Figma no define sombras. Se conservan las anteriores. */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+  /* Toasts (sin equivalente en Figma, se conservan) */
+  --toast-bg-info: rgba(255, 255, 255, 0.95);
+  --toast-bg-danger: rgba(185, 28, 28, 0.95);
+}
+
+/* ---------------------------------------------------
+   3) MAPEO A BOOTSTRAP 5.3
+   Bootstrap lee estas variables --bs-* en sus utilidades y componentes.
+   Debe cargarse DESPUÉS de bootstrap.min.css (ya ocurre en base.html).
+--------------------------------------------------- */
+:root,
+[data-bs-theme="light"] {
+  --bs-font-sans-serif: var(--font-family);
+  --bs-body-font-family: var(--font-family);
+  --bs-body-font-size: 0.875rem; /* 14px = "Texto/Cuerpo" */
+  --bs-body-color: var(--color-text);
+  --bs-body-color-rgb: 17, 24, 39;
+  --bs-body-bg: var(--color-bg);
+  --bs-body-bg-rgb: 243, 244, 246;
+  --bs-emphasis-color: var(--color-text);
+  --bs-secondary-color: var(--color-text-secondary);
+  --bs-secondary-color-rgb: 75, 85, 99;
+  --bs-tertiary-color: var(--color-text-muted);
+  --bs-border-color: var(--color-border);
+  --bs-border-radius: var(--radius-md);
+  --bs-border-radius-sm: var(--radius-md);
+  --bs-border-radius-lg: var(--radius-md);
+  --bs-border-radius-pill: var(--radius-pill);
+
+  --bs-primary: var(--color-primary);
+  --bs-primary-rgb: 29, 78, 216;
+  --bs-primary-bg-subtle: var(--color-primary-tint);
+  --bs-primary-border-subtle: #bfdbfe;
+  --bs-primary-text-emphasis: var(--color-primary);
+  --bs-link-color: var(--color-primary);
+  --bs-link-color-rgb: 29, 78, 216;
+  --bs-link-hover-color: var(--color-primary-hover);
+  --bs-link-hover-color-rgb: 30, 64, 175;
+  --bs-focus-ring-color: var(--color-primary-focus-ring);
+
+  --bs-success: var(--color-success);
+  --bs-success-rgb: 21, 128, 61;
+  --bs-success-bg-subtle: var(--color-success-tint);
+  --bs-success-border-subtle: #bbf7d0;
+  --bs-success-text-emphasis: var(--color-success);
+
+  --bs-danger: var(--color-error);
+  --bs-danger-rgb: 185, 28, 28;
+  --bs-danger-bg-subtle: var(--color-error-tint);
+  --bs-danger-border-subtle: #fecaca;
+  --bs-danger-text-emphasis: var(--color-error);
+
+  --bs-warning: var(--color-warning);
+  --bs-warning-rgb: 180, 83, 9;
+  --bs-warning-bg-subtle: var(--color-warning-tint);
+  --bs-warning-border-subtle: #fde68a;
+  --bs-warning-text-emphasis: var(--color-warning);
+
+  --bs-info: var(--color-info);
+  --bs-info-rgb: 3, 105, 161;
+  --bs-info-bg-subtle: var(--color-info-tint);
+  --bs-info-border-subtle: #bae6fd;
+  --bs-info-text-emphasis: var(--color-info);
+}
+
+body {
+  font-family: var(--font-family);
+}
+
+/* Bootstrap define los colores de cada botón dentro de la propia clase
+   (.btn-primary, .btn-danger...), por lo que --bs-primary no alcanza. */
+.btn-primary {
+  --bs-btn-bg: var(--color-primary);
+  --bs-btn-border-color: var(--color-primary);
+  --bs-btn-hover-bg: var(--color-primary-hover);
+  --bs-btn-hover-border-color: var(--color-primary-hover);
+  --bs-btn-active-bg: var(--color-primary-active);
+  --bs-btn-active-border-color: var(--color-primary-active);
+  --bs-btn-disabled-bg: var(--color-primary);
+  --bs-btn-disabled-border-color: var(--color-primary);
+  --bs-btn-focus-shadow-rgb: 29, 78, 216;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--color-primary);
+  --bs-btn-border-color: var(--color-primary);
+  --bs-btn-hover-bg: var(--color-primary);
+  --bs-btn-hover-border-color: var(--color-primary);
+  --bs-btn-active-bg: var(--color-primary-active);
+  --bs-btn-active-border-color: var(--color-primary-active);
+  --bs-btn-disabled-color: var(--color-primary);
+  --bs-btn-disabled-border-color: var(--color-primary);
+}
+
+.btn-danger {
+  --bs-btn-bg: var(--color-error);
+  --bs-btn-border-color: var(--color-error);
+  --bs-btn-hover-bg: #991b1b; /* derivado, no existe en Figma */
+  --bs-btn-hover-border-color: #991b1b;
+  --bs-btn-active-bg: #7f1d1d;
+  --bs-btn-active-border-color: #7f1d1d;
+  --bs-btn-disabled-bg: var(--color-error);
+  --bs-btn-disabled-border-color: var(--color-error);
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--color-error);
+  --bs-btn-border-color: var(--color-error);
+  --bs-btn-hover-bg: var(--color-error);
+  --bs-btn-hover-border-color: var(--color-error);
+  --bs-btn-active-bg: #991b1b;
+  --bs-btn-active-border-color: #991b1b;
+  --bs-btn-disabled-color: var(--color-error);
+  --bs-btn-disabled-border-color: var(--color-error);
+}
+
+.btn-success {
+  --bs-btn-bg: var(--color-success);
+  --bs-btn-border-color: var(--color-success);
+  --bs-btn-hover-bg: #166534; /* derivado, no existe en Figma */
+  --bs-btn-hover-border-color: #166534;
+  --bs-btn-active-bg: #14532d;
+  --bs-btn-active-border-color: #14532d;
+  --bs-btn-disabled-bg: var(--color-success);
+  --bs-btn-disabled-border-color: var(--color-success);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem var(--color-primary-focus-ring);
+}
+
+/* ---------------------------------------------------
+   4) ESTILOS DE TEXTO DE FIGMA
+   Nombre del estilo en Figma -> clase CSS.
+   Figma define lineHeight 100% (automático): se usa "normal",
+   igual que el código de referencia generado.
+--------------------------------------------------- */
+.text-title    { font: 600 28px/normal var(--font-family); } /* Texto/Título de página */
+.text-brand    { font: 600 28px/normal var(--font-family); } /* Texto/Marca */
+.text-section  { font: 600 18px/normal var(--font-family); } /* Texto/Título de sección */
+.text-kpi      { font: 700 32px/normal var(--font-family); } /* Texto/Número KPI */
+.text-button   { font: 600 16px/normal var(--font-family); } /* Texto/Botón */
+.text-body     { font: 400 14px/normal var(--font-family); } /* Texto/Cuerpo */
+.text-body-md  { font: 500 14px/normal var(--font-family); } /* Texto/Cuerpo medio */
+.text-label    { font: 500 13px/normal var(--font-family); } /* Texto/Etiqueta */
+.text-help     { font: 400 13px/normal var(--font-family); } /* Texto/Ayuda */
+.text-badge    { font: 600 13px/normal var(--font-family); } /* Texto/Badge */
+.text-group    { font: 600 12px/normal var(--font-family); } /* Texto/Encabezado de grupo */
+
+/* Colores de texto (los nombres no chocan con los de Bootstrap) */
+.text-c-primary   { color: var(--color-text); }
+.text-c-secondary { color: var(--color-text-secondary); }
+.text-c-muted     { color: var(--color-text-muted); }

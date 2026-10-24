@@ -6,7 +6,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
-    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-family: var(--font-family);
     background-color: #FFFFFF;
     color: var(--text-primary, #1E293B);
 }
@@ -21,7 +21,7 @@ html, body {
    PANEL IZQUIERDO (AZUL CORPORATIVO)
 =================================================== */
 .login-brand-panel {
-    width: 50%;
+    width: 560px;
     min-height: 100vh;
     background-color: var(--primary-color, #1D64F2);
     display: flex;

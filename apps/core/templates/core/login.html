@@ -15,11 +15,11 @@
     <!-- Font Awesome 6 Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    -->
     <!-- CSS Propios -->
     <link href="{% static 'core/css/paletas.css' %}" rel="stylesheet">
     <link href="{% static 'core/css/login.css' %}" rel="stylesheet">
@@ -128,25 +128,13 @@
     </div>
 
     <!-- SCRIPT INTERACTIVO: TOGGLE CONTRASEÑA Y ESTADO DE CARGA -->
+    <script src="{% static 'core/js/toggle_password.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const passwordInput = document.getElementById('id_password');
-            const toggleBtn = document.getElementById('togglePasswordBtn');
-            const toggleIcon = document.getElementById('togglePasswordIcon');
             const loginForm = document.getElementById('loginForm');
             const submitBtn = document.getElementById('submitBtn');
             const btnText = document.getElementById('btnText');
             const btnLoading = document.getElementById('btnLoading');
-
-            // Mostrar / Ocultar contraseña
-            if (toggleBtn && passwordInput && toggleIcon) {
-                toggleBtn.addEventListener('click', () => {
-                    const isPassword = passwordInput.getAttribute('type') === 'password';
-                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-                    toggleIcon.classList.toggle('fa-eye', !isPassword);
-                    toggleIcon.classList.toggle('fa-eye-slash', isPassword);
-                });
-            }
 
             // Animación de estado "Ingresando..." al enviar
             if (loginForm && submitBtn) {

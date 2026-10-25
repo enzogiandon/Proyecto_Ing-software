@@ -103,4 +103,3 @@ def ordenar_itinerario_segun_ruta(
         Parada.objects.bulk_update(paradas_finales, fields=["orden"])
 
     return paradas_finales
-

@@ -82,10 +82,9 @@ export default function ValidarCobro({
 
   return (
     <View style={styles.pantalla}>
-      <StatusBar
-        backgroundColor={AZUL}
-        barStyle="light-content"
-      />
+      
+<StatusBar barStyle="light-content" />
+
 
       {/* ENCABEZADO */}
       <View style={styles.encabezado}>

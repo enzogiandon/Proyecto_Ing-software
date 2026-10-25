@@ -12,18 +12,16 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import { obtenerItinerarioJornada } from '../services/itinerarioService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
-
-type FiltroTab = 'todas' | 'pendientes' | 'completadas';
 
 export default function ItinerarioScreen() {
   const router = useRouter();
 
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
-  const [filtroActivo, setFiltroActivo] = useState<FiltroTab>('todas');
 
   const cargarDatos = async () => {
     setCargando(true);
@@ -41,7 +39,7 @@ export default function ItinerarioScreen() {
     cargarDatos();
   }, []);
 
-  // Función para alternar manualmente a modo "Sin Asignar" para demostración visual de Figma
+  // Función para alternar modo demostración (Boceto Asignado vs Boceto Sin Asignar de Figma)
   const toggleModoDemostracion = () => {
     if (itinerario && itinerario.paradas.length > 0) {
       setItinerario(MOCK_ITINERARIO_SIN_ASIGNAR);
@@ -50,108 +48,133 @@ export default function ItinerarioScreen() {
     }
   };
 
-  const handleContactarBase = () => {
+  const handleRutasGuardadas = () => {
     Alert.alert(
-      'Soporte Operativo Softech',
-      'Contactando a Base Logística...\n\nLínea directa: 0800-444-SOFTECH (Int. 104)\nWhatsApp Guardia: +54 9 11 5555-0199',
+      'Rutas Guardadas',
+      'Accediendo al módulo de gestión y reordenamiento de recorridos guardados.',
+      [{ text: 'Aceptar' }]
+    );
+  };
+
+  const handleIrAParada = (parada: ParadaItem) => {
+    Alert.alert(
+      'Navegación iniciada',
+      `Dirigiéndose hacia: ${parada.comercio.razonSocial}\n${parada.comercio.domicilio}\n\nAbriendo GPS y preparando remitos...`,
+      [{ text: 'Continuar' }]
+    );
+  };
+
+  const handleVerDetalle = (parada: ParadaItem) => {
+    Alert.alert(
+      parada.comercio.razonSocial,
+      `Ubicación: ${parada.comercio.domicilio}\nDocumentos: ${parada.cantidadRemitos} remitos\nTotal a cobrar: $${parada.montoCobranza.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`,
       [{ text: 'Cerrar' }]
     );
   };
 
-  const paradasFiltradas = (itinerario?.paradas || []).filter((p) => {
-    if (filtroActivo === 'pendientes') return p.estado !== 'finalizada';
-    if (filtroActivo === 'completadas') return p.estado === 'finalizada';
-    return true;
-  });
+  const handleContactarBase = () => {
+    Alert.alert(
+      'Soporte Operativo RepartoYA',
+      'Contactando a Base Logística...\n\nLínea directa: 0800-444-REPARTO (Int. 104)\nWhatsApp Guardia: +54 9 11 5555-0199',
+      [{ text: 'Cerrar' }]
+    );
+  };
+
+  const paradas = itinerario?.paradas || [];
+  const proximaParada = paradas[0];
+  const siguientesParadas = paradas.slice(1);
 
   const porcentajeProgreso =
     itinerario && itinerario.totalParadas > 0
       ? Math.round((itinerario.paradasCompletadas / itinerario.totalParadas) * 100)
-      : 0;
+      : 50;
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <StatusBar barStyle="light-content" backgroundColor="#1E3A8A" />
+      <StatusBar barStyle="light-content" backgroundColor={RepartoYA.azulRuta} />
 
-      {/* ================= HEADER CORPORATIVO ================= */}
+      {/* ================= HEADER CORPORATIVO (Figma: Azul Ruta) ================= */}
       <View style={styles.header}>
+        {/* Fila 1: Título "Itinerario" y Logo RepartoYA */}
         <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.saludoTexto}>
-              Hola, {itinerario?.transportistaNombre || 'Transportista'} 👋
-            </Text>
-            <Text style={styles.fechaTexto}>
-              {itinerario?.fecha || 'Jornada Operativa'}
-            </Text>
+          <Text style={styles.headerTitulo}>Itinerario</Text>
+
+          <View style={styles.logoRepartoYA}>
+            <Text style={styles.logoCamionIcon}>🚚</Text>
+            <Text style={styles.logoTextoReparto}>Reparto</Text>
+            <Text style={styles.logoTextoYA}>YA</Text>
           </View>
-          <TouchableOpacity
-            style={styles.demoBadge}
-            onPress={toggleModoDemostracion}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.demoBadgeText}>
-              {itinerario && itinerario.paradas.length > 0
-                ? 'Ver Boceto Sin Asignar'
-                : 'Ver Boceto Asignado'}
-            </Text>
-          </TouchableOpacity>
         </View>
 
-        {/* DATOS DEL VEHÍCULO Y PROGRESO */}
-        {itinerario && itinerario.paradas.length > 0 && (
-          <View style={styles.vehiculoCard}>
-            <View style={styles.vehiculoRow}>
-              <View style={styles.iconoCamionWrap}>
-                <Text style={styles.iconoCamion}>🚚</Text>
-              </View>
-              <View style={styles.vehiculoInfo}>
-                <Text style={styles.vehiculoModelo}>
-                  {itinerario.vehiculo.modelo}
-                </Text>
-                <Text style={styles.vehiculoPatente}>
-                  Patente: {itinerario.vehiculo.patente}
-                </Text>
-              </View>
-              <View style={styles.progresoPill}>
-                <Text style={styles.progresoPillTexto}>
-                  {itinerario.paradasCompletadas}/{itinerario.totalParadas} paradas
-                </Text>
-              </View>
+        {/* Fila 2: Chofer + Unidad vs Fecha + Ruta */}
+        <View style={styles.driverRow}>
+          <View style={styles.driverLeft}>
+            <View style={styles.avatarBadge}>
+              <Text style={styles.avatarTexto}>
+                {itinerario?.transportistaIniciales || 'MR'}
+              </Text>
             </View>
-
-            {/* Barra de progreso */}
-            <View style={styles.barraFondo}>
-              <View
-                style={[
-                  styles.barraProgreso,
-                  { width: `${porcentajeProgreso}%` },
-                ]}
-              />
+            <View>
+              <Text style={styles.driverNombre}>
+                {itinerario?.transportistaNombre || 'Martín Rodriguez'}
+              </Text>
+              <Text style={styles.driverVehiculo}>
+                {itinerario?.vehiculo.modelo || 'Unidad 024'} · {itinerario?.vehiculo.patente || 'AB 458 CD'}
+              </Text>
             </View>
           </View>
-        )}
+
+          <View style={styles.driverRight}>
+            <Text style={styles.fechaTexto}>
+              {itinerario?.fecha || 'Lun, 19 oct 2026'}
+            </Text>
+            <Text style={styles.rutaTexto}>
+              {itinerario?.rutaNombre || 'Ruta 12 · San Martín'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Botón flotante para alternar demo con Figma */}
+        <TouchableOpacity
+          style={styles.toggleDemoButton}
+          onPress={toggleModoDemostracion}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.toggleDemoTexto}>
+            {itinerario && itinerario.paradas.length > 0
+              ? 'Ver Boceto: Sin Asignar'
+              : 'Ver Boceto: Asignado'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* ================= CONTENIDO PRINCIPAL ================= */}
+      {/* ================= CONTENIDO DE LA PANTALLA ================= */}
       {cargando ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#1E3A8A" />
-          <Text style={styles.cargandoTexto}>Cargando hoja de ruta...</Text>
+          <ActivityIndicator size="large" color={RepartoYA.azulRuta} />
+          <Text style={styles.cargandoTexto}>Cargando itinerario operativo...</Text>
         </View>
       ) : !itinerario || itinerario.paradas.length === 0 ? (
         /* ================= ESTADO FIGMA: ITINERARIO - SIN ASIGNAR ================= */
-        <ScrollView contentContainerStyle={styles.sinAsignarContent}>
-          <View style={styles.sinAsignarCard}>
-            <View style={styles.sinAsignarIconoWrap}>
+        <ScrollView contentContainerStyle={styles.sinAsignarScroll}>
+          {/* Botón Rutas Guardadas en cabecera */}
+          <TouchableOpacity
+            style={styles.botonRutasGuardadas}
+            onPress={handleRutasGuardadas}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.iconoBookmark}>🔖</Text>
+            <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
+          </TouchableOpacity>
+
+          {/* Tarjeta Central Ilustrativa */}
+          <View style={styles.sinAsignarCentro}>
+            <View style={styles.sinAsignarCirculo}>
               <Text style={styles.sinAsignarIcono}>📋</Text>
             </View>
-            <Text style={styles.sinAsignarTitulo}>
-              No tenés un itinerario asignado
-            </Text>
+            <Text style={styles.sinAsignarTitulo}>Itinerario sin asignar</Text>
             <Text style={styles.sinAsignarDescripcion}>
-              Aún no se ha cargado una hoja de ruta para tu vehículo en la jornada
-              de hoy. Por favor comunicate con Base Logística para verificar tu
-              asignación.
+              No tenés un itinerario asignado para esta jornada. Cuando haya uno disponible, vas a poder consultar las paradas, las direcciones y los montos a cobrar.
             </Text>
 
             <TouchableOpacity
@@ -163,11 +186,11 @@ export default function ItinerarioScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.botonContactoBase}
+              style={styles.botonContactarBase}
               onPress={handleContactarBase}
               activeOpacity={0.85}
             >
-              <Text style={styles.botonContactoBaseTexto}>
+              <Text style={styles.botonContactarBaseTexto}>
                 🎧 Contactar a Base Operativa
               </Text>
             </TouchableOpacity>
@@ -175,569 +198,687 @@ export default function ItinerarioScreen() {
         </ScrollView>
       ) : (
         /* ================= ESTADO FIGMA: ITINERARIO CON PARADAS ================= */
-        <View style={styles.flexOne}>
-          {/* BARRA DE FILTROS TABS */}
-          <View style={styles.filtrosRow}>
-            <TouchableOpacity
-              style={[
-                styles.filtroTab,
-                filtroActivo === 'todas' && styles.filtroTabActivo,
-              ]}
-              onPress={() => setFiltroActivo('todas')}
-            >
-              <Text
-                style={[
-                  styles.filtroTexto,
-                  filtroActivo === 'todas' && styles.filtroTextoActivo,
-                ]}
-              >
-                Todas ({itinerario.paradas.length})
+        <ScrollView
+          style={styles.flexOne}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* TARJETA DE PROGRESO DE ENTREGAS (Figma) */}
+          <View style={styles.progresoCard}>
+            <View style={styles.progresoHeaderRow}>
+              <Text style={styles.progresoTitulo}>
+                {itinerario.paradasCompletadas} de {itinerario.totalParadas} paradas entregadas
               </Text>
-            </TouchableOpacity>
+              <Text style={styles.progresoPorcentaje}>{porcentajeProgreso}%</Text>
+            </View>
 
-            <TouchableOpacity
-              style={[
-                styles.filtroTab,
-                filtroActivo === 'pendientes' && styles.filtroTabActivo,
-              ]}
-              onPress={() => setFiltroActivo('pendientes')}
-            >
-              <Text
+            {/* Barra con relleno Naranja YA */}
+            <View style={styles.barraFondo}>
+              <View
                 style={[
-                  styles.filtroTexto,
-                  filtroActivo === 'pendientes' && styles.filtroTextoActivo,
+                  styles.barraRelleno,
+                  { width: `${porcentajeProgreso}%` },
                 ]}
-              >
-                Pendientes (
-                {itinerario.paradas.filter((p) => p.estado !== 'finalizada').length}
-                )
-              </Text>
-            </TouchableOpacity>
+              />
+            </View>
 
-            <TouchableOpacity
-              style={[
-                styles.filtroTab,
-                filtroActivo === 'completadas' && styles.filtroTabActivo,
-              ]}
-              onPress={() => setFiltroActivo('completadas')}
-            >
-              <Text
-                style={[
-                  styles.filtroTexto,
-                  filtroActivo === 'completadas' && styles.filtroTextoActivo,
-                ]}
-              >
-                Entregadas (
-                {itinerario.paradas.filter((p) => p.estado === 'finalizada').length}
-                )
+            <View style={styles.progresoFooterRow}>
+              <Text style={styles.progresoEntregadas}>
+                {itinerario.paradasCompletadas} entregadas
               </Text>
-            </TouchableOpacity>
+              <Text style={styles.progresoPorVisitar}>
+                {itinerario.totalParadas - itinerario.paradasCompletadas} por visitar
+              </Text>
+            </View>
           </View>
 
-          {/* LISTADO DE PARADAS */}
-          <ScrollView
-            contentContainerStyle={styles.listaScroll}
-            showsVerticalScrollIndicator={false}
+          {/* BOTÓN RUTAS GUARDADAS */}
+          <TouchableOpacity
+            style={styles.botonRutasGuardadas}
+            onPress={handleRutasGuardadas}
+            activeOpacity={0.8}
           >
-            {paradasFiltradas.map((parada: ParadaItem) => {
-              const esFinalizada = parada.estado === 'finalizada';
-              const esEnCurso = parada.estado === 'en_curso';
+            <Text style={styles.iconoBookmark}>🔖</Text>
+            <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
+          </TouchableOpacity>
 
-              return (
-                <View
-                  key={parada.id}
-                  style={[
-                    styles.paradaCard,
-                    esEnCurso && styles.paradaCardEnCurso,
-                  ]}
-                >
-                  <View style={styles.paradaHeaderRow}>
-                    {/* Badge del número de parada */}
-                    <View
-                      style={[
-                        styles.badgeOrden,
-                        esFinalizada && styles.badgeOrdenExito,
-                        esEnCurso && styles.badgeOrdenEnCurso,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.badgeOrdenTexto,
-                          (esFinalizada || esEnCurso) && styles.badgeOrdenTextoBlanco,
-                        ]}
-                      >
-                        {parada.orden}
-                      </Text>
-                    </View>
+          {/* ENCABEZADO DE SECCIÓN: PRÓXIMAS PARADAS */}
+          <View style={styles.seccionHeader}>
+            <View style={styles.seccionTituloRow}>
+              <Text style={styles.seccionTitulo}>Próximas paradas</Text>
+              <Text style={styles.seccionRestantes}>
+                {itinerario.totalParadas - itinerario.paradasCompletadas} restantes
+              </Text>
+            </View>
+            <Text style={styles.seccionSubtitulo}>
+              Prioridad de visita · continuás en la parada {proximaParada ? proximaParada.orden : 5} de {itinerario.totalParadas}
+            </Text>
+          </View>
 
-                    {/* Comercio y Horario */}
-                    <View style={styles.comercioHeader}>
-                      <Text style={styles.razonSocial}>
-                        {parada.comercio.razonSocial}
-                      </Text>
-                      {parada.horaEstimada && (
-                        <Text style={styles.horarioEstimado}>
-                          ⏰ Estimado: {parada.horaEstimada}
-                        </Text>
-                      )}
-                    </View>
-
-                    {/* Pill de estado */}
-                    <View
-                      style={[
-                        styles.estadoPill,
-                        esFinalizada
-                          ? styles.estadoPillExito
-                          : esEnCurso
-                          ? styles.estadoPillEnCurso
-                          : styles.estadoPillPendiente,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.estadoPillTexto,
-                          esFinalizada
-                            ? styles.estadoPillTextoExito
-                            : esEnCurso
-                            ? styles.estadoPillTextoEnCurso
-                            : styles.estadoPillTextoPendiente,
-                        ]}
-                      >
-                        {esFinalizada
-                          ? 'Entregado'
-                          : esEnCurso
-                          ? 'En Ruta'
-                          : 'Pendiente'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Dirección */}
-                  <View style={styles.paradaInfoRow}>
-                    <Text style={styles.iconoUbicacion}>📍</Text>
-                    <Text style={styles.direccionTexto}>
-                      {parada.comercio.domicilio}
-                      {parada.comercio.localidad ? ` · ${parada.comercio.localidad}` : ''}
-                    </Text>
-                  </View>
-
-                  {/* Resumen de cobranza y remitos */}
-                  <View style={styles.paradaFooterRow}>
-                    <View style={styles.remitosBadge}>
-                      <Text style={styles.remitosTexto}>
-                        📦 {parada.cantidadRemitos} {parada.cantidadRemitos === 1 ? 'remito' : 'remitos'}
-                      </Text>
-                    </View>
-
-                    <View style={styles.cobranzaBadge}>
-                      <Text style={styles.cobranzaLabel}>A cobrar: </Text>
-                      <Text style={styles.cobranzaMonto}>
-                        ${parada.montoCobranza.toLocaleString('es-AR', {
-                          minimumFractionDigits: 2,
-                        })}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Botón de acción */}
-                  <TouchableOpacity
-                    style={[
-                      styles.botonGestionar,
-                      esFinalizada && styles.botonGestionarFinalizado,
-                    ]}
-                    onPress={() => {
-                      Alert.alert(
-                        parada.comercio.razonSocial,
-                        `Domicilio: ${parada.comercio.domicilio}\nRemitos: ${parada.cantidadRemitos}\nMonto: $${parada.montoCobranza.toLocaleString('es-AR')}\n\n¿Deseas gestionar la entrega y cobranza?`,
-                        [
-                          { text: 'Cancelar', style: 'cancel' },
-                          { text: 'Gestionar Remito', onPress: () => {} },
-                        ]
-                      );
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <Text
-                      style={[
-                        styles.botonGestionarTexto,
-                        esFinalizada && styles.botonGestionarTextoFinalizado,
-                      ]}
-                    >
-                      {esFinalizada ? '✓ Ver Resumen de Entrega' : 'Iniciar Gestión de Entrega ➔'}
-                    </Text>
-                  </TouchableOpacity>
+          {/* PARADA ACTIVA #1 (Figma: Botón Naranja YA "Ir a la parada") */}
+          {proximaParada && (
+            <View style={styles.paradaCardDestacada}>
+              <View style={styles.paradaHeaderRow}>
+                {/* Badge Naranja YA */}
+                <View style={styles.badgeNaranja}>
+                  <Text style={styles.badgeNaranjaTexto}>#1</Text>
                 </View>
-              );
-            })}
-          </ScrollView>
-        </View>
+                <View style={styles.paradaTituloWrap}>
+                  <Text style={styles.comercioNombre}>
+                    {proximaParada.comercio.razonSocial}
+                  </Text>
+                  <Text style={styles.comercioSubtitulo}>
+                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${itinerario.totalParadas} · Próxima entrega`}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Dirección */}
+              <View style={styles.direccionRow}>
+                <Text style={styles.iconoPin}>📍</Text>
+                <Text style={styles.direccionTexto}>
+                  {proximaParada.comercio.domicilio}
+                  {proximaParada.comercio.localidad ? ` · ${proximaParada.comercio.localidad}` : ''}
+                </Text>
+              </View>
+
+              {/* Documentación y Monto */}
+              <View style={styles.montosRow}>
+                <View>
+                  <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
+                  <Text style={styles.metaValorRemitos}>
+                    📄 {proximaParada.cantidadRemitos} remitos
+                  </Text>
+                </View>
+                <View style={styles.alignEnd}>
+                  <Text style={styles.metaLabel}>TOTAL A RECAUDAR</Text>
+                  <Text style={styles.montoPrincipal}>
+                    $ {proximaParada.montoCobranza.toLocaleString('es-AR', {
+                      minimumFractionDigits: 2,
+                    })}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Botón de Acción Naranja YA */}
+              <TouchableOpacity
+                style={styles.botonIrParada}
+                onPress={() => handleIrAParada(proximaParada)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.iconoNavegacion}>➤</Text>
+                <Text style={styles.textoBotonIrParada}>Ir a la parada</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* PARADA SIGUIENTE #2 (Figma: Botón Contorno Azul "Ver detalle de parada") */}
+          {siguientesParadas.map((parada, idx) => (
+            <View key={parada.id} style={styles.paradaCardSecundaria}>
+              <View style={styles.paradaHeaderRow}>
+                {/* Badge Neutro */}
+                <View style={styles.badgeNeutro}>
+                  <Text style={styles.badgeNeutroTexto}>#{idx + 2}</Text>
+                </View>
+                <View style={styles.paradaTituloWrap}>
+                  <Text style={styles.comercioNombre}>
+                    {parada.comercio.razonSocial}
+                  </Text>
+                  <Text style={styles.comercioSubtituloSecundario}>
+                    {parada.subtitulo || `Parada ${parada.orden} de ${itinerario.totalParadas} · A continuación`}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Dirección */}
+              <View style={styles.direccionRow}>
+                <Text style={styles.iconoPin}>📍</Text>
+                <Text style={styles.direccionTexto}>
+                  {parada.comercio.domicilio}
+                  {parada.comercio.localidad ? ` · ${parada.comercio.localidad}` : ''}
+                </Text>
+              </View>
+
+              {/* Documentación y Monto */}
+              <View style={styles.montosRow}>
+                <View>
+                  <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
+                  <Text style={styles.metaValorRemitos}>
+                    📄 {parada.cantidadRemitos} remitos
+                  </Text>
+                </View>
+                <View style={styles.alignEnd}>
+                  <Text style={styles.metaLabel}>TOTAL A RECAUDAR</Text>
+                  <Text style={styles.montoSecundario}>
+                    $ {parada.montoCobranza.toLocaleString('es-AR', {
+                      minimumFractionDigits: 2,
+                    })}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Botón Contorno Azul */}
+              <TouchableOpacity
+                style={styles.botonVerDetalle}
+                onPress={() => handleVerDetalle(parada)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.iconoVerDetalle}>📋</Text>
+                <Text style={styles.textoBotonVerDetalle}>Ver detalle de parada</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+
+          {/* Pie de lista: Paradas subsiguientes */}
+          <View style={styles.footerParadasRestantes}>
+            <Text style={styles.iconoRutaPunteada}>🔀</Text>
+            <View style={styles.footerParadasInfo}>
+              <Text style={styles.footerParadasTitulo}>Luego, paradas 7 y 8</Text>
+              <Text style={styles.footerParadasDetalle}>
+                Kiosco El Sol · Mercado San José
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
       )}
     </SafeAreaView>
   );
 }
 
+// ================= ESTILOS NATIVOS PALETA REPARTOYA =================
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: RepartoYA.azulRuta,
   },
   flexOne: {
     flex: 1,
+    backgroundColor: RepartoYA.cremaPan,
   },
-  header: {
-    backgroundColor: '#1E3A8A',
-    paddingHorizontal: 20,
+  contentContainer: {
+    paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    paddingBottom: 32,
+    backgroundColor: RepartoYA.cremaPan,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: RepartoYA.cremaPan,
+  },
+  cargandoTexto: {
+    marginTop: 12,
+    fontSize: 14,
+    color: RepartoYA.grisTexto,
+  },
+
+  // ================= HEADER =================
+  header: {
+    backgroundColor: RepartoYA.azulRuta,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 18,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  saludoTexto: {
+  headerTitulo: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: RepartoYA.blanco,
+  },
+  logoRepartoYA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoCamionIcon: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  logoTextoReparto: {
+    color: RepartoYA.blanco,
     fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
   },
-  fechaTexto: {
-    fontSize: 13,
-    color: '#93C5FD',
-    marginTop: 2,
+  logoTextoYA: {
+    color: RepartoYA.naranjaYA,
+    fontSize: 20,
+    fontWeight: '900',
+    marginLeft: 2,
   },
-  demoBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  driverRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  driverLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  avatarBadge: {
+    width: 42,
+    height: 42,
     borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  demoBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
+  avatarTexto: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  driverNombre: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  driverVehiculo: {
+    color: RepartoYA.azulRutaBorde,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  driverRight: {
+    alignItems: 'flex-end',
+  },
+  fechaTexto: {
+    color: RepartoYA.blanco,
+    fontSize: 13,
     fontWeight: '600',
   },
-  vehiculoCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
+  rutaTexto: {
+    color: RepartoYA.azulRutaBorde,
+    fontSize: 12,
+    marginTop: 2,
   },
-  vehiculoRow: {
+  toggleDemoButton: {
+    alignSelf: 'flex-end',
+    marginTop: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  toggleDemoTexto: {
+    color: RepartoYA.blanco,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+  // ================= TARJETA PROGRESO =================
+  progresoCard: {
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: RepartoYA.grisBorde,
+  },
+  progresoHeaderRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },
-  iconoCamionWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
-    backgroundColor: '#EFF6FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
+  progresoTitulo: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: RepartoYA.carbon,
   },
-  iconoCamion: {
-    fontSize: 20,
-  },
-  vehiculoInfo: {
-    flex: 1,
-  },
-  vehiculoModelo: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  vehiculoPatente: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 1,
-  },
-  progresoPill: {
-    backgroundColor: '#DBEAFE',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  progresoPillTexto: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#1E40AF',
+  progresoPorcentaje: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: RepartoYA.azulRuta,
   },
   barraFondo: {
-    height: 6,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 3,
+    height: 8,
+    backgroundColor: RepartoYA.grisFondo,
+    borderRadius: 4,
     overflow: 'hidden',
+    marginBottom: 10,
   },
-  barraProgreso: {
+  barraRelleno: {
     height: '100%',
-    backgroundColor: '#2563EB',
-    borderRadius: 3,
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 4,
   },
-  filtrosRow: {
+  progresoFooterRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginTop: 14,
-    marginBottom: 8,
-    gap: 8,
+    justifyContent: 'space-between',
   },
-  filtroTab: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: '#E5E7EB',
+  progresoEntregadas: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: RepartoYA.azulRuta,
   },
-  filtroTabActivo: {
-    backgroundColor: '#1E3A8A',
+  progresoPorVisitar: {
+    fontSize: 13,
+    color: RepartoYA.grisTexto,
   },
-  filtroTexto: {
-    fontSize: 12,
+
+  // ================= BOTÓN RUTAS GUARDADAS =================
+  botonRutasGuardadas: {
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.azulRuta,
+    borderRadius: 12,
+    height: 48,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  iconoBookmark: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  textoRutasGuardadas: {
+    color: RepartoYA.azulRuta,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  // ================= SECCIÓN PRÓXIMAS PARADAS =================
+  seccionHeader: {
+    marginBottom: 12,
+  },
+  seccionTituloRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  seccionTitulo: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: RepartoYA.carbon,
+  },
+  seccionRestantes: {
+    fontSize: 13,
+    color: RepartoYA.grisTexto,
     fontWeight: '600',
-    color: '#4B5563',
   },
-  filtroTextoActivo: {
-    color: '#FFFFFF',
+  seccionSubtitulo: {
+    fontSize: 13,
+    color: RepartoYA.grisTexto,
+    marginTop: 2,
   },
-  listaScroll: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 30,
-    gap: 14,
-  },
-  paradaCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+
+  // ================= PARADA DESTACADA (#1) =================
+  paradaCardDestacada: {
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 16,
     padding: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: RepartoYA.grisBorde,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
   },
-  paradaCardEnCurso: {
-    borderColor: '#3B82F6',
-    borderWidth: 1.5,
+  paradaCardSecundaria: {
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: RepartoYA.grisBorde,
   },
   paradaHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
   },
-  badgeOrden: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#DBEAFE',
+  badgeNaranja: {
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
-  badgeOrdenExito: {
-    backgroundColor: '#16A34A',
+  badgeNaranjaTexto: {
+    color: RepartoYA.blanco,
+    fontWeight: '900',
+    fontSize: 15,
   },
-  badgeOrdenEnCurso: {
-    backgroundColor: '#2563EB',
+  badgeNeutro: {
+    backgroundColor: RepartoYA.cremaPan,
+    borderWidth: 1,
+    borderColor: RepartoYA.grisBorde,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  badgeOrdenTexto: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1E40AF',
+  badgeNeutroTexto: {
+    color: RepartoYA.carbon,
+    fontWeight: '800',
+    fontSize: 14,
   },
-  badgeOrdenTextoBlanco: {
-    color: '#FFFFFF',
-  },
-  comercioHeader: {
+  paradaTituloWrap: {
     flex: 1,
   },
-  razonSocial: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
+  comercioNombre: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: RepartoYA.carbon,
   },
-  horarioEstimado: {
-    fontSize: 11,
-    color: '#6B7280',
+  comercioSubtitulo: {
+    fontSize: 12,
+    color: RepartoYA.azulRuta,
+    fontWeight: '700',
     marginTop: 2,
   },
-  estadoPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  comercioSubtituloSecundario: {
+    fontSize: 12,
+    color: RepartoYA.grisTexto,
+    fontWeight: '600',
+    marginTop: 2,
   },
-  estadoPillPendiente: {
-    backgroundColor: '#F3F4F6',
-  },
-  estadoPillEnCurso: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  estadoPillExito: {
-    backgroundColor: '#DCFCE7',
-  },
-  estadoPillTexto: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  estadoPillTextoPendiente: {
-    color: '#6B7280',
-  },
-  estadoPillTextoEnCurso: {
-    color: '#1D4ED8',
-  },
-  estadoPillTextoExito: {
-    color: '#15803D',
-  },
-  paradaInfoRow: {
+  direccionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  iconoUbicacion: {
+  iconoPin: {
     fontSize: 14,
     marginRight: 6,
   },
   direccionTexto: {
     fontSize: 13,
-    color: '#374151',
+    color: RepartoYA.grisTextoSecundario,
     flex: 1,
   },
-  paradaFooterRow: {
+  montosRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
+    alignItems: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: RepartoYA.grisFondo,
+    paddingTop: 12,
+    marginBottom: 14,
   },
-  remitosBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  remitosTexto: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
-  cobranzaBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cobranzaLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  cobranzaMonto: {
-    fontSize: 13,
+  metaLabel: {
+    fontSize: 11,
+    color: RepartoYA.grisTexto,
     fontWeight: '700',
-    color: '#111827',
+    letterSpacing: 0.8,
+    marginBottom: 4,
   },
-  botonGestionar: {
-    backgroundColor: '#1E3A8A',
-    paddingVertical: 10,
-    borderRadius: 8,
+  metaValorRemitos: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: RepartoYA.carbon,
+  },
+  alignEnd: {
+    alignItems: 'flex-end',
+  },
+  montoPrincipal: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: RepartoYA.azulRuta,
+  },
+  montoSecundario: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: RepartoYA.azulRuta,
+  },
+
+  // Botón Ir a la Parada (Naranja YA)
+  botonIrParada: {
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 12,
+    height: 48,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: RepartoYA.naranjaYA,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+  },
+  iconoNavegacion: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '900',
+    marginRight: 8,
+  },
+  textoBotonIrParada: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+
+  // Botón Ver Detalle (Contorno Azul)
+  botonVerDetalle: {
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.azulRuta,
+    borderRadius: 12,
+    height: 46,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  botonGestionarFinalizado: {
-    backgroundColor: '#F3F4F6',
+  iconoVerDetalle: {
+    fontSize: 15,
+    marginRight: 8,
+  },
+  textoBotonVerDetalle: {
+    color: RepartoYA.azulRuta,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Footer paradas restantes
+  footerParadasRestantes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 4,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: RepartoYA.grisBorde,
   },
-  botonGestionarTexto: {
-    color: '#FFFFFF',
+  iconoRutaPunteada: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  footerParadasInfo: {
+    flex: 1,
+  },
+  footerParadasTitulo: {
     fontSize: 13,
     fontWeight: '700',
+    color: RepartoYA.carbon,
   },
-  botonGestionarTextoFinalizado: {
-    color: '#4B5563',
+  footerParadasDetalle: {
+    fontSize: 12,
+    color: RepartoYA.grisTexto,
+    marginTop: 1,
   },
-  centerContainer: {
+
+  // ================= ESTADO SIN ASIGNAR =================
+  sinAsignarScroll: {
+    padding: 20,
+    flexGrow: 1,
+    backgroundColor: RepartoYA.cremaPan,
+  },
+  sinAsignarCentro: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 32,
   },
-  cargandoTexto: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  sinAsignarContent: {
-    padding: 24,
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  sinAsignarCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  sinAsignarIconoWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#EFF6FF',
+  sinAsignarCirculo: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 2,
+    borderColor: RepartoYA.azulRuta,
+    backgroundColor: RepartoYA.blanco,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   sinAsignarIcono: {
-    fontSize: 32,
+    fontSize: 38,
   },
   sinAsignarTitulo: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 22,
+    fontWeight: '800',
+    color: RepartoYA.carbon,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   sinAsignarDescripcion: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 14,
+    color: RepartoYA.grisTextoSecundario,
     textAlign: 'center',
-    lineHeight: 19,
-    marginBottom: 24,
+    lineHeight: 21,
+    marginBottom: 28,
+    paddingHorizontal: 16,
   },
   botonActualizar: {
-    backgroundColor: '#1E3A8A',
+    backgroundColor: RepartoYA.azulRuta,
     width: '100%',
-    paddingVertical: 12,
-    borderRadius: 10,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   botonActualizarTexto: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: RepartoYA.blanco,
+    fontSize: 15,
     fontWeight: '700',
   },
-  botonContactoBase: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+  botonContactarBase: {
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.grisBorde,
     width: '100%',
-    paddingVertical: 12,
-    borderRadius: 10,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  botonContactoBaseTexto: {
-    color: '#374151',
+  botonContactarBaseTexto: {
+    color: RepartoYA.carbon,
     fontSize: 14,
     fontWeight: '600',
   },

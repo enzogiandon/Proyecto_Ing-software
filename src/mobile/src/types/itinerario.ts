@@ -1,4 +1,4 @@
-// src/types/itinerario.ts
+// src/mobile/src/types/itinerario.ts
 
 export type EstadoParada = 'pendiente' | 'en_curso' | 'finalizada' | 'error';
 export type EstadoItinerario = 'pendiente' | 'asignado' | 'en_ruta' | 'finalizado' | 'sin_asignar';
@@ -20,6 +20,7 @@ export interface ParadaItem {
   montoCobranza: number;
   cantidadRemitos: number;
   horaEstimada?: string;
+  subtitulo?: string;
 }
 
 export interface VehiculoAsignado {
@@ -30,8 +31,10 @@ export interface VehiculoAsignado {
 export interface ItinerarioJornada {
   id: number;
   fecha: string;
+  rutaNombre?: string;
   estado: EstadoItinerario;
   transportistaNombre: string;
+  transportistaIniciales?: string;
   vehiculo: VehiculoAsignado;
   totalParadas: number;
   paradasCompletadas: number;

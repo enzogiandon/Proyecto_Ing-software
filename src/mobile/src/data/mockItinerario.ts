@@ -1,95 +1,109 @@
-// src/data/mockItinerario.ts
+// src/mobile/src/data/mockItinerario.ts
 import { ItinerarioJornada } from '../types/itinerario';
 
-// Itinerario asignado para el chofer Carlos Gómez (Figma: Itinerario.png)
+/**
+ * Itinerario asignado para el chofer Martín Rodriguez
+ * Coincide exactamente con el boceto de Figma: Itinerario.png (Actualizado 21-10-2026)
+ */
 export const MOCK_ITINERARIO_ASIGNADO: ItinerarioJornada = {
   id: 101,
-  fecha: 'Miércoles, 21 de Octubre',
+  fecha: 'Lun, 19 oct 2026',
+  rutaNombre: 'Ruta 12 · San Martín',
   estado: 'en_ruta',
-  transportistaNombre: 'Carlos Gómez',
+  transportistaNombre: 'Martín Rodriguez',
+  transportistaIniciales: 'MR',
   vehiculo: {
-    patente: 'AB 123 CD',
-    modelo: 'Mercedes-Benz 710',
+    patente: 'AB 458 CD',
+    modelo: 'Unidad 024',
   },
-  totalParadas: 4,
-  paradasCompletadas: 1,
+  totalParadas: 8,
+  paradasCompletadas: 4,
   paradas: [
     {
       id: 1,
-      orden: 1,
-      estado: 'finalizada',
+      orden: 5,
+      subtitulo: 'Parada 5 de 8 · Próxima entrega',
+      estado: 'en_curso',
       comercio: {
         id: 10,
-        razonSocial: 'Autoservicio Don Pedro',
+        razonSocial: 'Almacén Don Pedro',
         cuit: '30-71122334-4',
-        domicilio: 'Av. Mitre 2410, Avellaneda',
-        localidad: 'Zona Sur',
+        domicilio: 'Av. San Martín 2450',
+        localidad: 'San Martín',
         telefono: '11-4201-9988',
       },
-      montoCobranza: 85400.0,
-      cantidadRemitos: 2,
-      horaEstimada: '08:30 hs',
+      montoCobranza: 148500.0,
+      cantidadRemitos: 3,
+      horaEstimada: '10:30 hs',
     },
     {
       id: 2,
-      orden: 2,
-      estado: 'en_curso',
+      orden: 6,
+      subtitulo: 'Parada 6 de 8 · A continuación',
+      estado: 'pendiente',
       comercio: {
         id: 11,
-        razonSocial: 'Supermercado Los Primos',
+        razonSocial: 'Autoservicio La Esquina',
         cuit: '30-65544332-1',
-        domicilio: 'Calle 14 N° 582, Berazategui',
-        localidad: 'Zona Sur',
+        domicilio: 'Belgrano 1832',
+        localidad: 'San Martín',
         telefono: '11-4216-3322',
       },
-      montoCobranza: 142000.5,
-      cantidadRemitos: 3,
-      horaEstimada: '10:15 hs',
+      montoCobranza: 86750.0,
+      cantidadRemitos: 2,
+      horaEstimada: '11:15 hs',
     },
     {
       id: 3,
-      orden: 3,
+      orden: 7,
+      subtitulo: 'Parada 7 de 8 · Siguiente',
       estado: 'pendiente',
       comercio: {
         id: 12,
-        razonSocial: 'Almacén Central Quilmes',
+        razonSocial: 'Kiosco El Sol',
         cuit: '30-55443322-9',
-        domicilio: 'Alsina 320, Quilmes Centro',
-        localidad: 'Zona Sur',
+        domicilio: 'Mitre 540',
+        localidad: 'San Martín',
         telefono: '11-4253-1100',
       },
-      montoCobranza: 32900.0,
+      montoCobranza: 24200.0,
       cantidadRemitos: 1,
-      horaEstimada: '11:45 hs',
+      horaEstimada: '12:00 hs',
     },
     {
       id: 4,
-      orden: 4,
+      orden: 8,
+      subtitulo: 'Parada 8 de 8 · Cierre de reparto',
       estado: 'pendiente',
       comercio: {
         id: 13,
-        razonSocial: 'Minimarket San Jorge',
+        razonSocial: 'Mercado San José',
         cuit: '30-44998877-1',
-        domicilio: 'Belgrano 1105, Bernal',
-        localidad: 'Zona Sur',
+        domicilio: 'Rivadavia 1200',
+        localidad: 'San Martín',
         telefono: '11-4252-8877',
       },
-      montoCobranza: 54100.0,
+      montoCobranza: 65100.0,
       cantidadRemitos: 2,
       horaEstimada: '13:00 hs',
     },
   ],
 };
 
-// Escenario sin asignación (Figma: Itinerario - Sin Asignar.png)
+/**
+ * Escenario sin asignación
+ * Coincide con el boceto de Figma: Itinerario - Sin asignar.png (Actualizado 21-10-2026)
+ */
 export const MOCK_ITINERARIO_SIN_ASIGNAR: ItinerarioJornada = {
   id: 0,
-  fecha: 'Miércoles, 21 de Octubre',
+  fecha: 'Lun, 19 oct 2026',
+  rutaNombre: 'Ruta 12 · San Martín',
   estado: 'sin_asignar',
-  transportistaNombre: 'Juan Pérez',
+  transportistaNombre: 'Martín Rodriguez',
+  transportistaIniciales: 'MR',
   vehiculo: {
-    patente: 'AA 987 ZZ',
-    modelo: 'Ford Cargo 1722',
+    patente: 'AB 458 CD',
+    modelo: 'Unidad 024',
   },
   totalParadas: 0,
   paradasCompletadas: 0,

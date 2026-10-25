@@ -39,7 +39,7 @@ class Cobranza(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"Comercio {self.parada.comercio.razon_social} - Declarado ${self.total_recibido} | Verificado ${self.total_verificado}"
+        return f"Comercio {self.parada.comercio.razon_social} ~~ "
 
 
 class DetallePago(models.Model):

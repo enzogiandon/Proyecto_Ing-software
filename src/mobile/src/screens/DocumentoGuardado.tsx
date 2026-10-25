@@ -45,15 +45,19 @@ export default function DocumentoGuardado({
 }: DocumentoGuardadoProps) {
     
   const params = useLocalSearchParams<{
-    nombreArchivo?: string;
-    uriArchivo?: string;
-    tipoArchivo?: string;
-    modoDemo?: string;
-  }>();
+  nombreArchivo?: string;
+  uriArchivo?: string;
+  tipoArchivo?: string;
+  tamanoBytes?: string;
+  modoDemo?: string;
+}>();
 
   nombreArchivo = params.nombreArchivo ?? nombreArchivo;
   uriArchivo = params.uriArchivo ?? uriArchivo;
   tipoArchivo = params.tipoArchivo ?? tipoArchivo;
+  tamanoBytes = params.tamanoBytes
+  ? Number(params.tamanoBytes)
+  : 0;
 
   const volver = () => {
     if (onVolver) {
@@ -71,9 +75,10 @@ export default function DocumentoGuardado({
       ? 'PNG'
       : 'JPG';
 
-  const tamano = (tamanoBytes / (1024 * 1024))
-    .toFixed(1)
-    .replace('.', ',');
+  const tamano =
+  tamanoBytes > 0
+    ? `${(tamanoBytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
+    : 'Tamaño no disponible';
 
   return (
     <View style={styles.container}>
@@ -175,8 +180,8 @@ export default function DocumentoGuardado({
             {nombreArchivo}
           </Text>
           <Text style={styles.fileDetails}>
-            {`Imagen ${formato} · ${tamano} MB`}
-          </Text>
+  {`${formato === 'PDF' ? 'Documento PDF' : `Imagen ${formato}`} · ${tamano}`}
+</Text>
         </View>
 
         <View style={styles.infoBox}>

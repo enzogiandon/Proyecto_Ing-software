@@ -30,11 +30,11 @@ type SelectedFile = {
   name: string;
   uri: string;
   mimeType?: string;
+  size?: number;
 };
 
 export default function AdjuntarDocumento() {
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
-  const [saved, setSaved] = useState(false);
 
   const tomarFotografia = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -56,11 +56,12 @@ export default function AdjuntarDocumento() {
       const photo = result.assets[0];
 
       setSelectedFile({
-        name: photo.fileName || 'remito_fotografia.jpg',
-        uri: photo.uri,
-        mimeType: photo.mimeType || 'image/jpeg',
-      });
-      setSaved(false);
+  name: photo.fileName || 'remito_fotografia.jpg',
+  uri: photo.uri,
+  mimeType: photo.mimeType || 'image/jpeg',
+  size: photo.fileSize,
+});
+    
     }
   };
 
@@ -75,11 +76,12 @@ export default function AdjuntarDocumento() {
         const file = result.assets[0];
 
         setSelectedFile({
-          name: file.name,
-          uri: file.uri,
-          mimeType: file.mimeType,
-        });
-        setSaved(false);
+  name: file.name,
+  uri: file.uri,
+  mimeType: file.mimeType,
+  size: file.size,
+});
+        
       }
     } catch {
       Alert.alert('Error', 'No se pudo seleccionar el archivo.');
@@ -90,11 +92,12 @@ const abrirVistaPreviaDocumento = (archivo: SelectedFile) => {
   router.push({
     pathname: '/documento-guardado',
     params: {
-      nombreArchivo: archivo.name,
-      uriArchivo: archivo.uri,
-      tipoArchivo: archivo.mimeType ?? '',
-      modoDemo: 'true',
-    },
+  nombreArchivo: archivo.name,
+  uriArchivo: archivo.uri,
+  tipoArchivo: archivo.mimeType ?? '',
+  tamanoBytes: archivo.size?.toString() ?? '',
+  modoDemo: 'true',
+},
   });
 };
 
@@ -107,13 +110,19 @@ const abrirVistaPreviaDocumento = (archivo: SelectedFile) => {
       return;
     }
 
-    // Guardado visual local. Pendiente integrar con el backend.
-    setSaved(true);
+    
+Alert.alert(
+  'Modo demostración',
+  'Vamos a mostrar el documento seleccionado. Todavía no se guardará en el servidor.',
+  [
+    { text: 'Cancelar', style: 'cancel' },
+    {
+      text: 'Continuar',
+      onPress: () => abrirVistaPreviaDocumento(selectedFile),
+    },
+  ]
+);
 
-    Alert.alert(
-      'Documento seleccionado',
-      'El archivo está listo. Falta conectar el guardado definitivo con el servidor.'
-    );
   };
 
   const isImage = selectedFile?.mimeType?.startsWith('image/');
@@ -170,7 +179,7 @@ const abrirVistaPreviaDocumento = (archivo: SelectedFile) => {
         <View style={styles.previewHeading}>
           <Text style={styles.sectionTitle}>Vista previa</Text>
           <Text style={styles.previewStatus}>
-            {saved ? 'Seleccionado' : 'Sin guardar'}
+            {selectedFile ? 'Seleccionado' : 'Sin guardar'}
           </Text>
         </View>
 

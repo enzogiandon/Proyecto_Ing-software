@@ -1,17 +1,35 @@
-// src/mobile/src/app/itinerario.tsx
+/**
+ * Pantalla de Itinerario / Hoja de Ruta - RepartoYA
+ * 
+ * Resumen de lo que hace este código:
+ * Esta es la pantalla principal para el transportista en su jornada. Acá mostramos:
+ * 1. El header corporativo con los datos del chofer, la patente del camión, fecha y ruta asignada.
+ * 2. La tarjeta con la barra de progreso (porcentaje de entregas completadas en color Naranja YA).
+ * 3. El botón de acceso a 'Rutas Guardadas' (que conecta con el módulo de recorridos del Sprint 1).
+ * 4. La lista de paradas: destacando la próxima parada (#1) con llamada a la acción en naranja
+ *    ('Ir a la parada') y las paradas siguientes con su detalle y monto total a recaudar.
+ * 5. La vista de 'Itinerario sin asignar': si el chofer todavía no tiene hoja de ruta asignada,
+ *    mostramos la ilustración circular y mensaje institucional según Figma.
+ * 6. Metí un botón discreto en el header para alternar entre el modo asignado y el sin asignar para
+ *    poder mostrárselo a los profes en la demo del sprint sin tener que tocar la base de datos.
+ * Usé useSafeAreaInsets con cálculo de StatusBar para que en teléfonos con punch-hole como mi
+ * Redmi Note 13 el header azul pinte toda la barra de arriba y el contenido quede bien desahogado.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import { obtenerItinerarioJornada } from '../services/itinerarioService';
@@ -20,16 +38,22 @@ import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 export default function ItinerarioScreen() {
   const router = useRouter();
 
+  // Insets dinámicos para que no choque con la cámara frontal ni la barra de estado
+  const insets = useSafeAreaInsets();
+  const topPaddingSeguro = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0) + 10;
+
+  // Estado del itinerario y control de carga
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
 
+  // Función para pegarle al servicio o cargar los datos simulados
   const cargarDatos = async () => {
     setCargando(true);
     try {
       const res = await obtenerItinerarioJornada();
       setItinerario(res.itinerario);
     } catch (e) {
-      console.error(e);
+      console.error('Error al cargar itinerario:', e);
     } finally {
       setCargando(false);
     }
@@ -39,7 +63,7 @@ export default function ItinerarioScreen() {
     cargarDatos();
   }, []);
 
-  // Función para alternar modo demostración (Boceto Asignado vs Boceto Sin Asignar de Figma)
+  // Botón para la demo del sprint: permite alternar entre vista asignada y sin asignar
   const toggleModoDemostracion = () => {
     if (itinerario && itinerario.paradas.length > 0) {
       setItinerario(MOCK_ITINERARIO_SIN_ASIGNAR);
@@ -48,6 +72,7 @@ export default function ItinerarioScreen() {
     }
   };
 
+  // Acciones de los botones según el diagrama de navegación de la cátedra
   const handleRutasGuardadas = () => {
     Alert.alert(
       'Rutas Guardadas',
@@ -80,21 +105,29 @@ export default function ItinerarioScreen() {
     );
   };
 
+  // Separo la próxima parada (la #1 a entregar) del resto de las paradas
   const paradas = itinerario?.paradas || [];
   const proximaParada = paradas[0];
   const siguientesParadas = paradas.slice(1);
 
+  // Cálculo del porcentaje completado para la barra de progreso
   const porcentajeProgreso =
     itinerario && itinerario.totalParadas > 0
       ? Math.round((itinerario.paradasCompletadas / itinerario.totalParadas) * 100)
       : 50;
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <StatusBar barStyle="light-content" backgroundColor={RepartoYA.azulRuta} />
+    <View style={styles.safeContainer}>
+      {/* Barra de estado con fondo Azul Ruta continuo */}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={RepartoYA.azulRuta}
+        translucent={Platform.OS === 'android'}
+      />
 
-      {/* ================= HEADER CORPORATIVO (Figma: Azul Ruta) ================= */}
-      <View style={styles.header}>
+      {/* ================= HEADER CORPORATIVO (Azul Ruta #123C6B) ================= */}
+      {/* Aplicamos topPaddingSeguro para que el header cubra arriba y el texto baje lo necesario */}
+      <View style={[styles.header, { paddingTop: topPaddingSeguro }]}>
         {/* Fila 1: Título "Itinerario" y Logo RepartoYA */}
         <View style={styles.headerTop}>
           <Text style={styles.headerTitulo}>Itinerario</Text>
@@ -106,7 +139,7 @@ export default function ItinerarioScreen() {
           </View>
         </View>
 
-        {/* Fila 2: Chofer + Unidad vs Fecha + Ruta */}
+        {/* Fila 2: Datos del Chofer y Unidad vs Fecha y Ruta */}
         <View style={styles.driverRow}>
           <View style={styles.driverLeft}>
             <View style={styles.avatarBadge}>
@@ -134,7 +167,7 @@ export default function ItinerarioScreen() {
           </View>
         </View>
 
-        {/* Botón flotante para alternar demo con Figma */}
+        {/* Botoncito para alternar en vivo entre boceto con paradas y sin asignar */}
         <TouchableOpacity
           style={styles.toggleDemoButton}
           onPress={toggleModoDemostracion}
@@ -148,7 +181,7 @@ export default function ItinerarioScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ================= CONTENIDO DE LA PANTALLA ================= */}
+      {/* ================= CONTENIDO DE LA HOJA DE RUTA ================= */}
       {cargando ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={RepartoYA.azulRuta} />
@@ -157,7 +190,7 @@ export default function ItinerarioScreen() {
       ) : !itinerario || itinerario.paradas.length === 0 ? (
         /* ================= ESTADO FIGMA: ITINERARIO - SIN ASIGNAR ================= */
         <ScrollView contentContainerStyle={styles.sinAsignarScroll}>
-          {/* Botón Rutas Guardadas en cabecera */}
+          {/* Botón Rutas Guardadas en la parte superior */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
             onPress={handleRutasGuardadas}
@@ -167,7 +200,7 @@ export default function ItinerarioScreen() {
             <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
           </TouchableOpacity>
 
-          {/* Tarjeta Central Ilustrativa */}
+          {/* Tarjeta central ilustrativa del boceto sin asignar */}
           <View style={styles.sinAsignarCentro}>
             <View style={styles.sinAsignarCirculo}>
               <Text style={styles.sinAsignarIcono}>📋</Text>
@@ -203,7 +236,7 @@ export default function ItinerarioScreen() {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* TARJETA DE PROGRESO DE ENTREGAS (Figma) */}
+          {/* Tarjeta de Progreso de Entregas (Figma: barra naranja #F4661B) */}
           <View style={styles.progresoCard}>
             <View style={styles.progresoHeaderRow}>
               <Text style={styles.progresoTitulo}>
@@ -232,7 +265,7 @@ export default function ItinerarioScreen() {
             </View>
           </View>
 
-          {/* BOTÓN RUTAS GUARDADAS */}
+          {/* Botón de Rutas Guardadas con borde Azul Ruta */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
             onPress={handleRutasGuardadas}
@@ -242,7 +275,7 @@ export default function ItinerarioScreen() {
             <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
           </TouchableOpacity>
 
-          {/* ENCABEZADO DE SECCIÓN: PRÓXIMAS PARADAS */}
+          {/* Encabezado de la lista: Próximas paradas */}
           <View style={styles.seccionHeader}>
             <View style={styles.seccionTituloRow}>
               <Text style={styles.seccionTitulo}>Próximas paradas</Text>
@@ -255,7 +288,7 @@ export default function ItinerarioScreen() {
             </Text>
           </View>
 
-          {/* PARADA ACTIVA #1 (Figma: Botón Naranja YA "Ir a la parada") */}
+          {/* PARADA DESTACADA #1 (Figma: Botón Naranja YA "Ir a la parada") */}
           {proximaParada && (
             <View style={styles.paradaCardDestacada}>
               <View style={styles.paradaHeaderRow}>
@@ -273,7 +306,7 @@ export default function ItinerarioScreen() {
                 </View>
               </View>
 
-              {/* Dirección */}
+              {/* Dirección del comercio */}
               <View style={styles.direccionRow}>
                 <Text style={styles.iconoPin}>📍</Text>
                 <Text style={styles.direccionTexto}>
@@ -282,7 +315,7 @@ export default function ItinerarioScreen() {
                 </Text>
               </View>
 
-              {/* Documentación y Monto */}
+              {/* Remitos y Monto a cobrar */}
               <View style={styles.montosRow}>
                 <View>
                   <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
@@ -300,7 +333,7 @@ export default function ItinerarioScreen() {
                 </View>
               </View>
 
-              {/* Botón de Acción Naranja YA */}
+              {/* Botón de acción primario en Naranja YA */}
               <TouchableOpacity
                 style={styles.botonIrParada}
                 onPress={() => handleIrAParada(proximaParada)}
@@ -312,11 +345,11 @@ export default function ItinerarioScreen() {
             </View>
           )}
 
-          {/* PARADA SIGUIENTE #2 (Figma: Botón Contorno Azul "Ver detalle de parada") */}
+          {/* PARADAS SIGUIENTES #2 EN ADELANTE (Figma: Botón Contorno Azul) */}
           {siguientesParadas.map((parada, idx) => (
             <View key={parada.id} style={styles.paradaCardSecundaria}>
               <View style={styles.paradaHeaderRow}>
-                {/* Badge Neutro */}
+                {/* Badge de orden secundario */}
                 <View style={styles.badgeNeutro}>
                   <Text style={styles.badgeNeutroTexto}>#{idx + 2}</Text>
                 </View>
@@ -339,7 +372,7 @@ export default function ItinerarioScreen() {
                 </Text>
               </View>
 
-              {/* Documentación y Monto */}
+              {/* Remitos y Monto */}
               <View style={styles.montosRow}>
                 <View>
                   <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
@@ -357,7 +390,7 @@ export default function ItinerarioScreen() {
                 </View>
               </View>
 
-              {/* Botón Contorno Azul */}
+              {/* Botón con contorno azul */}
               <TouchableOpacity
                 style={styles.botonVerDetalle}
                 onPress={() => handleVerDetalle(parada)}
@@ -369,7 +402,7 @@ export default function ItinerarioScreen() {
             </View>
           ))}
 
-          {/* Pie de lista: Paradas subsiguientes */}
+          {/* Pie de lista con las paradas restantes del recorrido */}
           <View style={styles.footerParadasRestantes}>
             <Text style={styles.iconoRutaPunteada}>🔀</Text>
             <View style={styles.footerParadasInfo}>
@@ -381,7 +414,7 @@ export default function ItinerarioScreen() {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -413,11 +446,10 @@ const styles = StyleSheet.create({
     color: RepartoYA.grisTexto,
   },
 
-  // ================= HEADER =================
+  // Header superior
   header: {
     backgroundColor: RepartoYA.azulRuta,
     paddingHorizontal: 20,
-    paddingTop: 14,
     paddingBottom: 18,
   },
   headerTop: {
@@ -512,7 +544,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ================= TARJETA PROGRESO =================
+  // Tarjeta de progreso
   progresoCard: {
     backgroundColor: RepartoYA.blanco,
     borderRadius: 14,
@@ -563,7 +595,7 @@ const styles = StyleSheet.create({
     color: RepartoYA.grisTexto,
   },
 
-  // ================= BOTÓN RUTAS GUARDADAS =================
+  // Botón rutas guardadas
   botonRutasGuardadas: {
     backgroundColor: RepartoYA.blanco,
     borderWidth: 1.5,
@@ -585,7 +617,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ================= SECCIÓN PRÓXIMAS PARADAS =================
+  // Encabezado de sección
   seccionHeader: {
     marginBottom: 12,
   },
@@ -610,7 +642,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // ================= PARADA DESTACADA (#1) =================
+  // Parada activa (#1)
   paradaCardDestacada: {
     backgroundColor: RepartoYA.blanco,
     borderRadius: 16,
@@ -736,7 +768,7 @@ const styles = StyleSheet.create({
     color: RepartoYA.azulRuta,
   },
 
-  // Botón Ir a la Parada (Naranja YA)
+  // Botón Ir a la parada
   botonIrParada: {
     backgroundColor: RepartoYA.naranjaYA,
     borderRadius: 12,
@@ -762,7 +794,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  // Botón Ver Detalle (Contorno Azul)
+  // Botón Ver Detalle
   botonVerDetalle: {
     backgroundColor: RepartoYA.blanco,
     borderWidth: 1.5,
@@ -783,7 +815,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Footer paradas restantes
+  // Footer paradas
   footerParadasRestantes: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -812,7 +844,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  // ================= ESTADO SIN ASIGNAR =================
+  // Estado sin asignar
   sinAsignarScroll: {
     padding: 20,
     flexGrow: 1,

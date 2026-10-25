@@ -1,21 +1,20 @@
 /**
- * Below are the colors and design tokens that are used in the app.
- * Brand Identity: RepartoYA (Softech - Distribuidora Sur)
+ * Tokens de Diseño y Colores Oficiales - RepartoYA
+ * 
+ * Resumen de lo que hace este código:
+ * Acá centralicé la paleta de colores oficial que nos pasaron en Figma para RepartoYA.
+ * En vez de tener colores hardcodeados desparramados por todos lados, los importo desde acá.
+ * - Azul Ruta (#123C6B): color principal para headers institucionales y bordes.
+ * - Naranja YA (#F4661B): color de acción para botones primarios y barra de progreso.
+ * - Crema Pan (#FFF6EC): fondo cálido para todas las pantallas de la app móvil.
+ * - Carbón (#1B1B1F): color de los textos principales para que tengan buen contraste.
+ * - Blanco (#FFFFFF): para tarjetas de paradas, inputs y modales.
  */
 
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
-/**
- * Paleta Oficial RepartoYA
- * Basada en las guías de diseño de Figma y manual de marca:
- * - Naranja YA (#F4661B): Acento, urgencia, entrega, botones primarios.
- * - Azul Ruta (#123C6B): Color principal institucional, headers, tarjetas clave.
- * - Crema Pan (#FFF6EC): Fondo cálido principal de las pantallas de la app.
- * - Carbón (#1B1B1F): Texto de cuerpo y títulos principales.
- * - Blanco (#FFFFFF): Fondos neutros, tarjetas, modales y remitos.
- */
 export const RepartoYA = {
   naranjaYA: '#F4661B',
   azulRuta: '#123C6B',
@@ -23,7 +22,7 @@ export const RepartoYA = {
   carbon: '#1B1B1F',
   blanco: '#FFFFFF',
 
-  // Variantes funcionales y neutros complementarios
+  // Colores secundarios y estados que usamos en los inputs y cards
   azulRutaSuave: '#EFF6FF',
   azulRutaBorde: '#BFDBFE',
   grisTexto: '#6B7280',
@@ -31,7 +30,7 @@ export const RepartoYA = {
   grisBorde: '#D1D5DB',
   grisFondo: '#E5E7EB',
   
-  // Estados de validación
+  // Feedback de validación
   error: '#DC2626',
   errorFondo: '#FEF2F2',
   exito: '#16A34A',

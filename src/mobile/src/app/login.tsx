@@ -1,4 +1,18 @@
-// src/mobile/src/app/login.tsx
+/**
+ * Pantalla de Login / Acceso de Transportistas - RepartoYA
+ * 
+ * Resumen de lo que hace este código:
+ * Acá armé la pantalla de login para los choferes siguiendo al pie de la letra los
+ * bocetos de Figma del 21/10. Valido que no dejen el DNI o la clave vacíos, me conecto
+ * con authService (que maneja JWT y fallback de prueba), y si el login es correcto,
+ * mando al transportista directo a la pantalla de /itinerario.
+ * También contemplé todos los estados de error visuales (DNI erróneo, clave incorrecta
+ * y el modal de cuenta inhabilitada si nos devuelven ese estado).
+ * Además, usé useSafeAreaInsets con StatusBar.currentHeight para que en celulares como
+ * mi Redmi Note 13 (que tienen la cámara perforada en pantalla) el header azul cubra
+ * toda la parte superior pero el contenido arranque abajo sin pisarse con la cámara.
+ */
+
 import React, { useState } from 'react';
 import {
   View,
@@ -6,7 +20,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,30 +28,35 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { loginTransportista } from '../services/authService';
 
 export default function LoginScreen() {
   const router = useRouter();
 
-  // Estados del formulario
+  // Insets dinámicos para no pisar la cámara ni la barra de estado en Android / iOS
+  const insets = useSafeAreaInsets();
+  const topPaddingSeguro = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0) + 10;
+
+  // Estados locales para los inputs del form
   const [dni, setDni] = useState('');
   const [clave, setClave] = useState('');
   const [mostrarClave, setMostrarClave] = useState(false);
   const [cargando, setCargando] = useState(false);
 
-  // Estados de errores visuales (Figma: Acceso - DNI / Clave / Inhabilitado)
+  // Estados para manejar los errores visuales según Figma (bordes rojos, mensajes, etc.)
   const [errorDni, setErrorDni] = useState('');
   const [errorClave, setErrorClave] = useState('');
   const [modalInhabilitadoVisible, setModalInhabilitadoVisible] = useState(false);
 
-  // Función de autenticación conectada al Backend (JWT) con Fallback Mock
+  // Lógica principal de autenticación
   const handleIngresar = async () => {
-    // 1. Limpiar estados previos de error
+    // Limpio errores anteriores antes de validar
     setErrorDni('');
     setErrorClave('');
 
-    // Validación básica de campos vacíos
+    // Validaciones básicas de campos obligatorios
     if (!dni.trim()) {
       setErrorDni('El DNI es obligatorio.');
       return;
@@ -50,8 +68,10 @@ export default function LoginScreen() {
 
     setCargando(true);
     try {
+      // Llamo al servicio de autenticación conectado con el backend
       const resultado = await loginTransportista(dni, clave);
 
+      // Si falló, me fijo qué tipo de error fue para pintar la UI correspondiente
       if (!resultado.success) {
         if (resultado.tipoError === 'DNI') {
           setErrorDni(resultado.error || 'El DNI es incorrecto. Intentá nuevamente.');
@@ -65,7 +85,7 @@ export default function LoginScreen() {
         return;
       }
 
-      // Autenticación exitosa -> Conexión directa a Itinerario
+      // Login exitoso: preparamos el mensaje y conectamos con la pantalla de itinerario
       const nombreMostrar = resultado.user?.first_name 
         ? `${resultado.user.first_name} ${resultado.user.last_name || ''}`
         : 'Transportista';
@@ -77,6 +97,7 @@ export default function LoginScreen() {
           {
             text: 'Continuar a Hoja de Ruta',
             onPress: () => {
+              // Navego directamente a la pantalla de itinerario
               router.replace('/itinerario' as any);
             },
           },
@@ -87,7 +108,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Función de contacto a Base Logística / Soporte
+  // Modal rápido de soporte operativo por si el chofer tiene un problema en la calle
   const handleContactoBase = () => {
     Alert.alert(
       'Soporte Operativo RepartoYA',
@@ -97,8 +118,13 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <StatusBar barStyle="light-content" backgroundColor={RepartoYA.azulRuta} />
+    <View style={styles.safeContainer}>
+      {/* Barra de estado translúcida para lograr el efecto edge-to-edge con Azul Ruta */}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={RepartoYA.azulRuta}
+        translucent={Platform.OS === 'android'}
+      />
 
       <KeyboardAvoidingView
         style={styles.flexOne}
@@ -108,8 +134,9 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* ================= HEADER CORPORATIVO (Figma: Azul Ruta) ================= */}
-          <View style={styles.header}>
+          {/* ================= HEADER CORPORATIVO (Azul Ruta #123C6B) ================= */}
+          {/* Le inyecto el topPaddingSeguro para que baje lo justo y no choque con la cámara del celu */}
+          <View style={[styles.header, { paddingTop: topPaddingSeguro }]}>
             <View style={styles.headerTopRow}>
               {/* Logo Oficial RepartoYA */}
               <View style={styles.logoContainer}>
@@ -127,19 +154,19 @@ export default function LoginScreen() {
             <Text style={styles.headerTitulo}>Tu jornada empieza acá.</Text>
             <Text style={styles.headerSubtitulo}>ACCESO DE TRANSPORTISTAS</Text>
 
-            {/* Trazo decorativo de ruta punteada (Figma) */}
+            {/* Trazo decorativo de ruta punteada que vimos en Figma */}
             <View style={styles.rutaDecorativa}>
               <View style={styles.lineaPunteada} />
             </View>
           </View>
 
-          {/* ================= FORMULARIO (Figma: Fondo Crema Pan) ================= */}
+          {/* ================= FORMULARIO PRINCIPAL (Fondo Crema Pan #FFF6EC) ================= */}
           <View style={styles.formContainer}>
             <Text style={styles.instruccionTexto}>
               Ingresá tus datos para comenzar.
             </Text>
 
-            {/* CAMPO DNI */}
+            {/* Input de DNI */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>DNI</Text>
               <View
@@ -169,7 +196,7 @@ export default function LoginScreen() {
               ) : null}
             </View>
 
-            {/* CAMPO CLAVE */}
+            {/* Input de Clave con botón para ver/ocultar */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Clave</Text>
               <View
@@ -205,7 +232,7 @@ export default function LoginScreen() {
               ) : null}
             </View>
 
-            {/* BOTÓN INGRESAR (Figma: Naranja YA #F4661B) */}
+            {/* Botón principal en Naranja YA (#F4661B) */}
             <TouchableOpacity
               style={[styles.botonIngresar, cargando && { opacity: 0.7 }]}
               onPress={handleIngresar}
@@ -218,7 +245,7 @@ export default function LoginScreen() {
               <Text style={styles.flechaBoton}>{cargando ? '⏳' : '➔'}</Text>
             </TouchableOpacity>
 
-            {/* ENLACE CONTACTO A SOPORTE */}
+            {/* Enlace para llamar a soporte si no puede ingresar */}
             <TouchableOpacity
               style={styles.soporteContainer}
               onPress={handleContactoBase}
@@ -230,7 +257,7 @@ export default function LoginScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* BANNER PREVENTIVO DE SEGURIDAD VIAL (Figma) */}
+            {/* Banner vial de seguridad que está en el boceto */}
             <View style={styles.bannerSeguridad}>
               <Text style={styles.iconoCamion}>🚚</Text>
               <Text style={styles.textoSeguridad}>
@@ -241,7 +268,7 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* ================= MODAL CUENTA INHABILITADA (Figma) ================= */}
+      {/* ================= MODAL: CUENTA INHABILITADA (Figma) ================= */}
       <Modal
         visible={modalInhabilitadoVisible}
         transparent={true}
@@ -276,11 +303,11 @@ export default function LoginScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
-// ================= ESTILOS NATIVOS PALETA REPARTOYA =================
+// ================= ESTILOS NATIVOS CON PALETA REPARTOYA =================
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
@@ -293,11 +320,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  // Header
+  // Cabecera superior
   header: {
     backgroundColor: RepartoYA.azulRuta,
     paddingHorizontal: 24,
-    paddingTop: 20,
     paddingBottom: 28,
   },
   headerTopRow: {
@@ -367,7 +393,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     width: '80%',
   },
-  // Formulario en Crema Pan
+  // Cuerpo del formulario
   formContainer: {
     flex: 1,
     backgroundColor: RepartoYA.cremaPan,
@@ -426,7 +452,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginLeft: 2,
   },
-  // Botón Principal Naranja YA
+  // Botón ingresar
   botonIngresar: {
     backgroundColor: RepartoYA.naranjaYA,
     flexDirection: 'row',
@@ -476,7 +502,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     marginTop: 2,
   },
-  // Banner de seguridad
+  // Banner preventivo
   bannerSeguridad: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -498,7 +524,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 18,
   },
-  // Modal de Cuenta Inhabilitada
+  // Modal inhabilitado
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.55)',

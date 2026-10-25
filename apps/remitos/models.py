@@ -1,11 +1,9 @@
 # remitos/models.py
 
 import os
-from decimal import Decimal
 
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import F, Sum
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
@@ -27,7 +25,6 @@ class Marca(models.Model):
     cuit = models.CharField(max_length=11, unique=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.CharField(max_length=50, blank=True, null=True)
-    fecha_creacion = models.DateField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 
     def __str__(self):
@@ -47,7 +44,6 @@ class Comercio(models.Model):
     )
     domicilio = models.CharField(max_length=255)
     telefono = models.CharField(max_length=20, blank=True, null=True)
-    fecha_creacion = models.DateField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 
     def __str__(self):
@@ -122,7 +118,6 @@ class ErrorImportacion(models.Model):
 class Remito(models.Model):
     numero = models.CharField(max_length=50, unique=True, help_text="Numero de remito")
     marca = models.ForeignKey(Marca, on_delete=models.PROTECT, related_name="remitos")
-    monto_total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     estado = models.CharField(
         max_length=20, choices=EstadoRemito.choices, default=EstadoRemito.PENDIENTE
     )
@@ -153,19 +148,6 @@ class Remito(models.Model):
         self.eliminado = True
         self.save(update_fields=["eliminado"])
         return (1, {self._meta.label: 1})
-
-    def actualizar_monto_total(self):
-        """Calcula el monto total de un remito (ItemRemito * cantidad)"""
-        total = self.items.aggregate(
-            total=Sum(
-                F("cantidad") * F("precio_unitario"),
-                output_field=models.DecimalField(max_digits=10, decimal_places=2),
-            )
-        )["total"] or Decimal("0.00")
-
-        self.monto_total = total
-        # Guarda únicamente la columna monto_total para evitar sobreescrituras innecesarias
-        self.save(update_fields=["monto_total"])
 
     def __str__(self):
         return f"Remito #{self.numero} - {self.comercio.razon_social}"

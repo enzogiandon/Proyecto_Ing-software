@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .forms import EmpleadoCreateForm
-from .models import Roles, Transportista
+from .models import EstadoVehiculo, Roles, Transportista, Vehiculo
 
 
 class EmpleadoViewsTests(TestCase):
@@ -188,3 +188,107 @@ class EmpleadoViewsTests(TestCase):
         self.assertEqual(response.status_code, 405)
         employee.refresh_from_db()
         self.assertTrue(employee.is_active)
+
+class VehiculoViewsTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="administrativo",
+            password="test-password",
+            dni="12345678",
+            rol="administrativo",
+        )
+        self.add_permission = Permission.objects.get(
+            content_type__app_label="core", codename="add_vehiculo"
+        )
+        self.change_permission = Permission.objects.get(
+            content_type__app_label="core", codename="change_vehiculo"
+        )
+        self.view_permission = Permission.objects.get(
+            content_type__app_label="core", codename="view_vehiculo"
+        )
+        self.user.user_permissions.add(
+            self.add_permission, self.change_permission, self.view_permission
+        )
+        self.client.force_login(self.user)
+
+    def test_create_vehicle_redirects_to_list_and_shows_success(self):
+        response = self.client.post(
+            reverse("core:vehiculo_crear"),
+            {
+                "patente": "ab123cd",
+                "modelo": "Camión de reparto",
+                "poliza": "POL-123",
+                "estado": EstadoVehiculo.DISPONIBLE,
+            },
+        )
+
+        self.assertRedirects(
+            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
+        )
+        self.assertTrue(
+            Vehiculo.objects.filter(
+                patente="AB123CD", estado=EstadoVehiculo.DISPONIBLE
+            ).exists()
+        )
+        self.assertEqual(
+            [message.message for message in get_messages(response.wsgi_request)],
+            ["Vehículo registrado exitosamente"],
+        )
+
+    def test_duplicate_plate_redirects_to_list_and_shows_error(self):
+        Vehiculo.objects.create(patente="AB123CD")
+
+        response = self.client.post(
+            reverse("core:vehiculo_crear"),
+            {
+                "patente": "ab123cd",
+                "modelo": "Otro camión",
+                "poliza": "",
+                "estado": EstadoVehiculo.DISPONIBLE,
+            },
+        )
+
+        self.assertRedirects(
+            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
+        )
+        self.assertEqual(Vehiculo.objects.count(), 1)
+        self.assertEqual(
+            [message.message for message in get_messages(response.wsgi_request)],
+            ["Vehículo repetido"],
+        )
+
+    def test_update_vehicle_changes_state_and_shows_success(self):
+        vehiculo = Vehiculo.objects.create(patente="AB123CD")
+
+        response = self.client.post(
+            reverse("core:vehiculo_editar", args=[vehiculo.pk]),
+            {
+                "patente": "ab123cd",
+                "modelo": "Camión actualizado",
+                "poliza": "POL-456",
+                "estado": EstadoVehiculo.NO_OPERATIVO,
+            },
+        )
+
+        self.assertRedirects(
+            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
+        )
+        vehiculo.refresh_from_db()
+        self.assertEqual(vehiculo.modelo, "Camión actualizado")
+        self.assertEqual(vehiculo.estado, EstadoVehiculo.NO_OPERATIVO)
+        self.assertEqual(
+            [message.message for message in get_messages(response.wsgi_request)],
+            ["Vehículo modificado exitosamente"],
+        )
+
+    def test_create_vehicle_requires_login(self):
+        self.client.logout()
+
+        response = self.client.get(reverse("core:vehiculo_crear"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('core:login')}?next={reverse('core:vehiculo_crear')}",
+            fetch_redirect_response=False,
+        )

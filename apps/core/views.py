@@ -9,15 +9,17 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
-from .forms import EmpleadoCreateForm, EmpleadoUpdateForm, LoginForm
-from .models import Usuario
+from .forms import EmpleadoCreateForm, EmpleadoUpdateForm, LoginForm, VehiculoForm
+from .models import Usuario, Vehiculo
 
 # Create your views here.
+
 
 class CustomLoginView(LoginView):
     template_name = "core/login.html"
     form_class = LoginForm
-    #redirect_authenticated_user = True
+
+    # redirect_authenticated_user = True
     def form_valid(self, form):
         user = form.get_user()
         user.last_login = timezone.now()
@@ -39,6 +41,46 @@ class CustomLoginView(LoginView):
         except ObjectDoesNotExist:
             pass
         return super().form_invalid(form)
+
+
+class ListaVehiculos(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = Vehiculo
+    template_name = "core/vehiculo_lista.html"
+    context_object_name = "vehiculos"
+    permission_required = "core.view_vehiculo"
+
+    def get_queryset(self):
+        return Vehiculo.objects.order_by("patente")
+
+
+class CrearVehiculo(
+    LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView
+):
+    model = Vehiculo
+    form_class = VehiculoForm
+    template_name = "core/vehiculo_form.html"
+    success_url = reverse_lazy("core:vehiculo_lista")
+    success_message = "Vehículo registrado exitosamente"
+    permission_required = "core.add_vehiculo"
+
+    def form_invalid(self, form):
+        if "Vehículo repetido" in form.errors.get("patente", []):
+            messages.error(self.request, "Vehículo repetido")
+            return redirect(self.success_url)
+        return super().form_invalid(form)
+
+
+class EditarVehiculo(
+    LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView
+):
+    model = Vehiculo
+    form_class = VehiculoForm
+    template_name = "core/vehiculo_form.html"
+    context_object_name = "vehiculo"
+    success_url = reverse_lazy("core:vehiculo_lista")
+    success_message = "Vehículo modificado exitosamente"
+    permission_required = "core.change_vehiculo"
+
 
 class ListaEmpleados(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Usuario

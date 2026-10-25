@@ -3,10 +3,13 @@ from django.urls import path
 
 from .views import (
     CrearEmpleado,
+    CrearVehiculo,
     CustomLoginView,
     EditarEmpleado,
+    EditarVehiculo,
     Inicio,
     ListaEmpleados,
+    ListaVehiculos,
     SuspenderEmpleado,
 )
 
@@ -29,4 +32,9 @@ urlpatterns = [
         name="empleado_suspender",
     ),
     path("usuarios/crear", CrearEmpleado.as_view(), name="crear_usuario"),
+
+    path("vehiculos/", ListaVehiculos.as_view(), name="vehiculo_lista"),
+    path("vehiculos/nuevo/", CrearVehiculo.as_view(), name="vehiculo_crear"),
+    path("vehiculos/<int:pk>/editar/", EditarVehiculo.as_view(), name="vehiculo_editar"),
+
 ]

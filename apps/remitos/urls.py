@@ -3,19 +3,23 @@ from django.conf.urls.static import static
 from django.urls import path
 
 from .views import (
+    CrearComercio,
     CrearMarca,
     CrearProducto,
     CrearRemito,
     DetalleImportacion,
     DetalleRemito,
+    EditarComercio,
     EditarMarca,
     EditarProducto,
     EditarRemito,
+    EliminarComercio,
     EliminarImportacion,
     EliminarMarca,
     EliminarProducto,
     EliminarRemito,
     ImportarRemitos,
+    ListaComercio,
     ListaImportacion,
     ListaMarca,
     ListaProducto,
@@ -45,6 +49,11 @@ urlpatterns = [
     path("marcas/<int:pk>/editar", EditarMarca.as_view(), name="marca_editar"),
     path("marcas/nuevo", CrearMarca.as_view(), name="marca_crear"),
     path("marcas/<int:pk>/eliminar", EliminarMarca.as_view(), name="marca_eliminar"),
+
+    path("comercios/", ListaComercio.as_view(), name="comercio_lista"),
+    path("comercios/<int:pk>/editar", EditarComercio.as_view(), name="comercio_editar"),
+    path("comercios/nuevo", CrearComercio.as_view(), name="comercio_crear"),
+    path("comercios/<int:pk>/eliminar", EliminarComercio.as_view(), name="comercio_eliminar"),
 ]
 
 if settings.DEBUG:

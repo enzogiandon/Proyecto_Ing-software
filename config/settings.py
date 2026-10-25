@@ -52,8 +52,6 @@ INSTALLED_APPS = [
     "apps.api",
     "apps.cobranza",
     "apps.core",
-    "apps.entregas",
-    "apps.flota",
     "apps.itinerarios",
     "apps.remitos",
 ]

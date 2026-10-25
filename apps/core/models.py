@@ -16,6 +16,12 @@ class Roles(models.TextChoices):
     ADMINISTRADOR = "administrador", "Administrador"
 
 
+class EstadoVehiculo(models.TextChoices):
+    DISPONIBLE = "disponible", "Disponible"
+    ASIGNADO = "asignado", "Asignado"
+    NO_OPERATIVO = "no_operativo", "No operativo"
+
+
 class Usuario(AbstractUser):
     telefono = models.CharField(
         max_length=20, validators=[phone_validator], blank=True, null=True
@@ -37,14 +43,32 @@ class Usuario(AbstractUser):
     history = HistoricalRecords()
 
 
-class CentroAcopio(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    direccion = models.CharField(max_length=255)
-    telefono = models.CharField(
-        max_length=20, validators=[phone_validator], blank=True, null=True
+class Vehiculo(models.Model):
+    patente = models.CharField(
+        max_length=7,
+        unique=True,
+        help_text="Patente del vehiculo (ej: AB123CD o ABC123",
     )
-    activo = models.BooleanField(default=True)
-    history = HistoricalRecords()
+
+    modelo = models.CharField(
+        max_length=50, blank=True, null=True, help_text="Marca y modelo del camión"
+    )
+    poliza = models.CharField(
+        max_length=20, blank=True, null=True, help_text="Numero de poliza de seguro"
+    )
+    estado = models.CharField(
+        max_length=20,
+        choices=EstadoVehiculo.choices,
+        default=EstadoVehiculo.DISPONIBLE,
+        help_text="Estado operativo para la planificacion de rutas",
+    )
+
+    def __str__(self):
+        return self.patente
+
+    class Meta:
+        verbose_name = "Vehículo"
+        verbose_name_plural = "Vehículos"
 
 
 class Transportista(models.Model):
@@ -53,10 +77,10 @@ class Transportista(models.Model):
         on_delete=models.CASCADE,
         related_name="perfil_transportista",
     )
-    centro = models.ForeignKey(
-        CentroAcopio, on_delete=models.CASCADE, blank=True, null=True
-    )
     vehiculo = models.ForeignKey(
-        "flota.Vehiculo", on_delete=models.CASCADE, blank=True, null=True
+        Vehiculo, on_delete=models.CASCADE, blank=True, null=True
     )
     history = HistoricalRecords()
+
+    def __str__(self):
+        return self.usuario.get_full_name() or self.usuario.username

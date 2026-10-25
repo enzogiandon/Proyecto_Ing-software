@@ -35,7 +35,6 @@ class MarcaAdmin(admin.ModelAdmin):
   list_display = ("nombre", "cuit", "telefono", "email", "activo")
   list_filter = ("activo",)
   search_fields = ("nombre", "cuit", "email")
-  readonly_fields = ("fecha_creacion",)
 
 
 @admin.register(Comercio)
@@ -43,7 +42,6 @@ class ComercioAdmin(admin.ModelAdmin):
   list_display = ("razon_social", "cuit", "domicilio", "telefono", "activo")
   list_filter = ("activo",)
   search_fields = ("razon_social", "cuit", "domicilio")
-  readonly_fields = ("fecha_creacion",)
 
 
 @admin.register(Producto)
@@ -76,7 +74,6 @@ class RemitoAdmin(SimpleHistoryAdmin):
       "numero",
       "marca",
       "comercio",
-      "monto_total",
       "estado",
       "fecha_emision",
       "fecha_pactada",

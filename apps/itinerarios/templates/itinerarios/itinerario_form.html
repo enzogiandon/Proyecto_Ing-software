@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Itinerarios</title>
+</head>
+<body>
+    <h1>Crear Itinerarios por Transportista</h1>
+
+    {% if form.non_field_errors %}
+        <div style="color: red;">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <p>
+            <label for="{{ form.fecha.id_for_label }}"><strong>{{ form.fecha.label }}:</strong></label><br>
+            {{ form.fecha }}
+            {{ form.fecha.errors }}
+        </p>
+
+        <fieldset>
+            <legend><strong>{{ form.transportistas.label }}</strong></legend>
+            {{ form.transportistas.errors }}
+            {% for checkbox in form.transportistas %}
+                <div>
+                    {{ checkbox.tag }}
+                    <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                </div>
+            {% empty %}
+                <p><em>No hay transportistas activos con vehículo asignado disponibles.</em></p>
+            {% endfor %}
+        </fieldset>
+
+        <br>
+        <button type="submit">Generar Itinerarios</button>
+        <a href="{% url 'itinerarios:itinerario_lista' %}">Cancelar</a>
+    </form>
+</body>
+</html>

@@ -58,7 +58,6 @@ class CrearRemito(CreateView):
                 items_formset.instance = self.object
                 items_formset.save()
                 assert self.object is not None
-                self.object.actualizar_monto_total()
 
             return super().form_valid(form)
         else:
@@ -94,7 +93,6 @@ class EditarRemito(UpdateView):
             with transaction.atomic():
                 self.object = form.save()
                 items_formset.save()
-                self.object.actualizar_monto_total()
 
             return super().form_valid(form)
         else:

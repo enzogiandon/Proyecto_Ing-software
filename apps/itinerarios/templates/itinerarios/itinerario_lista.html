@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Itinerarios</title>
+</head>
+<body>
+    <h1>Itinerarios</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li><strong>{{ message }}</strong></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p>
+        <a href="{% url 'itinerarios:itinerario_crear' %}">[+] Crear Itinerarios</a> | 
+        <a href="{% url 'itinerarios:paradas_crear' %}">[+] Asignar Paradas</a>
+    </p>
+
+    <hr>
+
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Transportista</th>
+                <th>Vehículo</th>
+                <th>Paradas Asignadas</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for itinerario in itinerarios %}
+                <tr>
+                    <td>#{{ itinerario.id }}</td>
+                    <td>{{ itinerario.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ itinerario.get_estado_display }}</td>
+                    <td>
+                        {% if itinerario.transportista %}
+                            {{ itinerario.transportista.usuario.get_full_name|default:itinerario.transportista.usuario.username }}
+                        {% else %}
+                            <em>Sin asignar</em>
+                        {% endif %}
+                    </td>
+                    <td>{{ itinerario.vehiculo.patente|default:"-" }}</td>
+                    <td>
+                        <ul>
+                            {% for parada in itinerario.paradas.all %}
+                                <li>
+                                    Orden {{ parada.orden }}: {{ parada.comercio.razon_social }} 
+                                    ({{ parada.get_estado_display }})
+                                </li>
+                            {% empty %}
+                                <li><em>Sin paradas asignadas</em></li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No hay itinerarios registrados.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Asignar Paradas</title>
+</head>
+<body>
+    <h1>Asignar Comercios a Itinerario</h1>
+
+    {% if form.non_field_errors %}
+        <div style="color: red;">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <p>
+            <label for="{{ form.itinerario.id_for_label }}"><strong>{{ form.itinerario.label }}:</strong></label><br>
+            {{ form.itinerario }}
+            {{ form.itinerario.errors }}
+        </p>
+
+        <fieldset>
+            <legend><strong>{{ form.comercios.label }}</strong></legend>
+            {{ form.comercios.errors }}
+            {% for checkbox in form.comercios %}
+                <div>
+                    {{ checkbox.tag }}
+                    <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                </div>
+            {% empty %}
+                <p><em>No hay comercios con remitos pendientes de asignación.</em></p>
+            {% endfor %}
+        </fieldset>
+
+        <br>
+        <button type="submit">Asignar Paradas</button>
+        <a href="{% url 'itinerarios:itinerario_lista' %}">Cancelar</a>
+    </form>
+</body>
+</html>

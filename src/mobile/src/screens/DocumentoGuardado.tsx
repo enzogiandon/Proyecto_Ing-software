@@ -9,7 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+
+import { router, useLocalSearchParams } from 'expo-router';
+
 
 const C = {
   navy: '#123C6B',
@@ -41,6 +43,18 @@ export default function DocumentoGuardado({
   tamanoBytes = 1887437,
   onVolver,
 }: DocumentoGuardadoProps) {
+    
+  const params = useLocalSearchParams<{
+    nombreArchivo?: string;
+    uriArchivo?: string;
+    tipoArchivo?: string;
+    modoDemo?: string;
+  }>();
+
+  nombreArchivo = params.nombreArchivo ?? nombreArchivo;
+  uriArchivo = params.uriArchivo ?? uriArchivo;
+  tipoArchivo = params.tipoArchivo ?? tipoArchivo;
+
   const volver = () => {
     if (onVolver) {
       onVolver();
@@ -105,12 +119,18 @@ export default function DocumentoGuardado({
             <Text style={styles.successIconText}>✓</Text>
           </View>
           <View style={styles.messageText}>
-            <Text style={styles.successTitle}>
-              Documento guardado correctamente
-            </Text>
-            <Text style={styles.successDescription}>
-              El archivo se asoció a la entrega de la parada 3.
-            </Text>
+           
+<Text style={styles.successTitle}>
+  {params.modoDemo === 'true'
+    ? 'Vista previa del documento'
+    : 'Documento guardado correctamente'}
+</Text>
+<Text style={styles.successDescription}>
+  {params.modoDemo === 'true'
+    ? 'Modo demostración: el archivo todavía no se guardó en el servidor.'
+    : 'El archivo se asoció a la entrega de la parada 3.'}
+</Text>
+
           </View>
         </View>
 

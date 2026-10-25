@@ -86,6 +86,18 @@ export default function AdjuntarDocumento() {
     }
   };
 
+const abrirVistaPreviaDocumento = (archivo: SelectedFile) => {
+  router.push({
+    pathname: '/documento-guardado',
+    params: {
+      nombreArchivo: archivo.name,
+      uriArchivo: archivo.uri,
+      tipoArchivo: archivo.mimeType ?? '',
+      modoDemo: 'true',
+    },
+  });
+};
+
   const guardarDocumento = () => {
     if (!selectedFile) {
       Alert.alert(

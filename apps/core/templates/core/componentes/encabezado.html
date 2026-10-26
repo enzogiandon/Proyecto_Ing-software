@@ -1,0 +1,22 @@
+{% comment %}
+  Encabezado del Home: título, fecha y botón Actualizar.
+  Parámetros:
+    actualizado  texto opcional, ej. "hace 2 min" -> "Actualizado hace 2 min"
+{% endcomment %}
+{% now "l, j \d\e F \d\e Y" as fecha_hoy %}
+<header class="home-encabezado">
+    <div>
+        <h1 class="text-title mb-1">Inicio</h1>
+        <p class="text-body home-fecha mb-0">{{ fecha_hoy|capfirst }}</p>
+    </div>
+    <div class="home-actualizacion">
+        {% if actualizado %}
+            <span class="text-help home-actualizado">Actualizado {{ actualizado }}</span>
+        {% endif %}
+        {# Sin acción por ahora. Más adelante: hx-get para refrescar los indicadores y la tabla. #}
+        <button type="button" class="home-btn" id="btn-actualizar">
+            <i class="fas fa-rotate"></i>
+            <span>Actualizar</span>
+        </button>
+    </div>
+</header>

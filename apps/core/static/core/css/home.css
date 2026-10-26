@@ -1,0 +1,205 @@
+/* ===================================================
+   RepartosYA - HOME (los tres perfiles)
+   Figma: "Home - perfil Planificación / Conciliación / Administración"
+   Requiere paletas.css (tokens --color-*, --spacing-*, --radius-*)
+   y las clases de texto .text-* definidas allí.
+=================================================== */
+
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+}
+
+/* ---------- Encabezado ---------- */
+.home-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-16);
+}
+.home-fecha { color: var(--color-text-secondary); }
+.home-actualizacion {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+}
+.home-actualizado { color: var(--color-text-muted); }
+
+/* ---------- Botones (ButtonPrimary / ButtonSecondary) ---------- */
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 600 16px/normal var(--font-family);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.home-btn:hover { background: var(--color-bg); color: var(--color-text); }
+.home-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem var(--color-primary-focus-ring);
+}
+.home-btn--bloque { width: 100%; }
+.home-btn--primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-surface);
+}
+.home-btn--primary:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: var(--color-surface);
+}
+.home-btn.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* ---------- Indicadores (KpiCard) ---------- */
+.home-indicadores {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-16);
+}
+.kpi-card {
+  position: relative; /* para el stretched-link */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  padding: var(--spacing-20);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.kpi-card--alerta {
+  background: var(--color-warning-tint);
+  border-color: var(--color-warning);
+}
+.kpi-card__encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+}
+.kpi-card__etiqueta { color: var(--color-text-secondary); }
+.kpi-card__enlace { color: inherit; text-decoration: none; }
+.kpi-card__chevron { font-size: 14px; color: var(--color-text-secondary); }
+.kpi-card--sin-enlace .kpi-card__chevron { opacity: 0.35; }
+.kpi-card__valor { margin: 0; color: var(--color-text); }
+.kpi-card__pie { margin: 0; color: var(--color-text-muted); }
+.kpi-card__pie--alerta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  color: var(--color-warning);
+}
+.kpi-card:has(.kpi-card__enlace):hover { box-shadow: var(--shadow-md); }
+
+/* ---------- Paneles ---------- */
+.home-paneles {
+  display: flex;
+  align-items: stretch;
+  gap: var(--spacing-16);
+}
+.home-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  padding: var(--spacing-24);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.home-panel h2 { margin: 0; color: var(--color-text); }
+.home-panel--acciones { flex: 0 0 360px; width: 360px; }
+.home-panel--tabla { flex: 1 1 0; min-width: 0; }
+
+/* ---------- Tabla ---------- */
+.home-tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.home-tabla thead th {
+  padding: var(--spacing-12) var(--spacing-16);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font: 500 13px/normal var(--font-family);
+  text-align: left;
+}
+.home-tabla thead th:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.home-tabla thead th:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.home-tabla thead th.text-end { text-align: right; }
+.home-tabla tbody td {
+  padding: var(--spacing-16);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font: 400 14px/normal var(--font-family);
+  vertical-align: middle;
+}
+.home-tabla tbody td.fw-medium { font-weight: 500; }
+.home-tabla tbody td.text-end { text-align: right; }
+.home-tabla__texto-secundario { color: var(--color-text-secondary); }
+.home-tabla__fila { position: relative; transform: rotate(0); } /* permite stretched-link en <tr> */
+.home-tabla__fila:hover td { background: var(--color-bg); }
+.home-tabla__vacia {
+  padding: var(--spacing-24) !important;
+  text-align: center;
+  color: var(--color-text-muted) !important;
+}
+.home-tabla__chevron { color: var(--color-text-secondary); font-size: 14px; text-decoration: none; }
+.home-tabla__chevron--inactivo { opacity: 0.35; }
+
+.col-80 { width: 80px; }
+.col-100 { width: 100px; }
+.col-130 { width: 130px; }
+.col-140 { width: 140px; }
+.col-chevron { width: 18px; text-align: center; }
+
+/* ---------- Badge de estado ---------- */
+.estado-badge {
+  display: inline-flex;
+  padding: var(--spacing-4) var(--spacing-8);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.estado-badge--success { background: var(--color-success-tint); color: var(--color-success); }
+.estado-badge--error   { background: var(--color-error-tint);   color: var(--color-error); }
+.estado-badge--warning { background: var(--color-warning-tint); color: var(--color-warning); }
+.estado-badge--info    { background: var(--color-info-tint);    color: var(--color-info); }
+
+/* ---------- Enlace "Ver todas..." ---------- */
+.home-ver-todo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding-top: var(--spacing-8);
+  color: var(--color-primary);
+  font: 500 14px/normal var(--font-family);
+  text-decoration: none;
+}
+.home-ver-todo:hover { color: var(--color-primary-hover); text-decoration: underline; }
+.home-ver-todo.is-disabled { opacity: 0.55; pointer-events: none; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1199px) {
+  .home-indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 991px) {
+  .home-paneles { flex-direction: column; }
+  .home-panel--acciones { flex: 1 1 auto; width: 100%; }
+}
+@media (max-width: 575px) {
+  .home-indicadores { grid-template-columns: minmax(0, 1fr); }
+  .home-tabla { display: block; overflow-x: auto; }
+}

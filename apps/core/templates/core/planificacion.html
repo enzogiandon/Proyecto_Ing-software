@@ -1,0 +1,132 @@
+{% block content %}
+{% url 'remitos:remito_lista' as url_remitos %}
+{% url 'remitos:remito_crear' as url_remito_nuevo %}
+{% url 'remitos:importacion_lista' as url_importaciones %}
+{% url 'remitos:importacion_crear' as url_importacion_nueva %}
+{% url 'itinerarios:itinerario_lista' as url_itinerarios %}
+{% url 'itinerarios:itinerario_crear' as url_itinerario_nuevo %}
+
+<div class="home">
+    <header class="home-encabezado">
+        <div>
+            <h1 class="text-title mb-1">Inicio</h1>
+            <p class="text-body home-fecha mb-0">Lunes, 26 de octubre de 2026</p>
+        </div>
+        <div class="home-actualizacion">
+            <span class="text-help home-actualizado">Actualizado 3 minutos</span>
+            <button type="button" class="home-btn" id="btn-actualizar">
+                <i class="fas fa-rotate"></i>
+                <span>Actualizar</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="home-indicadores" aria-label="Indicadores">
+        {% include "core/componentes/indicador.html" with etiqueta="Remitos pendientes de asignar" valor=1240 pie="hoy" url=url_remitos only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Itinerarios del día" valor=172 pie="hoy" url=url_itinerarios only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Importaciones del día" valor=6 pie="procesadas" url=url_importaciones only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Lotes rechazados" valor=2 alerta=1 url=url_importaciones only %}
+    </section>
+
+    <div class="home-paneles">
+        <section class="home-panel home-panel--acciones">
+            <h2 class="text-section">Acciones rápidas</h2>
+            
+            <!-- Botón de "Nueva importación" -->
+            {% if url_importacion_nueva %}
+            <a href="{{ url_importacion_nueva }}" class="home-btn home-btn--bloque home-btn--primary">
+                <i class="fas fa-file-import" aria-hidden="true"></i>
+                <span>Nueva importación</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque home-btn--primary is-disabled" aria-disabled="true">
+                <i class="fas fa-file-import" aria-hidden="true"></i>
+                <span>Nueva importación</span>
+            </span>
+            {% endif %}
+            
+            <!-- Botón de "Crear itinerario" -->
+            {% if url_itinerario_nuevo %}
+            <a href="{{ url_itinerario_nuevo }}" class="home-btn home-btn--bloque">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                <span>Crear itinerario</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
+                <i class="fas fa-route" aria-hidden="true"></i>
+                <span>Crear itinerario</span>
+            </span>
+            {% endif %}
+            
+            <!-- Botón de "Agregar remito" -->
+            {% if url_remito_nuevo %}
+            <a href="{{ url_remito_nuevo }}" class="home-btn home-btn--bloque">
+                <i class="fas fa-receipt" aria-hidden="true"></i>
+                <span>Agregar remito</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
+                <i class="fas fa-receipt" aria-hidden="true"></i>
+                <span>Agregar remito</span>
+            </span>
+            {% endif %}
+        </section>
+
+        <section class="home-panel home-panel--tabla">
+            <h2 class="text-section">Importaciones recientes</h2>
+            <table class="home-tabla">
+                <thead>
+                    <tr>
+                        <th class="col-100">Lote</th>
+                        <th>Archivo</th>
+                        <th class="col-80 text-end">Remitos</th>
+                        <th class="col-130">Estado</th>
+                        <th class="col-chevron"><span class="visually-hidden">Ver detalle</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lote in importaciones_recientes %}
+                        {% url 'remitos:importacion_detalle' lote.id as url_lote %}
+                        <tr class="home-tabla__fila">
+                            <td class="fw-medium">Lote {{ lote.id|stringformat:"04d" }}</td>
+                            <td class="home-tabla__texto-secundario">{{ lote.nombre_archivo }}</td>
+                            <td class="text-end">{% if lote.cantidad %}{{ lote.cantidad }}{% else %}—{% endif %}</td>
+                            <td>
+                                {% if lote.estado == "exito" %}
+                                    <span class="estado-badge estado-badge--success text-badge">Procesado</span>
+                                {% elif lote.estado == "rechazado" %}
+                                    <span class="estado-badge estado-badge--error text-badge">Rechazado</span>
+                                {% else %}
+                                    <span class="estado-badge estado-badge--info text-badge">{{ lote.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-chevron">
+                                {% if url_lote %}
+                                <a href="{{ url_lote }}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle del lote">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                                {% else %}
+                                <span class="home-tabla__chevron home-tabla__chevron--inactivo" aria-hidden="true">
+                                    <i class="fas fa-chevron-right"></i>
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="home-tabla__vacia">Todavía no hay importaciones.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if url_importaciones %}
+            <a href="{{ url_importaciones }}" class="home-ver-todo">
+                <span>Ver todas las importaciones</span><i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            {% else %}
+            <span class="home-ver-todo is-disabled" aria-disabled="true">
+                <span>Ver todas las importaciones</span><i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </span>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

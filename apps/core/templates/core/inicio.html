@@ -1,148 +1,22 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Inicio - RepartosYA{% endblock %}
 
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<!-- ==============================================
-     CABECERA DE INICIO (FIGMA)
-=============================================== -->
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold mb-1" style="font-size: 1.65rem; color: #0F172A;">Inicio</h2>
-        <p class="text-muted small mb-0">
-            ¡Hola, {{ user.first_name|default:user.username }}! &bull; Panel administrativo de distribución
-        </p>
-    </div>
-    <div class="d-flex gap-2 mt-2 mt-md-0">
-        <button class="btn btn-white btn-sm shadow-sm px-3 border bg-white" onclick="location.reload();">
-            <i class="fas fa-rotate me-1 text-muted"></i> Actualizar
-        </button>
-    </div>
-</div>
+    {% if user.rol == 'administrativo' %}
+        {% include "core/administracion.html" %}
+    {% elif user.rol == 'conciliacion' %}
+        {% include "core/conciliacion.html" %}
+    {% elif user.rol == 'planificacion' %}
+        {% include "core/planificacion.html" %}
+    {% else %}
+        {% include "core/sin_perfil.html" %}
+    {% endif %}
 
-<!-- ==============================================
-     TARJETAS DE MÉTRICAS KPI (FIGMA)
-=============================================== -->
-<div class="row g-3 mb-4">
-    <!-- Remitos pendientes -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 10px;">
-            <span class="text-muted small fw-medium">Remitos pendientes de asignar</span>
-            <h2 class="fw-bold my-2" style="color: #0F172A; font-size: 2rem;">1.240</h2>
-            <span class="badge bg-light text-muted border w-auto align-self-start px-2 py-1">Hoy</span>
-        </div>
-    </div>
 
-    <!-- Itinerarios del día -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 10px;">
-            <span class="text-muted small fw-medium">Itinerarios del día</span>
-            <h2 class="fw-bold my-2" style="color: #0F172A; font-size: 2rem;">172</h2>
-            <span class="badge bg-light text-muted border w-auto align-self-start px-2 py-1">Hoy</span>
-        </div>
-    </div>
-
-    <!-- Importaciones del día -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 10px;">
-            <span class="text-muted small fw-medium">Importaciones del día</span>
-            <h2 class="fw-bold my-2" style="color: #0F172A; font-size: 2rem;">6</h2>
-            <span class="badge bg-light text-muted border w-auto align-self-start px-2 py-1">Procesadas</span>
-        </div>
-    </div>
-
-    <!-- Lotes rechazados (Alerta) -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 10px; background-color: var(--status-warning-bg); border: 1px solid #FDE047 !important;">
-            <span style="color: var(--status-warning-text);" class="small fw-semibold">Lotes rechazados</span>
-            <h2 class="fw-bold my-2" style="color: var(--status-warning-text); font-size: 2rem;">2</h2>
-            <span class="small fw-semibold" style="color: var(--status-warning-text);">
-                <i class="fas fa-triangle-exclamation me-1"></i> Requiere atención
-            </span>
-        </div>
-    </div>
-</div>
-
-<!-- ==============================================
-     SECCIÓN INFERIOR: ACCIONES Y RESUMEN (FIGMA)
-=============================================== -->
-<div class="row g-4">
-    <!-- Columna Izquierda: Acciones rápidas -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 10px;">
-            <h5 class="fw-bold mb-3" style="color: #0F172A; font-size: 1.05rem;">Acciones rápidas</h5>
-            <div class="d-flex flex-column gap-2">
-                <a href="{% url 'remitos:importacion_crear' %}" class="btn btn-primary d-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 8px;">
-                    <i class="fas fa-file-import"></i>
-                    <span>Nueva importación</span>
-                </a>
-                <a href="{% url 'remitos:remito_crear' %}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 8px;">
-                    <i class="fas fa-plus"></i>
-                    <span>Agregar remito</span>
-                </a>
-                <a href="#" class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2 py-2 text-muted opacity-75" style="border-radius: 8px;">
-                    <i class="fas fa-route"></i>
-                    <span>Crear itinerario</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Columna Derecha: Importaciones recientes -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 10px;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0" style="color: #0F172A; font-size: 1.05rem;">Importaciones recientes</h5>
-                <a href="{% url 'remitos:importacion_lista' %}" class="small text-decoration-none fw-semibold" style="color: var(--primary-color);">
-                    Ver todas las importaciones <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light text-muted small">
-                        <tr>
-                            <th>Lote</th>
-                            <th>Archivo</th>
-                            <th>Remitos</th>
-                            <th>Estado</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="fw-semibold">Lote 0148</td>
-                            <td class="text-muted small">remitos_octubre_16.csv</td>
-                            <td>700</td>
-                            <td><span class="badge bg-success-subtle text-success border border-success-subtle">Procesado</span></td>
-                            <td class="text-end"><i class="fas fa-chevron-right text-muted small"></i></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-semibold">Lote 0147</td>
-                            <td class="text-muted small">remitos_rechazados_lote2.csv</td>
-                            <td>-</td>
-                            <td><span class="badge bg-danger-subtle text-danger border border-danger-subtle">Rechazado</span></td>
-                            <td class="text-end"><i class="fas fa-chevron-right text-muted small"></i></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-semibold">Lote 0146</td>
-                            <td class="text-muted small">planilla_distribucion_centro.csv</td>
-                            <td>700</td>
-                            <td><span class="badge bg-success-subtle text-success border border-success-subtle">Procesado</span></td>
-                            <td class="text-end"><i class="fas fa-chevron-right text-muted small"></i></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-semibold">Lote 0145</td>
-                            <td class="text-muted small">entregas_nordelta_lote1.csv</td>
-                            <td>412</td>
-                            <td><span class="badge bg-success-subtle text-success border border-success-subtle">Procesado</span></td>
-                            <td class="text-end"><i class="fas fa-chevron-right text-muted small"></i></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}

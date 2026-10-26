@@ -1,0 +1,131 @@
+{% block content %}
+{% url 'cobranza:cobranza_lista' as url_cobranzas %}
+{% url 'cobranza:pago_lista' as url_pagos %}
+{% url 'cobranza:arqueo' as url_arqueo %}
+
+<div class="home">
+   <header class="home-encabezado">
+        <div>
+            <h1 class="text-title mb-1">Inicio</h1>
+            <p class="text-body home-fecha mb-0">Lunes, 26 de octubre de 2026</p>
+        </div>
+        <div class="home-actualizacion">
+            <span class="text-help home-actualizado">Actualizado 3 minutos</span>
+            <button type="button" class="home-btn" id="btn-actualizar">
+                <i class="fas fa-rotate"></i>
+                <span>Actualizar</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="home-indicadores" aria-label="Indicadores">
+        {% include "core/componentes/indicador.html" with etiqueta="Cobranzas por validar" valor=318 pie="hoy" url=url_cobranzas only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Pagos con diferencia" valor=7 alerta=1 url=url_pagos only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Pagos no encontrados" valor=3 alerta=1 url=url_pagos only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Arqueo de caja" valor="PENDIENTE" pie="sin iniciar" url=url_arqueo only %}
+    </section>
+
+    <div class="home-paneles">
+        <section class="home-panel home-panel--acciones">
+            <h2 class="text-section">Acciones rápidas</h2>
+
+            <!-- Botón de "Validar cobranzas" -->
+            {% if url_cobranzas %}
+            <a href="{{ url_cobranzas }}" class="home-btn home-btn--bloque home-btn--primary">
+                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                <span>Validar cobranzas</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque home-btn--primary is-disabled" aria-disabled="true">
+                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                <span>Validar cobranzas</span>
+            </span>
+            {% endif %}
+
+            <!-- Botón de "Revisar pagos con diferencia" -->
+            {% if url_pagos %}
+            <a href="{{ url_pagos }}" class="home-btn home-btn--bloque">
+                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                <span>Revisar pagos con diferencia</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
+                <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                <span>Revisar pagos con diferencia</span>
+            </span>
+            {% endif %}
+            
+            <!-- Botón de "Realizar arqueo de caja" -->
+            {% if url_arqueo %}
+            <a href="{{ url_arqueo }}" class="home-btn home-btn--bloque">
+                <i class="fas fa-cash-register" aria-hidden="true"></i>
+                <span>Realizar arqueo de caja</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
+                <i class="fas fa-cash-register" aria-hidden="true"></i>
+                <span>Realizar arqueo de caja</span>
+            </span>
+            {% endif %}
+        </section>
+
+        <section class="home-panel home-panel--tabla">
+            <h2 class="text-section">Cobranzas por validar</h2>
+            <table class="home-tabla">
+                <thead>
+                    <tr>
+                        <th class="col-100">Itinerario</th>
+                        <th>Transportista</th>
+                        <th class="col-140 text-end">Importe</th>
+                        <th class="col-130">Estado</th>
+                        <th class="col-chevron"><span class="visually-hidden">Ver detalle</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cobranza in cobranzas_pendientes %}
+                        {% url 'cobranza:cobranza_detalle' cobranza.id as url_cobranza %}{# tentativo #}
+                        <tr class="home-tabla__fila">
+                            <td class="fw-medium">Itin. {{ cobranza.itinerario|stringformat:"04d" }}</td>
+                            <td class="home-tabla__texto-secundario">{{ cobranza.transportista }}</td>
+                            <td class="text-end">$ {{ cobranza.importe|floatformat:"2g" }}</td>
+                            <td>
+                                {% if cobranza.estado == "registrado" %}
+                                    <span class="estado-badge estado-badge--info text-badge">Pendiente</span>
+                                {% elif cobranza.estado == "difiere" %}
+                                    <span class="estado-badge estado-badge--warning text-badge">Difiere</span>
+                                {% elif cobranza.estado == "no_encontrado" %}
+                                    <span class="estado-badge estado-badge--error text-badge">No encontrado</span>
+                                {% else %}
+                                    <span class="estado-badge estado-badge--info text-badge">{{ cobranza.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-chevron">
+                                {% if url_cobranza %}
+                                <a href="{{ url_cobranza }}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle de la cobranza">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                                {% else %}
+                                <span class="home-tabla__chevron home-tabla__chevron--inactivo" aria-hidden="true">
+                                    <i class="fas fa-chevron-right"></i>
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="home-tabla__vacia">No hay cobranzas por validar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if url_cobranzas %}
+            <a href="{{ url_cobranzas }}" class="home-ver-todo">
+                <span>Ver todas las cobranzas</span><i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            {% else %}
+            <span class="home-ver-todo is-disabled" aria-disabled="true">
+                <span>Ver todas las cobranzas</span><i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </span>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

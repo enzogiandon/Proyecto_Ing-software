@@ -1,0 +1,28 @@
+{% comment %}
+  Tarjeta de indicador (KpiCard / KpiCard-Alerta de Figma).
+  Parámetros:
+    etiqueta    texto superior
+    valor       número o texto (los números se formatean según el idioma: 1.240)
+    pie         texto inferior. En alerta, si falta, se muestra "Requiere atención"
+    pie_valor   opcional, se agrega al pie: pie="de" pie_valor=200 -> "de 200"
+    url         opcional. Con valor, toda la tarjeta es un enlace
+    alerta      opcional. Si es verdadero (por ejemplo, un número mayor a 0),
+                se muestra con el estilo de alerta
+{% endcomment %}
+<article class="kpi-card{% if alerta %} kpi-card--alerta{% endif %}{% if not url %} kpi-card--sin-enlace{% endif %}">
+    <div class="kpi-card__encabezado">
+        <span class="text-label kpi-card__etiqueta">
+            {% if url %}<a href="{{ url }}" class="stretched-link kpi-card__enlace">{{ etiqueta }}</a>{% else %}{{ etiqueta }}{% endif %}
+        </span>
+        <i class="fas fa-chevron-right kpi-card__chevron" aria-hidden="true"></i>
+    </div>
+    <p class="text-kpi kpi-card__valor">{{ valor }}</p>
+    {% if alerta %}
+        <p class="text-badge kpi-card__pie kpi-card__pie--alerta">
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            {{ pie|default:"Requiere atención" }}
+        </p>
+    {% else %}
+        <p class="text-help kpi-card__pie">{{ pie }}{% if pie_valor %} {{ pie_valor }}{% endif %}</p>
+    {% endif %}
+</article>

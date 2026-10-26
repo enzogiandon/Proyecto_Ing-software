@@ -8,6 +8,7 @@
  *    porque en el inicio de sesión no tiene sentido que se vean las pestañas (tal como está en Figma).
  * 3. En 'itinerario' dejo la pestaña activa con los iconos y los colores oficiales de RepartoYA
  *    (Azul Ruta para el activo y Gris Texto para el inactivo).
+ * 4. En 'validar-cobro' la oculto con href: null y tabBarStyle: none para que no aparezca como pestaña suelta.
  */
 
 import { Tabs } from 'expo-router';
@@ -65,6 +66,15 @@ export default function AppTabs() {
               style={{ width: 24, height: 24, tintColor: color }}
             />
           ),
+        }}
+      />
+
+      {/* Pantalla de cobro: la ocultamos del menú inferior de pestañas */}
+      <Tabs.Screen
+        name="validar-cobro"
+        options={{
+          href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
     </Tabs>

@@ -2,19 +2,19 @@
 import { ItinerarioJornada } from '../types/itinerario';
 
 /**
- * Itinerario asignado para el chofer Martín Rodriguez
- * Coincide exactamente con el boceto de Figma: Itinerario.png (Actualizado 21-10-2026)
+ * Itinerario asignado para el chofer de reparto
+ * Sincronizado con mockData (Carlos Gómez) y los bocetos de Figma
  */
 export const MOCK_ITINERARIO_ASIGNADO: ItinerarioJornada = {
   id: 101,
   fecha: 'Lun, 19 oct 2026',
   rutaNombre: 'Ruta 12 · San Martín',
   estado: 'en_ruta',
-  transportistaNombre: 'Martín Rodriguez',
-  transportistaIniciales: 'MR',
+  transportistaNombre: 'Carlos Gómez',
+  transportistaIniciales: 'CG',
   vehiculo: {
-    patente: 'AB 458 CD',
-    modelo: 'Unidad 024',
+    patente: 'AB 123 CD',
+    modelo: 'Mercedes-Benz 710',
   },
   totalParadas: 8,
   paradasCompletadas: 4,
@@ -92,18 +92,17 @@ export const MOCK_ITINERARIO_ASIGNADO: ItinerarioJornada = {
 
 /**
  * Escenario sin asignación
- * Coincide con el boceto de Figma: Itinerario - Sin asignar.png (Actualizado 21-10-2026)
  */
 export const MOCK_ITINERARIO_SIN_ASIGNAR: ItinerarioJornada = {
   id: 0,
   fecha: 'Lun, 19 oct 2026',
   rutaNombre: 'Ruta 12 · San Martín',
   estado: 'sin_asignar',
-  transportistaNombre: 'Martín Rodriguez',
-  transportistaIniciales: 'MR',
+  transportistaNombre: 'Carlos Gómez',
+  transportistaIniciales: 'CG',
   vehiculo: {
-    patente: 'AB 458 CD',
-    modelo: 'Unidad 024',
+    patente: 'AB 123 CD',
+    modelo: 'Mercedes-Benz 710',
   },
   totalParadas: 0,
   paradasCompletadas: 0,

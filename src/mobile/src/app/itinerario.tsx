@@ -3,11 +3,13 @@
  * 
  * Resumen de lo que hace este código:
  * Esta es la pantalla principal para el transportista en su jornada. Acá mostramos:
- * 1. El header corporativo con los datos del chofer, la patente del camión, fecha y ruta asignada.
+ * 1. El header corporativo que toma dinámicamente el nombre y las iniciales del chofer que inició
+ *    sesión (ej. Carlos Gómez -> CG) usando el logo oficial en PNG (repartoya-isotipo-header.png).
  * 2. La tarjeta con la barra de progreso (porcentaje de entregas completadas en color Naranja YA).
  * 3. El botón de acceso a 'Rutas Guardadas' (que conecta con el módulo de recorridos del Sprint 1).
  * 4. La lista de paradas: destacando la próxima parada (#1) con llamada a la acción en naranja
- *    ('Ir a la parada') y las paradas siguientes con su detalle y monto total a recaudar.
+ *    ('Ir a la parada') que conecta directamente con la pantalla de Validar Cobro (HU-32) que hizo Aylén,
+ *    y las paradas siguientes con su detalle y monto total a recaudar.
  * 5. La vista de 'Itinerario sin asignar': si el chofer todavía no tiene hoja de ruta asignada,
  *    mostramos la ilustración circular y mensaje institucional según Figma.
  * 6. Metí un botón discreto en el header para alternar entre el modo asignado y el sin asignar para
@@ -20,6 +22,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -33,6 +36,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import { obtenerItinerarioJornada } from '../services/itinerarioService';
+import { getUsuarioActual } from '../services/authService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 
 export default function ItinerarioScreen() {
@@ -45,6 +49,21 @@ export default function ItinerarioScreen() {
   // Estado del itinerario y control de carga
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
+
+  // Chofer que inició sesión (se obtiene de authService)
+  const usuarioLogueado = getUsuarioActual();
+  const nombreChofer = usuarioLogueado?.first_name 
+    ? `${usuarioLogueado.first_name} ${usuarioLogueado.last_name || ''}`.trim()
+    : (itinerario?.transportistaNombre || 'Carlos Gómez');
+
+  // Iniciales dinámicas para el badge del avatar (ej: Carlos Gómez -> CG)
+  const inicialesChofer = usuarioLogueado?.first_name
+    ? `${usuarioLogueado.first_name[0] || ''}${usuarioLogueado.last_name ? usuarioLogueado.last_name[0] : ''}`.toUpperCase()
+    : (itinerario?.transportistaIniciales || 'CG');
+
+  const vehiculoChofer = usuarioLogueado?.vehiculo
+    ? `${usuarioLogueado.vehiculo.modelo} · ${usuarioLogueado.vehiculo.patente}`
+    : `${itinerario?.vehiculo.modelo || 'Mercedes-Benz 710'} · ${itinerario?.vehiculo.patente || 'AB 123 CD'}`;
 
   // Función para pegarle al servicio o cargar los datos simulados
   const cargarDatos = async () => {
@@ -81,19 +100,22 @@ export default function ItinerarioScreen() {
     );
   };
 
+  // Conexión directa hacia la pantalla de validación de cobro de Aylén
   const handleIrAParada = (parada: ParadaItem) => {
-    Alert.alert(
-      'Navegación iniciada',
-      `Dirigiéndose hacia: ${parada.comercio.razonSocial}\n${parada.comercio.domicilio}\n\nAbriendo GPS y preparando remitos...`,
-      [{ text: 'Continuar' }]
-    );
+    router.push('/validar-cobro' as any);
   };
 
   const handleVerDetalle = (parada: ParadaItem) => {
     Alert.alert(
       parada.comercio.razonSocial,
       `Ubicación: ${parada.comercio.domicilio}\nDocumentos: ${parada.cantidadRemitos} remitos\nTotal a cobrar: $${parada.montoCobranza.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`,
-      [{ text: 'Cerrar' }]
+      [
+        { text: 'Cerrar', style: 'cancel' },
+        {
+          text: 'Validar Cobro',
+          onPress: () => router.push('/validar-cobro' as any),
+        },
+      ]
     );
   };
 
@@ -128,12 +150,16 @@ export default function ItinerarioScreen() {
       {/* ================= HEADER CORPORATIVO (Azul Ruta #123C6B) ================= */}
       {/* Aplicamos topPaddingSeguro para que el header cubra arriba y el texto baje lo necesario */}
       <View style={[styles.header, { paddingTop: topPaddingSeguro }]}>
-        {/* Fila 1: Título "Itinerario" y Logo RepartoYA */}
+        {/* Fila 1: Título "Itinerario" y Logo RepartoYA Oficial */}
         <View style={styles.headerTop}>
           <Text style={styles.headerTitulo}>Itinerario</Text>
 
           <View style={styles.logoRepartoYA}>
-            <Text style={styles.logoCamionIcon}>🚚</Text>
+            <Image
+              source={require('../../assets/images/repartoya-isotipo-header.png')}
+              style={styles.logoImagenHeader}
+              resizeMode="contain"
+            />
             <Text style={styles.logoTextoReparto}>Reparto</Text>
             <Text style={styles.logoTextoYA}>YA</Text>
           </View>
@@ -144,15 +170,15 @@ export default function ItinerarioScreen() {
           <View style={styles.driverLeft}>
             <View style={styles.avatarBadge}>
               <Text style={styles.avatarTexto}>
-                {itinerario?.transportistaIniciales || 'MR'}
+                {inicialesChofer}
               </Text>
             </View>
             <View>
               <Text style={styles.driverNombre}>
-                {itinerario?.transportistaNombre || 'Martín Rodriguez'}
+                {nombreChofer}
               </Text>
               <Text style={styles.driverVehiculo}>
-                {itinerario?.vehiculo.modelo || 'Unidad 024'} · {itinerario?.vehiculo.patente || 'AB 458 CD'}
+                {vehiculoChofer}
               </Text>
             </View>
           </View>
@@ -288,7 +314,7 @@ export default function ItinerarioScreen() {
             </Text>
           </View>
 
-          {/* PARADA DESTACADA #1 (Figma: Botón Naranja YA "Ir a la parada") */}
+          {/* PARADA DESTACADA #1 (Conecta con la pantalla de Validar Cobro) */}
           {proximaParada && (
             <View style={styles.paradaCardDestacada}>
               <View style={styles.paradaHeaderRow}>
@@ -333,7 +359,7 @@ export default function ItinerarioScreen() {
                 </View>
               </View>
 
-              {/* Botón de acción primario en Naranja YA */}
+              {/* Botón de acción primario en Naranja YA -> Va a Validar Cobro */}
               <TouchableOpacity
                 style={styles.botonIrParada}
                 onPress={() => handleIrAParada(proximaParada)}
@@ -467,9 +493,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoCamionIcon: {
-    fontSize: 16,
-    marginRight: 4,
+  logoImagenHeader: {
+    width: 34,
+    height: 34,
+    marginRight: 6,
   },
   logoTextoReparto: {
     color: RepartoYA.blanco,

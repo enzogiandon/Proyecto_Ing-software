@@ -1,11 +1,7 @@
 // src/services/authService.ts
-import { CHOFERES_PRUEBA, UsuarioTransportista } from '../data/mockData';
+import { CHOFERES_PRUEBA, UsuarioTransportista, MOCK_CHOFER_ACTUAL } from '../data/mockData';
 
 // Configuración de la URL base del Backend Django
-// NOTA PARA EMULADOR/DISPOSITIVO REAL:
-// - En navegador Web / emulador iOS: 'http://localhost:8000'
-// - En emulador Android: 'http://10.0.2.2:8000'
-// - En celular físico con Expo Go: 'http://<TU_IP_LOCAL>:8000' (ej. 192.168.1.45)
 export const API_BASE_URL = 'http://localhost:8000';
 
 export interface AuthTokens {
@@ -21,8 +17,9 @@ export interface LoginResult {
   tipoError?: 'DNI' | 'CLAVE' | 'INHABILITADO' | 'SERVIDOR';
 }
 
-// Variable en memoria para el token actual durante la sesión
+// Variables en memoria para la sesión activa del chofer
 let tokenAccesoActual: string | null = null;
+let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = MOCK_CHOFER_ACTUAL;
 
 export const setAuthToken = (token: string | null) => {
   tokenAccesoActual = token;
@@ -30,6 +27,14 @@ export const setAuthToken = (token: string | null) => {
 
 export const getAuthToken = (): string | null => {
   return tokenAccesoActual;
+};
+
+export const setUsuarioActual = (user: Partial<UsuarioTransportista> | null) => {
+  usuarioLogueadoActual = user;
+};
+
+export const getUsuarioActual = (): Partial<UsuarioTransportista> | null => {
+  return usuarioLogueadoActual;
 };
 
 /**
@@ -63,14 +68,24 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       const data: AuthTokens = await response.json();
       setAuthToken(data.access);
 
+      const choferEncontrado = CHOFERES_PRUEBA.find((c) => c.dni === dniLimpio);
+      const userAutenticado: Partial<UsuarioTransportista> = choferEncontrado || {
+        dni: dniLimpio,
+        first_name: 'Carlos',
+        last_name: 'Gómez',
+        vehiculo: {
+          patente: 'AB 123 CD',
+          modelo: 'Mercedes-Benz 710',
+          estado: 'disponible',
+        },
+      };
+
+      setUsuarioActual(userAutenticado);
+
       return {
         success: true,
         tokens: data,
-        user: {
-          dni: dniLimpio,
-          first_name: 'Transportista',
-          last_name: 'Autenticado',
-        },
+        user: userAutenticado,
       };
     }
 
@@ -126,6 +141,9 @@ function loginConMock(dni: string, clave: string): LoginResult {
   }
 
   chofer.intentos_fallidos = 0;
+  // Guardamos el chofer logueado para que itinerario tome su nombre real e iniciales
+  setUsuarioActual(chofer);
+
   return {
     success: true,
     user: chofer,

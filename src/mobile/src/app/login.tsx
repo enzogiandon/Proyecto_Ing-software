@@ -11,12 +11,14 @@
  * Además, usé useSafeAreaInsets con StatusBar.currentHeight para que en celulares como
  * mi Redmi Note 13 (que tienen la cámara perforada en pantalla) el header azul cubra
  * toda la parte superior pero el contenido arranque abajo sin pisarse con la cámara.
+ * Incorpora el logo oficial repartoya-isotipo-header.png tal como lo utilizó Aylén.
  */
 
 import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -30,7 +32,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
-import { loginTransportista } from '../services/authService';
+import { loginTransportista, setUsuarioActual } from '../services/authService';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -85,9 +87,14 @@ export default function LoginScreen() {
         return;
       }
 
+      // Guardamos el chofer logueado para que itinerario tome su nombre e iniciales reales
+      if (resultado.user) {
+        setUsuarioActual(resultado.user);
+      }
+
       // Login exitoso: preparamos el mensaje y conectamos con la pantalla de itinerario
       const nombreMostrar = resultado.user?.first_name 
-        ? `${resultado.user.first_name} ${resultado.user.last_name || ''}`
+        ? `${resultado.user.first_name} ${resultado.user.last_name || ''}`.trim()
         : 'Transportista';
 
       Alert.alert(
@@ -138,12 +145,13 @@ export default function LoginScreen() {
           {/* Le inyecto el topPaddingSeguro para que baje lo justo y no choque con la cámara del celu */}
           <View style={[styles.header, { paddingTop: topPaddingSeguro }]}>
             <View style={styles.headerTopRow}>
-              {/* Logo Oficial RepartoYA */}
+              {/* Logo Oficial RepartoYA (Usa el PNG oficial integrado por Aylén) */}
               <View style={styles.logoContainer}>
-                <View style={styles.logoIconoBadge}>
-                  <Text style={styles.logoIconoCamion}>🚚</Text>
-                  <Text style={styles.logoBadgeYa}>YA</Text>
-                </View>
+                <Image
+                  source={require('../../assets/images/repartoya-isotipo-header.png')}
+                  style={styles.logoImagen}
+                  resizeMode="contain"
+                />
                 <View style={styles.logoTextoRow}>
                   <Text style={styles.logoTextoReparto}>Reparto</Text>
                   <Text style={styles.logoTextoYA}>YA</Text>
@@ -335,24 +343,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoIconoBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: RepartoYA.naranjaYA,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
+  logoImagen: {
+    width: 38,
+    height: 38,
     marginRight: 8,
-  },
-  logoIconoCamion: {
-    fontSize: 14,
-    marginRight: 4,
-  },
-  logoBadgeYa: {
-    color: RepartoYA.blanco,
-    fontWeight: '900',
-    fontSize: 12,
-    letterSpacing: 0.5,
   },
   logoTextoRow: {
     flexDirection: 'row',

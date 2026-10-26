@@ -101,3 +101,11 @@ Documento dedicado al seguimiento, organización e información clave del proyec
   - Front Mobile presenta vistas de itinerario, recorridos habituales y cobros en Figma.
   - Detección de dependencia cruzada / circular (IMP-01 campos de UI para endpoints, IMP-02 esquema de BD para SQLite móvil, IMP-03 entorno o mock server).
   - Plan de destrabe del Scrum Master (Enzo Giandon): mesa de trabajo para formalizar contratos de API (DTOs), socialización de `models.py` y despliegue de mock server.
+- **Scrum #3 (26/10/2026 - Sincronización Técnica Interna y Avance de Código)**:
+  - Front Administrativos finaliza prototipos en Figma (dashboard por rol, barra lateral única) e inicia código de Login; detecta necesidad de vincular comercios y soporte dual para fotos/adjuntos de remitos.
+  - Backend reestructura y reduce arquitectura a 5 aplicaciones Django (`api`, `core`, `itinerarios`, `remitos`, `cobranza` para Sprint 2); avanza en lógica para 6 HUs (`HU-7`, `HU-43`, `HU-66`, `HU-9`, `HU-45`, `HU-13`); auditoría impone reemplazar bajas físicas por bajas lógicas (`is_active`).
+  - Front Mobile cierra prototipos adaptados a la Guía de Estilo oficial de Martín Rodríguez, implementa pantalla de Login en React Native y arranca codificación de itinerario; deuda técnica de actualización de paleta de colores en código y requerimiento de login con DNI como username.
+  - Coordinación del Scrum Master (Enzo Giandon): mesa técnica inmediata para unificar contrato de login por DNI y tokens JWT, adopción de manual de estilos y definición de DTOs para imágenes de remitos.
+
+
+

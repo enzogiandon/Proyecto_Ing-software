@@ -26,6 +26,11 @@
    - Queda estrictamente prohibido utilizar expresiones como *"para la materia"*, *"para el docente/profesor"*, *"según la consigna académica"* o romper el marco de rol en la especificación de requerimientos y entregables.
    - Cualquier restricción metodológica (ej. INVEST, formato de 4 campos, prohibición de validaciones de formulario) debe presentarse y aplicarse como un estándar interno de calidad y buenas prácticas de ingeniería de software de **Softech**.
 
+3. **Estándares de Documentación Ágil y Minutas de Scrum:**
+   - **Tono sobrio:** Toda la documentación debe mantener un diseño limpio, profesional y sobrio, prescindiendo del uso de emojis en títulos, subtítulos o tablas.
+   - **Identificación de subgrupos y atribución colectiva:** En las minutas de Scrum y seguimiento, los nombres completos de los integrantes deben figurar en el encabezado de cada subgrupo (ej. `### Subgrupo Front Administrativos (Alan Tolaba e Ian Chica Herrero)`). Sin embargo, en el cuerpo de tareas realizadas, acuerdos o resoluciones, **las tareas nunca deben atribuirse a integrantes individuales**; todo avance o compromiso debe redactarse como un trabajo o logro colectivo del subgrupo (o en tercera persona impersonal), asumiendo que los aportes técnicos reflejan una labor colaborativa.
+
+
 ## Alcance, Decisiones Técnicas y Métricas
 
 1. **Prohibición de adelantar el stack tecnológico:**

@@ -65,6 +65,7 @@ Proyecto_Ing-software/
 │           ├── sprint-planning-01.md   # Acta de Planning y compromiso (28 HUs - 71 pts)
 │           ├── daily-scrum-01.md       # Scrum #1: Validación con cliente Martín Rodríguez
 │           ├── daily-scrum-02.md       # Scrum #2: Sincronización técnica interna y bloqueos
+│           ├── daily-scrum-03.md       # Scrum #3: Avance en código, consolidación de apps backend y estilos
 │           └── assets/                 # Capturas de maquetas y logotipos de minutas
 └── src/                                # Código fuente del sistema (en desarrollo)
 ```

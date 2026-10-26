@@ -106,6 +106,10 @@ Documento dedicado al seguimiento, organización e información clave del proyec
   - Backend reestructura y reduce arquitectura a 5 aplicaciones Django (`api`, `core`, `itinerarios`, `remitos`, `cobranza` para Sprint 2); avanza en lógica para 6 HUs (`HU-7`, `HU-43`, `HU-66`, `HU-9`, `HU-45`, `HU-13`); auditoría impone reemplazar bajas físicas por bajas lógicas (`is_active`).
   - Front Mobile cierra prototipos adaptados a la Guía de Estilo oficial de Martín Rodríguez, implementa pantalla de Login en React Native y arranca codificación de itinerario; deuda técnica de actualización de paleta de colores en código y requerimiento de login con DNI como username.
   - Coordinación del Scrum Master (Enzo Giandon): mesa técnica inmediata para unificar contrato de login por DNI y tokens JWT, adopción de manual de estilos y definición de DTOs para imágenes de remitos.
-
+- **Scrum #4 (27/10/2026 - Integración de Código, Consolidación de Endpoints y Preparación de la Demo 1)**:
+  - Front Administrativos entrega inicio web dinámico según rol (`planificacion`, `conciliacion`, `administracion`), componentes reutilizables, hoja `home.css` (205 líneas) y sidebar condicional en `base.html`.
+  - Backend despliega API REST operativa para itinerarios y recorridos (`/api/itinerarios/paradas/`, `/api/itinerarios/rutas-guardadas/`, `/api/itinerarios/crear-ruta/`, etc.), fija estado `asignado` inmediato y publica comando `python manage.py poblar` (373 líneas) para dataset de pruebas.
+  - Front Mobile estandariza tokens de RepartoYA (`Azul Ruta`, `Naranja YA`, `Crema Pan`), rediseña itinerario con chofer/unidad/progreso, incorpora logo oficial en cobros (`HU-32`), avanza captura de remitos (`HU-55`) y consolida sesión activa persistida en `test-mobile`.
+  - Acuerdos del Scrum Master (Enzo Giandon): unificación hacia `dev`, pruebas cruzadas con dataset generado por `poblar`, validación de API en Expo y libreto de presentación para la Demo 1 del 30 de octubre.
 
 

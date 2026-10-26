@@ -57,10 +57,11 @@ El **Sprint 1** marca el arranque formal del desarrollo del producto mínimo via
 | **[daily-scrum-01.md](daily-scrum-01.md)** | 19/10/2026 (10:00 hs) | Scrum #1 (con Cliente) | Validación de maquetas Figma con Martín Rodríguez; 5 definiciones operativas de negocio (estados `pendiente` / `terminada`, vista conjunta flota/choferes, etc.). |
 | **[daily-scrum-02.md](daily-scrum-02.md)** | 19/10/2026 (14:46 hs) | Scrum #2 (Técnico Interno) | Sincronización entre frentes y backend; detección de dependencia circular (IMP-01, IMP-02, IMP-03); plan de acción (DTOs, esquemas y mock server). |
 | **[daily-scrum-03.md](daily-scrum-03.md)** | 26/10/2026 (11:00 hs) | Scrum #3 (Técnico Interno) | Avance en código, consolidación a 5 apps Django, bajas lógicas, soporte documental de fotos en remitos y adopción de Guía de Estilo de Martín Rodríguez. |
+| **[daily-scrum-04.md](daily-scrum-04.md)** | 27/10/2026 (11:00 hs) | Scrum #4 (Integración y Commits) | Auditoría de commits en todas las ramas, endpoints de itinerarios y rutas en API, vistas de inicio dinámicas por rol en web, y estabilización mobile en test-mobile con sesión persistida. |
 
 ---
 
 ## 🚀 6. Próximos Pasos
 
-- **Scrum Diario N° 4 / Integración:** Verificación de contratos de Login por DNI, endpoints REST conectados y primeras vistas integradas.
-- **Hito de Entrega:** Demo 1 (MVP Iteración 1) — **30 de octubre de 2026**.
+- **Ensayo General y Verificación Integrada:** Prueba cruzada de flujos web y mobile consumiendo dataset unificado (`python manage.py poblar`).
+- **Hito de Entrega:** Presentación formal de la Demo 1 (MVP Iteración 1) ante Martín Rodríguez — **30 de octubre de 2026**.

@@ -94,8 +94,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         """
         itinerario = self._get_itinerario_activo(request)
         paradas = (
-            itinerario.paradas
-            .select_related("comercio", "cobranza")
+            itinerario.paradas.select_related("comercio", "cobranza")
             .prefetch_related(
                 "remitos__items",
                 "cobranza__detalles",
@@ -157,16 +156,16 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         parada_ids = serializer.validated_data["parada_ids"]
 
         # Validar que las paradas pertenezcan al itinerario actual
-        paradas_dict = {
-            p.id: p for p in itinerario.paradas.select_related("comercio")
-        }
+        paradas_dict = {p.id: p for p in itinerario.paradas.select_related("comercio")}
         if not set(parada_ids).issubset(set(paradas_dict.keys())):
-            raise ValidationError({
-                "detail": (
-                    "Algunas de las paradas indicadas no pertenecen a tu"
-                    " itinerario activo."
-                )
-            })
+            raise ValidationError(
+                {
+                    "detail": (
+                        "Algunas de las paradas indicadas no pertenecen a tu"
+                        " itinerario activo."
+                    )
+                }
+            )
 
         transportista = request.user.perfil_transportista
 
@@ -195,9 +194,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
             ordenar_itinerario_segun_ruta(itinerario, ruta_guardada)
 
-        status_code = (
-            status.HTTP_201_CREATED if creada else status.HTTP_200_OK
-        )
+        status_code = status.HTTP_201_CREATED if creada else status.HTTP_200_OK
         mensaje = (
             "Ruta guardada exitosamente."
             if creada
@@ -217,20 +214,20 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="rutas-guardadas")
     def listar_rutas_guardadas(self, request):
-      """
-      Devuelve solo el id y el nombre de las rutas guardadas del transportista. Endpoint: GET /api/itinerarios/rutas-guardadas/
-      """
-      user = request.user
-      if not hasattr(user, "perfil_transportista"):
-        raise ValidationError({
-            "detail": "El usuario autenticado no posee perfil de transportista."
-        })
+        """
+        Devuelve solo el id y el nombre de las rutas guardadas del transportista. Endpoint: GET /api/itinerarios/rutas-guardadas/
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {"detail": "El usuario autenticado no posee perfil de transportista."}
+            )
 
-      rutas = RutaGuardada.objects.filter(
-          transportista=user.perfil_transportista
-      ).order_by("nombre")
-      serializer = RutaGuardadaSerializer(rutas, many=True)
-      return Response(serializer.data, status=status.HTTP_200_OK)
+        rutas = RutaGuardada.objects.filter(
+            transportista=user.perfil_transportista
+        ).order_by("nombre")
+        serializer = RutaGuardadaSerializer(rutas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"], url_path="ordenar-por-ruta")
     def ordenar_por_ruta(self, request):
@@ -248,9 +245,13 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
         # 2. Verificamos que la plantilla pertenezca a este chofer
         try:
-            ruta_guardada = RutaGuardada.objects.get(id=ruta_id, transportista=transportista)
+            ruta_guardada = RutaGuardada.objects.get(
+                id=ruta_id, transportista=transportista
+            )
         except RutaGuardada.DoesNotExist:
-            raise NotFound({"detail": "La ruta enviada no existe o no pertenece a tu usuario."})
+            raise NotFound(
+                {"detail": "La ruta enviada no existe o no pertenece a tu usuario."}
+            )
 
         # 3. Ejecutamos la función de ordenamiento que definiste
         paradas_ordenadas = ordenar_itinerario_segun_ruta(itinerario, ruta_guardada)

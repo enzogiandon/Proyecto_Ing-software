@@ -98,7 +98,7 @@
                             </td>
                             <td class="col-chevron">
                                 {% if url_pendiente %}
-                                <a href="{{ url_pendiente }}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle">
+                                <a href="{% url 'core:empleado_editar' emp.pk %}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle">
                                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                 </a>
                                 {% else %}

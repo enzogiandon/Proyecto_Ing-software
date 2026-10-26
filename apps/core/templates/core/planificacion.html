@@ -85,11 +85,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for lote in importaciones_recientes %}
+                    {% for lote in importaciones %}
                         {% url 'remitos:importacion_detalle' lote.id as url_lote %}
                         <tr class="home-tabla__fila">
                             <td class="fw-medium">Lote {{ lote.id|stringformat:"04d" }}</td>
-                            <td class="home-tabla__texto-secundario">{{ lote.nombre_archivo }}</td>
+                            <td class="home-tabla__texto-secundario">
+                                {% if lote.archivo %}
+                                    {{ lote.archivo.name }}
+                                {% else %}
+                                    Sin archivo
+                                {% endif %}
+                            </td>
                             <td class="text-end">{% if lote.cantidad %}{{ lote.cantidad }}{% else %}—{% endif %}</td>
                             <td>
                                 {% if lote.estado == "exito" %}
@@ -101,8 +107,8 @@
                                 {% endif %}
                             </td>
                             <td class="col-chevron">
-                                {% if url_lote %}
-                                <a href="{{ url_lote }}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle del lote">
+                                {% if url_importaciones %}
+                                <a href="{{ url_importaciones }}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle del lote">
                                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                 </a>
                                 {% else %}

@@ -52,7 +52,7 @@ class CrearParadasForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields["itinerario"].queryset = (
             Itinerario.objects.filter(
-                estado=EstadoItinerario.PENDIENTE,
+                estado=EstadoItinerario.ASIGNADO,
                 paradas__isnull=True,
             )
             .select_related("transportista__usuario", "vehiculo")

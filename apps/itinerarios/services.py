@@ -29,7 +29,7 @@ def crear_itinerarios(
                 fecha=fecha,
                 transportista=transportista,
                 vehiculo=transportista.vehiculo,
-                estado=EstadoItinerario.PENDIENTE,
+                estado=EstadoItinerario.ASIGNADO,
             )
         )
     return Itinerario.objects.bulk_create(itinerarios)

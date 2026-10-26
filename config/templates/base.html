@@ -100,7 +100,7 @@
                     <i class="fas fa-users"></i>
                     <span>Empleados</span>
                 </a>
-                <a href="{% url 'flota:vehiculo_lista' %}" class="sidebar-link {% if 'vehiculo' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:vehiculo_lista' %}" class="sidebar-link {% if 'vehiculo' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-truck"></i>
                     <span>Flota</span>
                 </a>

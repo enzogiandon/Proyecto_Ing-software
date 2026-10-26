@@ -76,36 +76,27 @@
             <table class="home-tabla">
                 <thead>
                     <tr>
-                        <th class="col-100">Tipo</th>
-                        <th>Elemento</th>
+                        <th class="col-100">Nombre</th>
+                        <th>Rol</th>
                         <th class="col-140 text-end">Desde</th>
                         <th class="col-130">Estado</th>
                         <th class="col-chevron"><span class="visually-hidden">Ver detalle</span></th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for pendiente in pendientes_administracion %}
-                        {% if pendiente.tipo == "empleado" %}
-                            {% url 'core:empleado_editar' pendiente.id as url_pendiente %}
-                        {% else %}
-                            {% url 'flota:vehiculo_editar' pendiente.id as url_pendiente %}
-                        {% endif %}
+                    {% for emp in empleados %}
                         <tr class="home-tabla__fila">
-                            <td class="fw-medium">{% if pendiente.tipo == "empleado" %}Empleado{% else %}Vehículo{% endif %}</td>
-                            <td class="home-tabla__texto-secundario">{{ pendiente.elemento }}</td>
-                            <td class="text-end">{{ pendiente.desde }}</td>
+                            <td class="fw-medium">{{ emp.last_name }}, {{ emp.first_name }}</td>
+                            <td class="home-tabla__texto-secundario">{{ emp.get_rol_display|default:emp.rol }}</td>
+                            <td class="text-end">Hace 2 horas</td>
                             <td>
-                                {% if pendiente.estado == "sin_permisos" %}
-                                    <span class="estado-badge estado-badge--warning text-badge">Sin permisos</span>
-                                {% elif pendiente.estado == "no_disponible" %}
-                                    <span class="estado-badge estado-badge--error text-badge">No disponible</span>
-                                {% elif pendiente.estado == "suspendida" %}
-                                    <span class="estado-badge estado-badge--info text-badge">Suspendida</span>
+                                {% if emp.is_active %}
+                                <span class="estado-badge estado-badge--info text-badge">Activo</span>
                                 {% else %}
-                                    <span class="estado-badge estado-badge--info text-badge">{{ pendiente.estado }}</span>
+                                <span class="estado-badge estado-badge--warning text-badge">Suspendido</span>
                                 {% endif %}
                             </td>
-                            <td class="col-chevron">{% include "core/componentes/chevron_fila.html" with url=url_pendiente etiqueta="Ver detalle" only %}
+                            <td class="col-chevron">
                                 {% if url_pendiente %}
                                 <a href="{{ url_pendiente }}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle">
                                     <i class="fas fa-chevron-right" aria-hidden="true"></i>

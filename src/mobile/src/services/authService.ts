@@ -74,6 +74,7 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
         first_name: 'Carlos',
         last_name: 'Gómez',
         vehiculo: {
+          id: 1,
           patente: 'AB 123 CD',
           modelo: 'Mercedes-Benz 710',
           estado: 'disponible',

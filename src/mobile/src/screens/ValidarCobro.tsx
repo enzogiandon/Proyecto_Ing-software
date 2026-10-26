@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -101,8 +102,12 @@ export default function ValidarCobro({
         </Text>
 
         <View style={styles.logo}>
-          <Text style={styles.logoTexto}>YA🚚</Text>
-        </View>
+  <Image
+    source={require('../../assets/images/repartoya-isotipo-header.png')}
+    style={{ width: 40, height: 40 }}
+    resizeMode="contain"
+  />
+</View>
       </View>
 
       <ScrollView

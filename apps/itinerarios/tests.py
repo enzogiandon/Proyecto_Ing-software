@@ -210,6 +210,49 @@ class ItinerarioViewsTests(TestCase):
         self.assertEqual(remito_response.status_code, 200)
         self.assertContains(remito_response, "$0,00")
 
+    def test_delivery_list_shows_error_stops_before_other_statuses(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+        )
+        paradas = [
+            Parada.objects.create(
+                itinerario=itinerario,
+                comercio=self.crear_comercio("Pendiente", "20123456790"),
+                orden=1,
+                estado="pendiente",
+            ),
+            Parada.objects.create(
+                itinerario=itinerario,
+                comercio=self.crear_comercio("Error", "20123456791"),
+                orden=2,
+                estado="error",
+            ),
+            Parada.objects.create(
+                itinerario=itinerario,
+                comercio=self.crear_comercio("Finalizada", "20123456792"),
+                orden=3,
+                estado="finalizada",
+            ),
+            Parada.objects.create(
+                itinerario=itinerario,
+                comercio=self.crear_comercio("Resuelto", "20123456793"),
+                orden=4,
+                estado="resuelto",
+            ),
+        ]
+
+        response = self.client.get(reverse("itinerarios:itinerario_lista"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        positions = [
+            content.index(f">{parada.comercio.razon_social}<")
+            for parada in [paradas[1], paradas[0], paradas[2], paradas[3]]
+        ]
+        self.assertEqual(positions, sorted(positions))
+
 
 class ItinerariosModelTests(TestCase):
     def test_saved_route_details_keep_order_and_unique_commerce_constraint(self):

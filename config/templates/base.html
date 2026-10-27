@@ -1,4 +1,5 @@
 {% load static %}
+{% load auth_extras %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -39,9 +40,8 @@
             <!-- Cabecera del Sidebar con Logo -->
             <div class="sidebar-header">
                 <a href="{% url 'core:inicio' %}" class="brand-link">
-                    <div class="brand-icon-box">
-                        <i class="fas fa-truck-fast"></i>
-                    </div>
+                    <!-- Logo SVG -->
+                    {% include 'logo.html' %}
                     <div>
                         <div class="brand-text">RepartosYA</div>
                         <div class="brand-subtext">Panel administrativo</div>
@@ -60,66 +60,69 @@
                     <span>Inicio</span>
                 </a>
 
-                <!-- Sección: PLANIFICACIÓN -->
-
-                {% if user.rol == 'planificacion' %}
-                <div class="nav-section-title">Planificación</div>
-                <a href="{% url 'remitos:importacion_lista' %}" class="sidebar-link {% if 'importacion' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-file-import"></i>
-                    <span>Importaciones</span>
-                </a>
-                <a href="{% url 'remitos:remito_lista' %}" class="sidebar-link {% if 'remito' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-receipt"></i>
-                    <span>Remitos</span>
-                </a>
-                <a href="#" class="sidebar-link text-muted opacity-75">
-                    <i class="fas fa-route"></i>
-                    <span>Itinerarios</span>
-                </a>
-
-                {% endif  %}
-
-                <!-- Sección: CONCILIACIÓN -->
-
-                {% if user.rol == "conciliacion" %}
-                <div class="nav-section-title">Conciliación</div>
-                <a href="#" class="sidebar-link text-muted opacity-75">
-                    <i class="fas fa-truck-ramp-box"></i>
-                    <span>Entregas</span>
-                </a>
-                <a href="#" class="sidebar-link text-muted opacity-75">
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span>Cobranzas</span>
-                </a>
-                <a href="#" class="sidebar-link text-muted opacity-75">
-                    <i class="fas fa-credit-card"></i>
-                    <span>Pagos</span>
-                </a>
-                <a href="#" class="sidebar-link text-muted opacity-75">
-                    <i class="fas fa-cash-register"></i>
-                    <span>Arqueo de caja</span>
-                </a>
-
-                {% endif %}
-
-                <!-- Sección: ADMINISTRACIÓN -->
                 
-                {% if user.rol == "administrativo" %}
-                <div class="nav-section-title">Administración</div>
-                <a href="{% url 'core:empleado_lista' %}" class="sidebar-link {% if 'empleado' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-users"></i>
-                    <span>Empleados</span>
-                </a>
-                <a href="{% url 'core:vehiculo_lista' %}" class="sidebar-link {% if 'vehiculo' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-truck"></i>
-                    <span>Flota</span>
-                </a>
-                <a href="#" class="sidebar-link text-muted opacity-75">
-                    <i class="fas fa-shield-halved"></i>
-                    <span>Permisos</span>
-                </a>
+                {% if request.user|has_group:'Administrador' %}
+
+                    {% if user.rol == 'planificacion' %}
+                        <!-- Sección: PLANIFICACIÓN -->
+                        <div class="nav-section-title">Planificación</div>
+                        <a href="{% url 'remitos:importacion_lista' %}" class="sidebar-link {% if 'importacion' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fas fa-file-import"></i>
+                            <span>Importaciones</span>
+                        </a>
+                        <a href="{% url 'remitos:remito_lista' %}" class="sidebar-link {% if 'remito' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fas fa-receipt"></i>
+                            <span>Remitos</span>
+                        </a>
+                        <a href="#" class="sidebar-link text-muted opacity-75">
+                            <i class="fas fa-route"></i>
+                            <span>Itinerarios</span>
+                        </a>
+
+                    {% elif user.rol == "conciliacion" %}
+                        <!-- Sección: CONCILIACIÓN -->
+                        <div class="nav-section-title">Conciliación</div>
+                        <a href="#" class="sidebar-link text-muted opacity-75">
+                            <i class="fas fa-truck-ramp-box"></i>
+                            <span>Entregas</span>
+                        </a>
+                        <a href="#" class="sidebar-link text-muted opacity-75">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Cobranzas</span>
+                        </a>
+                        <a href="#" class="sidebar-link text-muted opacity-75">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Pagos</span>
+                        </a>
+                        <a href="#" class="sidebar-link text-muted opacity-75">
+                            <i class="fas fa-cash-register"></i>
+                            <span>Arqueo de caja</span>
+                        </a>
+
+                    {% elif user.rol == "administracion"%}
+                        <!-- Sección: ADMINISTRACIÓN -->
+                        <div class="nav-section-title">Administración</div>
+                        <a href="{% url 'core:empleado_lista' %}" class="sidebar-link {% if 'empleado' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fas fa-users"></i>
+                            <span>Empleados</span>
+                        </a>
+                        <a href="{% url 'core:vehiculo_lista' %}" class="sidebar-link {% if 'vehiculo' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fas fa-truck"></i>
+                            <span>Flota</span>
+                        </a>
+                        <a href="#" class="sidebar-link text-muted opacity-75">
+                            <i class="fas fa-shield-halved"></i>
+                            <span>Permisos</span>
+                        </a>
+                    {% else %}
+                        <!-- Sección: USUARIO SIN ROL ASIGNADO -->
+                        <div class="sidebar-link text-muted opacity-75">
+                            <i class="fas fa-user-slash"></i>
+                            <span>Sin rol asignado</span>
+                        </div>
+                    {% endif %}
+                {% endif %}
             </nav>
-            {% endif %}
 
             <!-- Pie del Sidebar: Datos de Usuario y Botón de Salir -->
             <div class="sidebar-footer">

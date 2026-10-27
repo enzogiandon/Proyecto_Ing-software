@@ -8,12 +8,16 @@
 {% endblock %}
 
 {% block content %}
-    {% if user.rol == 'administrativo' %}
-        {% include "core/administracion.html" %}
-    {% elif user.rol == 'conciliacion' %}
-        {% include "core/conciliacion.html" %}
-    {% elif user.rol == 'planificacion' %}
-        {% include "core/planificacion.html" %}
+    {% if request.user|has_group:'Administrador' %}
+        {% if user.rol == 'administrativo' %}
+            {% include "core/administrativo.html" %}
+        {% elif user.rol == 'conciliacion' %}
+            {% include "core/conciliacion.html" %}
+        {% elif user.rol == 'planificacion' %}
+            {% include "core/planificacion.html" %}
+        {% else %}
+            {% include "core/sin_perfil.html" %}
+        {% endif %}
     {% else %}
         {% include "core/sin_perfil.html" %}
     {% endif %}

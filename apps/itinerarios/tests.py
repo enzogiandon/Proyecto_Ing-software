@@ -7,9 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.models import Roles, Transportista, Vehiculo
-from apps.remitos.models import Comercio, EstadoRemito, Marca, Remito
-
-from .models import (
+from apps.itinerarios.models import (
     DetalleRutaGuardada,
     EstadoItinerario,
     EvidenciaParada,
@@ -17,7 +15,8 @@ from .models import (
     Parada,
     ProblemaParada,
 )
-from .services import crear_paradas
+from apps.itinerarios.services import crear_paradas
+from apps.remitos.models import Comercio, EstadoRemito, Marca, Remito
 
 
 class ItinerarioViewsTests(TestCase):

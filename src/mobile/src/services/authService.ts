@@ -29,7 +29,7 @@ function getStoredUser(): Partial<UsuarioTransportista> | null {
       if (stored) return JSON.parse(stored);
     } catch {}
   }
-  return MOCK_CHOFER_ACTUAL;
+  return null;
 }
 
 function getStoredToken(): string | null {
@@ -39,7 +39,7 @@ function getStoredToken(): string | null {
       if (stored) return stored;
     } catch {}
   }
-  return 'mock-jwt-access-token-active';
+  return null;
 }
 
 let tokenAccesoActual: string | null = getStoredToken();

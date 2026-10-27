@@ -19,6 +19,7 @@ export default function AppTabs() {
   return (
     <Tabs
       backBehavior="history"
+      initialRouteName="login"
       screenOptions={{
         // Barra inferior blanca con borde suave y colores de la marca
         tabBarStyle: {

@@ -1,8 +1,10 @@
 // src/mobile/src/services/paradaService.ts
-// Gestión de estado y consulta de parada seleccionada con soporte para contratos de Django
+// Gestión de estado y consulta de parada seleccionada con soporte dinámico y contratos de Django
 
 import { API_BASE_URL, getAuthToken } from './authService';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
+import { ParadaItem } from '../types/itinerario';
+import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
 
 // Parada seleccionada en memoria durante la navegación
 let paradaSeleccionadaActual: DetalleParada = MOCK_PARADA_SELECCIONADA;
@@ -23,6 +25,44 @@ export const actualizarEstadoCobroParada = (estado: 'pendiente' | 'validado') =>
     };
   }
 };
+
+/**
+ * Selecciona una parada específica desde el itinerario
+ * y genera el modelo DetalleParada correspondiente con su monto y datos exactos.
+ */
+export function seleccionarParadaItem(
+  paradaItem: ParadaItem,
+  totalParadas: number = 8
+): DetalleParada {
+  const detalle: DetalleParada = {
+    id: paradaItem.id,
+    orden: paradaItem.orden,
+    totalParadasRuta: totalParadas || MOCK_ITINERARIO_ASIGNADO.totalParadas,
+    estado: paradaItem.estado,
+    horaEstimada: paradaItem.horaEstimada || '10:30 hs',
+    comercio: {
+      ...paradaItem.comercio,
+      contacto: 'Responsable de recepción',
+      horarioAtencion: '08:00 a 14:00 hs',
+    },
+    montoCobranza: paradaItem.montoCobranza,
+    cantidadRemitos: paradaItem.cantidadRemitos,
+    estadoCobro: paradaItem.estado === 'finalizada' ? 'validado' : 'pendiente',
+    remitos: [
+      {
+        id: paradaItem.id * 100 + 1,
+        numero: `R-000${paradaItem.orden}-00028491`,
+        proveedor: 'Distribuidora Oficial',
+        bultos: Math.max(2, paradaItem.cantidadRemitos * 3),
+        monto: paradaItem.montoCobranza,
+        estado: paradaItem.estado === 'finalizada' ? 'entregado' : 'pendiente',
+      },
+    ],
+  };
+
+  setParadaSeleccionada(detalle);
+  return detalle;
+}
 
 /**
  * Normaliza la respuesta del backend (modelo Parada de Django)
@@ -71,14 +111,14 @@ export function normalizarParadaBackend(data: any): DetalleParada {
 
 /**
  * Obtiene la información completa de la parada seleccionada.
- * Si el servidor Django está fuera de línea o inaccesible, conmuta al mock de prueba.
+ * Si el servidor Django está fuera de línea o inaccesible, busca en el mock de paradas.
  */
 export async function obtenerDetalleParada(paradaId?: number): Promise<{
   parada: DetalleParada;
   error?: string;
 }> {
   const token = getAuthToken();
-  const idObjetivo = paradaId || paradaSeleccionadaActual.id;
+  const idObjetivo = paradaId !== undefined ? paradaId : paradaSeleccionadaActual.id;
 
   try {
     const controller = new AbortController();
@@ -104,7 +144,16 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
 
     throw new Error(`HTTP ${response.status}`);
   } catch (error: any) {
-    console.warn('Backend de Parada no disponible. Usando datos Mock de prueba:', error?.message);
+    // Si no hay backend, buscar la parada solicitada en el itinerario
+    if (paradaId !== undefined) {
+      const encontrada = MOCK_ITINERARIO_ASIGNADO.paradas.find(
+        (p) => p.id === paradaId || p.orden === paradaId
+      );
+      if (encontrada) {
+        const detalle = seleccionarParadaItem(encontrada, MOCK_ITINERARIO_ASIGNADO.totalParadas);
+        return { parada: detalle };
+      }
+    }
     return { parada: paradaSeleccionadaActual };
   }
 }

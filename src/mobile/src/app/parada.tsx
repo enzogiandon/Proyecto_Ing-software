@@ -29,20 +29,21 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
-import { obtenerDetalleParada } from '../services/paradaService';
+import { obtenerDetalleParada, getParadaSeleccionada } from '../services/paradaService';
 
 export default function ParadaScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ paradaId?: string }>();
   const insets = useSafeAreaInsets();
   const topPaddingSeguro =
     Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0) + 10;
 
-  // Estado de los datos de la parada
-  const [parada, setParada] = useState<DetalleParada>(MOCK_PARADA_SELECCIONADA);
+  // Estado de los datos de la parada (inicia con la parada seleccionada en memoria)
+  const [parada, setParada] = useState<DetalleParada>(() => getParadaSeleccionada());
   const [cargando, setCargando] = useState<boolean>(true);
 
   // Modales interactivos para las acciones secundarias
@@ -50,12 +51,13 @@ export default function ParadaScreen() {
   const [modalDocVisible, setModalDocVisible] = useState<boolean>(false);
   const [modalIncVisible, setModalIncVisible] = useState<boolean>(false);
 
-  // Cargar datos (servicio con fallback automático)
+  // Cargar datos (servicio con fallback automático y soporte para paradaId específica)
   useEffect(() => {
     let montado = true;
     const cargar = async () => {
       try {
-        const res = await obtenerDetalleParada();
+        const idNum = params.paradaId ? Number(params.paradaId) : undefined;
+        const res = await obtenerDetalleParada(idNum);
         if (montado && res.parada) {
           setParada(res.parada);
         }
@@ -69,7 +71,7 @@ export default function ParadaScreen() {
     return () => {
       montado = false;
     };
-  }, []);
+  }, [params.paradaId]);
 
   // Navegación hacia la pantalla de validación de cobro (HU-32)
   const handleRegistrarCobro = () => {

@@ -35,6 +35,7 @@ import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import { obtenerItinerarioJornada } from '../services/itinerarioService';
 import { getUsuarioActual } from '../services/authService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
+import { seleccionarParadaItem } from '../services/paradaService';
 
 export default function ItinerarioScreen() {
   const router = useRouter();
@@ -99,11 +100,19 @@ export default function ItinerarioScreen() {
 
   // Redirección hacia la pantalla de detalle de la parada (HU-67)
   const handleIrAParada = (parada: ParadaItem) => {
-    router.push('/parada' as any);
+    seleccionarParadaItem(parada, itinerario?.totalParadas || paradas.length);
+    router.push({
+      pathname: '/parada',
+      params: { paradaId: String(parada.id) },
+    } as any);
   };
 
   const handleVerDetalle = (parada: ParadaItem) => {
-    router.push('/parada' as any);
+    seleccionarParadaItem(parada, itinerario?.totalParadas || paradas.length);
+    router.push({
+      pathname: '/parada',
+      params: { paradaId: String(parada.id) },
+    } as any);
   };
 
   const handleContactarBase = () => {

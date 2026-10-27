@@ -49,6 +49,10 @@ export type CobroValidado = {
 type Props = {
   onVolver?: () => void;
   onConfirmar?: (cobro: CobroValidado) => void;
+  montoTotal?: number;
+  nombreComercio?: string;
+  direccion?: string;
+  ordenParada?: number | string;
 };
 
 function convertirImporte(valor: string): number {
@@ -65,7 +69,15 @@ function nombreMedio(medio: MedioPago): string {
   return medio === 'efectivo' ? 'Efectivo' : 'Transferencia';
 }
 
-export default function ValidarCobro({ onVolver, onConfirmar }: Props) {
+export default function ValidarCobro({
+  onVolver,
+  onConfirmar,
+  montoTotal = 148500,
+  nombreComercio = 'Almacén Don Pedro',
+  direccion = 'Av. San Martín 2450 · San Martín',
+  ordenParada = 5,
+}: Props) {
+  const TOTAL_ENTREGA = montoTotal;
   const [movimientos, setMovimientos] = useState<MovimientoPago[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [medioSeleccionado, setMedioSeleccionado] = useState<MedioPago>('efectivo');
@@ -171,11 +183,11 @@ export default function ValidarCobro({ onVolver, onConfirmar }: Props) {
       >
         <View style={styles.tarjetaParada}>
           <View style={styles.filaParada}>
-            <Text style={styles.parada}>PARADA 3</Text>
+            <Text style={styles.parada}>PARADA {ordenParada}</Text>
             <Text style={styles.importeParada}>{formatoPesos(TOTAL_ENTREGA)}</Text>
           </View>
-          <Text style={styles.nombreComercio}>Almacén Don Tito</Text>
-          <Text style={styles.direccion}>Av. Mitre 1420</Text>
+          <Text style={styles.nombreComercio}>{nombreComercio}</Text>
+          <Text style={styles.direccion}>{direccion}</Text>
         </View>
 
         <Text style={styles.instruccion}>

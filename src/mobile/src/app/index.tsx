@@ -9,8 +9,12 @@
  */
 
 import { Redirect } from 'expo-router';
+import { estaAutenticado } from '../services/authService';
 
 export default function Index() {
-  // Redirijo de una al login para que el chofer empiece autenticándose
+  // Si el chofer ya inició sesión, lo mantenemos en el itinerario; de lo contrario, al login
+  if (estaAutenticado()) {
+    return <Redirect href={'/itinerario' as any} />;
+  }
   return <Redirect href={'/login' as any} />;
 }

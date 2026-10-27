@@ -15,25 +15,28 @@ import React from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import ValidarCobro from '../screens/ValidarCobro';
+import { getParadaSeleccionada, actualizarEstadoCobroParada } from '../services/paradaService';
 
 export default function ValidarCobroPage() {
   const router = useRouter();
+  const parada = getParadaSeleccionada();
 
-  // Regreso hacia la parada seleccionada o itinerario
-  const volver = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/parada' as any);
-    }
+  // Regreso directo hacia la pantalla de detalle de la parada
+  const volverAParada = () => {
+    router.replace('/parada' as any);
   };
 
   return (
     <ValidarCobro
-      onVolver={volver}
+      onVolver={volverAParada}
+      montoTotal={parada.montoCobranza}
+      nombreComercio={parada.comercio.razonSocial}
+      direccion={`${parada.comercio.domicilio}${parada.comercio.localidad ? ` · ${parada.comercio.localidad}` : ''}`}
+      ordenParada={parada.orden}
       onConfirmar={(cobro) => {
-        // Los movimientos quedan preparados para la futura integración.
-        // Todavía no se envían ni se guardan en el backend.
+        // Marcamos el cobro como validado en la parada actual
+        actualizarEstadoCobroParada('validado');
+
         Alert.alert(
           '¡Cobro validado!',
           `El importe de $${cobro.total.toLocaleString('es-AR', {
@@ -45,7 +48,7 @@ export default function ValidarCobroPage() {
           [
             {
               text: 'Volver a la Parada',
-              onPress: volver,
+              onPress: volverAParada,
             },
           ],
           { cancelable: false }

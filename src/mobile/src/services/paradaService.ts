@@ -13,6 +13,15 @@ export const getParadaSeleccionada = (): DetalleParada => {
   return paradaSeleccionadaActual;
 };
 
+export const actualizarEstadoCobroParada = (estado: 'pendiente' | 'validado') => {
+  if (paradaSeleccionadaActual) {
+    paradaSeleccionadaActual = {
+      ...paradaSeleccionadaActual,
+      estadoCobro: estado,
+    };
+  }
+};
+
 /**
  * Obtiene la información completa de la parada seleccionada.
  * Si el servidor Django está fuera de línea o inaccesible, conmuta al mock de prueba.

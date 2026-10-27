@@ -17,12 +17,41 @@ export interface LoginResult {
   tipoError?: 'DNI' | 'CLAVE' | 'INHABILITADO' | 'SERVIDOR';
 }
 
-// Variables en memoria para la sesión activa del chofer
-let tokenAccesoActual: string | null = null;
-let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = MOCK_CHOFER_ACTUAL;
+// Variables de sesión activa del chofer (persistencia en memoria y localStorage en web)
+const STORAGE_USER_KEY = 'repartoya_transportista_session';
+const STORAGE_TOKEN_KEY = 'repartoya_transportista_token';
+
+function getStoredUser(): Partial<UsuarioTransportista> | null {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_USER_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+  }
+  return MOCK_CHOFER_ACTUAL;
+}
+
+function getStoredToken(): string | null {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const stored = window.localStorage.getItem(STORAGE_TOKEN_KEY);
+      if (stored) return stored;
+    } catch {}
+  }
+  return 'mock-jwt-access-token-active';
+}
+
+let tokenAccesoActual: string | null = getStoredToken();
+let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = getStoredUser();
 
 export const setAuthToken = (token: string | null) => {
   tokenAccesoActual = token;
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      if (token) window.localStorage.setItem(STORAGE_TOKEN_KEY, token);
+      else window.localStorage.removeItem(STORAGE_TOKEN_KEY);
+    } catch {}
+  }
 };
 
 export const getAuthToken = (): string | null => {
@@ -31,10 +60,20 @@ export const getAuthToken = (): string | null => {
 
 export const setUsuarioActual = (user: Partial<UsuarioTransportista> | null) => {
   usuarioLogueadoActual = user;
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      if (user) window.localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+      else window.localStorage.removeItem(STORAGE_USER_KEY);
+    } catch {}
+  }
 };
 
 export const getUsuarioActual = (): Partial<UsuarioTransportista> | null => {
   return usuarioLogueadoActual;
+};
+
+export const estaAutenticado = (): boolean => {
+  return !!tokenAccesoActual || !!usuarioLogueadoActual;
 };
 
 /**

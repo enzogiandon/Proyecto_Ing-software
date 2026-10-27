@@ -18,6 +18,7 @@ import { RepartoYA } from '@/constants/theme';
 export default function AppTabs() {
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{
         // Barra inferior blanca con borde suave y colores de la marca
         tabBarStyle: {

@@ -1,38 +1,162 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Detalle Remito #{{ remito.numero }}</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-    <h1>Detalle del Remito #{{ remito.numero }}</h1>
+{% block title %}Detalle Remito #{{ remito.numero }} - RepartosYA{% endblock %}
 
-    <ul>
-        <li><strong>Número:</strong> {{ remito.numero }}</li>
-        <li><strong>Marca:</strong> {{ remito.marca.nombre }}</li>
-        <li><strong>Comercio:</strong> {{ remito.comercio.razon_social }} ({{ remito.comercio.domicilio }})</li>
-        <li><strong>Monto Total:</strong> ${{ remito.monto_total }}</li>
-        <li><strong>Estado:</strong> {{ remito.get_estado_display }}</li>
-        <li><strong>Fecha de Emisión:</strong> {{ remito.fecha_emision|date:"d/m/Y" }}</li>
-        <li><strong>Fecha Pactada:</strong> {{ remito.fecha_pactada|date:"d/m/Y"|default:"No asignada" }}</li>
-        <li><strong>Fecha de Creación:</strong> {{ remito.fecha_creacion|date:"d/m/Y" }}</li>
-        <li><strong>Parada asignada:</strong> {{ remito.parada|default:"Sin asignar a itinerario" }}</li>
-    </ul>
+{% block extra_css %}
+<link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <h2>Ítems / Productos</h2>
-    <ul>
-        {% for item in remito.items.all %}
-            <li>{{ item.cantidad }}x {{ item.producto.nombre }} - ${{ item.precio_unitario }} c/u</li>
-        {% empty %}
-            <li>No hay ítems registrados en este remito.</li>
-        {% endfor %}
-    </ul>
+{% block content %}
+<div class="remitos-page">
+    <!-- Breadcrumb -->
+    <div>
+        <a href="{% url 'remitos:remito_lista' %}" class="d-inline-flex align-items-center gap-2 text-decoration-none text-c-secondary mb-2">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver a remitos</span>
+        </a>
+    </div>
 
-    <p>
-        <a href="{% url 'remitos:remito_editar' remito.pk %}">Editar este remito</a> | 
-        <a href="{% url 'core:inicio' %}">Volver al listado</a>
-    </p>
+    <!-- Encabezado con Número y Estado -->
+    <header class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+        <h1 class="text-title mb-0">Remito {{ remito.numero }}</h1>
+        <span class="remito-estado-badge remito-estado-badge--{{ remito.estado|lower }} fs-6 px-3 py-1">
+            {{ remito.get_estado_display }}
+        </span>
+    </header>
 
-</body>
-</html>
+    <!-- ==============================================
+         TARJETA 1: DATOS DEL REMITO (FIGMA)
+    =============================================== -->
+    <section class="remitos-card mb-3">
+        <h2 class="text-section mb-3">Datos del remito</h2>
+        <div class="remitos-detail-grid">
+            <!-- Columna 1 -->
+            <div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Número de remito:</span>
+                    <span class="remito-data-value fw-semibold text-c-primary">#{{ remito.numero }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Marca proveedora:</span>
+                    <span class="remito-data-value">{{ remito.marca.nombre }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Comercio destino:</span>
+                    <span class="remito-data-value">{{ remito.comercio.razon_social }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Dirección destino:</span>
+                    <span class="remito-data-value text-c-secondary">{{ remito.comercio.domicilio }}</span>
+                </div>
+            </div>
+
+            <!-- Columna 2 -->
+            <div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Monto total:</span>
+                    <span class="remito-data-value fw-bold text-success fs-6">${{ remito.monto_total|floatformat:2 }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Total de ítems:</span>
+                    <span class="remito-data-value">{{ remito.items.count }} producto(s)</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Fecha de emisión:</span>
+                    <span class="remito-data-value">{{ remito.fecha_emision|date:"d/m/Y" }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Fecha pactada:</span>
+                    <span class="remito-data-value">{{ remito.fecha_pactada|date:"d/m/Y"|default:"Sin asignar" }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==============================================
+         TARJETA 2: DATOS DE LA ENTREGA / ITINERARIO (FIGMA)
+    =============================================== -->
+    <section class="remitos-card mb-3">
+        <h2 class="text-section mb-3">Datos de la entrega</h2>
+        {% if remito.parada %}
+            <div class="remitos-detail-grid">
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Itinerario asignado:</span>
+                    <span class="remito-data-value fw-semibold">Itinerario #{{ remito.parada.itinerario_id }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Parada en ruta:</span>
+                    <span class="remito-data-value">Parada #{{ remito.parada.orden }}</span>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-3 bg-light rounded text-c-muted d-flex align-items-center gap-2">
+                <i class="fas fa-info-circle text-c-secondary"></i>
+                <span>Este remito se encuentra actualmente <strong>pendiente</strong> de asignación a un itinerario.</span>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- ==============================================
+         TARJETA 3: PRODUCTOS ASOCIADOS (FIGMA)
+    =============================================== -->
+    <section class="remitos-card mb-3 p-0 overflow-hidden">
+        <div class="p-3 border-bottom">
+            <h2 class="text-section mb-0">Productos asociados</h2>
+        </div>
+        <div class="table-responsive">
+            <table class="remitos-tabla">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Código</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Precio Unitario</th>
+                        <th class="text-end pe-4">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in remito.items.all %}
+                        <tr>
+                            <td class="fw-medium">{{ item.producto.nombre }}</td>
+                            <td><code>{{ item.producto.codigo|default:"-" }}</code></td>
+                            <td class="text-center">{{ item.cantidad }}</td>
+                            <td class="text-end">${{ item.precio_unitario|floatformat:2 }}</td>
+                            <td class="text-end pe-4 fw-semibold">${{ item.subtotal|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-c-muted">
+                                No hay productos registrados en este remito.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="bg-light">
+                        <td colspan="4" class="text-end fw-bold py-3">Total del Remito:</td>
+                        <td class="text-end pe-4 fw-bold text-success fs-6 py-3">
+                            ${{ remito.monto_total|floatformat:2 }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+
+    <!-- Botones de Acción Inferiores -->
+    <div class="remitos-form-actions">
+        <a href="{% url 'remitos:remito_lista' %}" class="btn btn-outline-secondary">
+            Volver al listado
+        </a>
+        <a href="{% url 'remitos:remito_editar' remito.pk %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="fas fa-pen"></i>
+            <span>Editar remito</span>
+        </a>
+        <a href="{% url 'remitos:remito_eliminar' remito.pk %}" class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
+            <i class="fas fa-trash"></i>
+            <span>Eliminar</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

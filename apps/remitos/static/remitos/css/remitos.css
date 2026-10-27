@@ -1,0 +1,294 @@
+/* ===================================================
+   REMITOS - ESTILOS BASADOS EN FIGMA
+   Usa los tokens de paletas.css (--color-*, --spacing-*, --radius-*)
+=================================================== */
+
+/* ---------- Contenedor principal ---------- */
+.remitos-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-20, 20px);
+}
+
+/* ---------- Encabezado de página ---------- */
+.remitos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-16, 16px);
+}
+
+.remitos-header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Barra de filtros ---------- */
+.remitos-filtros-card {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--spacing-16, 16px);
+}
+
+.remitos-filtros-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-12, 12px);
+}
+
+.remitos-filtro-item {
+  flex: 1 1 180px;
+}
+
+.remitos-filtro-btn {
+  flex: 0 0 auto;
+}
+
+/* ---------- Tarjeta de tabla ---------- */
+.remitos-card {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--spacing-20, 20px);
+}
+
+.remitos-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+/* ---------- Tabla de Remitos ---------- */
+.remitos-tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.remitos-tabla thead th {
+  padding: var(--spacing-12, 12px) var(--spacing-16, 16px);
+  background: var(--color-bg, #f3f4f6);
+  color: var(--color-text-secondary, #4b5563);
+  font: 500 13px/normal var(--font-family, sans-serif);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #d1d5db);
+}
+
+.remitos-tabla thead th:first-child {
+  border-radius: var(--radius-md, 8px) 0 0 var(--radius-md, 8px);
+}
+
+.remitos-tabla thead th:last-child {
+  border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
+}
+
+.remitos-tabla tbody td {
+  padding: var(--spacing-16, 16px);
+  border-bottom: 1px solid var(--color-border, #d1d5db);
+  color: var(--color-text, #111827);
+  font: 400 14px/normal var(--font-family, sans-serif);
+  vertical-align: middle;
+}
+
+.remitos-tabla tbody tr:hover td {
+  background: var(--color-bg, #f3f4f6);
+}
+
+.remitos-tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Acciones en la tabla */
+.remitos-acciones-btns {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8, 8px);
+}
+
+.btn-accion-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border, #d1d5db);
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text-secondary, #4b5563);
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.btn-accion-icon:hover {
+  background: var(--color-bg, #f3f4f6);
+  color: var(--color-primary, #1d4ed8);
+  border-color: var(--color-primary-tint, #dbeafe);
+}
+
+.btn-accion-icon.btn-accion-danger:hover {
+  background: var(--color-error-tint, #fee2e2);
+  color: var(--color-error, #b91c1c);
+  border-color: var(--color-error-tint, #fee2e2);
+}
+
+/* Badges de estado */
+.remito-estado-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.remito-estado-badge--pendiente {
+  background-color: var(--color-warning-tint, #fef3c7);
+  color: var(--color-warning, #b45309);
+  border: 1px solid #fde68a;
+}
+
+.remito-estado-badge--asignado {
+  background-color: var(--color-primary-tint, #dbeafe);
+  color: var(--color-primary, #1d4ed8);
+  border: 1px solid #bfdbfe;
+}
+
+.remito-estado-badge--entregado {
+  background-color: var(--color-success-tint, #dcfce7);
+  color: var(--color-success, #15803d);
+  border: 1px solid #bbf7d0;
+}
+
+.remito-estado-badge--rechazado {
+  background-color: var(--color-error-tint, #fee2e2);
+  color: var(--color-error, #b91c1c);
+  border: 1px solid #fecaca;
+}
+
+/* Estado vacío */
+.remitos-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.remitos-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-bg, #f3f4f6);
+  color: var(--color-text-muted, #6b7280);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+/* ---------- Vistas de Detalle ---------- */
+.remitos-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-20, 20px);
+}
+
+.remito-data-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-8, 8px) 0;
+  border-bottom: 1px solid var(--color-border, #d1d5db);
+}
+
+.remito-data-row:last-child {
+  border-bottom: none;
+}
+
+.remito-data-label {
+  color: var(--color-text-secondary, #4b5563);
+  font-size: 14px;
+}
+
+.remito-data-value {
+  color: var(--color-text, #111827);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* ---------- Botones de Formulario ---------- */
+.remitos-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-12, 12px);
+  margin-top: var(--spacing-20, 20px);
+}
+
+/* Responsividad */
+@media (max-width: 991px) {
+  .remitos-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .remitos-tabla {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* ---------- Autocomplete de Productos (Figma) ---------- */
+.prod-autocomplete-container {
+  position: relative;
+  width: 100%;
+}
+
+.autocomplete-sugerencias {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  z-index: 1050;
+}
+
+.autocomplete-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--color-text, #111827);
+  transition: background-color 0.12s ease;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+  background-color: var(--color-primary-tint, #eff6ff);
+  color: var(--color-primary, #1d4ed8);
+}
+
+.autocomplete-item-nuevo {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-primary, #1d4ed8);
+  background-color: #f8fafc;
+  border-top: 1px dashed var(--color-border, #d1d5db);
+}
+
+.autocomplete-item-nuevo:hover {
+  background-color: var(--color-primary-tint, #eff6ff);
+}
+

@@ -1,80 +1,200 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Listado de Remitos</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-    <h1>Listado de Remitos</h1>
+{% block title %}Remitos - RepartosYA{% endblock %}
 
-    <p>
-        <a href="{% url 'remitos:remito_crear' %}">+ Crear nuevo remito</a>
-    </p>
+{% block extra_css %}
+<link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Número</th>
-                <th>Marca</th>
-                <th>Comercio</th>
-                <th>Monto Total</th>
-                <th>Estado</th>
-                <th>Fecha Emisión</th>
-                <th>Fecha Pactada</th>
-                <th>Parada</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for remito in remitos %}
-            <tr>
-                <td>{{ remito.id }}</td>
-                <td>{{ remito.numero }}</td>
-                <td>{{ remito.marca.nombre }}</td>
-                <td>{{ remito.comercio.razon_social }}</td>
-                <td>${{ remito.monto_total }}</td>
-                <td>{{ remito.get_estado_display }}</td>
-                <td>{{ remito.eliminado }}</td>
-                <td>{{ remito.fecha_emision|date:"d/m/Y" }}</td>
-                <td>{{ remito.fecha_pactada|date:"d/m/Y"|default:"-" }}</td>
-                <td>
-                    {% if remito.parada %}
-                        Parada #{{ remito.parada.orden }} (Itin: #{{ remito.parada.itinerario_id }})
-                    {% else %}
-                        Pendiente
+{% block content %}
+<div class="remitos-page">
+    <!-- ==============================================
+         ENCABEZADO DE PÁGINA (FIGMA)
+    =============================================== -->
+    <header class="remitos-header">
+        <div class="remitos-header-info">
+            <h1 class="text-title mb-1">Remitos</h1>
+            <p class="text-body text-c-secondary mb-0">Consultá y gestioná los remitos registrados en el sistema.</p>
+        </div>
+        <div>
+            <a href="{% url 'remitos:remito_crear' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                <i class="fas fa-plus"></i>
+                <span>Agregar remito</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- ==============================================
+         FILTROS DE BÚSQUEDA (FIGMA)
+    =============================================== -->
+    <section class="remitos-filtros-card">
+        <form method="get" class="remitos-filtros-form">
+            <!-- Buscar por comercio -->
+            <div class="remitos-filtro-item" style="flex: 1.5 1 220px;">
+                <input type="text" 
+                       name="comercio" 
+                       value="{{ filtro_comercio }}" 
+                       class="form-control" 
+                       placeholder="Buscar por comercio...">
+            </div>
+
+            <!-- Filtro Estado -->
+            <div class="remitos-filtro-item">
+                <select name="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    {% for valor, etiqueta in estados %}
+                        <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro Marca -->
+            <div class="remitos-filtro-item">
+                <select name="marca" class="form-select">
+                    <option value="">Todas las marcas</option>
+                    {% for marca in marcas %}
+                        <option value="{{ marca.id }}" {% if filtro_marca == marca.id|stringformat:"s" %}selected{% endif %}>{{ marca.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro Fecha -->
+            <div class="remitos-filtro-item">
+                <input type="date" 
+                       name="fecha" 
+                       value="{{ filtro_fecha }}" 
+                       class="form-control" 
+                       title="Fecha de emisión">
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="remitos-filtro-btn d-flex gap-2">
+                <button type="submit" class="btn btn-outline-secondary d-flex align-items-center gap-1">
+                    <i class="fas fa-filter"></i>
+                    <span>Filtrar</span>
+                </button>
+                {% if filtro_comercio or filtro_estado or filtro_marca or filtro_fecha %}
+                    <a href="{% url 'remitos:remito_lista' %}" class="btn btn-light text-muted">
+                        Limpiar
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    <!-- ==============================================
+         TABLA DE REMITOS O ESTADO VACÍO (FIGMA)
+    =============================================== -->
+    <div class="remitos-card p-0 overflow-hidden">
+        {% if remitos %}
+            <div class="table-responsive">
+                <table class="remitos-tabla">
+                    <thead>
+                        <tr>
+                            <th>N° de remito</th>
+                            <th>Marca</th>
+                            <th>Comercio</th>
+                            <th>Monto Total</th>
+                            <th>Estado</th>
+                            <th>Fecha Pactada</th>
+                            <th>Parada</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for remito in remitos %}
+                            <tr>
+                                <td class="fw-medium">
+                                    <a href="{% url 'remitos:remito_detalle' remito.pk %}" class="text-decoration-none text-c-primary fw-semibold">
+                                        {{ remito.numero }}
+                                    </a>
+                                </td>
+                                <td>{{ remito.marca.nombre }}</td>
+                                <td>
+                                    <div>{{ remito.comercio.razon_social }}</div>
+                                    <small class="text-c-muted">{{ remito.comercio.domicilio|truncatechars:35 }}</small>
+                                </td>
+                                <td class="fw-semibold">
+                                    ${{ remito.monto_total|floatformat:2 }}
+                                </td>
+                                <td>
+                                    <span class="remito-estado-badge remito-estado-badge--{{ remito.estado|lower }}">
+                                        {{ remito.get_estado_display }}
+                                    </span>
+                                </td>
+                                <td>{{ remito.fecha_pactada|date:"d/m/Y"|default:"-" }}</td>
+                                <td>
+                                    {% if remito.parada %}
+                                        <span class="text-c-secondary">Parada #{{ remito.parada.orden }}</span>
+                                        <small class="d-block text-c-muted">Itin #{{ remito.parada.itinerario_id }}</small>
+                                    {% else %}
+                                        <span class="text-c-muted fst-italic">Pendiente</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="remitos-acciones-btns justify-content-end">
+                                        <a href="{% url 'remitos:remito_detalle' remito.pk %}" class="btn-accion-icon" title="Ver detalle">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'remitos:remito_editar' remito.pk %}" class="btn-accion-icon" title="Editar remito">
+                                            <i class="fas fa-pen"></i>
+                                        </a>
+                                        <a href="{% url 'remitos:remito_eliminar' remito.pk %}" class="btn-accion-icon btn-accion-danger" title="Eliminar remito">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+                <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="text-help text-c-muted">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} ({{ paginator.count }} remitos)
+                    </span>
+                    <div class="d-flex gap-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_marca %}&marca={{ filtro_marca }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}" class="btn btn-sm btn-outline-secondary">
+                                Anterior
+                            </a>
+                        {% endif %}
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_marca %}&marca={{ filtro_marca }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}" class="btn btn-sm btn-outline-secondary">
+                                Siguiente
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+        {% else %}
+            <!-- ESTADO VACÍO (FIGMA) -->
+            <div class="remitos-empty-state">
+                <div class="remitos-empty-icon">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <h3 class="text-section mb-2">No se encontraron remitos</h3>
+                <p class="text-body text-c-muted mb-4" style="max-width: 420px;">
+                    No hay remitos que coincidan con los criterios seleccionados. Probá ajustando los filtros o agregá un nuevo remito.
+                </p>
+                <div class="d-flex gap-2">
+                    {% if filtro_comercio or filtro_estado or filtro_marca or filtro_fecha %}
+                        <a href="{% url 'remitos:remito_lista' %}" class="btn btn-outline-secondary">
+                            Restablecer filtros
+                        </a>
                     {% endif %}
-                </td>
-                <td>
-                    <a href="{% url 'remitos:remito_detalle' remito.pk %}">Ver</a> | 
-                    <a href="{% url 'remitos:remito_editar' remito.pk %}">Editar</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="10">No hay remitos registrados en el sistema.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- Controles de Paginación estándar de Django -->
-    {% if is_paginated %}
-    <p>
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; Primera</a> | 
-            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a> | 
+                    <a href="{% url 'remitos:remito_crear' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Agregar remito</span>
+                    </a>
+                </div>
+            </div>
         {% endif %}
-
-        <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-
-        {% if page_obj.has_next %}
-            | <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
-            | <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
-        {% endif %}
-    </p>
-    {% endif %}
-
-</body>
-</html>
+    </div>
+</div>
+{% endblock %}

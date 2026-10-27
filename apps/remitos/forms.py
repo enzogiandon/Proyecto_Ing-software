@@ -39,18 +39,53 @@ class RemitoForm(forms.ModelForm):
 
 
 class ItemRemitoForm(forms.ModelForm):
+    producto_nombre = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            "class": "form-control item-producto-input",
+            "placeholder": "Escribí o seleccioná un producto...",
+            "autocomplete": "off",
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["producto"].required = False
+        if self.instance and self.instance.pk and getattr(self.instance, "producto", None):
+            self.fields["producto_nombre"].initial = self.instance.producto.nombre
+
     def clean_precio_unitario(self):
         precio = self.cleaned_data.get("precio_unitario")
         if precio is not None and precio <= Decimal(0):
             raise ValidationError("El precio unitario debe ser mayor a 0")
         return precio
 
+    def clean(self):
+        cleaned_data = super().clean()
+        prod = cleaned_data.get("producto")
+        prod_nombre = (self.cleaned_data.get("producto_nombre") or self.data.get(self.add_prefix("producto_nombre")) or "").strip()
+
+        if not prod and prod_nombre:
+            prod = Producto.objects.filter(nombre__iexact=prod_nombre).first()
+            if not prod:
+                prod = Producto.objects.create(nombre=prod_nombre, activo=True)
+            cleaned_data["producto"] = prod
+            self.instance.producto = prod
+            if "producto" in self._errors:
+                del self._errors["producto"]
+
+        if not prod and not prod_nombre and not self.cleaned_data.get("DELETE", False):
+            self.add_error("producto", "Debes ingresar o seleccionar un producto.")
+
+        return cleaned_data
+
     class Meta:
         model = ItemRemito
         fields = ["producto", "cantidad", "precio_unitario"]
         widgets = {
-            "cantidad": forms.NumberInput(attrs={"min": "1"}),
-            "precio_unitario": forms.NumberInput(attrs={"step": "0.01", "min": "0.00"}),
+            "producto": forms.Select(attrs={"class": "form-select item-producto-select"}),
+            "cantidad": forms.NumberInput(attrs={"min": "1", "class": "form-control item-cantidad-input"}),
+            "precio_unitario": forms.NumberInput(attrs={"step": "0.01", "min": "0.00", "class": "form-control item-precio-input"}),
         }
 
 

@@ -152,9 +152,17 @@ class Remito(models.Model):
     def __str__(self):
         return f"Remito #{self.numero} - {self.comercio.razon_social}"
 
+    @property
+    def monto_total(self):
+        return sum((item.cantidad * item.precio_unitario for item in self.items.all()), 0)
+
 
 class ItemRemito(models.Model):
     remito = models.ForeignKey(Remito, on_delete=models.CASCADE, related_name="items")
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
     cantidad = models.PositiveIntegerField(default=1)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    @property
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario

@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remitos - RepartosYA</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos del Proyecto basados en Figma -->
+    <link href="apps/core/static/core/css/paletas.css" rel="stylesheet">
+    <link href="apps/core/static/core/css/base.css" rel="stylesheet">
+    <link href="apps/remitos/static/remitos/css/remitos.css" rel="stylesheet">
+
+    <style>
+        .toast-notif {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            min-width: 320px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            animation: slideIn 0.25s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast de Notificación Dinámica -->
+    <div id="toast-container"></div>
+
+    <div class="app-wrapper">
+        <!-- ==============================================
+             BARRA LATERAL DE NAVEGACIÓN (FIGMA)
+        =============================================== -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <div class="sidebar-header">
+                <a href="preview.html" class="brand-link">
+                    <div class="brand-icon-box">
+                        <i class="fas fa-truck-fast"></i>
+                    </div>
+                    <div>
+                        <div class="brand-text">RepartosYA</div>
+                        <div class="brand-subtext">Panel administrativo</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="preview.html" class="sidebar-link">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                </a>
+
+                <div class="nav-section-title">Planificación</div>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-file-import"></i>
+                    <span>Importaciones</span>
+                </a>
+                <a href="javascript:void(0)" onclick="navegarALista()" class="sidebar-link active" id="nav-link-remitos">
+                    <i class="fas fa-receipt"></i>
+                    <span>Remitos</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-route"></i>
+                    <span>Itinerarios</span>
+                </a>
+
+                <div class="nav-section-title">Conciliación</div>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-truck-ramp-box"></i>
+                    <span>Entregas</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Cobranzas</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Pagos</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Arqueo de caja</span>
+                </a>
+
+                <div class="nav-section-title">Administración</div>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-users"></i>
+                    <span>Empleados</span>
+                </a>
+                <a href="#" class="sidebar-link text-muted opacity-75">
+                    <i class="fas fa-truck"></i>
+                    <span>Flota</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-badge">
+                    <div class="user-avatar-circle">JC</div>
+                    <div class="user-info-text">
+                        <div class="user-display-name">Joel Chica</div>
+                        <div class="user-role-label">Planificación</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-logout-clean" onclick="location.href='preview_login.html'">
+                    <i class="fas fa-arrow-right-from-bracket"></i>
+                    <span>Cerrar sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ==============================================
+             CONTENIDO PRINCIPAL DINÁMICO
+        =============================================== -->
+        <main class="app-main">
+            <div class="content-container">
+
+                <!-- ==============================================
+                     PANTALLA 1: LISTADO DE REMITOS
+                =============================================== -->
+                <div id="screen-lista" class="remitos-screen">
+                    <header class="remitos-header mb-3">
+                        <div class="remitos-header-info">
+                            <h1 class="text-title mb-1">Remitos</h1>
+                            <p class="text-body text-c-secondary mb-0">Consultá y gestioná los remitos registrados en el sistema.</p>
+                        </div>
+                        <button class="btn btn-primary d-inline-flex align-items-center gap-2" onclick="abrirCrearRemito()">
+                            <i class="fas fa-plus"></i>
+                            <span>Agregar remito</span>
+                        </button>
+                    </header>
+
+                    <!-- Filtros de búsqueda interactivos -->
+                    <section class="remitos-filtros-card mb-3">
+                        <div class="remitos-filtros-form">
+                            <div class="remitos-filtro-item" style="flex: 1.5 1 220px;">
+                                <input type="text" id="filtro-comercio" class="form-control" placeholder="Buscar por comercio..." oninput="filtrarRemitos()">
+                            </div>
+                            <div class="remitos-filtro-item">
+                                <select id="filtro-estado" class="form-select" onchange="filtrarRemitos()">
+                                    <option value="">Todos los estados</option>
+                                    <option value="pendiente">Pendiente</option>
+                                    <option value="asignado">Asignado</option>
+                                    <option value="entregado">Entregado</option>
+                                    <option value="cancelado">Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="remitos-filtro-item">
+                                <select id="filtro-marca" class="form-select" onchange="filtrarRemitos()">
+                                    <option value="">Todas las marcas</option>
+                                    <option value="Arcor">Arcor</option>
+                                    <option value="Unilever">Unilever</option>
+                                    <option value="Molinos Río de la Plata">Molinos Río de la Plata</option>
+                                    <option value="Quilmes">Quilmes</option>
+                                    <option value="Bagley">Bagley</option>
+                                    <option value="La Serenísima">La Serenísima</option>
+                                </select>
+                            </div>
+                            <div class="remitos-filtro-item">
+                                <input type="date" id="filtro-fecha" class="form-control" title="Filtrar por fecha de emisión" onchange="filtrarRemitos()">
+                            </div>
+                            <div class="remitos-filtro-btn">
+                                <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-1" onclick="limpiarFiltros()">
+                                    <i class="fas fa-rotate-left"></i>
+                                    <span>Limpiar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Tabla de Remitos -->
+                    <div id="remitos-tabla-card" class="remitos-card p-0 overflow-hidden">
+                        <div class="table-responsive">
+                            <table class="remitos-tabla">
+                                <thead>
+                                    <tr>
+                                        <th>N° de remito</th>
+                                        <th>Marca</th>
+                                        <th>Comercio</th>
+                                        <th>Monto Total</th>
+                                        <th>Estado</th>
+                                        <th>Fecha Emisión</th>
+                                        <th>Parada</th>
+                                        <th class="text-end pe-4">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="remitos-tabla-tbody">
+                                    <!-- Filas inyectadas dinámicamente con JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Estado Vacío (se muestra si no hay remitos o no coinciden con los filtros) -->
+                    <div id="remitos-empty-state-card" class="remitos-card d-none">
+                        <div class="remitos-empty-state">
+                            <div class="remitos-empty-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <h3 class="text-section mb-2">No se encontraron remitos para los criterios seleccionados</h3>
+                            <p class="text-body text-c-muted mb-4" style="max-width: 440px;">
+                                Probá ajustando los filtros o agregá un nuevo remito para comenzar la gestión de distribución.
+                            </p>
+                            <button class="btn btn-primary d-inline-flex align-items-center gap-2" onclick="abrirCrearRemito()">
+                                <i class="fas fa-plus"></i>
+                                <span>Agregar remito</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==============================================
+                     PANTALLA 2: FORMULARIO AGREGAR / EDITAR
+                =============================================== -->
+                <div id="screen-form" class="remitos-screen d-none">
+                    <div>
+                        <a href="javascript:void(0)" onclick="navegarALista()" class="d-inline-flex align-items-center gap-2 text-decoration-none text-c-secondary mb-2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Volver a remitos</span>
+                        </a>
+                    </div>
+                    <header class="mb-3">
+                        <h1 class="text-title mb-1" id="form-titulo">Agregar remito</h1>
+                        <p class="text-body text-c-secondary mb-0">Completá los datos del remito y agregá los productos correspondientes.</p>
+                    </header>
+
+                    <form id="remito-form" onsubmit="guardarRemito(event)">
+                        <!-- Tarjeta 1: Datos Principales -->
+                        <section class="remitos-card mb-4">
+                            <h2 class="text-section mb-3">Datos Principales</h2>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="text-label text-c-secondary mb-1 d-block">Número de remito *</label>
+                                    <input type="text" id="form-numero" class="form-control" required placeholder="Ej: 0001-00012355">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-label text-c-secondary mb-1 d-block">Marca *</label>
+                                    <select id="form-marca" class="form-select" required>
+                                        <option value="">Seleccionar marca...</option>
+                                        <option value="Arcor">Arcor</option>
+                                        <option value="Unilever">Unilever</option>
+                                        <option value="Molinos Río de la Plata">Molinos Río de la Plata</option>
+                                        <option value="Quilmes">Quilmes</option>
+                                        <option value="Bagley">Bagley</option>
+                                        <option value="La Serenísima">La Serenísima</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-label text-c-secondary mb-1 d-block">Comercio destino *</label>
+                                    <input type="text" id="form-comercio" class="form-control" required placeholder="Ej: Supermercado Dia %">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-label text-c-secondary mb-1 d-block">Dirección destino *</label>
+                                    <input type="text" id="form-direccion" class="form-control" required placeholder="Ej: Av. Corrientes 1234, CABA">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-label text-c-secondary mb-1 d-block">Fecha de emisión *</label>
+                                    <input type="date" id="form-fecha-emision" class="form-control" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-label text-c-secondary mb-1 d-block">Fecha pactada de entrega *</label>
+                                    <input type="date" id="form-fecha-entrega" class="form-control" required>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Tarjeta 2: Productos del remito -->
+                        <section class="remitos-card mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 class="text-section mb-0">Productos del remito</h2>
+                                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onclick="agregarFilaProducto()">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Agregar producto</span>
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="remitos-tabla">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th style="width: 140px;">Cantidad</th>
+                                            <th style="width: 180px;">Precio Unitario ($)</th>
+                                            <th style="width: 170px;">Subtotal</th>
+                                            <th style="width: 60px;" class="text-center"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="form-productos-tbody">
+                                        <!-- Filas de productos inyectadas dinámicamente -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="bg-light">
+                                            <td colspan="3" class="text-end fw-bold py-3">Total Estimado del Remito:</td>
+                                            <td colspan="2" class="fw-bold text-success fs-6 py-3" id="form-total-remito">$ 0,00</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </section>
+
+                        <div class="remitos-form-actions">
+                            <button type="button" class="btn btn-outline-secondary" onclick="navegarALista()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-check me-1"></i> Guardar remito
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ==============================================
+                     PANTALLA 3: DETALLE DE REMITO
+                =============================================== -->
+                <div id="screen-detalle" class="remitos-screen d-none">
+                    <div>
+                        <a href="javascript:void(0)" onclick="navegarALista()" class="d-inline-flex align-items-center gap-2 text-decoration-none text-c-secondary mb-2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Volver a remitos</span>
+                        </a>
+                    </div>
+                    <header class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+                        <h1 class="text-title mb-0" id="detalle-titulo">Remito #0001-00012350</h1>
+                        <span id="detalle-badge-estado" class="remito-estado-badge remito-estado-badge--pendiente fs-6 px-3 py-1">Pendiente</span>
+                    </header>
+
+                    <!-- Datos del remito -->
+                    <section class="remitos-card mb-3">
+                        <h2 class="text-section mb-3">Datos del remito</h2>
+                        <div class="remitos-detail-grid">
+                            <div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Número de remito:</span>
+                                    <span class="remito-data-value fw-semibold text-c-primary" id="detalle-dato-numero">#0001-00012350</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Marca proveedora:</span>
+                                    <span class="remito-data-value" id="detalle-dato-marca">Arcor</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Comercio destino:</span>
+                                    <span class="remito-data-value" id="detalle-dato-comercio">Supermercado Dia %</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Dirección destino:</span>
+                                    <span class="remito-data-value text-c-secondary" id="detalle-dato-direccion">Av. Corrientes 1234, CABA</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Monto total:</span>
+                                    <span class="remito-data-value fw-bold text-success fs-6" id="detalle-dato-monto">$ 2.450.000,00</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Fecha de emisión:</span>
+                                    <span class="remito-data-value" id="detalle-dato-fecha">26/10/2026</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Fecha pactada entrega:</span>
+                                    <span class="remito-data-value" id="detalle-dato-fecha-entrega">28/10/2026</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Datos de la entrega -->
+                    <section class="remitos-card mb-3">
+                        <h2 class="text-section mb-3">Datos de la entrega</h2>
+                        <div class="remitos-detail-grid">
+                            <div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Estado del reparto:</span>
+                                    <span class="remito-data-value fw-medium" id="detalle-entrega-estado">Pendiente de asignación</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Parada asignada:</span>
+                                    <span class="remito-data-value text-c-secondary" id="detalle-entrega-parada">—</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Itinerario de viaje:</span>
+                                    <span class="remito-data-value" id="detalle-entrega-itinerario">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Productos asociados -->
+                    <section class="remitos-card mb-4">
+                        <h2 class="text-section mb-3">Productos asociados</h2>
+                        <div class="table-responsive">
+                            <table class="remitos-tabla">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-end">Precio Unitario</th>
+                                        <th class="text-end pe-4">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detalle-productos-tbody">
+                                    <!-- Inyectado por JS -->
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-light">
+                                        <td colspan="3" class="text-end fw-bold py-3">Total del Remito:</td>
+                                        <td class="text-end pe-4 fw-bold text-success fs-6 py-3" id="detalle-total-monto">$ 0,00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </section>
+
+                    <div class="remitos-form-actions">
+                        <button class="btn btn-outline-secondary" onclick="navegarALista()">Volver al listado</button>
+                        <button class="btn btn-primary d-inline-flex align-items-center gap-2" id="detalle-btn-editar">
+                            <i class="fas fa-pen"></i><span>Editar remito</span>
+                        </button>
+                        <button class="btn btn-outline-danger d-inline-flex align-items-center gap-2" id="detalle-btn-eliminar">
+                            <i class="fas fa-trash"></i><span>Eliminar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==============================================
+                     PANTALLA 4: CONFIRMAR BAJA (ELIMINAR)
+                =============================================== -->
+                <div id="screen-eliminar" class="remitos-screen d-none">
+                    <div>
+                        <a href="javascript:void(0)" onclick="navegarALista()" class="d-inline-flex align-items-center gap-2 text-decoration-none text-c-secondary mb-2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Volver a remitos</span>
+                        </a>
+                    </div>
+                    <div class="d-flex justify-content-center py-4">
+                        <div class="remitos-card" style="max-width: 580px; width: 100%;">
+                            <div class="text-center mb-4">
+                                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                     style="width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-error-tint); color: var(--color-error);">
+                                    <i class="fas fa-triangle-exclamation fa-2x"></i>
+                                </div>
+                                <h2 class="text-title fs-4 mb-2">¿Eliminar este remito?</h2>
+                                <p class="text-body text-c-secondary mb-0">
+                                    Esta acción quitará el remito seleccionado del sistema. Confirmá si los datos coinciden antes de continuar.
+                                </p>
+                            </div>
+
+                            <div class="bg-light p-3 rounded mb-4 border">
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Número de Remito:</span>
+                                    <span class="remito-data-value fw-semibold" id="eliminar-dato-numero">#0001-00012350</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Marca:</span>
+                                    <span class="remito-data-value" id="eliminar-dato-marca">Arcor</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Comercio destino:</span>
+                                    <span class="remito-data-value" id="eliminar-dato-comercio">Supermercado Dia %</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Monto total:</span>
+                                    <span class="remito-data-value text-success fw-bold" id="eliminar-dato-monto">$ 2.450.000,00</span>
+                                </div>
+                                <div class="remito-data-row">
+                                    <span class="remito-data-label">Ítems asociados:</span>
+                                    <span class="remito-data-value" id="eliminar-dato-items">2 producto(s)</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-center gap-2">
+                                <button class="btn btn-outline-secondary px-4" onclick="navegarALista()">Cancelar</button>
+                                <button class="btn btn-danger px-4" id="btn-confirmar-baja" onclick="ejecutarEliminacion()">
+                                    <i class="fas fa-trash me-1"></i> Confirmar Eliminación
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ==============================================
+         LÓGICA FUNCIONAL COMPLETA (CRUD + FILTROS)
+    =============================================== -->
+    <script>
+        // Datos iniciales de remitos basados en el diseño
+        const DATOS_INICIALES = [
+            {
+                id: "1",
+                numero: "0001-00012350",
+                marca: "Arcor",
+                comercio: "Supermercado Dia %",
+                direccion: "Av. Corrientes 1234, CABA",
+                estado: "pendiente",
+                fecha_emision: "2026-10-26",
+                fecha_entrega: "2026-10-28",
+                parada: "Pendiente",
+                itinerario: "—",
+                items: [
+                    { producto: "Galletitas Chocolinas 250g", cantidad: 50, precio: 2400.00 },
+                    { producto: "Caramelos Masticables Frutales x100", cantidad: 30, precio: 1800.00 }
+                ]
+            },
+            {
+                id: "2",
+                numero: "0001-00012347",
+                marca: "Unilever",
+                comercio: "Almacén Don Mario",
+                direccion: "San Martín 450, Quilmes",
+                estado: "asignado",
+                fecha_emision: "2026-10-25",
+                fecha_entrega: "2026-10-27",
+                parada: "Parada #1",
+                itinerario: "Itin #0412",
+                items: [
+                    { producto: "Jabón Líquido Skip 3L", cantidad: 40, precio: 14500.00 },
+                    { producto: "Desodorante Dove 150ml", cantidad: 80, precio: 5006.25 }
+                ]
+            },
+            {
+                id: "3",
+                numero: "0001-00012344",
+                marca: "Molinos Río de la Plata",
+                comercio: "Kiosco Central",
+                direccion: "Belgrano 890, Morón",
+                estado: "entregado",
+                fecha_emision: "2026-10-24",
+                fecha_entrega: "2026-10-26",
+                parada: "Parada #3",
+                itinerario: "Itin #0390",
+                items: [
+                    { producto: "Fideos Matarazzo 500g", cantidad: 120, precio: 2500.00 },
+                    { producto: "Aceite Cocinero 1.5L", cantidad: 85, precio: 10000.00 }
+                ]
+            },
+            {
+                id: "4",
+                numero: "0001-00012340",
+                marca: "Quilmes",
+                comercio: "Distribuidora Central",
+                direccion: "Av. Pavón 3400, Lanús",
+                estado: "pendiente",
+                fecha_emision: "2026-10-23",
+                fecha_entrega: "2026-10-27",
+                parada: "Pendiente",
+                itinerario: "—",
+                items: [
+                    { producto: "Cerveza Quilmes Clásica 1L", cantidad: 200, precio: 2200.00 }
+                ]
+            },
+            {
+                id: "5",
+                numero: "0001-00012338",
+                marca: "Bagley",
+                comercio: "Mini Market Express",
+                direccion: "Santa Fe 3100, CABA",
+                estado: "cancelado",
+                fecha_emision: "2026-10-22",
+                fecha_entrega: "2026-10-25",
+                parada: "Cancelado",
+                itinerario: "—",
+                items: [
+                    { producto: "Galletitas Criollitas 300g", cantidad: 60, precio: 1500.00 }
+                ]
+            }
+        ];
+
+        // Estado en LocalStorage
+        const STORAGE_KEY = 'repartosya_remitos_db';
+        let remitos = cargarRemitos();
+        let remitoEnEdicionId = null;
+        let remitoAEliminarId = null;
+
+        function cargarRemitos() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if (!data) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(DATOS_INICIALES));
+                return [...DATOS_INICIALES];
+            }
+            try {
+                return JSON.parse(data);
+            } catch (e) {
+                return [...DATOS_INICIALES];
+            }
+        }
+
+        function guardarEnStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(remitos));
+        }
+
+        // Helpers de formateo
+        function calcularMontoTotal(items) {
+            if (!items || !items.length) return 0;
+            return items.reduce((acc, it) => acc + (Number(it.cantidad || 0) * Number(it.precio || 0)), 0);
+        }
+
+        function formatoMoneda(valor) {
+            return '$ ' + Number(valor || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatoFecha(fechaStr) {
+            if (!fechaStr) return '—';
+            const partes = fechaStr.split('-');
+            if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            return fechaStr;
+        }
+
+        function showScreen(name) {
+            document.querySelectorAll('.remitos-screen').forEach(el => el.classList.add('d-none'));
+            const target = document.getElementById('screen-' + name);
+            if (target) target.classList.remove('d-none');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function navegarALista() {
+            filtrarRemitos();
+            showScreen('lista');
+        }
+
+        function mostrarToast(mensaje, tipo = 'success') {
+            const container = document.getElementById('toast-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo} alert-clean toast-notif d-flex align-items-center gap-2 p-3`;
+            const icon = tipo === 'success' ? 'fa-check-circle' : (tipo === 'danger' ? 'fa-trash' : 'fa-info-circle');
+            alert.innerHTML = `
+                <i class="fas ${icon} fs-5"></i>
+                <div class="flex-grow-1">${mensaje}</div>
+                <button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>
+            `;
+            container.appendChild(alert);
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.3s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }, 3500);
+        }
+
+        // ==============================================
+        // RENDERIZADO DE TABLA Y FILTROS
+        // ==============================================
+        function filtrarRemitos() {
+            const queryComercio = (document.getElementById('filtro-comercio').value || '').toLowerCase().trim();
+            const filtroEstado = document.getElementById('filtro-estado').value;
+            const filtroMarca = document.getElementById('filtro-marca').value;
+            const filtroFecha = document.getElementById('filtro-fecha').value;
+
+            const filtrados = remitos.filter(r => {
+                if (queryComercio && !r.comercio.toLowerCase().includes(queryComercio)) return false;
+                if (filtroEstado && r.estado !== filtroEstado) return false;
+                if (filtroMarca && r.marca !== filtroMarca) return false;
+                if (filtroFecha && r.fecha_emision !== filtroFecha) return false;
+                return true;
+            });
+
+            renderizarTabla(filtrados);
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-comercio').value = '';
+            document.getElementById('filtro-estado').value = '';
+            document.getElementById('filtro-marca').value = '';
+            document.getElementById('filtro-fecha').value = '';
+            filtrarRemitos();
+        }
+
+        function renderizarTabla(lista) {
+            const tbody = document.getElementById('remitos-tabla-tbody');
+            const tablaCard = document.getElementById('remitos-tabla-card');
+            const emptyCard = document.getElementById('remitos-empty-state-card');
+
+            if (!lista.length) {
+                tablaCard.classList.add('d-none');
+                emptyCard.classList.remove('d-none');
+                return;
+            }
+
+            tablaCard.classList.remove('d-none');
+            emptyCard.classList.add('d-none');
+
+            tbody.innerHTML = lista.map(remito => {
+                const monto = calcularMontoTotal(remito.items);
+                const estadoClass = `remito-estado-badge--${remito.estado.toLowerCase()}`;
+                const estadoLabel = remito.estado.charAt(0).toUpperCase() + remito.estado.slice(1);
+                
+                return `
+                    <tr>
+                        <td class="fw-medium">
+                            <a href="javascript:void(0)" onclick="verDetalle('${remito.id}')" class="text-decoration-none text-c-primary fw-semibold">
+                                ${remito.numero}
+                            </a>
+                        </td>
+                        <td>${remito.marca}</td>
+                        <td>
+                            <div class="fw-medium">${remito.comercio}</div>
+                            <small class="text-c-muted">${remito.direccion || '—'}</small>
+                        </td>
+                        <td class="fw-semibold text-success">${formatoMoneda(monto)}</td>
+                        <td>
+                            <span class="remito-estado-badge ${estadoClass}">${estadoLabel}</span>
+                        </td>
+                        <td>${formatoFecha(remito.fecha_emision)}</td>
+                        <td>
+                            <span class="text-c-secondary">${remito.parada || 'Pendiente'}</span>
+                            ${remito.itinerario && remito.itinerario !== '—' ? `<small class="d-block text-c-muted">${remito.itinerario}</small>` : ''}
+                        </td>
+                        <td class="text-end pe-3">
+                            <div class="remitos-acciones-btns justify-content-end">
+                                <button class="btn-accion-icon" onclick="verDetalle('${remito.id}')" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-accion-icon" onclick="abrirEditarRemito('${remito.id}')" title="Editar remito">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button class="btn-accion-icon btn-accion-danger" onclick="abrirConfirmarEliminar('${remito.id}')" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==============================================
+        // FORMULARIO: CREAR Y EDITAR
+        // ==============================================
+        function abrirCrearRemito() {
+            remitoEnEdicionId = null;
+            document.getElementById('form-titulo').textContent = 'Agregar remito';
+            document.getElementById('remito-form').reset();
+            
+            // Generar número consecutivo automático
+            const siguienteNum = (remitos.length + 1).toString().padStart(8, '0');
+            document.getElementById('form-numero').value = `0001-${siguienteNum}`;
+            
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('form-fecha-emision').value = hoy;
+            document.getElementById('form-fecha-entrega').value = hoy;
+
+            // Inicializar tabla de productos con una fila vacía
+            const tbody = document.getElementById('form-productos-tbody');
+            tbody.innerHTML = '';
+            agregarFilaProducto();
+
+            showScreen('form');
+        }
+
+        function abrirEditarRemito(id) {
+            const remito = remitos.find(r => r.id === id);
+            if (!remito) return;
+
+            remitoEnEdicionId = id;
+            document.getElementById('form-titulo').textContent = `Editar remito #${remito.numero}`;
+            document.getElementById('form-numero').value = remito.numero;
+            document.getElementById('form-marca').value = remito.marca;
+            document.getElementById('form-comercio').value = remito.comercio;
+            document.getElementById('form-direccion').value = remito.direccion || '';
+            document.getElementById('form-fecha-emision').value = remito.fecha_emision;
+            document.getElementById('form-fecha-entrega').value = remito.fecha_entrega;
+
+            const tbody = document.getElementById('form-productos-tbody');
+            tbody.innerHTML = '';
+
+            if (remito.items && remito.items.length) {
+                remito.items.forEach(it => agregarFilaProducto(it.producto, it.cantidad, it.precio));
+            } else {
+                agregarFilaProducto();
+            }
+
+            recalcularSubtotales();
+            showScreen('form');
+        }
+
+        function agregarFilaProducto(nombre = '', cantidad = 1, precio = 0) {
+            const tbody = document.getElementById('form-productos-tbody');
+            const tr = document.createElement('tr');
+            tr.className = 'fila-producto';
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="form-control prod-nombre" required placeholder="Nombre del producto..." value="${nombre}">
+                </td>
+                <td>
+                    <input type="number" class="form-control prod-cantidad" min="1" required value="${cantidad}" oninput="recalcularSubtotales()">
+                </td>
+                <td>
+                    <input type="number" step="0.01" min="0" class="form-control prod-precio" required value="${precio}" oninput="recalcularSubtotales()">
+                </td>
+                <td>
+                    <span class="fw-semibold text-c-primary prod-subtotal">$ 0,00</span>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn-accion-icon btn-accion-danger" onclick="eliminarFilaProducto(this)" title="Quitar producto">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            recalcularSubtotales();
+        }
+
+        function eliminarFilaProducto(btn) {
+            const tbody = document.getElementById('form-productos-tbody');
+            if (tbody.children.length <= 1) {
+                alert('El remito debe incluir al menos un producto.');
+                return;
+            }
+            btn.closest('tr').remove();
+            recalcularSubtotales();
+        }
+
+        function recalcularSubtotales() {
+            let total = 0;
+            document.querySelectorAll('#form-productos-tbody .fila-producto').forEach(row => {
+                const cant = Number(row.querySelector('.prod-cantidad').value || 0);
+                const precio = Number(row.querySelector('.prod-precio').value || 0);
+                const sub = cant * precio;
+                row.querySelector('.prod-subtotal').textContent = formatoMoneda(sub);
+                total += sub;
+            });
+            document.getElementById('form-total-remito').textContent = formatoMoneda(total);
+        }
+
+        function guardarRemito(e) {
+            e.preventDefault();
+
+            const numero = document.getElementById('form-numero').value.trim();
+            const marca = document.getElementById('form-marca').value;
+            const comercio = document.getElementById('form-comercio').value.trim();
+            const direccion = document.getElementById('form-direccion').value.trim();
+            const fecha_emision = document.getElementById('form-fecha-emision').value;
+            const fecha_entrega = document.getElementById('form-fecha-entrega').value;
+
+            // Recolectar productos
+            const items = [];
+            document.querySelectorAll('#form-productos-tbody .fila-producto').forEach(row => {
+                const prod = row.querySelector('.prod-nombre').value.trim();
+                const cant = Number(row.querySelector('.prod-cantidad').value || 1);
+                const precio = Number(row.querySelector('.prod-precio').value || 0);
+                if (prod) {
+                    items.push({ producto: prod, cantidad: cant, precio: precio });
+                }
+            });
+
+            if (!items.length) {
+                alert('Debes agregar al menos un producto al remito.');
+                return;
+            }
+
+            if (remitoEnEdicionId) {
+                // Editar existente
+                const index = remitos.findIndex(r => r.id === remitoEnEdicionId);
+                if (index !== -1) {
+                    remitos[index] = {
+                        ...remitos[index],
+                        numero,
+                        marca,
+                        comercio,
+                        direccion,
+                        fecha_emision,
+                        fecha_entrega,
+                        items
+                    };
+                    mostrarToast(`Remito <strong>#${numero}</strong> actualizado con éxito.`);
+                }
+            } else {
+                // Crear nuevo
+                const nuevoRemito = {
+                    id: Date.now().toString(),
+                    numero,
+                    marca,
+                    comercio,
+                    direccion,
+                    estado: 'pendiente',
+                    fecha_emision,
+                    fecha_entrega,
+                    parada: 'Pendiente',
+                    itinerario: '—',
+                    items
+                };
+                remitos.unshift(nuevoRemito);
+                mostrarToast(`Remito <strong>#${numero}</strong> agregado correctamente a la lista.`);
+            }
+
+            guardarEnStorage();
+            navegarALista();
+        }
+
+        // ==============================================
+        // PANTALLA DETALLE
+        // ==============================================
+        function verDetalle(id) {
+            const remito = remitos.find(r => r.id === id);
+            if (!remito) return;
+
+            document.getElementById('detalle-titulo').textContent = `Remito ${remito.numero}`;
+            
+            const badge = document.getElementById('detalle-badge-estado');
+            badge.className = `remito-estado-badge remito-estado-badge--${remito.estado.toLowerCase()} fs-6 px-3 py-1`;
+            badge.textContent = remito.estado.charAt(0).toUpperCase() + remito.estado.slice(1);
+
+            document.getElementById('detalle-dato-numero').textContent = `#${remito.numero}`;
+            document.getElementById('detalle-dato-marca').textContent = remito.marca;
+            document.getElementById('detalle-dato-comercio').textContent = remito.comercio;
+            document.getElementById('detalle-dato-direccion').textContent = remito.direccion || '—';
+            
+            const total = calcularMontoTotal(remito.items);
+            document.getElementById('detalle-dato-monto').textContent = formatoMoneda(total);
+            document.getElementById('detalle-total-monto').textContent = formatoMoneda(total);
+            document.getElementById('detalle-dato-fecha').textContent = formatoFecha(remito.fecha_emision);
+            document.getElementById('detalle-dato-fecha-entrega').textContent = formatoFecha(remito.fecha_entrega);
+
+            document.getElementById('detalle-entrega-estado').textContent = remito.estado === 'pendiente' ? 'Pendiente de asignación' : (remito.estado === 'entregado' ? 'Entregado en destino' : 'Asignado a reparto');
+            document.getElementById('detalle-entrega-parada').textContent = remito.parada || '—';
+            document.getElementById('detalle-entrega-itinerario').textContent = remito.itinerario || '—';
+
+            // Tabla productos
+            const tbody = document.getElementById('detalle-productos-tbody');
+            tbody.innerHTML = (remito.items || []).map(it => `
+                <tr>
+                    <td class="fw-medium">${it.producto}</td>
+                    <td class="text-center">${it.cantidad}</td>
+                    <td class="text-end">${formatoMoneda(it.precio)}</td>
+                    <td class="text-end pe-4 fw-semibold">${formatoMoneda(it.cantidad * it.precio)}</td>
+                </tr>
+            `).join('');
+
+            // Configurar botones de acción
+            document.getElementById('detalle-btn-editar').onclick = () => abrirEditarRemito(id);
+            document.getElementById('detalle-btn-eliminar').onclick = () => abrirConfirmarEliminar(id);
+
+            showScreen('detalle');
+        }
+
+        // ==============================================
+        // ELIMINACIÓN DE REMITOS
+        // ==============================================
+        function abrirConfirmarEliminar(id) {
+            const remito = remitos.find(r => r.id === id);
+            if (!remito) return;
+
+            remitoAEliminarId = id;
+            document.getElementById('eliminar-dato-numero').textContent = `#${remito.numero}`;
+            document.getElementById('eliminar-dato-marca').textContent = remito.marca;
+            document.getElementById('eliminar-dato-comercio').textContent = remito.comercio;
+            document.getElementById('eliminar-dato-monto').textContent = formatoMoneda(calcularMontoTotal(remito.items));
+            document.getElementById('eliminar-dato-items').textContent = `${(remito.items || []).length} producto(s)`;
+
+            showScreen('eliminar');
+        }
+
+        function ejecutarEliminacion() {
+            if (!remitoAEliminarId) return;
+
+            const index = remitos.findIndex(r => r.id === remitoAEliminarId);
+            if (index !== -1) {
+                const num = remitos[index].numero;
+                remitos.splice(index, 1);
+                guardarEnStorage();
+                mostrarToast(`El remito <strong>#${num}</strong> fue eliminado exitosamente.`, 'danger');
+            }
+
+            remitoAEliminarId = null;
+            navegarALista();
+        }
+
+        // Inicializar tabla al cargar
+        filtrarRemitos();
+    </script>
+</body>
+</html>

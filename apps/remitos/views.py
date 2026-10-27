@@ -35,6 +35,7 @@ class CrearRemito(CreateView):
             context["items_formset"] = ItemRemitoFormSet(self.request.POST)
         else:
             context["items_formset"] = ItemRemitoFormSet()
+        context["productos_disponibles"] = Producto.objects.filter(activo=True).order_by("nombre")
         return context
 
     def form_valid(self, form):
@@ -84,6 +85,7 @@ class EditarRemito(UpdateView):
             )
         else:
             context["items_formset"] = ItemRemitoFormSet(instance=self.object)
+        context["productos_disponibles"] = Producto.objects.filter(activo=True).order_by("nombre")
         return context
 
     def form_valid(self, form):
@@ -106,6 +108,13 @@ class DetalleRemito(DetailView):
     template_name = "remitos/remito_detalle.html"
     context_object_name = "remito"
 
+    def get_queryset(self):
+        return (
+            Remito.objects.select_related("marca", "comercio", "parada")
+            .prefetch_related("items__producto")
+            .all()
+        )
+
 
 class ListaRemito(ListView):
     model = Remito
@@ -114,11 +123,36 @@ class ListaRemito(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        return (
-            Remito.objects.select_related("marca", "comercio", "parada")
-            .all()
-            .order_by("-fecha_creacion", "id")
+        queryset = (
+            Remito.objects.filter(eliminado=False)
+            .select_related("marca", "comercio", "parada")
+            .order_by("-fecha_creacion", "-id")
         )
+        comercio = self.request.GET.get("comercio")
+        estado = self.request.GET.get("estado")
+        marca = self.request.GET.get("marca")
+        fecha = self.request.GET.get("fecha")
+
+        if comercio:
+            queryset = queryset.filter(comercio__razon_social__icontains=comercio)
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        if marca:
+            queryset = queryset.filter(marca_id=marca)
+        if fecha:
+            queryset = queryset.filter(fecha_emision=fecha)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["marcas"] = Marca.objects.filter(activo=True)
+        context["estados"] = EstadoRemito.choices
+        context["filtro_comercio"] = self.request.GET.get("comercio", "")
+        context["filtro_estado"] = self.request.GET.get("estado", "")
+        context["filtro_marca"] = self.request.GET.get("marca", "")
+        context["filtro_fecha"] = self.request.GET.get("fecha", "")
+        return context
 
 
 class EliminarRemito(DeleteView):

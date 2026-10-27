@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.db.models import Prefetch
+from django.db.models import Case, IntegerField, Prefetch, When
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView
 
@@ -24,6 +24,27 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
             .prefetch_related("paradas__comercio")
             .order_by("-fecha", "id")
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["paradas_seguimiento"] = (
+            Parada.objects.select_related("comercio", "itinerario")
+            .annotate(
+                prioridad_estado=Case(
+                    When(estado="error", then=0),
+                    default=1,
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by(
+                "prioridad_estado",
+                "-itinerario__fecha",
+                "itinerario_id",
+                "orden",
+                "id",
+            )
+        )
+        return context
 
 
 class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):

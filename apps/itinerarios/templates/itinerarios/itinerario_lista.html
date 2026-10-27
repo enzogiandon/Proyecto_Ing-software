@@ -51,7 +51,8 @@
                         <ul>
                             {% for parada in itinerario.paradas.all %}
                                 <li>
-                                    Orden {{ parada.orden }}: {{ parada.comercio.razon_social }} 
+                                    Orden {{ parada.orden }}:
+                                    <a href="{% url 'itinerarios:parada_detalle' parada.pk %}">{{ parada.comercio.razon_social }}</a>
                                     ({{ parada.get_estado_display }})
                                 </li>
                             {% empty %}

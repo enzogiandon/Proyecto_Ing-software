@@ -29,7 +29,8 @@ class DetalleRutaGuardada(models.Model):
     )
     comercio = models.ForeignKey("remitos.Comercio", on_delete=models.CASCADE)
     prioridad = models.IntegerField(null=True, blank=True)
-class Meta:
+
+    class Meta:
         ordering = (models.F("prioridad").asc(nulls_last=True),)
         constraints = [
             models.UniqueConstraint(
@@ -139,4 +140,4 @@ class ProblemaParada(models.Model):
         ordering = ("-fecha",)
 
     def __str__(self):
-        return f"Problema [{self.get_tipo_display()}] - Parada #{self.parada.id} ({self.parada.comercio.nombre})"
+        return f"Problema [{self.get_tipo_display()}] - Parada #{self.parada.id} ({self.parada.comercio.razon_social})"

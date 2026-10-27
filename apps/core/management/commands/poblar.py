@@ -17,9 +17,7 @@ from apps.itinerarios.models import (
 from apps.remitos.models import (
     Comercio,
     EstadoRemito,
-    ItemRemito,
     Marca,
-    Producto,
     Remito,
 )
 
@@ -28,8 +26,8 @@ Usuario = get_user_model()
 
 class Command(BaseCommand):
     help = (
-        "Carga datos maestros (Vehículos, Usuarios Chofer, Marcas, Productos, Comercios) "
-        "y Remitos PENDIENTES con sus ItemRemito."
+        "Carga datos maestros (Vehículos, Usuarios Chofer, Marcas, Comercios) "
+        "y Remitos PENDIENTES."
     )
 
     def add_arguments(self, parser):
@@ -43,11 +41,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE("Iniciando la carga de datos de prueba..."))
 
         with transaction.atomic():
-            if options['limpiar']:
+            if options["limpiar"]:
                 self.stdout.write("Limpiando datos existentes...")
 
                 # 1. Tablas intermedias e hijas directas
-                ItemRemito.objects.all().delete()
                 DetalleRutaGuardada.objects.all().delete()
                 RutaGuardada.objects.all().delete()
 
@@ -59,8 +56,7 @@ class Command(BaseCommand):
                 # 3. Eliminar Itinerarios (libera la referencia protegida a Transportista)
                 Itinerario.objects.all().delete()
 
-                # 4. Eliminar Comercios, Productos y Marcas
-                Producto.objects.all().delete()
+                # 4. Eliminar Comercios, y Marcas
                 Comercio.objects.all().delete()
                 Marca.objects.all().delete()
 
@@ -102,19 +98,17 @@ class Command(BaseCommand):
             # ------------------------------------------------------------------
             choferes_data = [
                 {
-                    "username": "chofer1",
+                    "username": "1234567",
                     "first_name": "Lautaro",
                     "last_name": "Gómez",
-                    "dni": "39123456",
-                    "telefono": "+54 9 11 5555-4444",
+                    "telefono": "5491155554444",
                     "vehiculo": vehiculos["AF123CD"],
                 },
                 {
-                    "username": "chofer2",
+                    "username": "12345678",
                     "first_name": "Martín",
                     "last_name": "Pérez",
-                    "dni": "38987654",
-                    "telefono": "+54 9 11 5555-7777",
+                    "telefono": "5491155557777",
                     "vehiculo": vehiculos["AG456EF"],
                 },
             ]
@@ -126,7 +120,6 @@ class Command(BaseCommand):
                     defaults={
                         "first_name": c_data["first_name"],
                         "last_name": c_data["last_name"],
-                        "dni": c_data["dni"],
                         "telefono": c_data["telefono"],
                         "rol": Roles.TRANSPORTISTA,
                         "is_active": True,
@@ -177,36 +170,7 @@ class Command(BaseCommand):
                 marcas[m_data["nombre"]] = marca
 
             # ------------------------------------------------------------------
-            # 4. Productos
-            # ------------------------------------------------------------------
-            productos_catalogo = [
-                ("Cerveza Quilmes Clásica 1L", "BEB-001", marcas["Cervecería y Maltería Quilmes"], Decimal("1850.00")),
-                ("Cerveza Stella Artois 1L", "BEB-002", marcas["Cervecería y Maltería Quilmes"], Decimal("2400.00")),
-                ("Agua Mineral Eco de los Andes 1.5L", "BEB-003", marcas["Cervecería y Maltería Quilmes"], Decimal("950.00")),
-                ("Fideos Matarazzo Tallarín 500g", "ALM-101", marcas["Molinos Río de la Plata"], Decimal("1100.00")),
-                ("Aceite Cocinero Girasol 900ml", "ALM-102", marcas["Molinos Río de la Plata"], Decimal("1750.00")),
-                ("Harina Blancaflor Leudante 1kg", "ALM-103", marcas["Molinos Río de la Plata"], Decimal("1300.00")),
-                ("Galletitas Chocolinas 250g", "GAL-201", marcas["Arcor Alimentos S.A."], Decimal("850.00")),
-                ("Mermelada BC Durazno 390g", "DUL-202", marcas["Arcor Alimentos S.A."], Decimal("1650.00")),
-                ("Tomate Triturado La Campagnola 520g", "CON-203", marcas["Arcor Alimentos S.A."], Decimal("1250.00")),
-            ]
-
-            productos_db = {}
-            precios_unitarios = {}
-            for nombre, codigo, marca_obj, precio_unit in productos_catalogo:
-                prod, _ = Producto.objects.get_or_create(
-                    codigo=codigo,
-                    defaults={
-                        "nombre": nombre,
-                        "marca": marca_obj,
-                        "activo": True,
-                    },
-                )
-                productos_db[codigo] = prod
-                precios_unitarios[codigo] = precio_unit
-
-            # ------------------------------------------------------------------
-            # 5. Comercios
+            # 4. Comercios
             # ------------------------------------------------------------------
             comercios_data = [
                 {
@@ -261,10 +225,8 @@ class Command(BaseCommand):
                 comercios[c_data["cuit"]] = comercio
 
             # ------------------------------------------------------------------
-            # 6. Remitos PENDIENTES e ItemRemito
+            # 5. Remitos PENDIENTES e ItemRemito
             # ------------------------------------------------------------------
-            hoy = date.today()
-            manana = hoy + timedelta(days=1)
 
             remitos_definicion = [
                 # Supermercado Los Hermanos (2 marcas distintas para probar consolidación en una parada)
@@ -272,102 +234,89 @@ class Command(BaseCommand):
                     "numero": "R-0001-00000101",
                     "marca": marcas["Cervecería y Maltería Quilmes"],
                     "comercio": comercios["20301112223"],
-                    "items": [("BEB-001", 12), ("BEB-002", 6)],
+                    "total": Decimal("185000.00"),
                 },
                 {
                     "numero": "R-0002-00000201",
                     "marca": marcas["Molinos Río de la Plata"],
                     "comercio": comercios["20301112223"],
-                    "items": [("ALM-101", 24), ("ALM-102", 10)],
+                    "total": Decimal("142500.00"),
                 },
                 # Almacén Don Tito
                 {
                     "numero": "R-0001-00000102",
                     "marca": marcas["Cervecería y Maltería Quilmes"],
                     "comercio": comercios["20283334445"],
-                    "items": [("BEB-001", 8), ("BEB-003", 10)],
+                    "total": Decimal("86000.00"),
                 },
                 {
                     "numero": "R-0003-00000301",
                     "marca": marcas["Arcor Alimentos S.A."],
                     "comercio": comercios["20283334445"],
-                    "items": [("GAL-201", 20), ("DUL-202", 8)],
+                    "total": Decimal("53000.00"),
                 },
                 # Autoservicio El Sol
                 {
                     "numero": "R-0002-00000202",
                     "marca": marcas["Molinos Río de la Plata"],
                     "comercio": comercios["27359998881"],
-                    "items": [("ALM-102", 5), ("ALM-103", 15)],
+                    "total": Decimal("98000.00"),
                 },
                 # Kiosco Open 25
                 {
                     "numero": "R-0003-00000302",
                     "marca": marcas["Arcor Alimentos S.A."],
                     "comercio": comercios["20365554443"],
-                    "items": [("GAL-201", 30)],
+                    "total": Decimal("34500.00"),
                 },
                 # Distribuidora Mitre SRL
                 {
                     "numero": "R-0001-00000103",
                     "marca": marcas["Cervecería y Maltería Quilmes"],
                     "comercio": comercios["30718889991"],
-                    "items": [("BEB-001", 30), ("BEB-002", 20), ("BEB-003", 40)],
+                    "total": Decimal("245000.00"),
                 },
                 # Minimercado San Jorge (2 marcas distintas)
                 {
                     "numero": "R-0002-00000203",
                     "marca": marcas["Molinos Río de la Plata"],
                     "comercio": comercios["20251114449"],
-                    "items": [("ALM-101", 10), ("ALM-103", 10)],
+                    "total": Decimal("72000.00"),
                 },
                 {
                     "numero": "R-0003-00000303",
                     "marca": marcas["Arcor Alimentos S.A."],
                     "comercio": comercios["20251114449"],
-                    "items": [("CON-203", 18), ("DUL-202", 12)],
+                    "total": Decimal("46500.00"),
                 },
             ]
 
             total_remitos = 0
-            total_items = 0
 
             for r_info in remitos_definicion:
-                remito, creado = Remito.objects.get_or_create(
+                _, creado = Remito.objects.get_or_create(
                     numero=r_info["numero"],
                     defaults={
                         "marca": r_info["marca"],
                         "comercio": r_info["comercio"],
+                        "total": r_info["total"],
                         "estado": EstadoRemito.PENDIENTE,
                         "parada": None,
                         "importacion": None,
-                        "fecha_emision": hoy,
-                        "fecha_pactada": manana,
                         "eliminado": False,
                     },
                 )
                 if creado:
                     total_remitos += 1
 
-                for codigo_prod, cant in r_info["items"]:
-                    prod = productos_db[codigo_prod]
-                    precio = precios_unitarios[codigo_prod]
-
-                    _, item_creado = ItemRemito.objects.get_or_create(
-                        remito=remito,
-                        producto=prod,
-                        defaults={
-                            "cantidad": cant,
-                            "precio_unitario": precio,
-                        },
-                    )
-                    if item_creado:
-                        total_items += 1
-
-        self.stdout.write(self.style.SUCCESS("✓ Datos maestros y remitos cargados exitosamente."))
+        self.stdout.write(
+            self.style.SUCCESS("✓ Datos maestros y remitos cargados exitosamente.")
+        )
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
-        self.stdout.write(f"  • Productos: {len(productos_catalogo)}")
-        self.stdout.write(f"  • Remitos PENDIENTES: {len(remitos_definicion)} ({total_remitos} nuevos)")
-        self.stdout.write(f"  • Líneas de Ítems (ItemRemito): {total_items}")
-        self.stdout.write("  • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)")
+        self.stdout.write(
+            f"  • Remitos PENDIENTES: {len(remitos_definicion)} ({total_remitos} nuevos)"
+        )
+        self.stdout.write(
+            "  • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)"
+        )

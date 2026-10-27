@@ -12,12 +12,10 @@ from django.views.generic import (
 from .forms import (
     ComercioForm,
     ImportacionRemitosForm,
-    ItemRemitoFormSet,
     MarcaForm,
-    ProductoForm,
     RemitoForm,
 )
-from .models import Comercio, ImportacionRemitos, Marca, Producto, Remito
+from .models import Comercio, ImportacionRemitos, Marca, Remito
 
 
 class CrearRemito(CreateView):
@@ -29,6 +27,7 @@ class CrearRemito(CreateView):
     permission_required = ""
     raise_exception = True
 
+<<<<<<< HEAD
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
@@ -66,6 +65,8 @@ class CrearRemito(CreateView):
             context["items_formset"] = items_formset
             return self.render_to_response(context)
 
+=======
+>>>>>>> d48cdfd927014556ad1cd7541bed245e52f9e676
 
 class EditarRemito(UpdateView):
     form_class = RemitoForm
@@ -77,6 +78,7 @@ class EditarRemito(UpdateView):
     permission_required = ""
     raise_exception = True
 
+<<<<<<< HEAD
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
@@ -102,6 +104,8 @@ class EditarRemito(UpdateView):
             context["items_formset"] = items_formset
             return self.render_to_response(context)
 
+=======
+>>>>>>> d48cdfd927014556ad1cd7541bed245e52f9e676
 
 class DetalleRemito(DetailView):
     model = Remito
@@ -123,10 +127,17 @@ class ListaRemito(ListView):
     paginate_by = 25
 
     def get_queryset(self):
+<<<<<<< HEAD
         queryset = (
             Remito.objects.filter(eliminado=False)
             .select_related("marca", "comercio", "parada")
             .order_by("-fecha_creacion", "-id")
+=======
+        return (
+            Remito.objects.select_related("marca", "comercio", "parada")
+            .all()
+            .order_by("id")
+>>>>>>> d48cdfd927014556ad1cd7541bed245e52f9e676
         )
         comercio = self.request.GET.get("comercio")
         estado = self.request.GET.get("estado")
@@ -196,37 +207,6 @@ class EliminarImportacion(DeleteView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_eliminar.html"
     success_url = reverse_lazy("remitos:importacion_lista")
-
-
-class CrearProducto(SuccessMessageMixin, CreateView):
-    form_class = ProductoForm
-    model = Producto
-    template_name = "remitos/producto_form.html"
-    success_url = reverse_lazy("remitos:producto_lista")
-    success_message = "Producto agregado exitosamente"
-
-
-class ListaProducto(ListView):
-    model = Producto
-    template_name = "remitos/producto_lista.html"
-    context_object_name = "productos"
-    paginate_by = 25
-
-    def get_queryset(self):
-        return Producto.objects.all().order_by("-activo", "-id")
-
-
-class EditarProducto(UpdateView):
-    form_class = ProductoForm
-    model = Producto
-    template_name = "remitos/producto_form.html"
-    success_url = reverse_lazy("remitos:producto_lista")
-
-
-class EliminarProducto(DeleteView):
-    model = Producto
-    template_name = "remitos/producto_eliminar.html"
-    success_url = reverse_lazy("remitos:producto_lista")
 
 
 class CrearComercio(SuccessMessageMixin, CreateView):

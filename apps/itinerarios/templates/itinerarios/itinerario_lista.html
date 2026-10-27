@@ -5,7 +5,7 @@
     <title>Lista de Itinerarios</title>
 </head>
 <body>
-    <h1>Itinerarios</h1>
+    <h1>Seguimiento de entregas</h1>
 
     {% if messages %}
         <ul>
@@ -22,6 +22,40 @@
 
     <hr>
 
+    <h2>Entregas y paradas</h2>
+    <p>Las paradas con estado Error aparecen primero para facilitar su seguimiento.</p>
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Entrega</th>
+                <th>Estado</th>
+                <th>Comercio</th>
+                <th>Dirección</th>
+                <th>Itinerario</th>
+                <th>Fecha</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for parada in paradas_seguimiento %}
+                <tr>
+                    <td>#{{ parada.pk }}</td>
+                    <td>{{ parada.get_estado_display }}</td>
+                    <td>{{ parada.comercio.razon_social }}</td>
+                    <td>{{ parada.comercio.domicilio }}</td>
+                    <td>#{{ parada.itinerario_id }}</td>
+                    <td>{{ parada.itinerario.fecha|date:"d/m/Y" }}</td>
+                    <td><a href="{% url 'itinerarios:parada_detalle' parada.pk %}">Ver detalle</a></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">No hay entregas registradas.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Itinerarios</h2>
     <table border="1" cellpadding="6" cellspacing="0">
         <thead>
             <tr>
@@ -51,7 +85,8 @@
                         <ul>
                             {% for parada in itinerario.paradas.all %}
                                 <li>
-                                    Orden {{ parada.orden }}: {{ parada.comercio.razon_social }} 
+                                    Orden {{ parada.orden }}:
+                                    <a href="{% url 'itinerarios:parada_detalle' parada.pk %}">{{ parada.comercio.razon_social }}</a>
                                     ({{ parada.get_estado_display }})
                                 </li>
                             {% empty %}

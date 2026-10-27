@@ -51,17 +51,24 @@ body {
   color: var(--text-primary);
 }
 
-.brand-icon-box {
+/* Estilo por defecto (tamaño grande con líneas de velocidad) */
+.isotipo-ya {
   width: 38px;
-  height: 38px;
-  border-radius: var(--border-radius);
-  background-color: var(--primary-light);
-  color: var(--primary-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: 700;
+  height: auto;
+}
+
+/* Versión compacta para espacios reducidos (automática o por clase) */
+.isotipo-ya.is-compact {
+  width: 40px; /* O el tamaño que necesites */
+}
+
+.isotipo-ya.is-compact #speed-lines {
+  display: none; /* Oculta mágicamente las líneas según la regla de marca */
+}
+
+/* Cambio de colores dinámico opcional */
+.isotipo-ya .camion-caja {
+  fill: var(--color-principal, #1B365D);
 }
 
 .brand-text {

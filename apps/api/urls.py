@@ -6,14 +6,11 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from . import views
 from .views import ItinerarioViewSet, ParadaViewSet
 
 app_name = "api"
 
 router = routers.DefaultRouter()
-router.register(r"users", views.UserViewSet, basename="user")
-router.register(r"groups", views.GroupViewSet, basename="group")
 router.register(r"itinerarios", ItinerarioViewSet, basename="itinerario")
 router.register(r"paradas", ParadaViewSet, basename="parada")
 

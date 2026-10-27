@@ -5,7 +5,6 @@ import os
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
-from simple_history.models import HistoricalRecords
 
 
 class EstadoImportacion(models.TextChoices):
@@ -50,24 +49,6 @@ class Comercio(models.Model):
         return f"{self.razon_social} - {self.domicilio}"
 
 
-class Producto(models.Model):
-    nombre = models.CharField(max_length=50)
-    codigo = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    marca = models.ForeignKey(
-        Marca, on_delete=models.PROTECT, related_name="productos", null=True, blank=True
-    )
-    activo = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f"{self.nombre} - {self.codigo}" if self.codigo else self.nombre
-
-    def delete(self, using=None, keep_parents=False):
-        self.activo = False
-        self.save(update_fields=["activo"])
-
-        return (1, {self._meta.label: 1})
-
-
 def ruta_lote(instance, filename):
     _, extension = os.path.splitext(filename)
     fecha_str = timezone.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -80,7 +61,7 @@ class ImportacionRemitos(models.Model):
     archivo = models.FileField(
         upload_to=ruta_lote, help_text="Planilla enviadas por la marca"
     )
-    marca = models.ForeignKey(Marca, on_delete=models.PROTECT)
+    marca = models.ForeignKey(Marca, on_delete=models.DO_NOTHING)
     cantidad = models.PositiveIntegerField(
         default=0, help_text="Cantidad de remitos agregados por esta importacion"
     )
@@ -121,8 +102,6 @@ class Remito(models.Model):
     estado = models.CharField(
         max_length=20, choices=EstadoRemito.choices, default=EstadoRemito.PENDIENTE
     )
-    fecha_emision = models.DateField()
-    fecha_pactada = models.DateField(blank=True)
     parada = models.ForeignKey(
         "itinerarios.Parada",
         on_delete=models.SET_NULL,
@@ -133,6 +112,7 @@ class Remito(models.Model):
     comercio = models.ForeignKey(
         Comercio, on_delete=models.PROTECT, related_name="remitos"
     )
+    total = models.DecimalField(max_digits=10, decimal_places=2)
     importacion = models.ForeignKey(
         ImportacionRemitos,
         on_delete=models.SET_NULL,
@@ -140,9 +120,7 @@ class Remito(models.Model):
         null=True,
         related_name="remitos",
     )
-    fecha_creacion = models.DateField(auto_now_add=True)
     eliminado = models.BooleanField(default=False)
-    history = HistoricalRecords()
 
     def delete(self, using=None, keep_parents=False):
         self.eliminado = True
@@ -152,6 +130,7 @@ class Remito(models.Model):
     def __str__(self):
         return f"Remito #{self.numero} - {self.comercio.razon_social}"
 
+<<<<<<< HEAD
     @property
     def monto_total(self):
         return sum((item.cantidad * item.precio_unitario for item in self.items.all()), 0)
@@ -166,3 +145,5 @@ class ItemRemito(models.Model):
     @property
     def subtotal(self):
         return self.cantidad * self.precio_unitario
+=======
+>>>>>>> d48cdfd927014556ad1cd7541bed245e52f9e676

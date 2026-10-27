@@ -1,10 +1,9 @@
 from datetime import date
-from decimal import Decimal
 
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import Comercio, ImportacionRemitos, ItemRemito, Marca, Producto, Remito
+from .models import Comercio, ImportacionRemitos, Marca, Remito
 
 
 class RemitoForm(forms.ModelForm):
@@ -14,30 +13,39 @@ class RemitoForm(forms.ModelForm):
             raise ValidationError("La fecha pactada no puede ser anterior a hoy.")
         return fecha
 
+    def clean_total(self):
+        total = self.cleaned_data.get("total")
+        if total is not None and total <= 0:
+            raise ValidationError("El monto total tiene que ser mayor a cero.")
+        return total
+
+
     class Meta:
         model = Remito
         fields = [
             "numero",
             "marca",
-            "fecha_emision",
-            "fecha_pactada",
             "comercio",
+            "total",
         ]
         widgets = {
             "numero": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Nº de remito"}
             ),
             "marca": forms.Select(attrs={"class": "form-select"}),
-            "fecha_emision": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
-            "fecha_pactada": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
-            ),
             "comercio": forms.Select(attrs={"class": "form-select"}),
+            "total": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Total a cobrar por el transportista",
+                    "step": "0.01",
+                    "min": "0.01",
+                }
+            ),
         }
 
 
+<<<<<<< HEAD
 class ItemRemitoForm(forms.ModelForm):
     producto_nombre = forms.CharField(
         required=False,
@@ -125,6 +133,8 @@ ItemRemitoFormSet = forms.inlineformset_factory(
 )
 
 
+=======
+>>>>>>> d48cdfd927014556ad1cd7541bed245e52f9e676
 class ImportacionRemitosForm(forms.ModelForm):
     class Meta:
         model = ImportacionRemitos
@@ -133,33 +143,6 @@ class ImportacionRemitosForm(forms.ModelForm):
             "marca": forms.Select(attrs={"class": "form-select"}),
             "archivo": forms.FileInput(
                 attrs={"class": "form-control", "accept": ".csv, xlsx, xls"}
-            ),
-        }
-
-
-class ProductoForm(forms.ModelForm):
-    activo = forms.BooleanField(
-        label="Estado",
-        initial=True,
-        required=False,
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
-    )
-
-    class Meta:
-        model = Producto
-        fields = ["nombre", "marca", "codigo", "activo"]
-        widgets = {
-            "nombre": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Detergente Vajilla Citrus 750ml (Caja x12)",
-                }
-            ),
-            "marca": forms.Select(
-                attrs={"class": "form-select", "placeholder": "Marca"}
-            ),
-            "codigo": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "1234 1234"}
             ),
         }
 

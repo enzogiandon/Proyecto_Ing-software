@@ -36,6 +36,9 @@ class CustomLoginView(LoginView):
                 user.intentos_fallidos += 1
                 if user.intentos_fallidos >= 5:
                     user.is_active = False
+            else:
+                form.add_error(None, "La cuenta se encuentra suspendida. Contacte al administrador.")
+
             user.save(update_fields=["intentos_fallidos", "is_active"])
 
         except ObjectDoesNotExist:

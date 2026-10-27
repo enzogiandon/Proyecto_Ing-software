@@ -3,6 +3,7 @@
 
 {% block title %}Detalle Remito #{{ remito.numero }} - RepartosYA{% endblock %}
 
+<<<<<<< HEAD
 {% block extra_css %}
 <link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
 {% endblock %}
@@ -24,6 +25,24 @@
             {{ remito.get_estado_display }}
         </span>
     </header>
+=======
+    <ul>
+        <li><strong>Número:</strong> {{ remito.numero }}</li>
+        <li><strong>Marca:</strong> {{ remito.marca.nombre }}</li>
+        <li><strong>Comercio:</strong> {{ remito.comercio.razon_social }} ({{ remito.comercio.domicilio }})</li>
+        <li><strong>Monto Total:</strong> ${{ remito.total }}</li>
+        <li><strong>Estado:</strong> {{ remito.get_estado_display }}</li>
+        <li><strong>Parada asignada:</strong> {{ remito.parada|default:"Sin asignar a itinerario" }}</li>
+    </ul>
+
+    <p>
+        <a href="{% url 'remitos:remito_editar' remito.pk %}">Editar este remito</a> |
+        {% if remito.parada_id %}
+            <a href="{% url 'itinerarios:parada_detalle' remito.parada_id %}">Volver a la entrega</a> |
+        {% endif %}
+        <a href="{% url 'remitos:remito_lista' %}">Volver al listado</a>
+    </p>
+>>>>>>> d48cdfd927014556ad1cd7541bed245e52f9e676
 
     <!-- ==============================================
          TARJETA 1: DATOS DEL REMITO (FIGMA)

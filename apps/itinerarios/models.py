@@ -6,7 +6,6 @@ from django.db import models
 class EstadoItinerario(models.TextChoices):
     PENDIENTE = "pendiente", "Pendiente"
     ASIGNADO = "asignado", "Asignado"
-    EN_RUTA = "en_ruta", "En ruta"
     FINALIZADO = "finalizado", "Finalizado"
 
 
@@ -14,12 +13,18 @@ class EstadoParada(models.TextChoices):
     PENDIENTE = "pendiente", "Pendiente"
     FINALIZADA = "finalizada", "Finalizada"
     ERROR = "error", "Error"
+    RESUELTO = "resuelto", "Resuelto"
 
 
 class TipoProblema(models.TextChoices):
-    MERCADERIA_DANADA = "mercaderia_danada", "Mercadería dañada o faltante"
-    RECHAZO_PARCIAL = "rechazo_parcial", "Rechazo parcial"
-    RECHAZO_TOTAL = "rechazo_total", "Rechazo total"
+    LOCAL_CERRADO = "local_cerrado", "Local cerrado"
+    CLIENTE_AUSENTE = "cliente_ausente", "Cliente ausente"
+    CLIENTE_RECHAZA_PEDIDO = "cliente_rechaza_pedido", "Cliente rechaza el pedido"
+    DIRECCION_INCORRECTA  = "direccion_incorrecta", "Dirección incorrecta"
+    PROBLEMA_PAGO = "problema_pago", "Problemas con el pago"
+    MERCADERIA_DANADA = "mercaderia_danada", "Mercadería dañada"
+    INACCESIBLE = "inaccesible", "Inaccesible"
+    PROBLEMA_VEHICULO = "problema_vehiculo", "Problemas con el vehículo"
     OTRO = "otro", "Otro problema"
 
 
@@ -110,9 +115,7 @@ class EvidenciaParada(models.Model):
         Parada, on_delete=models.CASCADE, related_name="evidencias"
     )
     archivo = models.ImageField(upload_to="remitos_firmados/")
-    fecha = models.DateTimeField(
-        auto_now_add=True, help_text="Fecha en la que se subio la imagen"
-    )
+    fecha = models.DateTimeField( auto_now_add=True)
 
     class Meta:
         verbose_name = "Evidencia de entrega"
@@ -129,22 +132,11 @@ class ProblemaParada(models.Model):
         related_name="problemas",
         help_text="Parada donde ocurrio el problema",
     )
-    remito = models.ForeignKey(
-        "remitos.Remito",
-        on_delete=models.PROTECT,
-        blank=True,
-        null=True,
-        related_name="problemas",
-    )
     tipo = models.CharField(
         max_length=30, choices=TipoProblema.choices, default=TipoProblema.OTRO
     )
-    imagen = models.ImageField(
-        upload_to="problemas_parada/",
-        blank=True,
-        null=True,
-        help_text="Foto de la mercaderia dañada",
-    )
+    descripcion = models.CharField(max_length=255, blank=True, null=True)
+    impide_entrega = models.BooleanField(default=False)
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -153,4 +145,4 @@ class ProblemaParada(models.Model):
         ordering = ("-fecha",)
 
     def __str__(self):
-        return f"Problema [{self.get_tipo_display()}] - Parada #{self.parada.id} ({self.parada.comercio.nombre})"
+        return f"Problema [{self.get_tipo_display()}] - Parada #{self.parada.id} ({self.parada.comercio.razon_social})"

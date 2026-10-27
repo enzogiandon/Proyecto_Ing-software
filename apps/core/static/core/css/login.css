@@ -33,18 +33,23 @@ html, body {
     color: #FFFFFF;
 }
 
-.login-brand-box {
-    width: 74px;
-    height: 74px;
-    background-color: #FFFFFF;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.3rem;
-    color: var(--primary-color, #1D64F2);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    margin-bottom: 1.5rem;
+.isotipo-ya {
+  width: 300px;
+  height: auto;
+}
+
+/* Versión compacta para espacios reducidos (automática o por clase) */
+.isotipo-ya.is-compact {
+  width: 40px; /* O el tamaño que necesites */
+}
+
+.isotipo-ya.is-compact #speed-lines {
+  display: none; /* Oculta mágicamente las líneas según la regla de marca */
+}
+
+/* Cambio de colores dinámico opcional */
+.isotipo-ya .camion-caja {
+  fill: var(--color-principal, #1B365D);
 }
 
 .login-brand-title {

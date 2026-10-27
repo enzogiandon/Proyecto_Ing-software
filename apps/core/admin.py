@@ -9,7 +9,6 @@ class UsuarioAdmin(UserAdmin):
     list_display = (
         "username",
         "email",
-        "dni",
         "telefono",
         "intentos_fallidos",
         "is_staff",
@@ -19,8 +18,7 @@ class UsuarioAdmin(UserAdmin):
     # Filtros laterales
     list_filter = ("is_staff", "is_superuser", "is_active", "groups")
 
-    # Búsqueda por texto (muy útil buscar por DNI o username)
-    search_fields = ("username", "dni", "email", "first_name", "last_name")
+    search_fields = ("username", "email", "first_name", "last_name")
     readonly_fields = ("last_login", "date_joined", "intentos_fallidos")
     ordering = ("username",)
 
@@ -32,7 +30,6 @@ class UsuarioAdmin(UserAdmin):
                 "fields": (
                     "first_name",
                     "last_name",
-                    "dni",
                     "telefono",
                     "email",
                     "intentos_fallidos",
@@ -61,7 +58,6 @@ class TransportistaAdmin(admin.ModelAdmin):
       "usuario__username",
       "usuario__first_name",
       "usuario__last_name",
-      "usuario__dni",
   )
 
 @admin.register(Vehiculo)

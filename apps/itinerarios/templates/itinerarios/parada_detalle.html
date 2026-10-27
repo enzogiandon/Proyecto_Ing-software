@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de entrega #{{ parada.pk }}</title>
+</head>
+<body>
+    <h1>Detalle de entrega #{{ parada.pk }}</h1>
+
+    <h2>Información de la entrega</h2>
+    <ul>
+        <li><strong>Estado:</strong> {{ parada.get_estado_display }}</li>
+        <li><strong>Orden:</strong> {{ parada.orden }}</li>
+        <li><strong>Comercio:</strong> {{ parada.comercio.razon_social }}</li>
+        <li><strong>Dirección:</strong> {{ parada.comercio.domicilio }}</li>
+        <li><strong>Itinerario:</strong> #{{ parada.itinerario.pk }}</li>
+        <li><strong>Fecha:</strong> {{ parada.itinerario.fecha|date:"d/m/Y" }}</li>
+        <li><strong>Transportista:</strong>
+            {% if parada.itinerario.transportista %}
+                {{ parada.itinerario.transportista.usuario.get_full_name|default:parada.itinerario.transportista.usuario.username }}
+            {% else %}
+                Sin asignar
+            {% endif %}
+        </li>
+        <li><strong>Vehículo:</strong> {{ parada.itinerario.vehiculo.patente|default:"-" }}</li>
+        <li><strong>Fecha y hora de entrega:</strong> {{ parada.hora_entrega|date:"d/m/Y H:i"|default:"Sin registrar" }}</li>
+    </ul>
+
+    <h2>Remitos asociados</h2>
+    <ul>
+        {% for remito in parada.remitos_vigentes %}
+            <li>
+                <a href="{% url 'remitos:remito_detalle' remito.pk %}">Remito #{{ remito.numero }}</a>
+                — {{ remito.marca.nombre }} — {{ remito.get_estado_display }} — ${{ remito.total }}
+            </li>
+        {% empty %}
+            <li>No hay remitos asociados a esta entrega.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Evidencias</h2>
+    <ul>
+        {% for evidencia in parada.evidencias.all %}
+            <li>
+                <a href="{{ evidencia.archivo.url }}">Ver evidencia #{{ evidencia.pk }}</a>
+                — {{ evidencia.fecha|date:"d/m/Y H:i" }}
+            </li>
+        {% empty %}
+            <li>No hay evidencias registradas.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Contingencias</h2>
+    <ul>
+        {% for problema in parada.problemas.all %}
+            <li>
+                <strong>{{ problema.get_tipo_display }}</strong>
+                {% if problema.descripcion %}— {{ problema.descripcion }}{% endif %}
+                — {% if problema.impide_entrega %}Impide la entrega{% else %}No impide la entrega{% endif %}
+                — {{ problema.fecha|date:"d/m/Y H:i" }}
+            </li>
+        {% empty %}
+            <li>No hay contingencias registradas.</li>
+        {% endfor %}
+    </ul>
+
+    <p><a href="{% url 'itinerarios:itinerario_lista' %}">Volver a entregas</a></p>
+</body>
+</html>

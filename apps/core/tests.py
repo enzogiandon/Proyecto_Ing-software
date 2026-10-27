@@ -1,11 +1,30 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.contrib.messages import get_messages
+from django.template import Context, Template
 from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.forms import EmpleadoCreateForm
 from apps.core.models import EstadoVehiculo, Roles, Transportista, Vehiculo
+
+
+class GroupTemplateFilterTests(TestCase):
+    def test_has_group_filter_checks_membership_and_anonymous_user(self):
+        user = get_user_model().objects.create_user(
+            username="99999999",
+            password="Secure-Password-42!",
+            rol=Roles.ADMINISTRATIVO,
+        )
+        group = Group.objects.create(name="Administrador")
+        template = Template(
+            "{% load auth_extras %}{{ user|has_group:'Administrador' }}"
+        )
+
+        self.assertEqual(template.render(Context({"user": user})), "False")
+        user.groups.add(group)
+        self.assertEqual(template.render(Context({"user": user})), "True")
+        self.assertEqual(template.render(Context({"user": None})), "False")
 
 
 class EmpleadoViewsTests(TestCase):

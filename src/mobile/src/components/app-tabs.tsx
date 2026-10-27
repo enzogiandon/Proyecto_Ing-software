@@ -87,6 +87,27 @@ export default function AppTabs() {
           tabBarStyle: { display: 'none' },
         }}
       />
+
+
+{/* Formulario de inconvenientes: oculto de la barra inferior */}
+<Tabs.Screen
+  name="registrar-inconveniente"
+  options={{
+    href: null,
+    tabBarStyle: { display: 'none' },
+  }}
+/>
+
+{/* Confirmación del inconveniente: oculta de la barra inferior */}
+<Tabs.Screen
+  name="inconveniente-registrado"
+  options={{
+    href: null,
+    tabBarStyle: { display: 'none' },
+  }}
+/>
+
+
     </Tabs>
   );
 }

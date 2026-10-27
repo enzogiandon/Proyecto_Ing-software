@@ -6,7 +6,6 @@ from django.db import models
 class EstadoItinerario(models.TextChoices):
     PENDIENTE = "pendiente", "Pendiente"
     ASIGNADO = "asignado", "Asignado"
-    EN_RUTA = "en_ruta", "En ruta"
     FINALIZADO = "finalizado", "Finalizado"
 
 
@@ -14,6 +13,7 @@ class EstadoParada(models.TextChoices):
     PENDIENTE = "pendiente", "Pendiente"
     FINALIZADA = "finalizada", "Finalizada"
     ERROR = "error", "Error"
+    RESUELTO = "resuelto", "Resuelto"
 
 
 class TipoProblema(models.TextChoices):
@@ -129,6 +129,7 @@ class ProblemaParada(models.Model):
     tipo = models.CharField(
         max_length=30, choices=TipoProblema.choices, default=TipoProblema.OTRO
     )
+    descripcion = models.CharField(max_length=255, blank=True, null=True)
     impide_entrega = models.BooleanField(default=False)
     fecha = models.DateTimeField(auto_now_add=True)
 

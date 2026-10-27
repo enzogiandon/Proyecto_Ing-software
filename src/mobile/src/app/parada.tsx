@@ -295,7 +295,7 @@ export default function ParadaScreen() {
           {/* 4. Botón: Registrar Inconveniente */}
           <TouchableOpacity
             style={[styles.botonSecundario, styles.botonInconveniente]}
-            onPress={() => setModalIncVisible(true)}
+            onPress={() => router.push('/registrar-inconveniente' as any)}
             activeOpacity={0.8}
           >
             <Text style={styles.iconoBotonSecundario}>⚠️</Text>

@@ -1,12 +1,12 @@
 # apps/core/management/commands/poblar_db.py
 
-from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
+from apps.cobranza.models import Cobranza, DetallePago
 from apps.core.models import EstadoVehiculo, Roles, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
@@ -44,25 +44,29 @@ class Command(BaseCommand):
             if options["limpiar"]:
                 self.stdout.write("Limpiando datos existentes...")
 
-                # 1. Tablas intermedias e hijas directas
+                # 1. Pagos y Cobranzas (evita ProtectedError en Cobranza.parada)
+                DetallePago.objects.all().delete()
+                Cobranza.objects.all().delete()
+
+                # 2. Tablas intermedias e hijas de rutas
                 DetalleRutaGuardada.objects.all().delete()
                 RutaGuardada.objects.all().delete()
 
-                # 2. Desvincular o eliminar Remitos y Paradas
-                # (Remito tiene SET_NULL con Parada, pero se limpian ambos)
+                # 3. Remitos y Paradas
                 Remito.objects.all().delete()
                 Parada.objects.all().delete()
 
-                # 3. Eliminar Itinerarios (libera la referencia protegida a Transportista)
+                # 4. Itinerarios (libera la referencia protegida a Transportista)
                 Itinerario.objects.all().delete()
 
-                # 4. Eliminar Comercios, y Marcas
+                # 5. Comercios y Marcas
                 Comercio.objects.all().delete()
                 Marca.objects.all().delete()
 
-                # 5. Ahora sí: eliminar Transportistas y Vehículos sin ProtectedError
+                # 6. Perfiles y Vehículos
                 Transportista.objects.all().delete()
                 Vehiculo.objects.all().delete()
+
             # ------------------------------------------------------------------
             # 1. Vehículos
             # ------------------------------------------------------------------
@@ -225,9 +229,8 @@ class Command(BaseCommand):
                 comercios[c_data["cuit"]] = comercio
 
             # ------------------------------------------------------------------
-            # 5. Remitos PENDIENTES e ItemRemito
+            # 5. Remitos PENDIENTES
             # ------------------------------------------------------------------
-
             remitos_definicion = [
                 # Supermercado Los Hermanos (2 marcas distintas para probar consolidación en una parada)
                 {

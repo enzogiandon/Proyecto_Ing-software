@@ -6,7 +6,13 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 from apps.cobranza.models import MedioPago
-from apps.itinerarios.models import Parada, RutaGuardada
+from apps.itinerarios.models import (
+    EvidenciaParada,
+    Parada,
+    ProblemaParada,
+    RutaGuardada,
+    TipoProblema,
+)
 from apps.remitos.models import Comercio, Remito
 
 User = get_user_model()
@@ -31,18 +37,6 @@ def calcular_monto_recaudar(parada) -> str:
     # 3. Saldo pendiente a cobrar (no menor a 0)
     saldo_pendiente = max(Decimal("0.00"), total_remitos - total_pagado)
     return str(round(saldo_pendiente, 2))
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["username", "email", "groups"]
-
-
-class GroupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Group
-        fields = ["url", "name"]
 
 
 class ComercioSerializer(serializers.ModelSerializer):
@@ -111,3 +105,54 @@ class RegistrarPagoInputSerializer(serializers.Serializer):
         decimal_places=2,
         min_value=Decimal("0.01"),
     )
+
+
+class RegistrarProblemaInputSerializer(serializers.Serializer):
+    tipo = serializers.ChoiceField(
+        choices=TipoProblema.choices,
+        default=TipoProblema.OTRO,
+    )
+    descripcion = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        default="",
+    )
+    impide_entrega = serializers.BooleanField(default=False)
+
+    def validate(self, attrs):
+        tipo = attrs.get("tipo")
+        descripcion = (attrs.get("descripcion") or "").strip()
+
+        # Si el tipo es 'otro', la descripción es obligatoria
+        if tipo == TipoProblema.OTRO and not descripcion:
+            raise serializers.ValidationError(
+                {"descripcion": "Debe proporcionar una descripción cuando el tipo de problema es 'Otro'."}
+            )
+
+        attrs["descripcion"] = descripcion
+        return attrs
+
+
+class ProblemaParadaSerializer(serializers.ModelSerializer):
+    tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
+
+    class Meta:
+        model = ProblemaParada
+        fields = [
+            "id",
+            "parada",
+            "tipo",
+            "tipo_display",
+            "descripcion",
+            "impide_entrega",
+            "fecha",
+        ]
+        read_only_fields = ["id", "parada", "fecha"]
+
+class EvidenciaParadaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EvidenciaParada
+        fields = ["id", "parada", "archivo", "fecha"]
+        read_only_fields = ["id", "parada", "fecha"]

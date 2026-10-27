@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from rest_framework import status, viewsets
+from rest_framework import parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -8,23 +8,30 @@ from rest_framework.response import Response
 
 from apps.api.serializers import (
     DetalleParadaSerializer,
+    EvidenciaParadaSerializer,
     GuardarRutaSerializer,
     ListaParadaSerializer,
+    ProblemaParadaSerializer,
+    RegistrarPagoInputSerializer,
+    RegistrarProblemaInputSerializer,
     RutaGuardadaSerializer,
 )
 from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
     EstadoItinerario,
+    EstadoParada,
+    EvidenciaParada,
     Itinerario,
     Parada,
+    ProblemaParada,
     RutaGuardada,
 )
 from apps.itinerarios.services import ordenar_itinerario_segun_ruta
+from apps.remitos.models import EstadoRemito
 
 from .serializers import (
     CrearRutaGuardadaSerializer,
-    RegistrarPagoInputSerializer,
 )
 
 User = get_user_model()
@@ -57,7 +64,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
         itinerario = Itinerario.objects.filter(
             transportista=user.perfil_transportista,
-            estado__in=[EstadoItinerario.ASIGNADO, EstadoItinerario.EN_RUTA],
+            estado__in=[EstadoItinerario.ASIGNADO],
         ).first()
 
         if not itinerario:
@@ -245,7 +252,9 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class ParadaViewSet(viewsets.ModelViewSet):
-    queryset = Parada.objects.select_related("comercio", "cobranza").prefetch_related("remitos")
+    queryset = Parada.objects.select_related("comercio", "cobranza").prefetch_related(
+        "remitos"
+    )
     serializer_class = DetalleParadaSerializer
     permission_classes = [IsAuthenticated]
 
@@ -260,9 +269,12 @@ class ParadaViewSet(viewsets.ModelViewSet):
         ]
         """
         parada = self.get_object()
+        remitos = parada.remitos
 
         if not isinstance(request.data, list) or len(request.data) == 0:
-            raise ValidationError("Se espera una lista con al menos un detalle de pago.")
+            raise ValidationError(
+                "Se espera una lista con al menos un detalle de pago."
+            )
 
         serializer = RegistrarPagoInputSerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
@@ -270,7 +282,7 @@ class ParadaViewSet(viewsets.ModelViewSet):
         pagos_validados = serializer.validated_data
 
         with transaction.atomic():
-            cobranza, _= Cobranza.objects.get_or_create(
+            cobranza, _ = Cobranza.objects.get_or_create(
                 parada=parada,
                 defaults={"estado": EstadoCobranza.REGISTRADO},
             )
@@ -286,11 +298,116 @@ class ParadaViewSet(viewsets.ModelViewSet):
 
             DetallePago.objects.bulk_create(detalles_a_crear)
 
+            parada.remitos.filter(eliminado=False).update(estado=EstadoRemito.ENTREGADO)
+
+            parada.estado = EstadoParada.FINALIZADA
+            parada.save(update_fields=["estado"])
+
+            # 4. Validar si era la última parada pendiente del itinerario
+            itinerario = parada.itinerario
+            quedan_paradas_pendientes = (
+                itinerario.paradas.exclude(id=parada.id)
+                .exclude(estado=EstadoParada.FINALIZADA)
+                .exists()
+            )
+
+            itinerario_finalizado = False
+            if not quedan_paradas_pendientes:
+                itinerario.estado = EstadoItinerario.FINALIZADO
+                itinerario.save(update_fields=["estado"])
+                itinerario_finalizado = True
+
         return Response(
             {
                 "mensaje": "Cobranza y pagos registrados correctamente.",
                 "cobranza_id": cobranza.id,
                 "pagos_registrados": len(detalles_a_crear),
+                "parada_estado": parada.estado,
+                "itinerario_finalizado": itinerario_finalizado,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["post"], url_path="reportar-problema")
+    def reportar_problema(self, request, pk=None):
+        parada = self.get_object()
+
+        serializer = RegistrarProblemaInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        tipo = serializer.validated_data["tipo"]
+        descripcion = serializer.validated_data.get("descripcion", "")
+        impide_entrega = serializer.validated_data["impide_entrega"]
+
+        with transaction.atomic():
+            problema = ProblemaParada.objects.create(
+                parada=parada,
+                tipo=tipo,
+                descripcion=descripcion,
+                impide_entrega=impide_entrega,
+            )
+
+            # Si impide la entrega, la parada pasa a estado ERROR
+            if impide_entrega:
+                parada.estado = EstadoParada.ERROR
+                parada.save(update_fields=["estado"])
+
+            # Validar si el itinerario queda completamente finalizado
+            itinerario = parada.itinerario
+            quedan_pendientes = (
+                itinerario.paradas.exclude(id=parada.id)
+                .filter(estado=EstadoParada.PENDIENTE)
+                .exists()
+            )
+
+            itinerario_finalizado = False
+            if not quedan_pendientes and parada.estado != EstadoParada.PENDIENTE:
+                itinerario.estado = EstadoItinerario.FINALIZADO
+                itinerario.save(update_fields=["estado"])
+                itinerario_finalizado = True
+
+        return Response(
+            {
+                "mensaje": "Problema registrado correctamente.",
+                "problema": ProblemaParadaSerializer(problema).data,
+                "parada_estado": parada.estado,
+                "itinerario_finalizado": itinerario_finalizado,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="subir-evidencia",
+        parser_classes=[parsers.MultiPartParser, parsers.FormParser],
+    )
+    def subir_evidencia(self, request, pk=None):
+        """
+        POST /api/paradas/{id}/subir-evidencia/
+        multipart/form-data:
+          archivo: <archivo binario>
+        """
+        parada = self.get_object()
+
+        if "archivo" not in request.FILES:
+            raise ValidationError(
+                {
+                    "archivo": "No se envió ningún archivo de imagen en el campo 'archivo'."
+                }
+            )
+
+        archivo = request.FILES["archivo"]
+        evidencia = EvidenciaParada.objects.create(
+            parada=parada,
+            archivo=archivo,
+        )
+
+        serializer = EvidenciaParadaSerializer(evidencia, context={"request": request})
+        return Response(
+            {
+                "mensaje": "Evidencia subida correctamente.",
+                "evidencia": serializer.data,
             },
             status=status.HTTP_201_CREATED,
         )

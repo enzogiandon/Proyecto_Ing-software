@@ -42,8 +42,9 @@ function getStoredToken(): string | null {
   return null;
 }
 
-let tokenAccesoActual: string | null = getStoredToken();
-let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = getStoredUser();
+let tokenAccesoActual: string | null = null;
+let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = null;
+let sesionActiva = false;
 
 export const setAuthToken = (token: string | null) => {
   tokenAccesoActual = token;
@@ -51,6 +52,7 @@ export const setAuthToken = (token: string | null) => {
     saveTokens(token);
   } else {
     clearTokens();
+    sesionActiva = false;
   }
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
@@ -66,6 +68,9 @@ export const getAuthToken = (): string | null => {
 
 export const setUsuarioActual = (user: Partial<UsuarioTransportista> | null) => {
   usuarioLogueadoActual = user;
+  if (!user) {
+    sesionActiva = false;
+  }
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       if (user) window.localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
@@ -79,7 +84,13 @@ export const getUsuarioActual = (): Partial<UsuarioTransportista> | null => {
 };
 
 export const estaAutenticado = (): boolean => {
-  return !!tokenAccesoActual || !!usuarioLogueadoActual;
+  return sesionActiva;
+};
+
+export const cerrarSesion = () => {
+  sesionActiva = false;
+  setAuthToken(null);
+  setUsuarioActual(null);
 };
 
 /**
@@ -111,6 +122,7 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
 
     if (response.ok) {
       const data: AuthTokens = await response.json();
+      sesionActiva = true;
       setAuthToken(data.access);
       await saveTokens(data.access, data.refresh);
 
@@ -188,6 +200,7 @@ function loginConMock(dni: string, clave: string): LoginResult {
   }
 
   chofer.intentos_fallidos = 0;
+  sesionActiva = true;
   // Guardamos el chofer logueado para que itinerario tome su nombre real e iniciales
   setUsuarioActual(chofer);
 

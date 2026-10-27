@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { router, useLocalSearchParams } from 'expo-router';
+import { getParadaSeleccionada } from '../services/paradaService';
 
 
 const C = {
@@ -59,11 +60,18 @@ export default function DocumentoGuardado({
   ? Number(params.tamanoBytes)
   : 0;
 
+  const parada = getParadaSeleccionada();
+  const montoFormateado = new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0,
+  }).format(parada.montoCobranza);
+
   const volver = () => {
     if (onVolver) {
       onVolver();
     } else {
-      router.back();
+      router.replace('/parada' as any);
     }
   };
 
@@ -111,12 +119,12 @@ export default function DocumentoGuardado({
       >
         <View style={styles.deliveryCard}>
           <View style={styles.deliveryTopRow}>
-            <Text style={styles.stopLabel}>PARADA 3</Text>
-            <Text style={styles.deliveryAmount}>$42.500</Text>
+            <Text style={styles.stopLabel}>PARADA {parada.orden}</Text>
+            <Text style={styles.deliveryAmount}>{montoFormateado}</Text>
           </View>
 
-          <Text style={styles.storeName}>Almacén Don Tito</Text>
-          <Text style={styles.address}>Av. Mitre 1420</Text>
+          <Text style={styles.storeName}>{parada.comercio.razonSocial}</Text>
+          <Text style={styles.address}>{parada.comercio.domicilio}</Text>
         </View>
 
         <View style={styles.successBox}>
@@ -124,18 +132,16 @@ export default function DocumentoGuardado({
             <Text style={styles.successIconText}>✓</Text>
           </View>
           <View style={styles.messageText}>
-           
-<Text style={styles.successTitle}>
-  {params.modoDemo === 'true'
-    ? 'Vista previa del documento'
-    : 'Documento guardado correctamente'}
-</Text>
-<Text style={styles.successDescription}>
-  {params.modoDemo === 'true'
-    ? 'Modo demostración: el archivo todavía no se guardó en el servidor.'
-    : 'El archivo se asoció a la entrega de la parada 3.'}
-</Text>
-
+            <Text style={styles.successTitle}>
+              {params.modoDemo === 'true'
+                ? 'Vista previa del documento'
+                : 'Documento guardado correctamente'}
+            </Text>
+            <Text style={styles.successDescription}>
+              {params.modoDemo === 'true'
+                ? 'Modo demostración: el archivo todavía no se guardó en el servidor.'
+                : `El archivo se asoció a la entrega de la parada ${parada.orden}.`}
+            </Text>
           </View>
         </View>
 
@@ -159,19 +165,19 @@ export default function DocumentoGuardado({
             <View style={styles.remito}>
               <View style={styles.remitoHeader}>
                 <Text style={styles.remitoTitle}>REMITO</Text>
-                <Text style={styles.remitoNumber}>003</Text>
+                <Text style={styles.remitoNumber}>00{parada.orden}</Text>
               </View>
 
               <View style={styles.remitoLineBlue} />
 
-              <Text style={styles.remitoStore}>Almacén Don Tito</Text>
-              <Text style={styles.remitoAddress}>Av. Mitre 1420</Text>
+              <Text style={styles.remitoStore}>{parada.comercio.razonSocial}</Text>
+              <Text style={styles.remitoAddress}>{parada.comercio.domicilio}</Text>
 
               <View style={[styles.remitoLine, { width: 86 }]} />
               <View style={[styles.remitoLine, { width: 108 }]} />
               <View style={[styles.remitoLine, { width: 96 }]} />
 
-              <Text style={styles.remitoTotal}>Total: $42.500</Text>
+              <Text style={styles.remitoTotal}>Total: {montoFormateado}</Text>
               <Text style={styles.remitoSignature}>Firma y aclaración</Text>
             </View>
           )}

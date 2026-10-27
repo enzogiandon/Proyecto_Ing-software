@@ -30,9 +30,6 @@ const TEXTO = '#1B1B1F';
 const ROJO = '#FF2525';
 const VERDE = '#008568';
 
-// Datos de demostración; se reemplazarán por los de la parada seleccionada.
-const TOTAL_ENTREGA = 42500;
-
 type MedioPago = 'efectivo' | 'transferencia' | 'qr';
 
 export type MovimientoPago = {

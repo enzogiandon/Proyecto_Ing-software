@@ -21,7 +21,7 @@ import {
   TipoInconveniente,
   descripcionEsValida,
 } from '../types/inconveniente';
-import { MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
+import { getParadaSeleccionada } from '../services/paradaService';
 import { reportarProblemaParada } from '../services/itinerarios';
 
 export default function RegistrarInconveniente() {
@@ -34,7 +34,7 @@ export default function RegistrarInconveniente() {
     useState(false);
   const [error, setError] = useState('');
 
-  const parada = MOCK_PARADA_SELECCIONADA;
+  const parada = getParadaSeleccionada();
 
   const volver = () => {
     router.replace('/parada');

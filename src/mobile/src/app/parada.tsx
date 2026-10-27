@@ -33,7 +33,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
-import { obtenerDetalleParada, getParadaSeleccionada } from '../services/paradaService';
+import { obtenerDetalleParada, getParadaSeleccionada, setParadaSeleccionada } from '../services/paradaService';
 
 export default function ParadaScreen() {
   const router = useRouter();
@@ -75,6 +75,7 @@ export default function ParadaScreen() {
 
   // Navegación hacia la pantalla de validación de cobro (HU-32)
   const handleRegistrarCobro = () => {
+    setParadaSeleccionada(parada);
     router.push('/validar-cobro' as any);
   };
 
@@ -281,7 +282,10 @@ export default function ParadaScreen() {
           {/* 3. Botón: Adjuntar Documento */}
           <TouchableOpacity
             style={styles.botonSecundario}
-            onPress={() => router.push('/adjuntar-documento' as any)}
+            onPress={() => {
+              setParadaSeleccionada(parada);
+              router.push('/adjuntar-documento' as any);
+            }}
             activeOpacity={0.8}
           >
             <Text style={styles.iconoBotonSecundario}>📎</Text>
@@ -297,7 +301,10 @@ export default function ParadaScreen() {
           {/* 4. Botón: Registrar Inconveniente */}
           <TouchableOpacity
             style={[styles.botonSecundario, styles.botonInconveniente]}
-            onPress={() => router.push('/registrar-inconveniente' as any)}
+            onPress={() => {
+              setParadaSeleccionada(parada);
+              router.push('/registrar-inconveniente' as any);
+            }}
             activeOpacity={0.8}
           >
             <Text style={styles.iconoBotonSecundario}>⚠️</Text>

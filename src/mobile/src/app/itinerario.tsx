@@ -33,7 +33,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import { obtenerItinerarioJornada } from '../services/itinerarioService';
-import { getUsuarioActual } from '../services/authService';
+import { getUsuarioActual, estaAutenticado } from '../services/authService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 import { seleccionarParadaItem } from '../services/paradaService';
 
@@ -77,6 +77,10 @@ export default function ItinerarioScreen() {
   };
 
   useEffect(() => {
+    if (!estaAutenticado()) {
+      router.replace('/login' as any);
+      return;
+    }
     cargarDatos();
   }, []);
 

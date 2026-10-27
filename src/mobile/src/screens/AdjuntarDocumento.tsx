@@ -13,6 +13,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
+import { getParadaSeleccionada } from '../services/paradaService';
 
 const COLORS = {
   orange: '#F4661B',
@@ -34,6 +35,13 @@ type SelectedFile = {
 };
 
 export default function AdjuntarDocumento() {
+  const parada = getParadaSeleccionada();
+  const montoFormateado = new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0,
+  }).format(parada.montoCobranza);
+
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
 
   const tomarFotografia = async () => {
@@ -133,7 +141,7 @@ Alert.alert(
 
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.replace('/parada' as any)}
           style={styles.backButton}
           accessibilityLabel="Volver"
         >
@@ -150,10 +158,10 @@ Alert.alert(
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.deliveryCard}>
-          <Text style={styles.stopLabel}>PARADA 3</Text>
-          <Text style={styles.storeName}>Almacén Don Tito</Text>
-          <Text style={styles.address}>Av. Mitre 1420</Text>
-          <Text style={styles.amount}>$42.500</Text>
+          <Text style={styles.stopLabel}>PARADA {parada.orden}</Text>
+          <Text style={styles.storeName}>{parada.comercio.razonSocial}</Text>
+          <Text style={styles.address}>{parada.comercio.domicilio}</Text>
+          <Text style={styles.amount}>{montoFormateado}</Text>
         </View>
 
         <Text style={styles.instructions}>
@@ -228,7 +236,7 @@ Alert.alert(
         </TouchableOpacity>
 
         <Text style={styles.footer}>
-          Se asociará a la entrega de la parada 3.
+          Se asociará a la entrega de la parada {parada.orden}.
         </Text>
       </ScrollView>
     </View>

@@ -19,14 +19,18 @@ import ValidarCobro from '../screens/ValidarCobro';
 export default function ValidarCobroPage() {
   const router = useRouter();
 
-  // Mantiene el regreso al itinerario hasta integrar la parada seleccionada.
-  const volverAItinerario = () => {
-    router.replace('/itinerario' as any);
+  // Regreso hacia la parada seleccionada o itinerario
+  const volver = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/parada' as any);
+    }
   };
 
   return (
     <ValidarCobro
-      onVolver={volverAItinerario}
+      onVolver={volver}
       onConfirmar={(cobro) => {
         // Los movimientos quedan preparados para la futura integración.
         // Todavía no se envían ni se guardan en el backend.
@@ -40,8 +44,8 @@ export default function ValidarCobroPage() {
             'Validación en modo demostración. Los datos todavía no se enviaron al servidor.',
           [
             {
-              text: 'Volver a Hoja de Ruta',
-              onPress: volverAItinerario,
+              text: 'Volver a la Parada',
+              onPress: volver,
             },
           ],
           { cancelable: false }

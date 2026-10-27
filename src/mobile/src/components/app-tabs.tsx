@@ -77,6 +77,15 @@ export default function AppTabs() {
           tabBarStyle: { display: 'none' },
         }}
       />
+
+      {/* Pantalla de detalle de parada: oculta de la barra de pestañas */}
+      <Tabs.Screen
+        name="parada"
+        options={{
+          href: null,
+          tabBarStyle: { display: 'none' },
+        }}
+      />
     </Tabs>
   );
 }

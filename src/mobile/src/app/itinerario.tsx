@@ -97,23 +97,13 @@ export default function ItinerarioScreen() {
     );
   };
 
-  // Conexión directa hacia la pantalla de validación de cobro de Aylén
+  // Redirección hacia la pantalla de detalle de la parada (HU-67)
   const handleIrAParada = (parada: ParadaItem) => {
-    router.push('/validar-cobro' as any);
+    router.push('/parada' as any);
   };
 
   const handleVerDetalle = (parada: ParadaItem) => {
-    Alert.alert(
-      parada.comercio.razonSocial,
-      `Ubicación: ${parada.comercio.domicilio}\nDocumentos: ${parada.cantidadRemitos} remitos\nTotal a cobrar: $${parada.montoCobranza.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`,
-      [
-        { text: 'Cerrar', style: 'cancel' },
-        {
-          text: 'Validar Cobro',
-          onPress: () => router.push('/validar-cobro' as any),
-        },
-      ]
-    );
+    router.push('/parada' as any);
   };
 
   const handleContactarBase = () => {

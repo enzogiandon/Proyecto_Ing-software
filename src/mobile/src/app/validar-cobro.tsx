@@ -1,21 +1,10 @@
-
-/**
- * Ruta de registro y validación de cobros (/validar-cobro).
- *
- * Conecta la pantalla ValidarCobro con Expo Router.
- * Recibe el total y los movimientos individuales validados
- * y muestra una confirmación en modo demostración.
- *
- * Por ahora, la navegación regresa al itinerario.
- * La integración con el backend y el regreso a la parada
- * seleccionada quedan pendientes.
- */
-
+// src/mobile/src/app/validar-cobro.tsx
 import React from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import ValidarCobro from '../screens/ValidarCobro';
 import { getParadaSeleccionada, actualizarEstadoCobroParada } from '../services/paradaService';
+import { registrarCobranza } from '../services/itinerarios';
 
 export default function ValidarCobroPage() {
   const router = useRouter();
@@ -33,8 +22,16 @@ export default function ValidarCobroPage() {
       nombreComercio={parada.comercio.razonSocial}
       direccion={`${parada.comercio.domicilio}${parada.comercio.localidad ? ` · ${parada.comercio.localidad}` : ''}`}
       ordenParada={parada.orden}
-      onConfirmar={(cobro) => {
-        // Marcamos el cobro como validado en la parada actual
+      onConfirmar={async (cobro) => {
+        // 1. Enviar cobranza oficial al backend Django (o fallback resiliente)
+        const pagos = cobro.movimientos.map((m) => ({
+          medio: m.medio,
+          monto: m.monto,
+        }));
+
+        const res = await registrarCobranza(parada.id, pagos);
+
+        // 2. Marcamos el cobro como validado en la parada actual
         actualizarEstadoCobroParada('validado');
 
         Alert.alert(
@@ -42,9 +39,9 @@ export default function ValidarCobroPage() {
           `El importe de $${cobro.total.toLocaleString('es-AR', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
-          })} coincide con el total de la entrega.\n\n` +
-            `Movimientos registrados: ${cobro.movimientos.length}.\n\n` +
-            'Validación en modo demostración. Los datos todavía no se enviaron al servidor.',
+          })} coincide con el total exigible de la entrega.\n\n` +
+            `Medios registrados: ${cobro.movimientos.length}.\n\n` +
+            `Estado: ${res.mensaje}`,
           [
             {
               text: 'Volver a la Parada',

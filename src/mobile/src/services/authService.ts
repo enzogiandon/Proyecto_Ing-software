@@ -1,5 +1,6 @@
 // src/services/authService.ts
 import { CHOFERES_PRUEBA, UsuarioTransportista, MOCK_CHOFER_ACTUAL } from '../data/mockData';
+import { saveTokens, clearTokens } from './storage';
 
 // Configuración de la URL base del Backend Django
 export const API_BASE_URL = 'http://localhost:8000';
@@ -46,6 +47,11 @@ let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = getStoredUser(
 
 export const setAuthToken = (token: string | null) => {
   tokenAccesoActual = token;
+  if (token) {
+    saveTokens(token);
+  } else {
+    clearTokens();
+  }
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
       if (token) window.localStorage.setItem(STORAGE_TOKEN_KEY, token);
@@ -106,6 +112,7 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
     if (response.ok) {
       const data: AuthTokens = await response.json();
       setAuthToken(data.access);
+      await saveTokens(data.access, data.refresh);
 
       const choferEncontrado = CHOFERES_PRUEBA.find((c) => c.dni === dniLimpio);
       const userAutenticado: Partial<UsuarioTransportista> = choferEncontrado || {

@@ -22,6 +22,7 @@ import {
   descripcionEsValida,
 } from '../types/inconveniente';
 import { MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
+import { reportarProblemaParada } from '../services/itinerarios';
 
 export default function RegistrarInconveniente() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function RegistrarInconveniente() {
     router.replace('/parada');
   };
 
-  const registrar = () => {
+  const registrar = async () => {
     if (!tipo) {
       setError('Seleccioná el motivo del inconveniente.');
       return;
@@ -52,7 +53,13 @@ export default function RegistrarInconveniente() {
 
     setError('');
 
-    // Registro local de demostración. Todavía no se envía a Django.
+    // Envío oficial al endpoint de Django (o fallback offline/mock)
+    await reportarProblemaParada(parada.id, {
+      tipo,
+      descripcion: descripcion.trim(),
+      impide_entrega: impideCompletarEntrega,
+    });
+
     router.replace({
       pathname: '/inconveniente-registrado',
       params: {

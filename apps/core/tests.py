@@ -12,9 +12,8 @@ class EmpleadoViewsTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.user = user_model.objects.create_user(
-            username="administrativo_autorizado",
+            username="11111111",
             password="Testing-Password-123!",
-            dni="12345678",
             rol=Roles.ADMINISTRATIVO,
         )
         permissions = Permission.objects.filter(
@@ -28,11 +27,10 @@ class EmpleadoViewsTests(TestCase):
         response = self.client.post(
             reverse("core:empleado_crear"),
             {
-                "username": "nuevo_admin",
+                "username": "23456789",
                 "email": "admin@example.com",
                 "first_name": "Ana",
                 "last_name": "Pérez",
-                "dni": "23456789",
                 "telefono": "1112345678",
                 "rol": Roles.ADMINISTRATIVO,
                 "password": "Another-Secure-Password-42!",
@@ -45,7 +43,7 @@ class EmpleadoViewsTests(TestCase):
             reverse("core:empleado_lista"),
             fetch_redirect_response=False,
         )
-        employee = get_user_model().objects.get(username="nuevo_admin")
+        employee = get_user_model().objects.get(username="23456789")
         self.assertTrue(employee.check_password("Another-Secure-Password-42!"))
         self.assertFalse(employee.user_permissions.exists())
         self.assertFalse(employee.groups.exists())
@@ -58,11 +56,10 @@ class EmpleadoViewsTests(TestCase):
         response = self.client.post(
             reverse("core:empleado_crear"),
             {
-                "username": "nuevo_transportista",
+                "username": "34567890",
                 "email": "transporte@example.com",
                 "first_name": "Luis",
                 "last_name": "Gómez",
-                "dni": "34567890",
                 "telefono": "1112345678",
                 "rol": Roles.TRANSPORTISTA,
                 "password": "Transport-Password-42!",
@@ -75,24 +72,22 @@ class EmpleadoViewsTests(TestCase):
             reverse("core:empleado_lista"),
             fetch_redirect_response=False,
         )
-        employee = get_user_model().objects.get(username="nuevo_transportista")
+        employee = get_user_model().objects.get(username="34567890")
         self.assertTrue(Transportista.objects.filter(usuario=employee).exists())
 
     def test_duplicate_employee_dni_is_rejected(self):
         get_user_model().objects.create_user(
-            username="empleado_existente",
+            username="45678901",
             password="Existing-Password-42!",
-            dni="45678901",
             rol=Roles.TRANSPORTISTA,
         )
 
         form = EmpleadoCreateForm(
             data={
-                "username": "otro_usuario",
+                "username": "45678901",
                 "email": "otro@example.com",
                 "first_name": "Otro",
                 "last_name": "Empleado",
-                "dni": "45678901",
                 "telefono": "",
                 "rol": Roles.ADMINISTRATIVO,
                 "password": "Another-Secure-Password-42!",
@@ -103,28 +98,26 @@ class EmpleadoViewsTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn(
             "El empleado ya se encuentra registrado.",
-            form.errors["dni"],
+            form.errors["username"],
         )
-        self.assertFalse(
-            get_user_model().objects.filter(username="otro_usuario").exists()
+        self.assertEqual(
+            get_user_model().objects.filter(username="45678901").count(), 1
         )
 
     def test_update_employee_changes_profile_and_keeps_password(self):
         employee = get_user_model().objects.create_user(
-            username="empleado",
+            username="56789012",
             password="Original-Password-42!",
-            dni="56789012",
             rol=Roles.TRANSPORTISTA,
         )
 
         response = self.client.post(
             reverse("core:empleado_editar", args=[employee.pk]),
             {
-                "username": "empleado_actualizado",
+                "username": "56789013",
                 "email": "actualizado@example.com",
                 "first_name": "Nombre",
                 "last_name": "Actualizado",
-                "dni": "56789012",
                 "telefono": "1112345678",
                 "rol": Roles.TRANSPORTISTA,
             },
@@ -137,13 +130,13 @@ class EmpleadoViewsTests(TestCase):
         )
         employee.refresh_from_db()
         self.assertEqual(employee.first_name, "Nombre")
+        self.assertEqual(employee.username, "56789013")
         self.assertTrue(employee.check_password("Original-Password-42!"))
 
     def test_suspend_employee_disables_account_without_deleting_it(self):
         employee = get_user_model().objects.create_user(
-            username="empleado_a_suspender",
+            username="67890123",
             password="Employee-Password-42!",
-            dni="67890123",
             rol=Roles.TRANSPORTISTA,
         )
 
@@ -164,7 +157,7 @@ class EmpleadoViewsTests(TestCase):
         self.client.logout()
         self.assertFalse(
             self.client.login(
-                username="empleado_a_suspender",
+                username="67890123",
                 password="Employee-Password-42!",
             )
         )
@@ -175,9 +168,8 @@ class EmpleadoViewsTests(TestCase):
 
     def test_suspend_employee_does_not_change_account_on_get(self):
         employee = get_user_model().objects.create_user(
-            username="empleado_sin_cambios",
+            username="78901234",
             password="Employee-Password-42!",
-            dni="78901234",
             rol=Roles.TRANSPORTISTA,
         )
 
@@ -193,9 +185,8 @@ class VehiculoViewsTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.user = user_model.objects.create_user(
-            username="administrativo",
+            username="12345678",
             password="test-password",
-            dni="12345678",
             rol="administrativo",
         )
         self.add_permission = Permission.objects.get(

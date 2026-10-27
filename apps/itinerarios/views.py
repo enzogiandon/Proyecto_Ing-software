@@ -1,11 +1,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
+from django.db.models import Prefetch
 from django.urls import reverse_lazy
-from django.views.generic import FormView, ListView
+from django.views.generic import DetailView, FormView, ListView
+
+from apps.remitos.models import Remito
 
 from .forms import CrearItinerariosForm, CrearParadasForm
-from .models import Itinerario
+from .models import EvidenciaParada, Itinerario, Parada, ProblemaParada
 from .services import crear_itinerarios, crear_paradas
 
 
@@ -20,6 +23,33 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
             Itinerario.objects.select_related("transportista__usuario", "vehiculo")
             .prefetch_related("paradas__comercio")
             .order_by("-fecha", "id")
+        )
+
+
+class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = Parada
+    template_name = "itinerarios/parada_detalle.html"
+    context_object_name = "parada"
+    permission_required = "itinerarios.view_parada"
+
+    def get_queryset(self):
+        return (
+            Parada.objects.select_related(
+                "comercio",
+                "itinerario__transportista__usuario",
+                "itinerario__vehiculo",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "remitos",
+                    queryset=Remito.objects.filter(eliminado=False).select_related(
+                        "marca"
+                    ),
+                    to_attr="remitos_vigentes",
+                ),
+                Prefetch("evidencias", queryset=EvidenciaParada.objects.order_by("fecha")),
+                Prefetch("problemas", queryset=ProblemaParada.objects.order_by("-fecha")),
+            )
         )
 
 

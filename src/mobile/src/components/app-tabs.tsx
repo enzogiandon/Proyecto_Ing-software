@@ -108,6 +108,23 @@ export default function AppTabs() {
   }}
 />
 
+{/* Adjuntar documento: oculto de la barra inferior */}
+<Tabs.Screen
+  name="adjuntar-documento"
+  options={{
+    href: null,
+    tabBarStyle: { display: 'none' },
+  }}
+/>
+
+{/* Confirmación de documento guardado: oculta de la barra inferior */}
+<Tabs.Screen
+  name="documento-guardado"
+  options={{
+    href: null,
+    tabBarStyle: { display: 'none' },
+  }}
+/>
 
     </Tabs>
   );

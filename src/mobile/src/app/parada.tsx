@@ -281,7 +281,7 @@ export default function ParadaScreen() {
           {/* 3. Botón: Adjuntar Documento */}
           <TouchableOpacity
             style={styles.botonSecundario}
-            onPress={() => setModalDocVisible(true)}
+            onPress={() => router.push('/adjuntar-documento' as any)}
             activeOpacity={0.8}
           >
             <Text style={styles.iconoBotonSecundario}>📎</Text>

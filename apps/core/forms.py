@@ -44,7 +44,6 @@ class EmpleadoCreateForm(forms.ModelForm):
             "email",
             "first_name",
             "last_name",
-            "dni",
             "telefono",
             "rol",
         ]
@@ -53,7 +52,6 @@ class EmpleadoCreateForm(forms.ModelForm):
             "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "Email"}),
             "first_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre"}),
             "last_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Apellido"}),
-            "dni": forms.TextInput(attrs={"class": "form-control", "placeholder": "DNI"}),
             "telefono": forms.TextInput(attrs={"class": "form-control", "placeholder": "Teléfono"}),
             "rol": forms.Select(attrs={"class": "form-select"}),
         }
@@ -65,11 +63,11 @@ class EmpleadoCreateForm(forms.ModelForm):
             (Roles.TRANSPORTISTA, Roles.TRANSPORTISTA.label),
         ]
 
-    def clean_dni(self):
-        dni = self.cleaned_data["dni"]
-        if Usuario.objects.filter(dni=dni).exists():
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        if Usuario.objects.filter(username=username).exists():
             raise ValidationError("El empleado ya se encuentra registrado.")
-        return dni
+        return username
 
     def clean_password(self):
         password = self.cleaned_data["password"]
@@ -103,7 +101,6 @@ class EmpleadoUpdateForm(forms.ModelForm):
             "email",
             "first_name",
             "last_name",
-            "dni",
             "telefono",
             "rol",
         ]
@@ -112,7 +109,6 @@ class EmpleadoUpdateForm(forms.ModelForm):
             "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "Email"}),
             "first_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre"}),
             "last_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Apellido"}),
-            "dni": forms.TextInput(attrs={"class": "form-control", "placeholder": "DNI"}),
             "telefono": forms.TextInput(attrs={"class": "form-control", "placeholder": "Teléfono"}),
             "rol": forms.Select(attrs={"class": "form-select"}),
         }
@@ -124,11 +120,11 @@ class EmpleadoUpdateForm(forms.ModelForm):
             (Roles.TRANSPORTISTA, Roles.TRANSPORTISTA.label),
         ]
 
-    def clean_dni(self):
-        dni = self.cleaned_data["dni"]
-        if Usuario.objects.filter(dni=dni).exclude(pk=self.instance.pk).exists():
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        if Usuario.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
             raise ValidationError("El empleado ya se encuentra registrado.")
-        return dni
+        return username
 
     def save(self, commit=True):
         user = super().save(commit=commit)

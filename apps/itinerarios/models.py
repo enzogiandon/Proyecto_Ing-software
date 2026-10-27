@@ -29,8 +29,7 @@ class DetalleRutaGuardada(models.Model):
     )
     comercio = models.ForeignKey("remitos.Comercio", on_delete=models.CASCADE)
     prioridad = models.IntegerField(null=True, blank=True)
-
-    class Meta:
+class Meta:
         ordering = (models.F("prioridad").asc(nulls_last=True),)
         constraints = [
             models.UniqueConstraint(
@@ -110,9 +109,7 @@ class EvidenciaParada(models.Model):
         Parada, on_delete=models.CASCADE, related_name="evidencias"
     )
     archivo = models.ImageField(upload_to="remitos_firmados/")
-    fecha = models.DateTimeField(
-        auto_now_add=True, help_text="Fecha en la que se subio la imagen"
-    )
+    fecha = models.DateTimeField( auto_now_add=True)
 
     class Meta:
         verbose_name = "Evidencia de entrega"
@@ -129,22 +126,10 @@ class ProblemaParada(models.Model):
         related_name="problemas",
         help_text="Parada donde ocurrio el problema",
     )
-    remito = models.ForeignKey(
-        "remitos.Remito",
-        on_delete=models.PROTECT,
-        blank=True,
-        null=True,
-        related_name="problemas",
-    )
     tipo = models.CharField(
         max_length=30, choices=TipoProblema.choices, default=TipoProblema.OTRO
     )
-    imagen = models.ImageField(
-        upload_to="problemas_parada/",
-        blank=True,
-        null=True,
-        help_text="Foto de la mercaderia dañada",
-    )
+    impide_entrega = models.BooleanField(default=False)
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:

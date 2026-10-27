@@ -1,7 +1,6 @@
 # cobranza/models.py
 
 from django.db import models
-from simple_history.models import HistoricalRecords
 
 
 class MedioPago(models.TextChoices):
@@ -36,7 +35,6 @@ class Cobranza(models.Model):
         help_text="Motivo documentado por el administrativo para no aprobar la cobranza",
     )
     fecha = models.DateTimeField(auto_now_add=True)
-    history = HistoricalRecords()
 
     def __str__(self):
         return f"Comercio {self.parada.comercio.razon_social} ~~ "

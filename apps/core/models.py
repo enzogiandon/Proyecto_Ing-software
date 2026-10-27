@@ -6,11 +6,6 @@ from django.core.validators import RegexValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-phone_validator = RegexValidator(
-    regex=r"^\+?[\d\s\-()]{7,20}$",
-    message="El número de teléfono debe ingresarse en un formato válido (ej: +54 9 11 1234-5678 o 1112345678).",
-)
-
 
 class Roles(models.TextChoices):
     ADMINISTRATIVO = "administrativo", "Administrativo"
@@ -25,10 +20,7 @@ class EstadoVehiculo(models.TextChoices):
 
 
 class Usuario(AbstractUser):
-    telefono = models.CharField(
-        max_length=20, validators=[phone_validator], blank=True, null=True
-    )
-    dni = models.CharField(
+    username = models.CharField(
         max_length=8,
         unique=True,
         validators=[
@@ -37,6 +29,21 @@ class Usuario(AbstractUser):
                 "El DNI debe contener 7 u 8 dígitos sin puntos ni guiones.",
             )
         ],
+        help_text="Requerido. Ingrese el DNI (7 u 8 dígitos numéricos).",
+        error_messages={
+            "unique": "Ya existe un usuario registrado con este DNI.",
+        },
+    )
+    telefono = models.CharField(
+        max_length=20,
+        validators=[
+            RegexValidator(
+                regex=r"^\+?[\d\s\-()]{7,20}$",
+                message="El número de teléfono debe ingresarse en un formato válido (ej: 54 9 11 1234 5678 o 1112345678).",
+            )
+        ],
+        blank=True,
+        null=True,
     )
     intentos_fallidos = models.IntegerField(default=0)
     rol = models.CharField(

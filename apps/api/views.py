@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.db import transaction
-from rest_framework import permissions, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +12,7 @@ from apps.api.serializers import (
     ListaParadaSerializer,
     RutaGuardadaSerializer,
 )
+from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
     EstadoItinerario,
@@ -22,29 +22,12 @@ from apps.itinerarios.models import (
 )
 from apps.itinerarios.services import ordenar_itinerario_segun_ruta
 
-from .serializers import CrearRutaGuardadaSerializer, GroupSerializer, UserSerializer
+from .serializers import (
+    CrearRutaGuardadaSerializer,
+    RegistrarPagoInputSerializer,
+)
 
 User = get_user_model()
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-
-    queryset = User.objects.all().order_by("-date_joined")
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-
-    queryset = Group.objects.all().order_by("name")
-    serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
@@ -96,7 +79,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         paradas = (
             itinerario.paradas.select_related("comercio", "cobranza")
             .prefetch_related(
-                "remitos__items",
+                "remitos",
                 "cobranza__detalles",
             )
             .order_by("orden")
@@ -261,12 +244,53 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(parada_ids_ordenadas, status=status.HTTP_200_OK)
 
 
-class ParadaViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Endpoints de paradas:
-    - GET /api/paradas/{id}/ (Detalle con comercio y remitos asociados)
-    """
-
-    queryset = Parada.objects.select_related("comercio").prefetch_related("remitos")
+class ParadaViewSet(viewsets.ModelViewSet):
+    queryset = Parada.objects.select_related("comercio", "cobranza").prefetch_related("remitos")
     serializer_class = DetalleParadaSerializer
     permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=["post"], url_path="registrar-cobranza")
+    def registrar_cobranza(self, request, pk=None):
+        """
+        POST /api/paradas/{id}/registrar-cobranza/
+        Body:
+        [
+            {"medio": "qr", "monto": 100.00},
+            {"medio": "efectivo", "monto": 100.00}
+        ]
+        """
+        parada = self.get_object()
+
+        if not isinstance(request.data, list) or len(request.data) == 0:
+            raise ValidationError("Se espera una lista con al menos un detalle de pago.")
+
+        serializer = RegistrarPagoInputSerializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        pagos_validados = serializer.validated_data
+
+        with transaction.atomic():
+            cobranza, _= Cobranza.objects.get_or_create(
+                parada=parada,
+                defaults={"estado": EstadoCobranza.REGISTRADO},
+            )
+
+            detalles_a_crear = [
+                DetallePago(
+                    cobranza=cobranza,
+                    medio=pago["medio"],
+                    monto_declarado=pago["monto"],
+                )
+                for pago in pagos_validados
+            ]
+
+            DetallePago.objects.bulk_create(detalles_a_crear)
+
+        return Response(
+            {
+                "mensaje": "Cobranza y pagos registrados correctamente.",
+                "cobranza_id": cobranza.id,
+                "pagos_registrados": len(detalles_a_crear),
+            },
+            status=status.HTTP_201_CREATED,
+        )

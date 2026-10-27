@@ -17,9 +17,14 @@ class EstadoParada(models.TextChoices):
 
 
 class TipoProblema(models.TextChoices):
-    MERCADERIA_DANADA = "mercaderia_danada", "Mercadería dañada o faltante"
-    RECHAZO_PARCIAL = "rechazo_parcial", "Rechazo parcial"
-    RECHAZO_TOTAL = "rechazo_total", "Rechazo total"
+    LOCAL_CERRADO = "local_cerrado", "Local cerrado"
+    CLIENTE_AUSENTE = "cliente_ausente", "Cliente ausente"
+    CLIENTE_RECHAZA_PEDIDO = "cliente_rechaza_pedido", "Cliente rechaza el pedido"
+    DIRECCION_INCORRECTA  = "direccion_incorrecta", "Dirección incorrecta"
+    PROBLEMA_PAGO = "problema_pago", "Problemas con el pago"
+    MERCADERIA_DANADA = "mercaderia_danada", "Mercadería dañada"
+    INACCESIBLE = "inaccesible", "Inaccesible"
+    PROBLEMA_VEHICULO = "problema_vehiculo", "Problemas con el vehículo"
     OTRO = "otro", "Otro problema"
 
 

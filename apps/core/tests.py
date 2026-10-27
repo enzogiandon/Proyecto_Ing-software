@@ -4,8 +4,8 @@ from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 
-from .forms import EmpleadoCreateForm
-from .models import EstadoVehiculo, Roles, Transportista, Vehiculo
+from apps.core.forms import EmpleadoCreateForm
+from apps.core.models import EstadoVehiculo, Roles, Transportista, Vehiculo
 
 
 class EmpleadoViewsTests(TestCase):

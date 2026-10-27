@@ -61,7 +61,7 @@ export default function RegistrarInconveniente() {
         impideCompletarEntrega: String(impideCompletarEntrega),
         paradaId: String(parada.id),
       },
-    });
+    } as never);
   };
 
   return (

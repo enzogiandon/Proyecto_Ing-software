@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.db.models import Sum
 from rest_framework import serializers
 
@@ -19,20 +18,14 @@ User = get_user_model()
 
 
 def calcular_monto_recaudar(parada) -> str:
-    total_remitos = (
-        parada.remitos.filter(eliminado=False).aggregate(
-            total=Sum("total")
-        )["total"]
-        or Decimal("0.00")
-    )
+    total_remitos = parada.remitos.filter(eliminado=False).aggregate(
+        total=Sum("total")
+    )["total"] or Decimal("0.00")
     total_pagado = Decimal("0.00")
     if hasattr(parada, "cobranza"):
-        total_pagado = (
-            parada.cobranza.detalles.aggregate(
-                total=Sum("monto_declarado")
-            )["total"]
-            or Decimal("0.00")
-        )
+        total_pagado = parada.cobranza.detalles.aggregate(total=Sum("monto_declarado"))[
+            "total"
+        ] or Decimal("0.00")
 
     # 3. Saldo pendiente a cobrar (no menor a 0)
     saldo_pendiente = max(Decimal("0.00"), total_remitos - total_pagado)
@@ -63,14 +56,50 @@ class ListaParadaSerializer(serializers.ModelSerializer):
         return calcular_monto_recaudar(obj)
 
 
+class ProblemaParadaSerializer(serializers.ModelSerializer):
+    tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
+
+    class Meta:
+        model = ProblemaParada
+        fields = [
+            "id",
+            "parada",
+            "tipo",
+            "tipo_display",
+            "descripcion",
+            "impide_entrega",
+            "fecha",
+        ]
+        read_only_fields = ["id", "parada", "fecha"]
+
+
+class EvidenciaParadaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EvidenciaParada
+        fields = ["id", "parada", "archivo", "fecha"]
+        read_only_fields = ["id", "parada", "fecha"]
+
+
 class DetalleParadaSerializer(serializers.ModelSerializer):
     comercio = ComercioSerializer(read_only=True)
     remitos = RemitoSerializer(many=True, read_only=True)
     monto_recaudar = serializers.SerializerMethodField()
+    evidencias = EvidenciaParadaSerializer(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = Parada
-        fields = ["id", "itinerario", "orden", "estado", "comercio", "remitos", "monto_recaudar"]
+        fields = [
+            "id",
+            "itinerario",
+            "orden",
+            "estado",
+            "comercio",
+            "remitos",
+            "monto_recaudar",
+            "evidencias",
+        ]
 
     def get_monto_recaudar(self, obj) -> str:
         return calcular_monto_recaudar(obj)
@@ -128,31 +157,10 @@ class RegistrarProblemaInputSerializer(serializers.Serializer):
         # Si el tipo es 'otro', la descripción es obligatoria
         if tipo == TipoProblema.OTRO and not descripcion:
             raise serializers.ValidationError(
-                {"descripcion": "Debe proporcionar una descripción cuando el tipo de problema es 'Otro'."}
+                {
+                    "descripcion": "Debe proporcionar una descripción cuando el tipo de problema es 'Otro'."
+                }
             )
 
         attrs["descripcion"] = descripcion
         return attrs
-
-
-class ProblemaParadaSerializer(serializers.ModelSerializer):
-    tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
-
-    class Meta:
-        model = ProblemaParada
-        fields = [
-            "id",
-            "parada",
-            "tipo",
-            "tipo_display",
-            "descripcion",
-            "impide_entrega",
-            "fecha",
-        ]
-        read_only_fields = ["id", "parada", "fecha"]
-
-class EvidenciaParadaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EvidenciaParada
-        fields = ["id", "parada", "archivo", "fecha"]
-        read_only_fields = ["id", "parada", "fecha"]

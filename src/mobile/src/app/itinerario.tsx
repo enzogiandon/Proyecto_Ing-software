@@ -4,18 +4,15 @@
  * Resumen de lo que hace este código:
  * Esta es la pantalla principal para el transportista en su jornada. Acá mostramos:
  * 1. El header corporativo que toma dinámicamente el nombre y las iniciales del chofer que inició
- *    sesión (ej. Carlos Gómez -> CG) usando el logo oficial en PNG (repartoya-isotipo-header.png).
  * 2. La tarjeta con la barra de progreso (porcentaje de entregas completadas en color Naranja YA).
  * 3. El botón de acceso a 'Rutas Guardadas' (que conecta con el módulo de recorridos del Sprint 1).
  * 4. La lista de paradas: destacando la próxima parada (#1) con llamada a la acción en naranja
- *    ('Ir a la parada') que conecta directamente con la pantalla de Validar Cobro (HU-32) que hizo Aylén,
+ *    ('Ir a la parada') que conecta directamente con la pantalla de Validar Cobro (HU-32)
  *    y las paradas siguientes con su detalle y monto total a recaudar.
  * 5. La vista de 'Itinerario sin asignar': si el chofer todavía no tiene hoja de ruta asignada,
  *    mostramos la ilustración circular y mensaje institucional según Figma.
  * 6. Metí un botón discreto en el header para alternar entre el modo asignado y el sin asignar para
  *    poder mostrárselo a los profes en la demo del sprint sin tener que tocar la base de datos.
- * Usé useSafeAreaInsets con cálculo de StatusBar para que en teléfonos con punch-hole como mi
- * Redmi Note 13 el header azul pinte toda la barra de arriba y el contenido quede bien desahogado.
  */
 
 import React, { useState, useEffect } from 'react';

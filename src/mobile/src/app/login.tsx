@@ -41,7 +41,7 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const topPaddingSeguro = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0) + 10;
 
-  // Estados locales para los inputs del form
+  // Estados locales para los inputs del form (inician vacíos para ingreso manual)
   const [dni, setDni] = useState('');
   const [clave, setClave] = useState('');
   const [mostrarClave, setMostrarClave] = useState(false);
@@ -51,6 +51,7 @@ export default function LoginScreen() {
   const [errorDni, setErrorDni] = useState('');
   const [errorClave, setErrorClave] = useState('');
   const [modalInhabilitadoVisible, setModalInhabilitadoVisible] = useState(false);
+  const [modalSoporteVisible, setModalSoporteVisible] = useState(false);
 
   // Lógica principal de autenticación
   const handleIngresar = async () => {
@@ -92,36 +93,16 @@ export default function LoginScreen() {
         setUsuarioActual(resultado.user);
       }
 
-      // Login exitoso: preparamos el mensaje y conectamos con la pantalla de itinerario
-      const nombreMostrar = resultado.user?.first_name 
-        ? `${resultado.user.first_name} ${resultado.user.last_name || ''}`.trim()
-        : 'Transportista';
-
-      Alert.alert(
-        '¡Acceso Autorizado!',
-        `Bienvenido, ${nombreMostrar}.\nCredenciales verificadas exitosamente.`,
-        [
-          {
-            text: 'Continuar a Hoja de Ruta',
-            onPress: () => {
-              // Navego directamente a la pantalla de itinerario
-              router.replace('/itinerario' as any);
-            },
-          },
-        ]
-      );
+      // Redirigimos directamente al itinerario para un flujo rápido y compatible con Web y Mobile
+      router.replace('/itinerario' as any);
     } finally {
       setCargando(false);
     }
   };
 
-  // Modal rápido de soporte operativo por si el chofer tiene un problema en la calle
+  // Modal de soporte operativo por si el chofer tiene un problema en la calle
   const handleContactoBase = () => {
-    Alert.alert(
-      'Soporte Operativo RepartoYA',
-      'Contactando a Base Logística...\n\nLínea directa: 0800-444-REPARTO (Int. 104)\nWhatsApp Guardia: +54 9 11 5555-0199',
-      [{ text: 'Cerrar' }]
-    );
+    setModalSoporteVisible(true);
   };
 
   return (
@@ -307,6 +288,45 @@ export default function LoginScreen() {
               onPress={() => setModalInhabilitadoVisible(false)}
             >
               <Text style={styles.modalBotonOkTexto}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ================= MODAL: SOPORTE OPERATIVO (RepartoYA) ================= */}
+      <Modal
+        visible={modalSoporteVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalSoporteVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={styles.modalTituloContainer}>
+                <Text style={styles.modalIconoInfo}>🎧</Text>
+                <Text style={styles.modalTitulo}>Soporte Operativo</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setModalSoporteVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.modalCerrarCruz}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalMensaje}>
+              Base Logística RepartoYA:{'\n\n'}
+              📞 Línea directa: 0800-444-REPARTO (Int. 104){'\n'}
+              💬 WhatsApp Guardia: +54 9 11 5555-0199{'\n'}
+              🕒 Atención: Lun a Sáb de 06:00 a 20:00 hs
+            </Text>
+
+            <TouchableOpacity
+              style={styles.modalBotonOk}
+              onPress={() => setModalSoporteVisible(false)}
+            >
+              <Text style={styles.modalBotonOkTexto}>Entendido</Text>
             </TouchableOpacity>
           </View>
         </View>

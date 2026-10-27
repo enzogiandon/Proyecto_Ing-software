@@ -57,12 +57,6 @@ class DetallePago(models.Model):
         null=True,
         help_text="Importe verificado por el administrativo",
     )
-    cuenta_destino = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        help_text="Cuenta a la que llego la transferencia",
-    )
 
     class Meta:
         verbose_name = "Detalle del pago"

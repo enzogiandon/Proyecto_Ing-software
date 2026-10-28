@@ -33,6 +33,8 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { loginTransportista, setUsuarioActual } from '../services/authService';
+// Núcleo del cambio: Importamos el servicio centralizado para enlazar con WhatsApp
+import { contactarSoporteWhatsApp } from '../services/soporteService';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -170,8 +172,10 @@ export default function LoginScreen() {
                   placeholderTextColor={RepartoYA.grisTexto}
                   keyboardType="numeric"
                   value={dni}
+                  // Núcleo del cambio: Filtra caracteres para admitir únicamente números en el DNI
                   onChangeText={(val) => {
-                    setDni(val);
+                    const soloNumeros = val.replace(/[^0-9]/g, '');
+                    setDni(soloNumeros);
                     if (errorDni) setErrorDni('');
                   }}
                   maxLength={8}
@@ -201,8 +205,10 @@ export default function LoginScreen() {
                   secureTextEntry={!mostrarClave}
                   keyboardType="numeric"
                   value={clave}
+                  // Núcleo del cambio: Filtra letras y símbolos; solo permite ingresar dígitos numéricos
                   onChangeText={(val) => {
-                    setClave(val);
+                    const soloNumeros = val.replace(/[^0-9]/g, '');
+                    setClave(soloNumeros);
                     if (errorClave) setErrorClave('');
                   }}
                   maxLength={12}
@@ -280,14 +286,26 @@ export default function LoginScreen() {
             </View>
 
             <Text style={styles.modalMensaje}>
-              Intente de nuevo más tarde o contacte al soporte.
+              Su usuario se encuentra inhabilitado para operar en el sistema. Para regularizar su habilitación, comunicate con la Base Logística.
             </Text>
 
+            {/* Núcleo del cambio: Botón para contactar a soporte por WhatsApp si la cuenta está inhabilitada */}
             <TouchableOpacity
-              style={styles.modalBotonOk}
+              style={styles.modalBotonWhatsApp}
+              onPress={() => {
+                setModalInhabilitadoVisible(false);
+                contactarSoporteWhatsApp(`Hola, mi usuario figura inhabilitado en RepartoYA (DNI: ${dni || 'no ingresado'}). Solicito revisión.`);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalBotonWhatsAppTexto}>💬 Contactar a Soporte por WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalBotonSecundario}
               onPress={() => setModalInhabilitadoVisible(false)}
             >
-              <Text style={styles.modalBotonOkTexto}>OK</Text>
+              <Text style={styles.modalBotonSecundarioTexto}>Cerrar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -316,17 +334,26 @@ export default function LoginScreen() {
             </View>
 
             <Text style={styles.modalMensaje}>
-              Base Logística RepartoYA:{'\n\n'}
-              📞 Línea directa: 0800-444-REPARTO (Int. 104){'\n'}
-              💬 WhatsApp Guardia: +54 9 11 5555-0199{'\n'}
-              🕒 Atención: Lun a Sáb de 06:00 a 20:00 hs
+              Canal de guardia y asistencia para transportistas de RepartoYA. Si tenés problemas para ingresar o dudas con tu jornada, comunicate con Despacho.
             </Text>
 
+            {/* Núcleo del cambio: Reemplaza números ficticios por enlace real a WhatsApp */}
             <TouchableOpacity
-              style={styles.modalBotonOk}
+              style={styles.modalBotonWhatsApp}
+              onPress={() => {
+                setModalSoporteVisible(false);
+                contactarSoporteWhatsApp('Hola, soy transportista de RepartoYA y necesito soporte para ingresar a la aplicación.');
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalBotonWhatsAppTexto}>💬 Abrir chat de WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalBotonSecundario}
               onPress={() => setModalSoporteVisible(false)}
             >
-              <Text style={styles.modalBotonOkTexto}>Entendido</Text>
+              <Text style={styles.modalBotonSecundarioTexto}>Cerrar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -599,5 +626,32 @@ const styles = StyleSheet.create({
     color: RepartoYA.blanco,
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  // Núcleo del cambio: Estilos del botón de contacto oficial a WhatsApp
+  modalBotonWhatsApp: {
+    backgroundColor: '#25D366', // Verde corporativo oficial de WhatsApp
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: 'center',
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: '#25D366',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  modalBotonWhatsAppTexto: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  modalBotonSecundario: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  modalBotonSecundarioTexto: {
+    color: RepartoYA.grisTexto,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

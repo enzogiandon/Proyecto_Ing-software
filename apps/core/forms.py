@@ -1,12 +1,13 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.contrib.auth import get_user_model
+from django.db.models import Q
 
-from .models import Grupos, Transportista, Usuario, Vehiculo
+from .models import EstadoVehiculo, Grupos, Transportista, Usuario, Vehiculo
 
 Usuario = get_user_model()
 
@@ -58,6 +59,13 @@ class EmpleadoCreateForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
         label="Grupos / Roles asignados",
     )
+    vehiculo = forms.ModelChoiceField(
+        queryset=Vehiculo.objects.none(),
+        required=False,
+        empty_label="Seleccione un vehículo (opcional)",
+        widget=forms.Select(attrs={"class": "form-select"}),
+        label="Vehículo asignado",
+    )
 
     class Meta:
         model = Usuario
@@ -67,6 +75,7 @@ class EmpleadoCreateForm(forms.ModelForm):
             "first_name",
             "last_name",
             "telefono",
+            "vehiculo",
             "grupos",
         ]
         widgets = {
@@ -86,6 +95,12 @@ class EmpleadoCreateForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "Teléfono"}
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["vehiculo"].queryset = Vehiculo.objects.filter(
+            transportista__isnull=True, estado="disponible"
+        ).order_by("modelo", "patente")
 
     def clean_username(self):
         username = self.cleaned_data["username"]
@@ -116,8 +131,11 @@ class EmpleadoCreateForm(forms.ModelForm):
                 user.groups.set(nuevos_grupos)
 
                 nombres_grupos = [g.name for g in nuevos_grupos]
+                vehiculo = self.cleaned_data.get("vehiculo")
                 if Grupos.TRANSPORTISTA in nombres_grupos:
                     Transportista.objects.get_or_create(usuario=user)
+                    Transportista.objects.create(usuario=user, vehiculo=vehiculo)
+
         return user
 
 
@@ -127,6 +145,14 @@ class EmpleadoUpdateForm(forms.ModelForm):
         required=True,
         widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
         label="Grupos / Roles asignados",
+    )
+    # Declarado explícitamente (no se agrega a Meta.fields)
+    vehiculo = forms.ModelChoiceField(
+        queryset=Vehiculo.objects.none(),
+        required=False,
+        empty_label="Seleccione un vehículo (opcional)",
+        widget=forms.Select(attrs={"class": "form-select"}),
+        label="Vehículo asignado",
     )
 
     class Meta:
@@ -159,27 +185,36 @@ class EmpleadoUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         if self.instance and self.instance.pk:
             self.fields["grupos"].initial = self.instance.groups.filter(
                 name__in=Grupos.values
             )
             self.fields["username"].disabled = True
-
             self.fields["first_name"].disabled = True
-
             self.fields["last_name"].disabled = True
 
+            perfil = getattr(self.instance, "perfil_transportista", None)
+            qs_vehiculos = Vehiculo.objects.filter(
+                transportista__isnull=True,
+                estado="disponible"
+            )
+
+            if perfil and perfil.vehiculo_id:
+                qs_vehiculos = qs_vehiculos.exclude(pk=perfil.vehiculo_id)
+                self.fields["vehiculo"].queryset = qs_vehiculos.order_by("modelo", "patente")
+            else:
+                self.fields["vehiculo"].queryset = Vehiculo.objects.filter(
+                    transportista__isnull=True,
+                    estado="disponible"
+                ).order_by("modelo", "patente")
     def clean_grupos(self):
         grupos = self.cleaned_data.get("grupos")
-
         if not grupos:
             return grupos
 
         nombres_grupos = [getattr(g, "name", str(g)) for g in grupos]
-
-        rol_transportista = "transportista"  # o Grupos.TRANSPORTISTA si usás un Enum
-
-        if rol_transportista in nombres_grupos and len(nombres_grupos) > 1:
+        if Grupos.TRANSPORTISTA in nombres_grupos and len(nombres_grupos) > 1:
             raise ValidationError(
                 "Un transportista no puede tener otros roles asignados."
             )
@@ -202,20 +237,42 @@ class EmpleadoUpdateForm(forms.ModelForm):
         if commit:
             with transaction.atomic():
                 user.save()
-
                 grupos = self.cleaned_data.get("grupos")
                 if grupos is not None:
                     user.groups.set(grupos)
 
                 nombres_grupos = [getattr(g, "name", str(g)) for g in user.groups.all()]
                 es_transportista = Grupos.TRANSPORTISTA in nombres_grupos
+                nuevo_vehiculo = self.cleaned_data.get("vehiculo")
+
+                perfil = Transportista.objects.filter(usuario=user).first()
 
                 if es_transportista:
-                    Transportista.objects.get_or_create(usuario=user)
-                else:
-                    Transportista.objects.filter(usuario=user).delete()
+                    if not perfil:
+                        perfil = Transportista.objects.create(usuario=user)
 
-        return user
+                    vehiculo_anterior = perfil.vehiculo
+
+                    if vehiculo_anterior and vehiculo_anterior != nuevo_vehiculo:
+                        vehiculo_anterior.estado = EstadoVehiculo.DISPONIBLE
+                        vehiculo_anterior.save(update_fields=["estado"])
+
+                    perfil.vehiculo = nuevo_vehiculo
+                    perfil.save(update_fields=["vehiculo"])
+
+                    if nuevo_vehiculo:
+                        nuevo_vehiculo.estado = EstadoVehiculo.ASIGNADO
+                        nuevo_vehiculo.save(update_fields=["estado"])
+
+                else:
+                    # Si dejó de ser transportista, liberamos su vehículo antes de eliminar el perfil
+                    if perfil:
+                        if perfil.vehiculo:
+                            perfil.vehiculo.estado = EstadoVehiculo.DISPONIBLE
+                            perfil.vehiculo.save(update_fields=["estado"])
+                        perfil.delete()
+
+            return user
 
 class VehiculoForm(forms.ModelForm):
     class Meta:

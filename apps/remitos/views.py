@@ -1,5 +1,4 @@
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db import transaction
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -15,7 +14,7 @@ from .forms import (
     MarcaForm,
     RemitoForm,
 )
-from .models import Comercio, ImportacionRemitos, Marca, Remito
+from .models import Comercio, EstadoRemito, ImportacionRemitos, Marca, Remito
 
 
 class CrearRemito(CreateView):
@@ -52,11 +51,41 @@ class ListaRemito(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        return (
-            Remito.objects.select_related("marca", "comercio", "parada")
-            .all()
-            .order_by("id")
+        qs = (
+            super()
+            .get_queryset()
+            .select_related("comercio", "marca")
+            .order_by("-id")
         )
+
+        comercio = self.request.GET.get("comercio", "").strip()
+        estado = self.request.GET.get("estado", "").strip()
+        marca = self.request.GET.get("marca", "").strip()
+        fecha = self.request.GET.get("fecha", "").strip()
+
+        if comercio:
+            qs = qs.filter(comercio__razon_social__icontains=comercio)
+        if estado:
+            qs = qs.filter(estado=estado)
+        if marca:
+            qs = qs.filter(marca_id=marca)
+        if fecha:
+            qs = qs.filter(fecha_creacion__date=fecha)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Opciones para los desplegables
+        context["estados"] = EstadoRemito.choices
+        context["marcas"] = Marca.objects.all().order_by("nombre")
+
+        # Variables para mantener el estado del formulario en el HTML
+        context["filtro_comercio"] = self.request.GET.get("comercio", "")
+        context["filtro_estado"] = self.request.GET.get("estado", "")
+        context["filtro_marca"] = self.request.GET.get("marca", "")
+        context["filtro_fecha"] = self.request.GET.get("fecha", "")
+        return context
 
 
 class EliminarRemito(DeleteView):

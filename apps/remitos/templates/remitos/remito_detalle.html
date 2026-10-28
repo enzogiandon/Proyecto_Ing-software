@@ -38,12 +38,12 @@
                     <span class="remito-data-value fw-semibold text-c-primary">#{{ remito.numero }}</span>
                 </div>
                 <div class="remito-data-row">
-                    <span class="remito-data-label">Comercio CUIT:</span>
-                    <span class="remito-data-value">{{ remito.comercio.cuit }}</span>
-                </div>
-                <div class="remito-data-row">
                     <span class="remito-data-label">Comercio destino:</span>
                     <span class="remito-data-value">{{ remito.comercio.razon_social }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Dirección destino:</span>
+                    <span class="remito-data-value text-c-secondary">{{ remito.comercio.domicilio }}</span>
                 </div>
             </div>
 
@@ -54,12 +54,12 @@
                     <span class="remito-data-value">{{ remito.marca.nombre }}</span>
                 </div>
                 <div class="remito-data-row">
-                    <span class="remito-data-label">Monto total:</span>
-                    <span class="remito-data-value fw-bold text-success fs-6">${{ remito.total|floatformat:2 }}</span>
+                    <span class="remito-data-label">Transportista asignado:</span>
+                    <span class="remito-data-value"> {{ remito.parada.itinerario.transportista.usuario.get_full_name|default:"Sin asignar" }}
                 </div>
                 <div class="remito-data-row">
-                    <span class="remito-data-label">Dirección destino:</span>
-                    <span class="remito-data-value text-c-secondary">{{ remito.comercio.domicilio }}</span>
+                    <span class="remito-data-label">Monto total:</span>
+                    <span class="remito-data-value fw-bold text-success fs-6">${{ remito.total|floatformat:2 }}</span>
                 </div>
             </div>
         </div>
@@ -72,14 +72,27 @@
         <h2 class="text-section mb-3">Datos de la entrega</h2>
         {% if remito.parada %}
             <div class="remitos-detail-grid">
-                <div class="remito-data-row">
+              <div>
+                <div class="parada-data-row">
                     <span class="remito-data-label">Itinerario asignado:</span>
                     <span class="remito-data-value fw-semibold">Itinerario #{{ remito.parada.itinerario_id }}</span>
                 </div>
-                <div class="remito-data-row">
+                <div class="parada-data-row">
                     <span class="remito-data-label">Parada en ruta:</span>
                     <span class="remito-data-value">Parada #{{ remito.parada.orden }}</span>
                 </div>
+              </div>
+
+              <div>
+                <div class="parada-data-row">
+                    <span class="remito-data-label">Estado:</span>
+                    <span class="remito-data-value">{{ remito.parada.get_estado_display }}</span>
+                </div>
+                <div class="parada-data-row">
+                    <span class="remito-data-label">Fecha y hora de entrega:</span>
+                    <span class="remito-data-value">{{ remito.parada.hora_entrega|default:'No entregado' }}</span>
+                </div>
+              </div>
             </div>
         {% else %}
             <div class="p-3 bg-light rounded text-c-muted d-flex align-items-center gap-2">

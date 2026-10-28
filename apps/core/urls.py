@@ -35,7 +35,6 @@ urlpatterns = [
         SuspenderEmpleado.as_view(),
         name="empleado_suspender",
     ),
-    path("usuarios/crear", CrearEmpleado.as_view(), name="crear_usuario"),
 
     path("vehiculos/", ListaVehiculos.as_view(), name="vehiculo_lista"),
     path("vehiculos/nuevo/", CrearVehiculo.as_view(), name="vehiculo_crear"),

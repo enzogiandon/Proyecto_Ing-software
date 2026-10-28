@@ -1,5 +1,4 @@
 {% load static %}
-{% load auth_extras %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -43,7 +42,10 @@
                     <!-- Logo SVG -->
                     {% include 'logo.html' %}
                     <div>
-                        <div class="brand-text">RepartosYA</div>
+                        <div class="brand-text">
+                            <span class="text-repartos">Repartos</span>
+                            <span class="text-ya">YA</span>
+                        </div>
                         <div class="brand-subtext">Panel administrativo</div>
                     </div>
                 </a>
@@ -61,8 +63,6 @@
                 </a>
 
                 
-                {% if request.user|has_group:'Administrador' %}
-
                     {% if user.rol == 'planificacion' %}
                         <!-- Sección: PLANIFICACIÓN -->
                         <div class="nav-section-title">Planificación</div>
@@ -99,7 +99,7 @@
                             <span>Arqueo de caja</span>
                         </a>
 
-                    {% elif user.rol == "administracion"%}
+                    {% elif user.rol == "administrativo"%}
                         <!-- Sección: ADMINISTRACIÓN -->
                         <div class="nav-section-title">Administración</div>
                         <a href="{% url 'core:empleado_lista' %}" class="sidebar-link {% if 'empleado' in request.resolver_match.url_name %}active{% endif %}">
@@ -121,7 +121,6 @@
                             <span>Sin rol asignado</span>
                         </div>
                     {% endif %}
-                {% endif %}
             </nav>
 
             <!-- Pie del Sidebar: Datos de Usuario y Botón de Salir -->

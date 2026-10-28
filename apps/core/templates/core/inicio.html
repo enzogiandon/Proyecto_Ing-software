@@ -8,9 +8,8 @@
 {% endblock %}
 
 {% block content %}
-    {% if request.user|has_group:'Administrador' %}
         {% if user.rol == 'administrativo' %}
-            {% include "core/administrativo.html" %}
+            {% include "core/administracion.html" %}
         {% elif user.rol == 'conciliacion' %}
             {% include "core/conciliacion.html" %}
         {% elif user.rol == 'planificacion' %}
@@ -18,9 +17,6 @@
         {% else %}
             {% include "core/sin_perfil.html" %}
         {% endif %}
-    {% else %}
-        {% include "core/sin_perfil.html" %}
-    {% endif %}
 
 
 {% endblock %}

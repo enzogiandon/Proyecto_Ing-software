@@ -7,7 +7,7 @@ html, body {
     padding: 0;
     height: 100%;
     font-family: var(--font-family);
-    background-color: #FFFFFF;
+    background-color: var(--color-bg);
     color: var(--text-primary, #1E293B);
 }
 
@@ -38,18 +38,17 @@ html, body {
   height: auto;
 }
 
-/* Versión compacta para espacios reducidos (automática o por clase) */
-.isotipo-ya.is-compact {
-  width: 40px; /* O el tamaño que necesites */
-}
-
-.isotipo-ya.is-compact #speed-lines {
-  display: none; /* Oculta mágicamente las líneas según la regla de marca */
+.isotipo-ya #speed-lines {
+    fill: var(--bg-surface, #ffffff);
 }
 
 /* Cambio de colores dinámico opcional */
-.isotipo-ya .camion-caja {
-  fill: var(--color-principal, #1B365D);
+.isotipo-ya #camion-caja {
+  fill: var(--bg-surface, #ffffff);
+}
+
+.isotipo-ya #cabina {
+  fill: var(--color-accent, #f4661b);
 }
 
 .login-brand-title {
@@ -57,7 +56,12 @@ html, body {
     font-weight: 700;
     letter-spacing: -0.02em;
     margin: 0 0 0.4rem;
-    color: #FFFFFF;
+    color: var(--bg-surface, #FFFFFF);
+    display: flex;
+}
+
+.text-ya {
+    color: var(--color-accent, #f4661b);
 }
 
 .login-brand-subtitle {
@@ -77,7 +81,7 @@ html, body {
     align-items: center;
     justify-content: center;
     padding: 2.5rem 2rem;
-    background-color: #FFFFFF;
+    background-color: var(--color-bg, #F8FAFC);
 }
 
 .login-form-card {
@@ -88,13 +92,13 @@ html, body {
 .login-form-title {
     font-size: 1.9rem;
     font-weight: 700;
-    color: #0F172A;
+    color: var(--text-primary, #0F172A);
     margin: 0 0 0.35rem;
 }
 
 .login-form-subtitle {
     font-size: 0.95rem;
-    color: #64748B;
+    color: var(--text-secondary, #64748B);
     margin: 0 0 1.75rem;
 }
 
@@ -110,15 +114,15 @@ html, body {
 }
 
 .login-alert-danger {
-    background-color: #FEE2E2;
-    border: 1px solid #FCA5A5;
-    color: #991B1B;
+    background-color: var(--color-error-tint);
+    border: 1px solid var(--color-error);
+    color: var(--color-error);
 }
 
 .login-alert-warning {
-    background-color: #FEF9C3;
-    border: 1px solid #FDE047;
-    color: #854D0E;
+    background-color: var(--color-warning-tint, #FEF3C7);
+    border: 1px solid var(--color-warning, #F59E0B);
+    color: var(--color-warning, #F59E0B);
 }
 
 /* CAMPOS DE ENTRADA */
@@ -130,7 +134,7 @@ html, body {
     display: block;
     font-size: 0.88rem;
     font-weight: 600;
-    color: #1E293B;
+    color: var(--text-label, #1E293B);
     margin-bottom: 0.45rem;
 }
 
@@ -138,16 +142,16 @@ html, body {
     width: 100%;
     padding: 0.75rem 0.9rem;
     font-size: 0.95rem;
-    border: 1px solid #E2E8F0;
+    border: 1px solid var(--border-color, #CBD5E1);
     border-radius: 8px;
-    color: #1E293B;
-    background-color: #FFFFFF;
+    color: var(--text-muted, #475569);
+    background-color: var(--bg);
     box-sizing: border-box;
     transition: all 0.15s ease-in-out;
 }
 
 .login-input::placeholder {
-    color: #94A3B8;
+    color: var(--text-muted, #94A3B8);
 }
 
 .login-input:focus {
@@ -157,8 +161,8 @@ html, body {
 }
 
 .login-input.is-invalid {
-    border-color: #EF4444;
-    background-color: #FFFDFD;
+    border-color: var(--status-danger-text, #EF4444);
+    background-color: var(--bg-surface, #FEF2F2);
 }
 
 .login-input.is-invalid:focus {
@@ -182,7 +186,7 @@ html, body {
     transform: translateY(-50%);
     background: transparent;
     border: none;
-    color: #64748B;
+    color: var(--text-secondary, #64748B);
     padding: 6px 8px;
     cursor: pointer;
     font-size: 1rem;
@@ -194,7 +198,7 @@ html, body {
 }
 
 .btn-toggle-eye:hover {
-    color: #1E293B;
+    color: var(--text-primary, #1b1b1f);
 }
 
 /* BOTÓN INICIAR SESIÓN */
@@ -235,7 +239,7 @@ html, body {
 /* ENLACE DE AYUDA */
 .login-help-link {
     display: inline-block;
-    color: #64748B;
+    color: var(--text-secondary, #64748B);
     font-size: 0.8rem;
     text-decoration: underline;
     transition: color 0.15s ease;

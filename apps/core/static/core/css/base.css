@@ -75,7 +75,15 @@ body {
   font-weight: 700;
   font-size: 1.15rem;
   line-height: 1.2;
-  color: var(--text-primary);
+  display: flex;
+}
+
+.text-repartos {
+  color: var(--text-primary, #1B365D);
+}
+
+.text-ya {
+  color: var(--color-accent, #f4661b);
 }
 
 .brand-subtext {

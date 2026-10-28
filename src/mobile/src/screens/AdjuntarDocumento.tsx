@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   Alert,
   Image,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -44,33 +45,77 @@ export default function AdjuntarDocumento() {
 
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
 
+  const tamanoLegible = selectedFile?.size
+    ? selectedFile.size > 1024 * 1024
+      ? `${(selectedFile.size / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
+      : `${Math.round(selectedFile.size / 1024)} KB`
+    : null;
+
   const tomarFotografia = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    // 1. Verificación previa de hardware en entorno Web
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const tieneCamara = devices.some((d) => d.kind === 'videoinput');
+        if (!tieneCamara) {
+          Alert.alert(
+            'Cámara no detectada',
+            'No se detectó ninguna cámara disponible en este dispositivo. Podés adjuntar el documento seleccionando un archivo.'
+          );
+          return;
+        }
+      } catch {
+        // En caso de bloqueo de políticas del navegador
+      }
+    }
 
-    if (!permission.granted) {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          'Permiso necesario',
+          'Necesitamos permiso para utilizar la cámara y fotografiar el remito.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const photo = result.assets[0];
+        setSelectedFile({
+          name: photo.fileName || `remito_camara_${Date.now()}.jpg`,
+          uri: photo.uri,
+          mimeType: photo.mimeType || 'image/jpeg',
+          size: photo.fileSize,
+        });
+      }
+    } catch (error: any) {
+      console.warn('Error al iniciar la cámara:', error);
       Alert.alert(
-        'Permiso necesario',
-        'Necesitamos permiso para utilizar la cámara.'
+        'Cámara no detectada',
+        'No se detectó ninguna cámara disponible o no fue posible iniciarla en este dispositivo. Podés adjuntar el documento seleccionando un archivo.'
       );
-      return;
     }
+  };
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets.length > 0) {
-      const photo = result.assets[0];
-
-      setSelectedFile({
-  name: photo.fileName || 'remito_fotografia.jpg',
-  uri: photo.uri,
-  mimeType: photo.mimeType || 'image/jpeg',
-  size: photo.fileSize,
-});
-    
-    }
+  const eliminarDocumento = () => {
+    Alert.alert(
+      'Quitar documento',
+      '¿Deseás eliminar el documento seleccionado de esta entrega?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => setSelectedFile(null),
+        },
+      ]
+    );
   };
 
   const seleccionarArchivo = async () => {
@@ -186,29 +231,51 @@ Alert.alert(
 
         <View style={styles.previewHeading}>
           <Text style={styles.sectionTitle}>Vista previa</Text>
-          <Text style={styles.previewStatus}>
-            {selectedFile ? 'Seleccionado' : 'Sin guardar'}
-          </Text>
+          {selectedFile ? (
+            <TouchableOpacity
+              style={styles.botonEliminarHeader}
+              onPress={eliminarDocumento}
+              activeOpacity={0.7}
+              accessibilityLabel="Eliminar documento seleccionado"
+            >
+              <Text style={styles.iconoEliminar}>🗑️</Text>
+              <Text style={styles.textoBotonEliminar}>Eliminar</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.previewStatus}>Sin guardar</Text>
+          )}
         </View>
 
         <View style={styles.previewCard}>
           {selectedFile ? (
             <>
               {isImage ? (
-                <Image
-                  source={{ uri: selectedFile.uri }}
-                  style={styles.previewImage}
-                  resizeMode="contain"
-                />
+                <View style={styles.previewImageContainer}>
+                  <Image
+                    source={{ uri: selectedFile.uri }}
+                    style={styles.previewImage}
+                    resizeMode="contain"
+                  />
+                </View>
               ) : (
                 <View style={styles.filePlaceholder}>
+                  <Text style={styles.filePlaceholderIcon}>📄</Text>
                   <Text style={styles.filePlaceholderText}>PDF</Text>
+                  <Text style={styles.filePlaceholderSubtext}>Documento adjunto</Text>
                 </View>
               )}
 
-              <Text style={styles.fileName} numberOfLines={2}>
-                {selectedFile.name}
-              </Text>
+              <View style={styles.fileInfoContainer}>
+                <Text style={styles.fileName} numberOfLines={2}>
+                  {selectedFile.name}
+                </Text>
+                {tamanoLegible && (
+                  <Text style={styles.fileSizeText}>Tamaño: {tamanoLegible}</Text>
+                )}
+                <View style={styles.badgeSeleccionado}>
+                  <Text style={styles.badgeSeleccionadoTexto}>✓ Comprobante listo para guardar</Text>
+                </View>
+              </View>
             </>
           ) : (
             <View style={styles.emptyPreview}>
@@ -216,9 +283,22 @@ Alert.alert(
               <Text style={styles.emptyPreviewText}>
                 Todavía no seleccionaste un documento
               </Text>
+              <Text style={styles.emptyPreviewSubtext}>
+                Podés tomar una foto del comprobante o elegir un archivo
+              </Text>
             </View>
           )}
         </View>
+
+        {selectedFile && (
+          <TouchableOpacity
+            style={styles.botonQuitarArchivo}
+            onPress={eliminarDocumento}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.textoQuitarArchivo}>✕ Quitar este documento</Text>
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.note}>
           Al guardarlo, quedará disponible para consulta administrativa.
@@ -342,7 +422,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 20,
     marginBottom: 12,
   },
   sectionTitle: {
@@ -351,57 +431,138 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   previewStatus: {
-    color: COLORS.orange,
+    color: COLORS.gray,
     fontSize: 14,
+    fontWeight: '600',
+  },
+  botonEliminarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  iconoEliminar: {
+    fontSize: 14,
+    marginRight: 6,
+  },
+  textoBotonEliminar: {
+    color: '#DC2626',
+    fontSize: 13,
     fontWeight: '700',
   },
   previewCard: {
-    minHeight: 190,
+    minHeight: 340,
     backgroundColor: COLORS.white,
     borderColor: COLORS.border,
     borderWidth: 1,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  previewImageContainer: {
+    width: '100%',
+    height: 300,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   previewImage: {
     width: '100%',
-    height: 160,
-    borderRadius: 8,
+    height: '100%',
   },
   filePlaceholder: {
-    height: 110,
-    width: 100,
-    borderRadius: 12,
-    backgroundColor: '#F0F0F0',
+    height: 180,
+    width: 170,
+    borderRadius: 14,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  filePlaceholderIcon: {
+    fontSize: 44,
+    marginBottom: 6,
   },
   filePlaceholderText: {
     color: COLORS.navy,
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
   },
+  filePlaceholderSubtext: {
+    color: COLORS.gray,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  fileInfoContainer: {
+    width: '100%',
+    marginTop: 14,
+    alignItems: 'center',
+  },
   fileName: {
-    marginTop: 10,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '700',
     color: COLORS.charcoal,
     textAlign: 'center',
   },
+  fileSizeText: {
+    fontSize: 13,
+    color: COLORS.gray,
+    marginTop: 4,
+  },
+  badgeSeleccionado: {
+    marginTop: 8,
+    backgroundColor: '#E4F3ED',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  badgeSeleccionadoTexto: {
+    color: '#00876A',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  botonQuitarArchivo: {
+    alignSelf: 'center',
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  textoQuitarArchivo: {
+    color: '#DC2626',
+    fontSize: 14,
+    fontWeight: '700',
+  },
   emptyPreview: {
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 40,
+    paddingHorizontal: 16,
   },
   emptyPreviewIcon: {
-    fontSize: 36,
+    fontSize: 48,
     color: COLORS.gray,
     marginBottom: 10,
   },
   emptyPreviewText: {
+    color: COLORS.charcoal,
+    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  emptyPreviewSubtext: {
     color: COLORS.gray,
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 13,
   },
   note: {
     color: COLORS.gray,

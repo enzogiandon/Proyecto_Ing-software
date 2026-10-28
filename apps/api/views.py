@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
@@ -336,8 +337,9 @@ class ParadaViewSet(viewsets.ModelViewSet):
 
             parada.remitos.filter(eliminado=False).update(estado=EstadoRemito.ENTREGADO)
 
+            parada.hora_entrega = timezone.now()
             parada.estado = EstadoParada.FINALIZADA
-            parada.save(update_fields=["estado"])
+            parada.save(update_fields=["estado", "hora_entrega"])
 
             # 4. Validar si era la última parada pendiente del itinerario
             itinerario = parada.itinerario

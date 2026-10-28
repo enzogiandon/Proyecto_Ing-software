@@ -163,6 +163,28 @@ class EmpleadoUpdateForm(forms.ModelForm):
             self.fields["grupos"].initial = self.instance.groups.filter(
                 name__in=Grupos.values
             )
+            self.fields["username"].disabled = True
+
+            self.fields["first_name"].disabled = True
+
+            self.fields["last_name"].disabled = True
+
+    def clean_grupos(self):
+        grupos = self.cleaned_data.get("grupos")
+
+        if not grupos:
+            return grupos
+
+        nombres_grupos = [getattr(g, "name", str(g)) for g in grupos]
+
+        rol_transportista = "transportista"  # o Grupos.TRANSPORTISTA si usás un Enum
+
+        if rol_transportista in nombres_grupos and len(nombres_grupos) > 1:
+            raise ValidationError(
+                "Un transportista no puede tener otros roles asignados."
+            )
+
+        return grupos
 
     def clean_username(self):
         username = self.cleaned_data["username"]
@@ -176,17 +198,24 @@ class EmpleadoUpdateForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+
         if commit:
             with transaction.atomic():
                 user.save()
-                nuevos_grupos = self.cleaned_data.get("grupos", [])
-                user.groups.set(nuevos_grupos)
 
-                nombres_grupos = [g.name for g in nuevos_grupos]
-                if Grupos.TRANSPORTISTA in nombres_grupos:
+                grupos = self.cleaned_data.get("grupos")
+                if grupos is not None:
+                    user.groups.set(grupos)
+
+                nombres_grupos = [getattr(g, "name", str(g)) for g in user.groups.all()]
+                es_transportista = Grupos.TRANSPORTISTA in nombres_grupos
+
+                if es_transportista:
                     Transportista.objects.get_or_create(usuario=user)
-        return user
+                else:
+                    Transportista.objects.filter(usuario=user).delete()
 
+        return user
 
 class VehiculoForm(forms.ModelForm):
     class Meta:

@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-        {% if request.user|has_group:'gestion-usuarios' %}
+        {% if request.user|has_group:'gestion-personal' %}
             {% include "core/administracion.html" %}
         {% elif request.user|has_group:'administrativo-conciliacion' %}
             {% include "core/conciliacion.html" %}

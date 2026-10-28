@@ -37,7 +37,13 @@
                     <td class="fw-bold">{{ emp.username }}</td>
                     <td>{{ emp.last_name }}, {{ emp.first_name }}</td>
                     <td>{{ emp.dni }}</td>
-                    <td><span class="badge bg-secondary">{{ emp.get_rol_display|default:emp.rol }}</span></td>
+                    <td>
+                        {% for grupo in emp.groups.all %}
+                            <span class="badge bg-secondary me-1">{{ grupo.name }}</span>
+                        {% empty %}
+                            <span class="text-muted small">Sin rol</span>
+                        {% endfor %}
+                    </td>
                     <td>
                         {% if emp.is_active %}
                             <span class="badge bg-success">Activo</span>

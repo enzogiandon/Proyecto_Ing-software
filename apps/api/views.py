@@ -250,6 +250,43 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         parada_ids_ordenadas = [parada.id for parada in paradas_ordenadas]
         return Response(parada_ids_ordenadas, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=["post", "delete"], url_path="eliminar-ruta")
+    def eliminar_ruta(self, request):
+        """
+        Elimina una plantilla de RutaGuardada perteneciente al chofer autenticado.
+        Endpoint: POST o DELETE /api/itinerarios/eliminar-ruta/
+        Body: {"ruta_id": <id>}
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {"detail": "El usuario autenticado no posee perfil de transportista."}
+            )
+
+        ruta_id = request.data.get("ruta_id")
+        if not ruta_id:
+            raise ValidationError({"ruta_id": "El campo 'ruta_id' es obligatorio."})
+
+        try:
+            ruta_guardada = RutaGuardada.objects.get(
+                id=ruta_id, transportista=user.perfil_transportista
+            )
+        except RutaGuardada.DoesNotExist:
+            raise NotFound(
+                {"detail": "La ruta enviada no existe o no pertenece a tu usuario."}
+            )
+
+        with transaction.atomic():
+            # Si el modelo tiene on_delete=CASCADE en los detalles se borran solos,
+            # pero hacerlo explícito asegura la limpieza completa.
+            ruta_guardada.detalles.all().delete()
+            ruta_guardada.delete()
+
+        return Response(
+            {"mensaje": "Ruta eliminada correctamente.", "id": ruta_id},
+            status=status.HTTP_200_OK,
+        )
+
 
 class ParadaViewSet(viewsets.ModelViewSet):
     queryset = Parada.objects.select_related("comercio", "cobranza").prefetch_related(
@@ -269,7 +306,6 @@ class ParadaViewSet(viewsets.ModelViewSet):
         ]
         """
         parada = self.get_object()
-        remitos = parada.remitos
 
         if not isinstance(request.data, list) or len(request.data) == 0:
             raise ValidationError(

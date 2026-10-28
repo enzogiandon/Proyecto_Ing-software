@@ -1,78 +1,75 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Lista de Empleados</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4 bg-light">
+{% extends "base.html" %}
+{% load static %}
 
-<div class="container">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} py-2">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+{% block title %}Empleados - RepartosYA{% endblock %}
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Empleados</h3>
-        <a href="{% url 'core:empleado_crear' %}" class="btn btn-success">+ Nuevo Empleado</a>
+{% block extra_css %}
+{# home.css aporta el botón (.home-btn) y los badges (.estado-badge) compartidos #}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'core/css/empleado_lista.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% now "l, j \d\e F \d\e Y" as fecha_hoy %}
+<div class="empleados">
+
+    <div class="empleados-encabezado">
+        <header class="empleados-encabezado_texto">
+            <h1 class="text-title">Empleados</h1>
+            <p class="text-body empleados-fecha">{{ fecha_hoy|capfirst }}</p>
+        </header>
+        <div>
+            <a href="{% url 'core:empleado_crear' %}" class="home-btn home-btn--primary home-btn--compacto">
+                Agregar personal
+                <i class="fa fa-plus"></i>
+            </a>
+        </div>
     </div>
+    
+    <section class="panel-tabla" aria-labelledby="titulo-transportistas">
 
-    <div class="card shadow-sm">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Usuario</th>
-                    <th>Nombre y Apellido</th>
-                    <th>DNI</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th class="text-end pe-3">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
+
+        <div class="tabla-scroll">
+            <div class="tabla-empleados" role="table" aria-label="Transportistas">
+
+                <div class="tabla-empleados__fila tabla-empleados__fila--encabezado" role="row">
+                    <div role="columnheader">Nombre y Apellido</div>
+                    <div role="columnheader">DNI</div>
+                    <div role="columnheader">Estado</div>
+                    <div role="columnheader">Rol</div>
+                    <div role="columnheader">Acciones</div>
+                </div>
+
                 {% for emp in empleados %}
-                <tr>
-                    <td class="fw-bold">{{ emp.username }}</td>
-                    <td>{{ emp.last_name }}, {{ emp.first_name }}</td>
-                    <td>{{ emp.dni }}</td>
-                    <td>
-                        {% for grupo in emp.groups.all %}
-                            <span class="badge bg-secondary me-1">{{ grupo.name }}</span>
-                        {% empty %}
-                            <span class="text-muted small">Sin rol</span>
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% if emp.is_active %}
-                            <span class="badge bg-success">Activo</span>
-                        {% else %}
-                            <span class="badge bg-danger">Suspendido</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end pe-3">
-                        <a href="{% url 'core:empleado_editar' emp.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-
-                        {% if emp.is_active %}
-                        <form method="post" action="{% url 'core:empleado_suspender' emp.pk %}" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Suspender empleado?')">
-                                Suspender
-                            </button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
+                    <div class="tabla-empleados__fila" role="row">
+                        <div class="celda-nombre" role="cell">{{ emp.first_name }}, {{ emp.last_name }}</div>
+                        <div class="celda-vehiculo" role="cell">{{ emp.username }}</div>
+                        <div role="cell">
+                            {% if emp.is_active %}
+                                <span class="estado-badge estado-badge--info text-badge">Activo</span>
+                            {% else %}
+                                <span class="estado-badge estado-badge--error text-badge">Suspendido</span>
+                            {% endif %}
+                        </div>
+                        <div role="cell">
+                            {{ emp.vehiculo|default:'Sin rol' }}
+                        </div>
+                        <div role="cell">
+                            <a href="{% url 'core:empleado_editar' emp.pk %}" class="home-btn" aria-label="Editar a {{ nombre }}">
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                <span>Editar</span>
+                            </a>
+                        </div>
+                    </div>
                 {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">No hay empleados registrados.</td>
-                </tr>
+                    {# Estado vacío: no existe en Figma, texto provisorio #}
+                    <div class="tabla-empleados__vacia" role="row">
+                        <div role="cell">No hay transportistas registrados.</div>
+                    </div>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
 
-</body>
-</html>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+/* ===================================================
+   RepartosYA - LISTADO DE EMPLEADOS
+   Requiere paletas.css (tokens, incluidos --color-accent / --color-info)
+   y home.css (.home-btn, .home-btn--primary, .estado-badge).
+=================================================== */
+
+.empleados {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+}
+/* En Figma el panel llega hasta el borde inferior de la pantalla */
+@media (min-width: 992px) {
+  .empleados { min-height: calc(100vh - 3.5rem); }
+}
+
+/* ---------- Encabezado de página ---------- */
+.empleados-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-16);
+  padding: 10px var(--spacing-16);
+}
+.empleados-encabezado_texto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.empleados-encabezado_texto h1 {
+  margin: 0;
+  color: var(--color-primary);
+}
+.empleados-fecha {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Panel ---------- */
+.panel-tabla {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  padding: var(--spacing-24);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.panel-tabla__textos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+.panel-tabla__titulo {
+  margin: 0;
+  color: var(--color-primary);
+}
+.panel-tabla__descripcion {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+/* Botón principal más bajo que el estándar (34px en Figma) */
+.home-btn--compacto {
+  min-height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+  white-space: nowrap;
+}
+
+/* ---------- Tabla ---------- */
+/* En pantallas angostas se desplaza hacia el costado en lugar de romperse */
+.tabla-scroll { overflow-x: auto; }
+
+/* Las filas son hermanas separadas por 20px, sin líneas divisorias (Figma) */
+.tabla-empleados {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 954px; /* 220 + 140 + 180 + 198 + 120 + 4 huecos de 16 + padding */
+}
+
+/* Columnas de ancho fijo alineadas a la izquierda; la fila ocupa todo el ancho */
+.tabla-empleados__fila {
+  display: grid;
+  grid-template-columns: 220px 140px 180px 198px 120px;
+  column-gap: var(--spacing-16);
+  align-items: center;
+  padding: 12px var(--spacing-16);
+  color: var(--color-text);
+  font: 400 14px/normal var(--font-family);
+}
+
+.tabla-empleados__fila--encabezado {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: var(--color-bg);
+  border-radius: 6px; /* Figma usa 6px acá, no el radio estándar de 8px */
+  color: var(--color-text-secondary);
+  font: 600 12px/normal var(--font-family);
+}
+
+.celda-nombre { font-weight: 500; }
+.celda-vehiculo { font-weight: 400; }
+.celda-vacia { color: var(--color-text-muted); }
+
+/* Matrícula (chip) */
+.chip-matricula {
+  display: inline-flex;
+  padding: 4px 10px;
+  background: var(--color-bg);
+  border-radius: 12px; /* valor propio del chip en Figma */
+  color: var(--color-text-secondary);
+  font: 600 12px/normal var(--font-family);
+  white-space: nowrap;
+}
+
+/* Estado vacío */
+.tabla-empleados__vacia {
+  padding: var(--spacing-32) var(--spacing-16);
+  text-align: center;
+  color: var(--color-text-muted);
+  font: 400 14px/normal var(--font-family);
+}

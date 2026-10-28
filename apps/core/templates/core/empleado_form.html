@@ -1,141 +1,182 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Registrar Nuevo Empleado{% endblock %}
+{% block title %}{% if object.pk %}Editar{% else %}Añadir{% endif %} transportista - RepartosYA{% endblock %}
+
+{% block extra_css %}
+{# home.css aporta los botones compartidos (.home-btn, .home-btn--primary) #}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'core/css/empleado_form.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-3">
-                    <h4 class="card-title mb-0">Crear Nuevo Empleado</h4>
+{% comment %}
+  AÑADIR / EDITAR TRANSPORTISTA
+  (Figma: "Empleados - Añadir Transportista", node 134:857)
+
+  Lo usan CreateView (EmpleadoCreateForm) y UpdateView (EmpleadoUpdateForm).
+
+  VARIABLES DE CONTEXTO
+    form     el formulario. Campos que se dibujan:
+               username, first_name, last_name, email, telefono, rol,
+               is_active (Estado laboral), password, password_confirm
+             - is_active   hay que agregarlo a Meta.fields en forms.py.
+             - dni         no está en el diseño pero el modelo lo exige: si el
+                           formulario lo tiene, se dibuja como tercera columna
+                           de la fila de contacto. Si se quita del formulario,
+                           desaparece solo.
+             - password / password_confirm  solo existen en el alta; en la
+                           edición la fila no se dibuja.
+    object   el empleado que se edita. Vacío en el alta.
+
+  Esta pantalla no usa HTMX: es un formulario POST común.
+{% endcomment %}
+<div class="form-pagina">
+
+    <header class="form-pagina__encabezado">
+        <a href="{% url 'core:empleado_lista' %}" class="home-btn form-pagina__volver">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Volver a empleados</span>
+        </a>
+        <div class="form-pagina__titulos">
+            <h1 class="text-title">{% if object.pk %}Editar transportista{% else %}Añadir transportista{% endif %}</h1>
+            <p class="text-body">{% if object.pk %}Actualiza los datos del transportista.{% else %}Añade a un nuevo transportista a la plantilla{% endif %}</p>
+        </div>
+    </header>
+
+    <form method="post" class="form-pagina__formulario">
+        {% csrf_token %}
+
+        <section class="panel-form" aria-labelledby="titulo-info-transportista">
+            <h2 id="titulo-info-transportista" class="text-section panel-form__titulo">Información del transportista</h2>
+
+            {# Errores que no pertenecen a un campo (provisorio: no está en Figma) #}
+            {% if form.non_field_errors %}
+                <div class="aviso-form aviso-form--error" role="alert">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
                 </div>
-                
-                <div class="card-body p-4">
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger" role="alert">
-                            {% for error in form.non_field_errors %}
-                                <div>{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+            {% endif %}
 
-                    <form method="post" novalidate>
-                        {% csrf_token %}
+            {# Identidad: usuario, nombre y apellido #}
+            <div class="fila-campos fila-campos--3">
+                <!-- Campo de nombre de usuario -->
+                <div class="campo-form{% if form.username.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.username.id_for_label }}" class="campo-form__etiqueta">Nombre de usuario</label>
+                    {{ form.username }}
+                    {% for error in form.username.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
 
-                        <!-- Nombre de usuario -->
-                        <div class="mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label fw-bold">Usuario / DNI</label>
-                            {{ form.username }}
-                            {% if form.username.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.username.errors.0 }}
-                                </div>
-                            {% endif %}
-                        </div>
+                <!-- Campo de nombre -->
+                <div class="campo-form{% if form.first_name.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.first_name.id_for_label }}" class="campo-form__etiqueta">Nombre</label>
+                    {{ form.first_name }}
+                    {% for error in form.first_name.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
 
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label for="{{ form.email.id_for_label }}" class="form-label fw-bold">Correo Electrónico</label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.email.errors.0 }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Nombre y Apellido -->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.first_name.id_for_label }}" class="form-label fw-bold">Nombre</label>
-                                {{ form.first_name }}
-                                {% if form.first_name.errors %}
-                                    <div class="text-danger small mt-1">
-                                        {{ form.first_name.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.last_name.id_for_label }}" class="form-label fw-bold">Apellido</label>
-                                {{ form.last_name }}
-                                {% if form.last_name.errors %}
-                                    <div class="text-danger small mt-1">
-                                        {{ form.last_name.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Teléfono -->
-                        <div class="mb-3">
-                            <label for="{{ form.telefono.id_for_label }}" class="form-label fw-bold">Teléfono</label>
-                            {{ form.telefono }}
-                            {% if form.telefono.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.telefono.errors.0 }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Grupo / Rol -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold d-block">{{ form.grupos.label }}</label>
-                            
-                            <div class="card p-3 bg-light border-0">
-                                {% for checkbox in form.grupos %}
-                                    <div class="form-check mb-2">
-                                        {{ checkbox.tag }}
-                                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">
-                                            {{ checkbox.choice_label }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-
-                            {% if form.grupos.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.grupos.errors.0 }}
-                                </div>
-                            {% endif %}
-                            <div class="form-text">
-                                Marcá o desmarcá los roles que correspondan para este usuario.
-                            </div>
-                        </div>
-                        <hr class="my-4">
-
-                        <!-- Contraseña -->
-                        <div class="mb-3">
-                            <label for="{{ form.password.id_for_label }}" class="form-label fw-bold">{{ form.password.label }}</label>
-                            {{ form.password }}
-                            {% if form.password.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.password.errors.0 }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Confirmar contraseña -->
-                        <div class="mb-4">
-                            <label for="{{ form.password_confirm.id_for_label }}" class="form-label fw-bold">{{ form.password_confirm.label }}</label>
-                            {{ form.password_confirm }}
-                            {% if form.password_confirm.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ form.password_confirm.errors.0 }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Botones de acción -->
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="javascript:history.back()" class="btn btn-outline-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary px-4">Guardar Empleado</button>
-                        </div>
-                    </form>
+                <!-- Campo de apellido -->
+                <div class="campo-form{% if form.last_name.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.last_name.id_for_label }}" class="campo-form__etiqueta">Apellido</label>
+                    {{ form.last_name }}
+                    {% for error in form.last_name.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
                 </div>
             </div>
+
+            {# Contacto: email y teléfono (+ DNI si el formulario lo tiene) #}
+            <div class="fila-campos {% if form.dni %}fila-campos--3{% else %}fila-campos--2{% endif %}">
+                <!-- Campo de email -->
+                <div class="campo-form{% if form.email.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.email.id_for_label }}" class="campo-form__etiqueta">Email</label>
+                    {{ form.email }}
+                    {% for error in form.email.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Campo de teléfono -->
+                <div class="campo-form{% if form.telefono.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.telefono.id_for_label }}" class="campo-form__etiqueta">Teléfono</label>
+                    {{ form.telefono }}
+                    {% for error in form.telefono.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# Datos laborales: rol y estado laboral #}
+            <div class="fila-campos fila-campos--2">
+
+                <!-- Campo de grupos / roles -->
+                <div class="campo-form{% if form.grupos.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.grupos.id_for_label }}" class="campo-form__etiqueta">Roles</label>
+                    {{ form.grupos }}
+                    {% for error in form.grupos.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                {# Estado laboral: se envía como is_active = "True" / "False" #}
+                <fieldset class="estado-laboral">
+                    <legend class="estado-laboral__etiqueta">Estado laboral</legend>
+                    <div class="estado-laboral__opciones">
+                        {% with valor=form.is_active.value %}
+                        <label class="opcion-estado">
+                            <input type="radio" name="is_active" value="True"{% if valor != False and valor != "False" %} checked{% endif %}>
+                            <span class="opcion-estado__caja">
+                                <span class="opcion-estado__punto" aria-hidden="true"></span>
+                                <span>Activo</span>
+                            </span>
+                        </label>
+                        <label class="opcion-estado">
+                            <input type="radio" name="is_active" value="False"{% if valor == False or valor == "False" %} checked{% endif %}>
+                            <span class="opcion-estado__caja">
+                                <span class="opcion-estado__punto" aria-hidden="true"></span>
+                                <span>Inactivo</span>
+                            </span>
+                        </label>
+                        {% endwith %}
+                    </div>
+                    {% for error in form.is_active.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </fieldset>
+            </div>
+
+            {# Contraseña: solo en el alta #}
+            {% if form.password %}
+
+                <!-- Campos de contraseña y confirmación -->
+                <div class="fila-campos fila-campos--2">
+                    <div class="campo-form{% if form.password.errors %} campo-form--error{% endif %}">
+                        <label for="{{ form.password.id_for_label }}" class="campo-form__etiqueta">Contraseña</label>
+                        {{ form.password }}
+                        {% for error in form.password.errors %}
+                            <p class="campo-form__error" role="alert">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="campo-form{% if form.password_confirm.errors %} campo-form--error{% endif %}">
+                        <label for="{{ form.password.id_for_label }}" class="campo-form__etiqueta">Confirmar Contraseña</label>
+                        {{ form.password_confirm }}
+                        {% for error in form.password_confirm.errors %}
+                            <p class="campo-form__error" role="alert">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+
+        <div class="acciones-form">
+            <p class="text-help acciones-form__nota">Los cambios se aplicarán al guardar.</p>
+            <div class="acciones-form__botones">
+                <a href="{% url 'core:empleado_lista' %}" class="home-btn">Cancelar</a>
+                <button type="submit" class="home-btn home-btn--primary">Guardar</button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}

@@ -1,0 +1,228 @@
+/* ===================================================
+   RepartosYA - AÑADIR / EDITAR TRANSPORTISTA
+   Figma: "Empleados - Añadir Transportista" (134:857)
+   Requiere paletas.css (tokens) y home.css (.home-btn, .home-btn--primary).
+=================================================== */
+
+.form-pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+}
+
+/* ---------- Encabezado ---------- */
+.form-pagina__encabezado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+.form-pagina__titulos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.form-pagina__titulos h1 {
+  margin: 0;
+  color: var(--color-primary);
+}
+.form-pagina__titulos p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.form-pagina__formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+}
+
+/* ---------- Panel con los campos ---------- */
+.panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-24);
+  padding: var(--spacing-24);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.panel-form__titulo {
+  margin: 0;
+  color: var(--color-primary);
+}
+
+/* Filas de campos: columnas iguales separadas por 16px */
+.fila-campos {
+  display: grid;
+  gap: var(--spacing-16);
+  align-items: start;
+}
+.fila-campos--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fila-campos--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* ---------- Campo (etiqueta + control + error) ---------- */
+.campo-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+.campo-form__etiqueta {
+  margin: 0;
+  color: var(--color-text);
+  font: 500 14px/normal var(--font-family);
+}
+
+/* Los controles los dibuja Django con clases de Bootstrap (form-control /
+   form-select): se ajustan acá a las medidas de Figma. */
+.campo-form .form-control,
+.campo-form .form-select {
+  width: 100%;
+  padding: var(--spacing-12) var(--spacing-16);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  color: var(--color-text);
+  font: 400 14px/normal var(--font-family);
+}
+.campo-form .form-control .form-select::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+.campo-form .form-control:focus,
+.campo-form .form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem var(--color-primary-focus-ring);
+}
+/* Select con el chevron de Figma */
+.campo-form .form-select {
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%236b6b6d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+}
+
+/* Estado de error (no existe en Figma: provisorio) */
+.campo-form--error .form-control,
+.campo-form--error .form-select {
+  border-color: var(--color-error);
+}
+.campo-form__error {
+  margin: 0;
+  color: var(--color-error);
+  font: 400 13px/normal var(--font-family);
+}
+.aviso-form {
+  padding: var(--spacing-12) var(--spacing-16);
+  border-radius: var(--radius-md);
+  font: 400 14px/normal var(--font-family);
+}
+.aviso-form p { margin: 0; }
+.aviso-form--error {
+  background: var(--color-error-tint);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+}
+
+/* ---------- Estado laboral (opciones tipo pill) ---------- */
+.estado-laboral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.estado-laboral__etiqueta {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  color: var(--color-text);
+  font: 500 13px/normal var(--font-family);
+}
+.estado-laboral__opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8);
+}
+.opcion-estado {
+  position: relative;
+  display: inline-flex;
+  margin: 0;
+  cursor: pointer;
+}
+/* El radio real queda oculto pero sigue siendo accesible con teclado */
+.opcion-estado input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+.opcion-estado__caja {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: 10px var(--spacing-16);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font: 500 14px/normal var(--font-family);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.opcion-estado__punto {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--color-text-muted);
+  border-radius: 50%;
+}
+.opcion-estado:hover .opcion-estado__caja { background: var(--color-bg); }
+.opcion-estado input:checked + .opcion-estado__caja {
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.opcion-estado input:checked + .opcion-estado__caja .opcion-estado__punto {
+  border-color: var(--color-primary);
+  background: radial-gradient(circle, var(--color-primary) 0 3px, transparent 3.5px);
+}
+.opcion-estado input:focus-visible + .opcion-estado__caja {
+  box-shadow: 0 0 0 0.2rem var(--color-primary-focus-ring);
+}
+
+/* ---------- Acciones ---------- */
+.acciones-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-16);
+  padding-top: var(--spacing-4);
+}
+.acciones-form__nota {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+.acciones-form__botones {
+  display: flex;
+  gap: var(--spacing-12);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991px) {
+  .fila-campos--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 575px) {
+  .fila-campos--2,
+  .fila-campos--3 { grid-template-columns: minmax(0, 1fr); }
+  .acciones-form { flex-direction: column-reverse; align-items: stretch; }
+  .acciones-form__botones { justify-content: flex-end; }
+}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object.pk %}Editar{% else %}Añadir{% endif %} vehículo - RepartosYA{% endblock %}
+
+{% block extra_css %}
+{# home.css: botones compartidos. empleado_form.css: la estructura de formulario es la misma #}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'core/css/empleado_form.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="form-pagina">
+
+    <header class="form-pagina__encabezado">
+        <a href="{% url 'core:vehiculo_lista' %}" class="home-btn form-pagina__volver">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Volver a flota</span>
+        </a>
+        <div class="form-pagina__titulos">
+            <h1 class="text-title">{% if object.pk %}Editar vehículo{% else %}Añadir vehículo{% endif %}</h1>
+            <p class="text-body">{% if object.pk %}Actualiza los datos del vehículo.{% else %}Añade un nuevo vehículo a la flota{% endif %}</p>
+        </div>
+    </header>
+
+    <form method="post" class="form-pagina__formulario">
+        {% csrf_token %}
+
+        <section class="panel-form" aria-labelledby="titulo-info-vehiculo">
+            <h2 id="titulo-info-vehiculo" class="text-section panel-form__titulo">Información del vehículo</h2>
+
+            {# Errores que no pertenecen a un campo (provisorio: no está en Figma) #}
+            {% if form.non_field_errors %}
+                <div class="aviso-form aviso-form--error" role="alert">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            {# Datos del vehículo #}
+            <div class="fila-campos fila-campos--3">
+
+                <!-- Campo de patente -->
+                <div class="campo-form{% if form.patente.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.patente.id_for_label }}" class="campo-form__etiqueta">Patente</label>
+                    {{ form.patente }}
+                    {% for error in form.patente.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Campo de modelo -->
+                <div class="campo-form{% if form.modelo.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.modelo.id_for_label }}" class="campo-form__etiqueta">Modelo y marca del vehículo</label>
+                    {{ form.modelo }}
+                    {% for error in form.modelo.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Campo de póliza -->
+                <div class="campo-form{% if form.poliza.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.poliza.id_for_label }}" class="campo-form__etiqueta">Número de póliza del seguro del vehículo</label>
+                    {{ form.poliza }}
+                    {% for error in form.poliza.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# Estado: una opción por cada valor de EstadoVehiculo #}
+            <fieldset class="estado-laboral">
+                <legend class="estado-laboral__etiqueta">Estado</legend>
+                <div class="estado-laboral__opciones">
+                    {% for opcion in form.estado %}
+                        <label class="opcion-estado">
+                            <input type="radio" name="{{ opcion.data.name }}" value="{{ opcion.data.value }}"{% if opcion.data.selected %} checked{% endif %}>
+                            <span class="opcion-estado__caja">
+                                <span class="opcion-estado__punto" aria-hidden="true"></span>
+                                <span>{{ opcion.data.label }}</span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+                {% for error in form.estado.errors %}
+                    <p class="campo-form__error" role="alert">{{ error }}</p>
+                {% endfor %}
+            </fieldset>
+        </section>
+
+        <div class="acciones-form">
+            <p class="text-help acciones-form__nota">Los cambios se aplicarán al guardar.</p>
+            <div class="acciones-form__botones">
+                <a href="{% url 'core:vehiculo_lista' %}" class="home-btn">Cancelar</a>
+                <button type="submit" class="home-btn home-btn--primary">Guardar cambios</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

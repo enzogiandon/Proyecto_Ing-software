@@ -1,0 +1,94 @@
+/* ===================================================
+   Reutiliza empleado_lista.css (.empleados, .empleados-encabezado,
+   .panel-tabla*, .tabla-scroll, .chip-matricula, .celda-vacia,
+   .home-btn--compacto) y home.css (.home-btn, .estado-badge).
+   Acá solo está lo que cambia en esta pantalla.
+=================================================== */
+
+/* ---------- Tabla ---------- */
+/* A diferencia de empleados: las filas van pegadas y separadas por una línea */
+.tabla-flota {
+  display: flex;
+  flex-direction: column;
+  min-width: 896px; /* 204 + 152 + 116 + 216 + 112 + 4 huecos de 16 + padding */
+}
+.tabla-flota__fila {
+  display: grid;
+  grid-template-columns: 204px 152px 116px 216px 112px;
+  column-gap: var(--spacing-16);
+  align-items: center;
+  padding: 18px var(--spacing-16);
+  border-bottom: 1px solid var(--color-skeleton);
+  color: var(--color-text);
+  font: 400 14px/normal var(--font-family);
+}
+.tabla-flota__fila--encabezado {
+  padding-top: var(--spacing-12);
+  padding-bottom: var(--spacing-12);
+  background: var(--color-bg);
+  border-bottom: 0;
+  border-radius: 6px; /* Figma usa 6px acá, no el radio estándar de 8px */
+  color: var(--color-text-secondary);
+  font: 600 12px/normal var(--font-family);
+}
+
+.celda-vehiculo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.celda-vehiculo__nombre { font-weight: 500; }
+.celda-vehiculo__detalle {
+  color: var(--color-text-muted);
+  font: 400 13px/normal var(--font-family);
+}
+.celda-transportista { font-weight: 400; }
+
+/* La matrícula mide 13px en esta pantalla (12px en empleados) */
+.flota .chip-matricula { font-size: 13px; }
+
+/* Botón Editar de ancho fijo (112px en Figma) */
+.flota .home-btn--editar {
+  width: 112px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.tabla-flota__vacia {
+  padding: var(--spacing-32) var(--spacing-16);
+  text-align: center;
+  color: var(--color-text-muted);
+  font: 400 14px/normal var(--font-family);
+}
+
+/* ---------- Resumen y paginación ---------- */
+.resumen-listado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-16);
+  color: var(--color-text-muted);
+  font: 400 13px/normal var(--font-family);
+}
+.resumen-listado p { margin: 0; }
+.paginacion {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+}
+/* Los enlaces Anterior / Siguiente no están en Figma: estilo provisorio */
+.paginacion a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.paginacion a:hover { text-decoration: underline; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 575px) {
+  .herramientas-tabla { flex-direction: column; }
+  .filtro-estado { flex-basis: auto; width: 100%; }
+}

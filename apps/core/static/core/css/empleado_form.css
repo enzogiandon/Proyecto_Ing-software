@@ -16,6 +16,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 20px;
+  width: 100%;
 }
 .form-pagina__titulos {
   display: flex;
@@ -216,6 +217,18 @@
   gap: var(--spacing-12);
 }
 
+
+.roles-chips-contenedor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.roles-chips-contenedor .btn-group-toggle {
+  display: inline-flex;
+}
 /* ---------- Responsive ---------- */
 @media (max-width: 991px) {
   .fila-campos--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -226,3 +239,4 @@
   .acciones-form { flex-direction: column-reverse; align-items: stretch; }
   .acciones-form__botones { justify-content: flex-end; }
 }
+

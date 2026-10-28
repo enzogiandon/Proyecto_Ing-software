@@ -36,7 +36,7 @@
                     <div role="columnheader">Nombre y Apellido</div>
                     <div role="columnheader">DNI</div>
                     <div role="columnheader">Estado</div>
-                    <div role="columnheader">Rol</div>
+                    <div role="columnheader">Grupos</div>
                     <div role="columnheader">Acciones</div>
                 </div>
 
@@ -52,10 +52,10 @@
                             {% endif %}
                         </div>
                         <div role="cell">
-                            {{ emp.vehiculo|default:'Sin rol' }}
+                            {{ emp.groups.all|join:", "|default:'Sin grupo' }}
                         </div>
                         <div role="cell">
-                            <a href="{% url 'core:empleado_editar' emp.pk %}" class="home-btn" aria-label="Editar a {{ nombre }}">
+                            <a href="{% url 'core:empleado_editar' emp.pk %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" aria-label="Editar a {{ nombre }}">
                                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
                                 <span>Editar</span>
                             </a>

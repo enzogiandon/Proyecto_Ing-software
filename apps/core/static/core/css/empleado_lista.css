@@ -1,5 +1,5 @@
 /* ===================================================
-   RepartosYA - LISTADO DE EMPLEADOS
+   RepartosYA - LISTADO DE EMPLEADOS (Bootstrap Compatible)
    Requiere paletas.css (tokens, incluidos --color-accent / --color-info)
    y home.css (.home-btn, .home-btn--primary, .estado-badge).
 =================================================== */
@@ -7,11 +7,15 @@
 .empleados {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-24);
+  gap: var(--spacing-24, 1.5rem);
+  width: 100%;
 }
-/* En Figma el panel llega hasta el borde inferior de la pantalla */
+
+/* En pantallas grandes el panel se extiende */
 @media (min-width: 992px) {
-  .empleados { min-height: calc(100vh - 3.5rem); }
+  .empleados {
+    min-height: calc(100vh - 3.5rem);
+  }
 }
 
 /* ---------- Encabezado de página ---------- */
@@ -20,21 +24,24 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--spacing-16);
-  padding: 10px var(--spacing-16);
+  gap: var(--spacing-16, 1rem);
+  padding: 10px var(--spacing-16, 1rem);
 }
+
 .empleados-encabezado_texto {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: var(--spacing-4, 0.25rem);
 }
+
 .empleados-encabezado_texto h1 {
   margin: 0;
-  color: var(--color-primary);
+  color: var(--color-primary, #0d6efd);
 }
+
 .empleados-fecha {
   margin: 0;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #6c757d);
 }
 
 /* ---------- Panel ---------- */
@@ -42,30 +49,32 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.25rem;
   min-width: 0;
-  padding: var(--spacing-24);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: var(--spacing-24, 1.5rem);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #dee2e6);
+  border-radius: var(--radius-md, 0.5rem);
 }
 
 .panel-tabla__textos {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: var(--spacing-4, 0.25rem);
   min-width: 0;
 }
+
 .panel-tabla__titulo {
   margin: 0;
-  color: var(--color-primary);
-}
-.panel-tabla__descripcion {
-  margin: 0;
-  color: var(--color-text-muted);
+  color: var(--color-primary, #0d6efd);
 }
 
-/* Botón principal más bajo que el estándar (34px en Figma) */
+.panel-tabla__descripcion {
+  margin: 0;
+  color: var(--color-text-muted, #6c757d);
+}
+
+/* Botón principal más bajo que el estándar */
 .home-btn--compacto {
   min-height: 38px;
   padding-top: 0;
@@ -73,57 +82,108 @@
   white-space: nowrap;
 }
 
-/* ---------- Tabla ---------- */
-/* En pantallas angostas se desplaza hacia el costado en lugar de romperse */
-.tabla-scroll { overflow-x: auto; }
+/* ---------- Tabla Contenedor y Scroll ---------- */
+.tabla-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-/* Las filas son hermanas separadas por 20px, sin líneas divisorias (Figma) */
 .tabla-empleados {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-width: 954px; /* 220 + 140 + 180 + 198 + 120 + 4 huecos de 16 + padding */
+  gap: 1rem;
+  width: 100%;
+  /* Ancho mínimo razonable para que en móviles scrollee en vez de colapsar */
+  min-width: 760px;
 }
 
-/* Columnas de ancho fijo alineadas a la izquierda; la fila ocupa todo el ancho */
+/* ---------- Fila con Grid de 5 Columnas Responsivas ---------- */
 .tabla-empleados__fila {
   display: grid;
-  grid-template-columns: 220px 140px 180px 198px 120px;
-  column-gap: var(--spacing-16);
+  /* Col 1: Nombre (2fr)
+     Col 2: Usuario (1.5fr)
+     Col 3: Estado (1fr)
+     Col 4: Grupos (minmax(180px, 2.5fr))
+     Col 5: Acción/Editar (auto o 100px fijo a la derecha) */
+  grid-template-columns: 2fr 1.5fr 1fr minmax(180px, 2.5fr) 100px;
+  column-gap: var(--spacing-16, 1rem);
   align-items: center;
-  padding: 12px var(--spacing-16);
-  color: var(--color-text);
-  font: 400 14px/normal var(--font-family);
+  padding: 12px var(--spacing-16, 1rem);
+  color: var(--color-text, #212529);
+  font: 400 14px/normal var(--font-family, inherit);
+  background: var(--color-surface, #ffffff);
+  border-radius: 6px;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.tabla-empleados__fila:hover:not(.tabla-empleados__fila--encabezado) {
+  background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.02));
+}
+
+.tabla-empleados__fila {
+  border-bottom: 1px solid var(--color-border, #dee2e6);
 }
 
 .tabla-empleados__fila--encabezado {
   padding-top: 10px;
   padding-bottom: 10px;
-  background: var(--color-bg);
-  border-radius: 6px; /* Figma usa 6px acá, no el radio estándar de 8px */
-  color: var(--color-text-secondary);
-  font: 600 12px/normal var(--font-family);
+  background: var(--color-bg, #f8f9fa);
+  border-radius: 6px;
+  color: var(--color-text-secondary, #6c757d);
+  font: 600 12px/normal var(--font-family, inherit);
 }
 
-.celda-nombre { font-weight: 500; }
-.celda-vehiculo { font-weight: 400; }
-.celda-vacia { color: var(--color-text-muted); }
+/* ---------- Celdas Individuales ---------- */
+.celda-nombre {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.celda-vehiculo {
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.celda-vacia {
+  color: var(--color-text-muted, #6c757d);
+}
+
+/* 4ta celda: Manejo del texto largo de los grupos */
+.tabla-empleados__fila > div:nth-child(4) {
+  min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* 5ta celda: Alineación a la derecha del botón editar */
+.tabla-empleados__fila > div:nth-child(5) {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
 
 /* Matrícula (chip) */
 .chip-matricula {
   display: inline-flex;
   padding: 4px 10px;
-  background: var(--color-bg);
-  border-radius: 12px; /* valor propio del chip en Figma */
-  color: var(--color-text-secondary);
-  font: 600 12px/normal var(--font-family);
+  background: var(--color-bg, #f8f9fa);
+  border-radius: 12px;
+  color: var(--color-text-secondary, #6c757d);
+  font: 600 12px/normal var(--font-family, inherit);
   white-space: nowrap;
 }
 
 /* Estado vacío */
 .tabla-empleados__vacia {
-  padding: var(--spacing-32) var(--spacing-16);
+  padding: var(--spacing-32, 2rem) var(--spacing-16, 1rem);
   text-align: center;
-  color: var(--color-text-muted);
-  font: 400 14px/normal var(--font-family);
+  color: var(--color-text-muted, #6c757d);
+  font: 400 14px/normal var(--font-family, inherit);
 }

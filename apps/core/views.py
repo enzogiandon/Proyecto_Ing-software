@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import View
@@ -137,3 +137,15 @@ class Inicio(LoginRequiredMixin, TemplateView):
         user = self.request.user
         context["username"] = user.first_name or user.username
         return context
+
+
+def error_404(request, exception):
+    return render(request, "errores/404.html", status=404)
+
+
+def error_500(request):
+    return render(request, "errores/500.html", status=500)
+
+
+def error_403(request, exception):
+    return render(request, "errores/403.html", status=403)

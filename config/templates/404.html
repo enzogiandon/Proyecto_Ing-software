@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Página no encontrada | RepartoYA</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #FFF6EC;
+            color: #1B1B1F;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .btn-naranja {
+            background-color: #F4661B;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .btn-naranja:hover {
+            background-color: #d85714;
+            color: #FFFFFF;
+        }
+        .btn-outline-azul {
+            border: 1.5px solid #123C6B;
+            color: #123C6B;
+            border-radius: 8px;
+            font-weight: 500;
+            background: transparent;
+        }
+        .btn-outline-azul:hover {
+            background-color: #123C6B;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100 p-3">
+    <main class="card border-0 shadow-sm text-center p-4 p-md-5" style="max-width: 500px; width: 100%; border-radius: 16px;">
+        <!-- Isotipo SVG Oficial RepartoYA -->
+        <div class="mx-auto mb-3" style="width: 140px; height: 90px;">
+            <svg viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-100 h-100">
+                <!-- Líneas de velocidad (Naranja YA) -->
+                <rect x="5" y="42" width="16" height="5" rx="2.5" fill="#F4661B"/>
+                <rect x="10" y="52" width="11" height="5" rx="2.5" fill="#F4661B"/>
+                <rect x="5" y="62" width="16" height="5" rx="2.5" fill="#F4661B"/>
+                
+                <!-- Caja del camión (Azul Ruta) -->
+                <path d="M30 30C30 25.58 33.58 22 38 22H95C99.42 22 103 25.58 103 30V72C103 74.2 101.2 76 99 76H34C31.8 76 30 74.2 30 72V30Z" fill="#123C6B"/>
+                
+                <!-- Texto 'YA' (Naranja YA) -->
+                <text x="66" y="58" font-family="-apple-system, sans-serif" font-weight="900" font-size="27" fill="#F4661B" text-anchor="middle" letter-spacing="-1">YA</text>
+                
+                <!-- Cabina (Naranja YA) -->
+                <path d="M103 40H118L132 58V72C132 74.2 130.2 76 128 76H103V40Z" fill="#F4661B"/>
+                <path d="M107 45H116L126 58H107V45Z" fill="#FFFFFF"/>
+                
+                <!-- Ruedas (Azul Ruta con centro Crema) -->
+                <circle cx="54" cy="76" r="11" fill="#123C6B"/>
+                <circle cx="54" cy="76" r="4.5" fill="#FFF6EC"/>
+                <circle cx="116" cy="76" r="11" fill="#123C6B"/>
+                <circle cx="116" cy="76" r="4.5" fill="#FFF6EC"/>
+            </svg>
+        </div>
+
+        <span class="badge px-3 py-2 rounded-pill mx-auto mb-3" style="background-color: #FFF6EC; color: #F4661B; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px;">
+            ERROR 404
+        </span>
+
+        <h1 class="fw-bold mb-2" style="color: #123C6B; font-size: 1.85rem;">Ruta no encontrada</h1>
+
+        <p class="mb-4" style="color: #1B1B1F; font-size: 1rem; line-height: 1.5;">
+            El elemento que intentás consultar no existe en el sistema.
+        </p>
+
+        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+            <a href="{% url 'core:inicio' %}" class="btn btn-naranja px-4 py-2 d-inline-flex align-items-center justify-content-center gap-2">
+                <i class="fas fa-home"></i>
+                <span>Volver al inicio</span>
+            </a>
+            <button onclick="window.history.back()" class="btn btn-outline-azul px-4 py-2 d-inline-flex align-items-center justify-content-center gap-2">
+                <i class="fas fa-arrow-left"></i>
+                <span>Regresar</span>
+            </button>
+        </div>
+    </main>
+</body>
+</html>

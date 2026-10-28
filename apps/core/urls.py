@@ -15,6 +15,10 @@ from .views import (
 
 app_name = "core"
 
+handler404 = "apps.core.views.error_404"
+handler500 = "apps.core.views.error_500"
+handler403 = "apps.core.views.error_403"
+
 urlpatterns = [
     path("", Inicio.as_view(), name="inicio"),
     path("login/", CustomLoginView.as_view(), name="login"),

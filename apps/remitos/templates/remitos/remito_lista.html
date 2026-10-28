@@ -4,6 +4,8 @@
 {% block title %}Remitos - RepartosYA{% endblock %}
 
 {% block extra_css %}
+<!-- CSS para los botones principales -->
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
 <link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
 {% endblock %}
 
@@ -18,7 +20,7 @@
             <p class="text-body text-c-secondary mb-0">Consultá y gestioná los remitos registrados en el sistema.</p>
         </div>
         <div>
-            <a href="{% url 'remitos:remito_crear' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <a href="{% url 'remitos:remito_crear' %}" class="home-btn home-btn--primary home-btn--compacto">
                 <i class="fas fa-plus"></i>
                 <span>Agregar remito</span>
             </a>
@@ -177,7 +179,7 @@
                             Restablecer filtros
                         </a>
                     {% endif %}
-                    <a href="{% url 'remitos:remito_crear' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                    <a href="{% url 'remitos:remito_crear' %}" class="home-btn home-btn--primary home-btn--compacto">
                         <i class="fas fa-plus"></i>
                         <span>Agregar remito</span>
                     </a>

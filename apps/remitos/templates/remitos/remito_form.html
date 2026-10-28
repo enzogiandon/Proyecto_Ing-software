@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
 <link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
 {% endblock %}
 
@@ -13,7 +14,7 @@
 <div class="remitos-page">
     <!-- Breadcrumb / Volver -->
     <div>
-        <a href="{% url 'remitos:remito_lista' %}" class="d-inline-flex align-items-center gap-2 text-decoration-none text-c-secondary mb-2">
+        <a href="{% url 'remitos:remito_lista' %}" class="home-btn">
             <i class="fas fa-arrow-left"></i>
             <span>Volver a remitos</span>
         </a>

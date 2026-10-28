@@ -4,6 +4,7 @@
 {% block title %}Detalle Remito #{{ remito.numero }} - RepartosYA{% endblock %}
 
 {% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
 <link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
 {% endblock %}
 
@@ -11,7 +12,7 @@
 <div class="remitos-page">
     <!-- Breadcrumb -->
     <div>
-        <a href="{% url 'remitos:remito_lista' %}" class="d-inline-flex align-items-center gap-2 text-decoration-none text-c-secondary mb-2">
+        <a href="{% url 'remitos:remito_lista' %}" class="home-btn">
             <i class="fas fa-arrow-left"></i>
             <span>Volver a remitos</span>
         </a>
@@ -104,9 +105,6 @@
 
     <!-- Botones de Acción Inferiores -->
     <div class="remitos-form-actions">
-        <a href="{% url 'remitos:remito_lista' %}" class="btn btn-outline-secondary">
-            Volver al listado
-        </a>
         <a href="{% url 'remitos:remito_editar' remito.pk %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
             <i class="fas fa-pen"></i>
             <span>Editar remito</span>

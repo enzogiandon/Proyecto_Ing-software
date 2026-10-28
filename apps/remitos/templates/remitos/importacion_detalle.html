@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle Remito #{{ remito.numero }} - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="remitos-page">
+    <!-- Breadcrumb -->
+    <div>
+        <a href="{% url 'remitos:remito_lista' %}" class="home-btn">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver a remitos</span>
+        </a>
+    </div>
+
+    <!-- Encabezado con Número y Estado -->
+    <header class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+        <h1 class="text-title mb-0">Lote L-{{ importacion.id }}</h1>
+    </header>
+
+    <!-- ==============================================
+         TARJETA 1: DATOS DEL REMITO (FIGMA)
+    =============================================== -->
+    <section class="remitos-card mb-3">
+        <h2 class="text-section mb-3">Datos del lote importado</h2>
+        <div class="remitos-detail-grid">
+            <!-- Columna 1 -->
+            <div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">ID del lote:</span>
+                    <span class="remito-data-value fw-semibold text-c-primary">#{{ importacion.id }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Fecha de importación:</span>
+                    <span class="remito-data-value">{{ importacion.fecha }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Marca:</span>
+                    <span class="remito-data-value">{{ importacion.marca }}</span>
+                </div>
+            </div>
+
+            <!-- Columna 2 -->
+            <div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Archivo:</span>
+                    <span class="remito-data-value">{{ importacion.archivo }}</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Cantidad de remitos:</span>
+                    <span class="remito-data-value"> {{ importacion.cantidad }} remitos</span>
+                </div>
+                <div class="remito-data-row">
+                    <span class="remito-data-label">Estado:</span>
+                    <span class="remito-data-value">{{ importacion.estado|capfirst }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Botones de Acción Inferiores -->
+    <div class="remitos-form-actions">
+        <a href="{% url 'remitos:importacion_eliminar' importacion.pk %}" class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
+            <i class="fas fa-trash"></i>
+            <span>Eliminar</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

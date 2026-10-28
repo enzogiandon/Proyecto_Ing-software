@@ -9,44 +9,34 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RepartoYA } from '../constants/theme';
 import {
-  TIPOS_INCONVENIENTE,
   TipoInconveniente,
   obtenerNombreInconveniente,
 } from '../types/inconveniente';
-import { getParadaSeleccionada } from '../services/paradaService';
+import { getConfirmacionInconveniente } from '../services/itinerarios';
 
 export default function InconvenienteRegistrado() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const params = useLocalSearchParams<{
-    tipo?: string;
-    descripcion?: string;
-    impideCompletarEntrega?: string;
-    paradaId?: string;
-  }>();
+  const params = useLocalSearchParams<{ problemaId?: string; paradaId?: string }>();
+  const confirmacion = getConfirmacionInconveniente(Number(params.problemaId), Number(params.paradaId));
+  if (!confirmacion) return <Redirect href="/registrar-inconveniente" />;
 
-  const tipoValido = TIPOS_INCONVENIENTE.some(
-    (item) => item.codigo === params.tipo
-  );
-
-  const tipo = tipoValido
-    ? (params.tipo as TipoInconveniente)
-    : null;
-
-  const descripcion = params.descripcion?.trim() ?? '';
-  const impideCompletarEntrega =
-    params.impideCompletarEntrega === 'true';
-
-  const parada = getParadaSeleccionada();
+  const { problema, parada } = confirmacion;
+  const tipo = problema.tipo as TipoInconveniente;
+  const descripcion = problema.descripcion ?? '';
+  const impideCompletarEntrega = problema.impide_entrega;
 
   const volverAParada = () => {
-    router.replace('/parada');
+    router.replace({
+      pathname: '/parada',
+      params: { paradaId: String(parada.id), inconvenienteId: String(problema.id), cobranzaId: '' },
+    });
   };
 
   return (
@@ -75,7 +65,7 @@ export default function InconvenienteRegistrado() {
         <Text style={styles.titulo}>Inconveniente registrado</Text>
 
         <Text style={styles.subtitulo}>
-          La información fue registrada en esta demostración.
+          Django confirmó el registro de la información.
         </Text>
 
         <View style={styles.tarjeta}>
@@ -85,7 +75,7 @@ export default function InconvenienteRegistrado() {
 
           <Text style={styles.etiqueta}>PARADA</Text>
           <Text style={styles.valor}>
-            N.º {parada.orden} — {parada.comercio.razonSocial}
+            N.º {parada.orden} — {parada.razonSocial}
           </Text>
 
           <Text style={styles.etiqueta}>MOTIVO</Text>
@@ -123,10 +113,9 @@ export default function InconvenienteRegistrado() {
           </View>
         </View>
 
-        <View style={styles.avisoDemo}>
+        <View style={styles.avisoConfirmacion}>
           <Text style={styles.avisoTexto}>
-            Modo demostración: el inconveniente todavía no fue enviado
-            al servidor.
+            Inconveniente N.º {problema.id}, asociado a la parada N.º {parada.orden}.
           </Text>
         </View>
 
@@ -262,7 +251,7 @@ const styles = StyleSheet.create({
   textoDisponible: {
     color: RepartoYA.exito,
   },
-  avisoDemo: {
+  avisoConfirmacion: {
     width: '100%',
     backgroundColor: RepartoYA.azulRutaSuave,
     borderRadius: 10,

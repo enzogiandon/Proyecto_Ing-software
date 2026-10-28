@@ -1,7 +1,7 @@
 
 /**
  * Ruta de confirmación del inconveniente.
- * Recibe los datos del formulario mediante Expo Router.
+ * Recibe los identificadores del registro confirmado por Django mediante Expo Router.
  */
 
 import InconvenienteRegistrado from '../screens/InconvenienteRegistrado';

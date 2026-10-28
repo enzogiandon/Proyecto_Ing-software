@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -12,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RepartoYA } from '../constants/theme';
@@ -21,7 +22,7 @@ import {
   TipoInconveniente,
   descripcionEsValida,
 } from '../types/inconveniente';
-import { getParadaSeleccionada } from '../services/paradaService';
+import { getParadaSeleccionada, getIdParadaSeleccionadaParaCobro } from '../services/paradaService';
 import { reportarProblemaParada } from '../services/itinerarios';
 
 export default function RegistrarInconveniente() {
@@ -34,13 +35,36 @@ export default function RegistrarInconveniente() {
     useState(false);
   const [error, setError] = useState('');
 
-  const parada = getParadaSeleccionada();
+  const [enviando, setEnviando] = useState(false);
+  const [parada, setParada] = useState(getParadaSeleccionada);
+  const envioEnCurso = useRef(false);
+  const paradaAnterior = useRef(parada.id);
+  const activa = useRef(true);
+
+  useFocusEffect(useCallback(() => {
+    activa.current = true;
+    const seleccionada = getParadaSeleccionada();
+    setParada(seleccionada);
+    if (paradaAnterior.current !== seleccionada.id) {
+      setTipo(null);
+      setDescripcion('');
+      setImpideCompletarEntrega(false);
+      setError('');
+      paradaAnterior.current = seleccionada.id;
+    }
+    return () => { activa.current = false; };
+  }, []));
+
+  const paradaVerificada = getIdParadaSeleccionadaParaCobro() === parada.id;
+  const mensajeError = error || (!paradaVerificada
+    ? 'Falta una parada verificada. Abrí su detalle con conexión a Django antes de enviar.' : '');
 
   const volver = () => {
     router.replace('/parada');
   };
 
   const registrar = async () => {
+    if (envioEnCurso.current) return;
     if (!tipo) {
       setError('Seleccioná el motivo del inconveniente.');
       return;
@@ -53,22 +77,42 @@ export default function RegistrarInconveniente() {
 
     setError('');
 
-    // Envío oficial al endpoint de Django (o fallback offline/mock)
-    await reportarProblemaParada(parada.id, {
-      tipo,
-      descripcion: descripcion.trim(),
-      impide_entrega: impideCompletarEntrega,
-    });
-
-    router.replace({
-      pathname: '/inconveniente-registrado',
-      params: {
+    const paradaId = getIdParadaSeleccionadaParaCobro();
+    if (paradaId === null || paradaId !== parada.id) {
+      setError('La parada no está verificada. Volvé a abrir su detalle con Django disponible.');
+      return;
+    }
+    envioEnCurso.current = true;
+    setEnviando(true);
+    try {
+      const respuesta = await reportarProblemaParada(paradaId, {
         tipo,
         descripcion: descripcion.trim(),
-        impideCompletarEntrega: String(impideCompletarEntrega),
-        paradaId: String(parada.id),
-      },
-    } as never);
+        impide_entrega: impideCompletarEntrega,
+      });
+      if (!Number.isSafeInteger(respuesta.problema?.id) || respuesta.problema.id <= 0 ||
+          respuesta.problema.parada !== paradaId) {
+        throw new Error('No se recibió una confirmación válida de Django para esta parada.');
+      }
+      if (activa.current && getParadaSeleccionada().id === paradaId) {
+        router.replace({
+          pathname: '/inconveniente-registrado',
+          params: { problemaId: String(respuesta.problema.id), paradaId: String(paradaId) },
+        });
+        setTipo(null);
+        setDescripcion('');
+        setImpideCompletarEntrega(false);
+      }
+    } catch (error: unknown) {
+      if (activa.current && getParadaSeleccionada().id === paradaId) {
+        const mensaje = error instanceof Error ? error.message : 'No se pudo registrar el inconveniente. Podés reintentar.';
+        setError(mensaje);
+        Alert.alert('No se pudo registrar el inconveniente', mensaje);
+      }
+    } finally {
+      envioEnCurso.current = false;
+      setEnviando(false);
+    }
   };
 
   return (
@@ -77,6 +121,7 @@ export default function RegistrarInconveniente() {
         <View style={styles.filaEncabezado}>
           <TouchableOpacity
             onPress={volver}
+            disabled={enviando}
             style={styles.botonVolver}
             accessibilityRole="button"
             accessibilityLabel="Volver a la parada"
@@ -144,8 +189,9 @@ export default function RegistrarInconveniente() {
                     styles.opcion,
                     seleccionado && styles.opcionSeleccionada,
                   ]}
+                  disabled={enviando}
                   accessibilityRole="radio"
-                  accessibilityState={{ selected: seleccionado }}
+                  accessibilityState={{ selected: seleccionado, disabled: enviando }}
                 >
                   <View
                     style={[
@@ -174,6 +220,7 @@ export default function RegistrarInconveniente() {
 
             <TextInput
               value={descripcion}
+              editable={!enviando}
               onChangeText={(valor) => {
                 setDescripcion(valor);
                 setError('');
@@ -182,17 +229,18 @@ export default function RegistrarInconveniente() {
               placeholderTextColor={RepartoYA.grisTexto}
               multiline
               textAlignVertical="top"
-              maxLength={500}
+              maxLength={255}
               style={styles.campoDescripcion}
             />
 
-            <Text style={styles.contador}>{descripcion.length}/500</Text>
+            <Text style={styles.contador}>{descripcion.length}/255</Text>
 
             <TouchableOpacity
               style={styles.filaCheckbox}
               onPress={() => setImpideCompletarEntrega((actual) => !actual)}
+              disabled={enviando}
               accessibilityRole="checkbox"
-              accessibilityState={{ checked: impideCompletarEntrega }}
+              accessibilityState={{ checked: impideCompletarEntrega, disabled: enviando }}
             >
               <View
                 style={[
@@ -215,25 +263,28 @@ export default function RegistrarInconveniente() {
               </View>
             </TouchableOpacity>
 
-            {error ? (
+            {mensajeError ? (
               <Text style={styles.error} accessibilityRole="alert">
-                {error}
+                {mensajeError}
               </Text>
             ) : null}
           </View>
 
           <TouchableOpacity
-            style={styles.botonRegistrar}
+            style={[styles.botonRegistrar, (enviando || !paradaVerificada) && { opacity: 0.5 }]}
             onPress={registrar}
+            disabled={enviando || !paradaVerificada}
+            accessibilityState={{ busy: enviando, disabled: enviando || !paradaVerificada }}
             accessibilityRole="button"
           >
+            {enviando && <ActivityIndicator color={RepartoYA.blanco} />}
             <Text style={styles.textoRegistrar}>
-              Registrar inconveniente
+              {enviando ? 'Enviando inconveniente…' : error ? 'Reintentar envío' : 'Registrar inconveniente'}
             </Text>
           </TouchableOpacity>
 
-          <Text style={styles.notaDemo}>
-            Modo demostración: todavía no se envían datos al servidor.
+          <Text style={styles.notaEnvio}>
+            El registro se confirmará cuando Django reciba la información.
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -471,7 +522,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-  notaDemo: {
+  notaEnvio: {
     color: RepartoYA.grisTexto,
     textAlign: 'center',
     fontSize: 11,

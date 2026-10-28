@@ -8,6 +8,14 @@ import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
 
 // Parada seleccionada en memoria durante la navegación
 let paradaSeleccionadaActual: DetalleParada = MOCK_PARADA_SELECCIONADA;
+// Metadato exclusivo de cobranza: los fallbacks no habilitan operaciones reales.
+const paradasVerificadas = new WeakSet<DetalleParada>();
+
+export function getIdParadaSeleccionadaParaCobro(): number | null {
+  const parada = paradaSeleccionadaActual;
+  return paradasVerificadas.has(parada) && Number.isSafeInteger(parada.id) && parada.id > 0
+    ? parada.id : null;
+}
 
 export const setParadaSeleccionada = (parada: DetalleParada) => {
   paradaSeleccionadaActual = parada;
@@ -17,12 +25,18 @@ export const getParadaSeleccionada = (): DetalleParada => {
   return paradaSeleccionadaActual;
 };
 
-export const actualizarEstadoCobroParada = (estado: 'pendiente' | 'validado') => {
+export const actualizarEstadoCobroParada = (
+  estado: 'pendiente' | 'validado',
+  estadoParada?: DetalleParada['estado']
+) => {
   if (paradaSeleccionadaActual) {
+    const verificada = paradasVerificadas.has(paradaSeleccionadaActual);
     paradaSeleccionadaActual = {
       ...paradaSeleccionadaActual,
       estadoCobro: estado,
+      ...(estadoParada ? { estado: estadoParada } : {}),
     };
+    if (verificada) paradasVerificadas.add(paradaSeleccionadaActual);
   }
 };
 
@@ -138,6 +152,9 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
     if (response.ok) {
       const data = await response.json();
       const normalizada = normalizarParadaBackend(data);
+      if (Number.isSafeInteger(data.id) && data.id > 0 && data.id === idObjetivo) {
+        paradasVerificadas.add(normalizada);
+      }
       setParadaSeleccionada(normalizada);
       return { parada: normalizada };
     }

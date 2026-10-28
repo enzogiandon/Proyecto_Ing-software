@@ -37,7 +37,7 @@ import { obtenerDetalleParada, getParadaSeleccionada, setParadaSeleccionada } fr
 
 export default function ParadaScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ paradaId?: string }>();
+  const params = useLocalSearchParams<{ paradaId?: string; cobranzaId?: string; inconvenienteId?: string }>();
   const insets = useSafeAreaInsets();
   const topPaddingSeguro =
     Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0) + 10;
@@ -57,6 +57,13 @@ export default function ParadaScreen() {
     const cargar = async () => {
       try {
         const idNum = params.paradaId ? Number(params.paradaId) : undefined;
+        const seleccionada = getParadaSeleccionada();
+        if (params.cobranzaId && Number.isSafeInteger(Number(params.cobranzaId)) &&
+            Number(params.cobranzaId) > 0 && seleccionada.id === idNum &&
+            seleccionada.estadoCobro === 'validado') {
+          if (montado) setParada(seleccionada);
+          return;
+        }
         const res = await obtenerDetalleParada(idNum);
         if (montado && res.parada) {
           setParada(res.parada);
@@ -71,7 +78,7 @@ export default function ParadaScreen() {
     return () => {
       montado = false;
     };
-  }, [params.paradaId]);
+  }, [params.paradaId, params.cobranzaId, params.inconvenienteId]);
 
   // Navegación hacia la pantalla de validación de cobro (HU-32)
   const handleRegistrarCobro = () => {

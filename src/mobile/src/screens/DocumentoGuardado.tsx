@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { getParadaSeleccionada } from '../services/paradaService';
 
 
@@ -50,7 +50,8 @@ export default function DocumentoGuardado({
   uriArchivo?: string;
   tipoArchivo?: string;
   tamanoBytes?: string;
-  modoDemo?: string;
+  evidenciaId?: string;
+  paradaId?: string;
 }>();
 
   nombreArchivo = params.nombreArchivo ?? nombreArchivo;
@@ -74,6 +75,12 @@ export default function DocumentoGuardado({
       router.replace('/parada' as any);
     }
   };
+
+  // Una visita directa a la ruta no debe mostrar un guardado inexistente.
+  if (!Number.isInteger(Number(params.evidenciaId)) || Number(params.evidenciaId) <= 0 ||
+      Number(params.paradaId) !== parada.id) {
+    return <Redirect href="./adjuntar-documento" />;
+  }
 
   const esImagen = tipoArchivo.startsWith('image/');
 
@@ -133,14 +140,10 @@ export default function DocumentoGuardado({
           </View>
           <View style={styles.messageText}>
             <Text style={styles.successTitle}>
-              {params.modoDemo === 'true'
-                ? 'Vista previa del documento'
-                : 'Documento guardado correctamente'}
+              Documento guardado correctamente
             </Text>
             <Text style={styles.successDescription}>
-              {params.modoDemo === 'true'
-                ? 'Modo demostración: el archivo todavía no se guardó en el servidor.'
-                : `El archivo se asoció a la entrega de la parada ${parada.orden}.`}
+              {`El archivo se asoció a la entrega de la parada ${parada.orden}.`}
             </Text>
           </View>
         </View>

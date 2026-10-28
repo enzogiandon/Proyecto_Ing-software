@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Platform,
@@ -14,7 +15,8 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
-import { getParadaSeleccionada } from '../services/paradaService';
+import { getParadaSeleccionada, getIdParadaSeleccionadaParaCobro } from '../services/paradaService';
+import { subirEvidenciaParada } from '../services/itinerarios';
 
 const COLORS = {
   orange: '#F4661B',
@@ -33,6 +35,7 @@ type SelectedFile = {
   uri: string;
   mimeType?: string;
   size?: number;
+  webFile?: File;
 };
 
 export default function AdjuntarDocumento() {
@@ -44,6 +47,9 @@ export default function AdjuntarDocumento() {
   }).format(parada.montoCobranza);
 
   const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const uploadInProgress = useRef(false);
 
   const tamanoLegible = selectedFile?.size
     ? selectedFile.size > 1024 * 1024
@@ -131,6 +137,7 @@ export default function AdjuntarDocumento() {
             uri: objectUrl,
             mimeType: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
             size: file.size,
+            webFile: file,
           });
         }
       };
@@ -163,41 +170,54 @@ export default function AdjuntarDocumento() {
     }
   };
 
-const abrirVistaPreviaDocumento = (archivo: SelectedFile) => {
-  router.push({
-    pathname: '/documento-guardado',
-    params: {
-  nombreArchivo: archivo.name,
-  uriArchivo: archivo.uri,
-  tipoArchivo: archivo.mimeType ?? '',
-  tamanoBytes: archivo.size?.toString() ?? '',
-  modoDemo: 'true',
-},
-  });
-};
-
-  const guardarDocumento = () => {
-    if (!selectedFile) {
-      Alert.alert(
-        'Documento pendiente',
-        'Primero tenés que adjuntar una fotografía o un archivo.'
-      );
+  const guardarDocumento = async () => {
+    // El ref bloquea incluso dos pulsaciones anteriores al siguiente render.
+    if (uploadInProgress.current || !selectedFile) return;
+    const paradaId = getIdParadaSeleccionadaParaCobro();
+    if (paradaId === null || paradaId !== parada.id) {
+      const mensaje = 'La parada no está verificada o cambió la selección. Abrí su detalle con conexión a Django antes de subir el documento. El archivo seleccionado se conserva.';
+      setUploadError(mensaje);
+      Alert.alert('No se pudo guardar el documento', mensaje);
       return;
     }
+    uploadInProgress.current = true;
+    setIsUploading(true);
+    setUploadError(null);
+    const archivo = selectedFile;
 
-    
-Alert.alert(
-  'Modo demostración',
-  'Vamos a mostrar el documento seleccionado. Todavía no se guardará en el servidor.',
-  [
-    { text: 'Cancelar', style: 'cancel' },
-    {
-      text: 'Continuar',
-      onPress: () => abrirVistaPreviaDocumento(selectedFile),
-    },
-  ]
-);
+    try {
+      const respuesta = await subirEvidenciaParada(
+        paradaId,
+        archivo.uri,
+        archivo.name,
+        archivo.mimeType || (archivo.name.toLowerCase().endsWith('.pdf')
+          ? 'application/pdf' : 'image/jpeg'),
+        archivo.webFile
+      );
 
+      // Solo navegar después de recibir una evidencia confirmada por Django.
+      router.replace({
+        pathname: './documento-guardado',
+        params: {
+          evidenciaId: String(respuesta.evidencia.id),
+          paradaId: String(paradaId),
+          nombreArchivo: archivo.name,
+          uriArchivo: archivo.uri,
+          tipoArchivo: archivo.mimeType ?? '',
+          tamanoBytes: archivo.size?.toString() ?? '',
+        },
+      });
+      // Las pantallas de Tabs pueden conservarse montadas: limpiar al completar.
+      setSelectedFile(null);
+    } catch (error: unknown) {
+      const mensaje = error instanceof Error
+        ? error.message : 'No se pudo subir el documento. Podés reintentar.';
+      setUploadError(mensaje);
+      Alert.alert('No se pudo guardar el documento', mensaje);
+    } finally {
+      uploadInProgress.current = false;
+      setIsUploading(false);
+    }
   };
 
   const isImage = selectedFile?.mimeType?.startsWith('image/');
@@ -211,6 +231,7 @@ Alert.alert(
           onPress={() => router.replace('/parada' as any)}
           style={styles.backButton}
           accessibilityLabel="Volver"
+          disabled={isUploading}
         >
           <Text style={styles.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -239,6 +260,7 @@ Alert.alert(
         <TouchableOpacity
           style={styles.outlineButton}
           onPress={tomarFotografia}
+          disabled={isUploading}
         >
           <Image
             source={require('../../assets/icons/icono-camara.png')}
@@ -252,6 +274,7 @@ Alert.alert(
         <TouchableOpacity
           style={styles.outlineButton}
           onPress={seleccionarArchivo}
+          disabled={isUploading}
         >
           <Image
             source={require('../../assets/icons/icono-adjuntar-archivo.png')}
@@ -267,6 +290,7 @@ Alert.alert(
             <TouchableOpacity
               style={styles.botonEliminarHeader}
               onPress={eliminarDocumento}
+              disabled={isUploading}
               activeOpacity={0.7}
               accessibilityLabel="Eliminar documento seleccionado"
             >
@@ -326,10 +350,17 @@ Alert.alert(
           <TouchableOpacity
             style={styles.botonQuitarArchivo}
             onPress={eliminarDocumento}
+            disabled={isUploading}
             activeOpacity={0.7}
           >
             <Text style={styles.textoQuitarArchivo}>✕ Quitar este documento</Text>
           </TouchableOpacity>
+        )}
+
+        {uploadError && (
+          <Text accessibilityRole="alert" style={{ color: '#B42318', marginTop: 16 }}>
+            {uploadError}
+          </Text>
         )}
 
         <Text style={styles.note}>
@@ -339,12 +370,18 @@ Alert.alert(
         <TouchableOpacity
           style={[
             styles.primaryButton,
-            !selectedFile && styles.primaryButtonDisabled,
+            (!selectedFile || isUploading) && styles.primaryButtonDisabled,
           ]}
           onPress={guardarDocumento}
-          disabled={!selectedFile}
+          disabled={!selectedFile || isUploading}
+          accessibilityState={{ disabled: !selectedFile || isUploading, busy: isUploading }}
         >
-          <Text style={styles.primaryButtonText}>Guardar documento</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            {isUploading && <ActivityIndicator color={COLORS.white} />}
+            <Text style={styles.primaryButtonText}>
+              {isUploading ? 'Subiendo documento…' : uploadError ? 'Reintentar subida' : 'Guardar documento'}
+            </Text>
+          </View>
         </TouchableOpacity>
 
         <Text style={styles.footer}>

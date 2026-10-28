@@ -6,7 +6,7 @@
  * Los labels son los textos visibles para el transportista.
  *
  * La descripción es opcional, excepto para el motivo "otro".
- * El envío al backend se implementará en una etapa posterior.
+ * El formulario envía estos datos a Django y espera la confirmación del registro.
  */
 
 export const TIPOS_INCONVENIENTE = [

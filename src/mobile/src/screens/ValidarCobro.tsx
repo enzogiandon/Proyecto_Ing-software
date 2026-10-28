@@ -6,11 +6,11 @@
  * o QR desde un formulario emergente. Compara la suma con el total de la
  * entrega y permite confirmar una sola vez cuando los importes coinciden.
  *
- * Funciona en modo demostración: prepara los movimientos para el backend,
- * pero no realiza solicitudes ni guarda datos en el servidor.
+ * Conserva importes en centavos y espera la confirmación del backend.
  */
 import React, { useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -22,6 +22,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { interpretarImporte, formatoCentavos } from '../utils/importes';
 
 const AZUL = '#123C6B';
 const NARANJA = '#F4661B';
@@ -35,30 +37,25 @@ type MedioPago = 'efectivo' | 'transferencia' | 'qr';
 export type MovimientoPago = {
   id: string;
   medio: MedioPago;
-  monto: number;
+  montoCentavos: number;
 };
 
 export type CobroValidado = {
   movimientos: MovimientoPago[];
-  total: number;
+  totalCentavos: number;
 };
 
 type Props = {
   onVolver?: () => void;
-  onConfirmar?: (cobro: CobroValidado) => void;
-  montoTotal?: number;
+  onConfirmar?: (cobro: CobroValidado) => Promise<void>;
+  montoTotalCentavos: number;
   nombreComercio?: string;
   direccion?: string;
   ordenParada?: number | string;
 };
 
-function convertirImporte(valor: string): number {
-  const limpio = valor.replace(/[^\d]/g, '');
-  return limpio ? Number(limpio) : 0;
-}
-
-function formatoPesos(valor: number): string {
-  return '$' + valor.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+function formatoPesos(centavos: number): string {
+  return Number.isSafeInteger(centavos) ? formatoCentavos(centavos) : 'No disponible';
 }
 
 function nombreMedio(medio: MedioPago): string {
@@ -81,17 +78,19 @@ function obtenerIconoMedio(medio: MedioPago) {
 export default function ValidarCobro({
   onVolver,
   onConfirmar,
-  montoTotal = 148500,
-  nombreComercio = 'Almacén Don Pedro',
-  direccion = 'Av. San Martín 2450 · San Martín',
-  ordenParada = 5,
+  montoTotalCentavos,
+  nombreComercio = '',
+  direccion = '',
+  ordenParada,
 }: Props) {
-  const TOTAL_ENTREGA = montoTotal;
+  const TOTAL_ENTREGA = montoTotalCentavos;
   const [movimientos, setMovimientos] = useState<MovimientoPago[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [medioSeleccionado, setMedioSeleccionado] = useState<MedioPago>('efectivo');
   const [importeNuevo, setImporteNuevo] = useState('');
   const [cobroConfirmado, setCobroConfirmado] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [errorEnvio, setErrorEnvio] = useState('');
 
   // Un contador local garantiza identificadores distintos incluso al agregar rápido.
   const siguienteId = useRef(0);
@@ -99,28 +98,31 @@ export default function ValidarCobro({
   const confirmacionEnCurso = useRef(false);
 
   const totalIngresado = movimientos.reduce(
-    (acumulado, movimiento) => acumulado + movimiento.monto,
+    (acumulado, movimiento) => acumulado + movimiento.montoCentavos,
     0
   );
   const diferencia = TOTAL_ENTREGA - totalIngresado;
-  const completo = movimientos.length > 0 && diferencia === 0;
+  const importeValido = Number.isSafeInteger(TOTAL_ENTREGA) && TOTAL_ENTREGA > 0;
+  const completo = importeValido && Number.isSafeInteger(totalIngresado) &&
+    movimientos.length > 0 && diferencia === 0;
   const insuficiente = diferencia > 0;
   const excedido = diferencia < 0;
-  const puedeEditar = !cobroConfirmado;
+  const puedeEditar = !cobroConfirmado && !enviando;
+  const puedeConfirmar = completo && puedeEditar && !!onConfirmar;
 
   const abrirModalPago = () => {
-    if (!puedeEditar) return;
+    if (!puedeEditar || confirmacionEnCurso.current) return;
     setMedioSeleccionado('efectivo');
     setImporteNuevo('');
     setModalVisible(true);
   };
 
   const agregarMovimiento = () => {
-    if (!puedeEditar) return;
-    const monto = convertirImporte(importeNuevo);
+    if (!puedeEditar || confirmacionEnCurso.current) return;
+    const montoCentavos = interpretarImporte(importeNuevo);
 
-    if (!Number.isSafeInteger(monto) || monto <= 0) {
-      Alert.alert('Importe inválido', 'Ingresá un importe válido mayor a cero.');
+    if (montoCentavos === null || montoCentavos <= 0 || montoCentavos > 9999999999) {
+      Alert.alert('Importe inválido', 'Ingresá un importe positivo con hasta dos decimales. Ejemplos: 15400,50 o 15.400,50. El máximo por pago es $99.999.999,99.');
       return;
     }
 
@@ -128,37 +130,40 @@ export default function ValidarCobro({
     const nuevoMovimiento: MovimientoPago = {
       id: String(siguienteId.current),
       medio: medioSeleccionado,
-      monto,
+      montoCentavos,
     };
 
     setMovimientos((anteriores) => [...anteriores, nuevoMovimiento]);
     setImporteNuevo('');
+    setErrorEnvio('');
     setModalVisible(false);
   };
 
   const eliminarMovimiento = (id: string) => {
-    if (!puedeEditar) return;
+    if (!puedeEditar || confirmacionEnCurso.current) return;
     setMovimientos((anteriores) =>
       anteriores.filter((movimiento) => movimiento.id !== id)
     );
   };
 
-  // Entrega una copia de los movimientos, sin atribuirles persistencia en servidor.
-  const confirmarCobro = () => {
-    if (!completo || cobroConfirmado || confirmacionEnCurso.current) return;
+  const confirmarCobro = async () => {
+    if (!puedeConfirmar || confirmacionEnCurso.current || !onConfirmar) return;
     confirmacionEnCurso.current = true;
-    setCobroConfirmado(true);
-
-    if (onConfirmar) {
-      onConfirmar({
+    setEnviando(true);
+    setErrorEnvio('');
+    try {
+      await onConfirmar({
         movimientos: movimientos.map((movimiento) => ({ ...movimiento })),
-        total: totalIngresado,
+        totalCentavos: totalIngresado,
       });
-    } else {
-      Alert.alert(
-        'Cobro validado',
-        'El importe coincide con el total de la entrega. Validación en modo demostración.'
-      );
+      setCobroConfirmado(true);
+    } catch (error: unknown) {
+      const mensaje = error instanceof Error ? error.message : 'No se pudo registrar el cobro. Podés reintentar.';
+      setErrorEnvio(mensaje);
+      Alert.alert('No se pudo confirmar el cobro', mensaje);
+      confirmacionEnCurso.current = false;
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -169,7 +174,7 @@ export default function ValidarCobro({
       <View style={styles.encabezado}>
         <TouchableOpacity
           onPress={onVolver}
-          disabled={!onVolver}
+          disabled={!onVolver || enviando}
           style={styles.volver}
           accessibilityLabel="Volver"
         >
@@ -228,13 +233,13 @@ export default function ValidarCobro({
                   />
                   <Text style={styles.medioMovimiento}>{nombreMedio(movimiento.medio)}</Text>
                 </View>
-                <Text style={styles.importeMovimiento}>{formatoPesos(movimiento.monto)}</Text>
+                <Text style={styles.importeMovimiento}>{formatoPesos(movimiento.montoCentavos)}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => eliminarMovimiento(movimiento.id)}
                 disabled={!puedeEditar}
                 style={[styles.botonEliminar, !puedeEditar && styles.opacidadDeshabilitada]}
-                accessibilityLabel={`Eliminar pago de ${formatoPesos(movimiento.monto)} en ${nombreMedio(movimiento.medio)}`}
+                accessibilityLabel={`Eliminar pago de ${formatoPesos(movimiento.montoCentavos)} en ${nombreMedio(movimiento.medio)}`}
               >
                 <Text style={styles.textoEliminar}>✕</Text>
               </TouchableOpacity>
@@ -275,7 +280,7 @@ export default function ValidarCobro({
             </Text>
             <Text style={[styles.detalleMensaje, { color: completo ? VERDE : ROJO }]}>
               {cobroConfirmado
-                ? 'Validación de demostración realizada. No se enviaron datos al servidor.'
+                ? 'Django confirmó que los movimientos fueron registrados.'
                 : completo
                   ? `Ya podés confirmar el cobro de ${formatoPesos(TOTAL_ENTREGA)}.`
                   : insuficiente
@@ -285,27 +290,31 @@ export default function ValidarCobro({
           </View>
         </View>
 
+        {errorEnvio ? <Text accessibilityRole="alert" style={{ color: ROJO, marginTop: 12 }}>{errorEnvio}</Text> : null}
+        {!importeValido ? <Text accessibilityRole="alert" style={{ color: ROJO }}>Falta el importe real de la parada. No se puede confirmar.</Text> : null}
         <View style={styles.espacioFlexible} />
         <TouchableOpacity
           style={[
             styles.boton,
-            completo && !cobroConfirmado ? styles.botonActivo : styles.botonInactivo,
+            puedeConfirmar ? styles.botonActivo : styles.botonInactivo,
           ]}
-          disabled={!completo || cobroConfirmado}
+          disabled={!puedeConfirmar}
+          accessibilityState={{ disabled: !puedeConfirmar, busy: enviando }}
           onPress={confirmarCobro}
         >
+          {enviando && <ActivityIndicator color={AZUL} />}
           <Text
             style={[
               styles.textoBoton,
-              (!completo || cobroConfirmado) && styles.textoBotonInactivo,
+              !puedeConfirmar && styles.textoBotonInactivo,
             ]}
           >
-            {cobroConfirmado ? '✓ Cobro validado' : `${completo ? '✓  ' : ''}Confirmar cobro`}
+            {enviando ? 'Registrando cobro…' : cobroConfirmado ? '✓ Cobro validado' : errorEnvio ? 'Reintentar cobro' : `${completo ? '✓  ' : ''}Confirmar cobro`}
           </Text>
         </TouchableOpacity>
         <Text style={styles.pie}>
           {cobroConfirmado
-            ? 'Validado localmente. Pendiente de integración con el backend.'
+            ? 'Cobro registrado y confirmado por Django.'
             : completo
               ? 'El importe coincide con el total de la entrega.'
               : insuficiente
@@ -362,8 +371,8 @@ export default function ValidarCobro({
               style={styles.modalInput}
               value={importeNuevo}
               onChangeText={setImporteNuevo}
-              keyboardType="number-pad"
-              placeholder="Ej.: 5000"
+              keyboardType="decimal-pad"
+              placeholder="Ej.: 15.400,50"
               placeholderTextColor="#748093"
             />
             <TouchableOpacity style={styles.modalBotonGuardar} onPress={agregarMovimiento}>

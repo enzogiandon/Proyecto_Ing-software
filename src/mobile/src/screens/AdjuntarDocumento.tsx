@@ -51,31 +51,25 @@ export default function AdjuntarDocumento() {
       : `${Math.round(selectedFile.size / 1024)} KB`
     : null;
 
+  // Núcleo del cambio: Manejo de cámara según plataforma (aviso de "sin cámara" en computadora y apertura nativa en celulares)
   const tomarFotografia = async () => {
-    // 1. Verificación previa de hardware en entorno Web
-    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const tieneCamara = devices.some((d) => d.kind === 'videoinput');
-        if (!tieneCamara) {
-          Alert.alert(
-            'Cámara no detectada',
-            'No se detectó ninguna cámara disponible en este dispositivo. Podés adjuntar el documento seleccionando un archivo.'
-          );
-          return;
-        }
-      } catch {
-        // En caso de bloqueo de políticas del navegador
-      }
+    // 1. Simulación en Computadora (Web): Notifica directamente que no hay cámara física disponible
+    if (Platform.OS === 'web') {
+      Alert.alert(
+        'Cámara no detectada',
+        'No se detectó ninguna cámara disponible en este dispositivo. Podés adjuntar el documento seleccionando un archivo desde tu equipo.'
+      );
+      return;
     }
 
+    // 2. Dispositivo Móvil Físico (Android / iOS): Detecta y abre la cámara nativa del celular
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
 
       if (!permission.granted) {
         Alert.alert(
           'Permiso necesario',
-          'Necesitamos permiso para utilizar la cámara y fotografiar el remito.'
+          'Necesitamos permiso para utilizar la cámara y fotografiar el remito de entrega.'
         );
         return;
       }
@@ -95,10 +89,10 @@ export default function AdjuntarDocumento() {
         });
       }
     } catch (error: any) {
-      console.warn('Error al iniciar la cámara:', error);
+      console.warn('Error al iniciar la cámara en el dispositivo:', error);
       Alert.alert(
-        'Cámara no detectada',
-        'No se detectó ninguna cámara disponible o no fue posible iniciarla en este dispositivo. Podés adjuntar el documento seleccionando un archivo.'
+        'Cámara no disponible',
+        'No fue posible iniciar la cámara del dispositivo móvil. Podés adjuntar el documento seleccionando un archivo.'
       );
     }
   };
@@ -118,23 +112,51 @@ export default function AdjuntarDocumento() {
     );
   };
 
+  // Núcleo del cambio: Selección de archivos compatible con simulador en PC (Web) y celulares (Android/iOS)
   const seleccionarArchivo = async () => {
+    // 1. Entorno Web / Simulación en Computadora: Dispara el explorador nativo de archivos (Windows, Linux, Mac)
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*,application/pdf';
+      input.style.display = 'none';
+
+      input.onchange = (event: any) => {
+        const file = event.target?.files?.[0];
+        if (file) {
+          // Genera una URL local de blob en el navegador para mostrar la imagen o PDF en pantalla
+          const objectUrl = URL.createObjectURL(file);
+          setSelectedFile({
+            name: file.name,
+            uri: objectUrl,
+            mimeType: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+            size: file.size,
+          });
+        }
+      };
+
+      document.body.appendChild(input);
+      input.click();
+      document.body.removeChild(input);
+      return;
+    }
+
+    // 2. Entorno Nativo Móvil: Utiliza el DocumentPicker de Expo para dispositivos físicos
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['image/*', 'application/pdf'],
         copyToCacheDirectory: true,
       });
 
-      if (!result.canceled && result.assets.length > 0) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
 
         setSelectedFile({
-  name: file.name,
-  uri: file.uri,
-  mimeType: file.mimeType,
-  size: file.size,
-});
-        
+          name: file.name,
+          uri: file.uri,
+          mimeType: file.mimeType,
+          size: file.size,
+        });
       }
     } catch {
       Alert.alert('Error', 'No se pudo seleccionar el archivo.');

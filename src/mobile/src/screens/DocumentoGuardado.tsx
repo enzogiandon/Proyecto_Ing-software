@@ -248,9 +248,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
   },
+  // Núcleo del cambio: Proporción 1:1 para que el logo cuadrado oficial no se deforme
   logo: {
     width: 34,
-    height: 28,
+    height: 34,
     marginLeft: 8,
   },
   scroll: {

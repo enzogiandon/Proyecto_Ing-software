@@ -180,9 +180,16 @@ export default function LoginScreen() {
                   }}
                   maxLength={8}
                 />
-                <Text style={[styles.inputIcon, errorDni && styles.iconError]}>
-                  {errorDni ? '⚠️' : '🪪'}
-                </Text>
+                {/* Núcleo del cambio: Ícono oficial de DNI o Alerta */}
+                <Image
+                  source={
+                    errorDni
+                      ? require('../../assets/icons/icono-alerta.png')
+                      : require('../../assets/icons/icono-dni.png')
+                  }
+                  style={styles.iconoInputCustom}
+                  resizeMode="contain"
+                />
               </View>
               {errorDni ? (
                 <Text style={styles.mensajeError}>{errorDni}</Text>
@@ -213,13 +220,22 @@ export default function LoginScreen() {
                   }}
                   maxLength={12}
                 />
+                {/* Núcleo del cambio: Ícono minimalista de clave mostrar/ocultar o Alerta */}
                 <TouchableOpacity
                   onPress={() => setMostrarClave(!mostrarClave)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Text style={[styles.inputIcon, errorClave && styles.iconError]}>
-                    {errorClave ? '⚠️' : mostrarClave ? '👁️' : '🔒'}
-                  </Text>
+                  <Image
+                    source={
+                      errorClave
+                        ? require('../../assets/icons/icono-alerta.png')
+                        : mostrarClave
+                        ? require('../../assets/icons/psswd-mostrar.png')
+                        : require('../../assets/icons/psswd-ocultar.png')
+                    }
+                    style={styles.iconoInputCustom}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
               </View>
               {errorClave ? (
@@ -240,12 +256,16 @@ export default function LoginScreen() {
               <Text style={styles.flechaBoton}>{cargando ? '⏳' : '➔'}</Text>
             </TouchableOpacity>
 
-            {/* Enlace para llamar a soporte si no puede ingresar */}
+            {/* Núcleo del cambio: Enlace con ícono oficial de soporte operativo */}
             <TouchableOpacity
               style={styles.soporteContainer}
               onPress={handleContactoBase}
             >
-              <Text style={styles.soporteIcon}>🎧</Text>
+              <Image
+                source={require('../../assets/icons/icono-soporte.png')}
+                style={styles.soporteIconoCustom}
+                resizeMode="contain"
+              />
               <View>
                 <Text style={styles.soporteTextoPregunta}>¿Problemas para entrar?</Text>
                 <Text style={styles.soporteTextoAccion}>Contactar a Soporte</Text>
@@ -274,7 +294,12 @@ export default function LoginScreen() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeaderRow}>
               <View style={styles.modalTituloContainer}>
-                <Text style={styles.modalIconoInfo}>ℹ️</Text>
+                {/* Núcleo del cambio: Ícono oficial de alerta en modal */}
+                <Image
+                  source={require('../../assets/icons/icono-alerta.png')}
+                  style={styles.modalIconoCustom}
+                  resizeMode="contain"
+                />
                 <Text style={styles.modalTitulo}>Cuenta Inhabilitada</Text>
               </View>
               <TouchableOpacity
@@ -322,7 +347,12 @@ export default function LoginScreen() {
           <View style={styles.modalCard}>
             <View style={styles.modalHeaderRow}>
               <View style={styles.modalTituloContainer}>
-                <Text style={styles.modalIconoInfo}>🎧</Text>
+                {/* Núcleo del cambio: Ícono oficial de soporte en modal */}
+                <Image
+                  source={require('../../assets/icons/icono-soporte.png')}
+                  style={styles.modalIconoCustom}
+                  resizeMode="contain"
+                />
                 <Text style={styles.modalTitulo}>Soporte Operativo</Text>
               </View>
               <TouchableOpacity
@@ -482,6 +512,22 @@ const styles = StyleSheet.create({
   inputIcon: {
     fontSize: 18,
     marginLeft: 8,
+  },
+  // Núcleo del cambio: Estilos para los íconos minimalistas oficiales
+  iconoInputCustom: {
+    width: 22,
+    height: 22,
+    marginLeft: 8,
+  },
+  soporteIconoCustom: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  modalIconoCustom: {
+    width: 22,
+    height: 22,
+    marginRight: 8,
   },
   iconError: {
     fontSize: 16,

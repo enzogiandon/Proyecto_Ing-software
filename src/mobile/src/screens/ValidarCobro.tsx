@@ -66,6 +66,18 @@ function nombreMedio(medio: MedioPago): string {
   return medio === 'efectivo' ? 'Efectivo' : 'Transferencia';
 }
 
+// Núcleo del cambio: Mapeo de medios de pago a sus íconos oficiales RepartoYA
+function obtenerIconoMedio(medio: MedioPago) {
+  switch (medio) {
+    case 'efectivo':
+      return require('../../assets/icons/icono-efectivo.png');
+    case 'transferencia':
+      return require('../../assets/icons/icono-transferencia.png');
+    case 'qr':
+      return require('../../assets/icons/icono-qr.png');
+  }
+}
+
 export default function ValidarCobro({
   onVolver,
   onConfirmar,
@@ -207,7 +219,15 @@ export default function ValidarCobro({
           movimientos.map((movimiento) => (
             <View key={movimiento.id} style={styles.filaMovimiento}>
               <View style={styles.datosMovimiento}>
-                <Text style={styles.medioMovimiento}>{nombreMedio(movimiento.medio)}</Text>
+                {/* Núcleo del cambio: Ícono oficial del medio de pago en la lista de cobros */}
+                <View style={styles.medioConIcono}>
+                  <Image
+                    source={obtenerIconoMedio(movimiento.medio)}
+                    style={styles.iconoMedioLista}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.medioMovimiento}>{nombreMedio(movimiento.medio)}</Text>
+                </View>
                 <Text style={styles.importeMovimiento}>{formatoPesos(movimiento.monto)}</Text>
               </View>
               <TouchableOpacity
@@ -316,6 +336,15 @@ export default function ValidarCobro({
                   onPress={() => setMedioSeleccionado(medio)}
                   accessibilityLabel={`Seleccionar ${nombreMedio(medio)}`}
                 >
+                  {/* Núcleo del cambio: Ícono oficial del medio de pago en el selector emergente */}
+                  <Image
+                    source={obtenerIconoMedio(medio)}
+                    style={[
+                      styles.modalIconoOpcion,
+                      medioSeleccionado === medio && styles.modalIconoSeleccionado,
+                    ]}
+                    resizeMode="contain"
+                  />
                   <Text
                     style={[
                       styles.modalTextoOpcion,
@@ -402,6 +431,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginRight: 16,
   },
+  medioConIcono: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconoMedioLista: {
+    width: 22,
+    height: 22,
+  },
   medioMovimiento: { fontSize: 15, color: TEXTO, fontWeight: 'bold' },
   importeMovimiento: { fontSize: 16, color: AZUL, fontWeight: 'bold' },
   botonEliminar: {
@@ -450,6 +488,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalOpcionSeleccionada: { backgroundColor: AZUL },
+  modalIconoOpcion: {
+    width: 26,
+    height: 26,
+    marginBottom: 6,
+  },
+  modalIconoSeleccionado: {
+    tintColor: '#FFFFFF',
+  },
   modalTextoOpcion: { color: AZUL, fontSize: 12, fontWeight: 'bold' },
   modalTextoSeleccionado: { color: '#FFFFFF' },
   modalInput: {

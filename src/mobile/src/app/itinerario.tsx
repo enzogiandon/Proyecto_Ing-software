@@ -231,12 +231,17 @@ export default function ItinerarioScreen() {
       ) : !itinerario || itinerario.paradas.length === 0 ? (
         /* ================= ESTADO FIGMA: ITINERARIO - SIN ASIGNAR ================= */
         <ScrollView contentContainerStyle={styles.sinAsignarScroll}>
-          {/* Núcleo del cambio: Botón sin emoji de rutas guardadas para estilo más limpio */}
+          {/* Núcleo del cambio: Botón con ícono minimalista oficial de rutas guardadas */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
             onPress={handleRutasGuardadas}
             activeOpacity={0.8}
           >
+            <Image
+              source={require('../../assets/icons/icono-rutas-guardadas.png')}
+              style={styles.iconoRutasGuardadas}
+              resizeMode="contain"
+            />
             <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
           </TouchableOpacity>
 
@@ -305,12 +310,17 @@ export default function ItinerarioScreen() {
             </View>
           </View>
 
-          {/* Núcleo del cambio: Botón sin emoji de rutas guardadas con borde Azul Ruta */}
+          {/* Núcleo del cambio: Botón con ícono minimalista oficial de rutas guardadas */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
             onPress={handleRutasGuardadas}
             activeOpacity={0.8}
           >
+            <Image
+              source={require('../../assets/icons/icono-rutas-guardadas.png')}
+              style={styles.iconoRutasGuardadas}
+              resizeMode="contain"
+            />
             <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
           </TouchableOpacity>
 
@@ -646,6 +656,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  // Núcleo del cambio: Estilo para el ícono oficial de rutas guardadas
+  iconoRutasGuardadas: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
   },
   iconoBookmark: {
     fontSize: 16,

@@ -161,25 +161,40 @@ export default function ParadaScreen() {
 
             <View style={styles.divisor} />
 
-            {/* Núcleo del cambio: Fila de domicilio limpia sin emoji */}
+            {/* Núcleo del cambio: Fila de domicilio con ícono minimalista oficial */}
             <View style={styles.filaDato}>
+              <Image
+                source={require('../../assets/icons/icono-domicilio.png')}
+                style={styles.iconoDatoCustom}
+                resizeMode="contain"
+              />
               <View style={styles.columnaDato}>
                 <Text style={styles.labelDato}>DOMICILIO DE ENTREGA</Text>
                 <Text style={styles.valorDatoPrincipal}>{parada.comercio.domicilio}</Text>
               </View>
             </View>
 
-            {/* Núcleo del cambio: Fila de CUIT limpia sin emoji */}
+            {/* Núcleo del cambio: Fila de CUIT con ícono minimalista oficial */}
             <View style={styles.filaDato}>
+              <Image
+                source={require('../../assets/icons/icono-cuit.png')}
+                style={styles.iconoDatoCustom}
+                resizeMode="contain"
+              />
               <View style={styles.columnaDato}>
                 <Text style={styles.labelDato}>IDENTIFICACIÓN FISCAL (CUIT)</Text>
                 <Text style={styles.valorDato}>{parada.comercio.cuit}</Text>
               </View>
             </View>
 
-            {/* Núcleo del cambio: Fila de contacto en destino limpia sin emoji */}
+            {/* Núcleo del cambio: Fila de contacto en destino con ícono minimalista oficial */}
             {parada.comercio.telefono && (
               <View style={styles.filaDato}>
+                <Image
+                  source={require('../../assets/icons/icono-contacto.png')}
+                  style={styles.iconoDatoCustom}
+                  resizeMode="contain"
+                />
                 <View style={styles.columnaDato}>
                   <Text style={styles.labelDato}>CONTACTO EN DESTINO</Text>
                   <Text style={styles.valorDato}>
@@ -196,8 +211,13 @@ export default function ParadaScreen() {
               </View>
             )}
 
-            {/* Núcleo del cambio: Fila de horario programado limpia sin emoji */}
+            {/* Núcleo del cambio: Fila de horario programado con ícono minimalista oficial */}
             <View style={styles.filaDato}>
+              <Image
+                source={require('../../assets/icons/icono-horario.png')}
+                style={styles.iconoDatoCustom}
+                resizeMode="contain"
+              />
               <View style={styles.columnaDato}>
                 <Text style={styles.labelDato}>HORARIO PROGRAMADO</Text>
                 <Text style={styles.valorDato}>
@@ -284,14 +304,23 @@ export default function ParadaScreen() {
             }}
             activeOpacity={0.8}
           >
-            <Text style={styles.iconoBotonSecundario}>📎</Text>
+            {/* Núcleo del cambio: Ícono minimalista de adjuntar archivo */}
+            <Image
+              source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+              style={styles.iconoAccionSecundario}
+              resizeMode="contain"
+            />
             <View style={styles.textoSecundarioCol}>
               <Text style={styles.textoBotonSecundario}>Adjuntar documento</Text>
               <Text style={styles.subtextoBotonSecundario}>
                 Fotografía del comprobante o remito con firma
               </Text>
             </View>
-            <Text style={styles.indicadorBotonSecundario}>📷</Text>
+            <Image
+              source={require('../../assets/icons/icono-camara.png')}
+              style={styles.iconoIndicadorCamara}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
 
           {/* 4. Botón: Registrar Inconveniente */}
@@ -303,7 +332,12 @@ export default function ParadaScreen() {
             }}
             activeOpacity={0.8}
           >
-            <Text style={styles.iconoBotonSecundario}>⚠️</Text>
+            {/* Núcleo del cambio: Ícono minimalista de alerta en inconveniente */}
+            <Image
+              source={require('../../assets/icons/icono-alerta.png')}
+              style={styles.iconoAccionSecundario}
+              resizeMode="contain"
+            />
             <View style={styles.textoSecundarioCol}>
               <Text style={[styles.textoBotonSecundario, styles.textoAlertaInconveniente]}>
                 Registrar inconveniente
@@ -623,6 +657,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 12,
+  },
+  // Núcleo del cambio: Estilo para los íconos minimalistas de datos del comercio
+  iconoDatoCustom: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+    marginTop: 2,
+  },
+  iconoAccionSecundario: {
+    width: 22,
+    height: 22,
+    marginRight: 14,
+  },
+  iconoIndicadorCamara: {
+    width: 18,
+    height: 18,
+    marginLeft: 8,
   },
   iconoDato: {
     fontSize: 16,

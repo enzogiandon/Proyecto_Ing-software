@@ -235,19 +235,29 @@ Alert.alert(
           Adjuntá el remito o comprobante de la entrega.
         </Text>
 
+        {/* Núcleo del cambio: Botón para tomar fotografía con ícono oficial */}
         <TouchableOpacity
           style={styles.outlineButton}
           onPress={tomarFotografia}
         >
-          <Text style={styles.outlineIcon}>▣</Text>
+          <Image
+            source={require('../../assets/icons/icono-camara.png')}
+            style={styles.iconoBotonOutline}
+            resizeMode="contain"
+          />
           <Text style={styles.outlineButtonText}>Tomar fotografía</Text>
         </TouchableOpacity>
 
+        {/* Núcleo del cambio: Botón para seleccionar archivo con ícono oficial */}
         <TouchableOpacity
           style={styles.outlineButton}
           onPress={seleccionarArchivo}
         >
-          <Text style={styles.outlineIcon}>▤</Text>
+          <Image
+            source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+            style={styles.iconoBotonOutline}
+            resizeMode="contain"
+          />
           <Text style={styles.outlineButtonText}>Seleccionar archivo</Text>
         </TouchableOpacity>
 
@@ -429,6 +439,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
     paddingHorizontal: 16,
+  },
+  iconoBotonOutline: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
   },
   outlineIcon: {
     color: COLORS.navy,

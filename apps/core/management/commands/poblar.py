@@ -3,11 +3,12 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from apps.cobranza.models import Cobranza, DetallePago
-from apps.core.models import EstadoVehiculo, Roles, Transportista, Vehiculo
+from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
     Itinerario,
@@ -67,6 +68,8 @@ class Command(BaseCommand):
                 Transportista.objects.all().delete()
                 Vehiculo.objects.all().delete()
 
+                Usuario.objects.filter(is_superuser=False).delete()
+
             # ------------------------------------------------------------------
             # 1. Vehículos
             # ------------------------------------------------------------------
@@ -117,6 +120,7 @@ class Command(BaseCommand):
                 },
             ]
 
+            grupo_transportista, _ = Group.objects.get_or_create(name=Grupos.TRANSPORTISTA)
             for c_data in choferes_data:
                 v = c_data.pop("vehiculo")
                 user, _ = Usuario.objects.get_or_create(
@@ -125,10 +129,10 @@ class Command(BaseCommand):
                         "first_name": c_data["first_name"],
                         "last_name": c_data["last_name"],
                         "telefono": c_data["telefono"],
-                        "rol": Roles.TRANSPORTISTA,
                         "is_active": True,
                     },
                 )
+                user.groups.add(grupo_transportista)
                 user.set_password("chofer123")
                 user.save()
 

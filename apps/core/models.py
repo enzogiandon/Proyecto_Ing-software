@@ -4,14 +4,19 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
-from simple_history.models import HistoricalRecords
 
 
-class Roles(models.TextChoices):
-    ADMINISTRATIVO = "administrativo", "Administrativo"
+class Grupos(models.TextChoices):
+    ADMIN_PLANIFICACION = (
+        "administrativo-planificacion",
+        "Administrativo - Planificación",
+    )
+    ADMIN_CONCILIACION = (
+        "administrativo-conciliacion",
+        "Administrativo - Conciliación",
+    )
     TRANSPORTISTA = "transportista", "Transportista"
-    ADMINISTRADOR = "administrador", "Administrador"
-
+    GESTION_PERSONAL = "gestion-personal", "Gestión de Personal"
 
 class EstadoVehiculo(models.TextChoices):
     DISPONIBLE = "disponible", "Disponible"
@@ -46,10 +51,6 @@ class Usuario(AbstractUser):
         null=True,
     )
     intentos_fallidos = models.IntegerField(default=0)
-    rol = models.CharField(
-        max_length=20, choices=Roles.choices, default=Roles.TRANSPORTISTA
-    )
-    history = HistoricalRecords()
 
 
 class Vehiculo(models.Model):
@@ -89,7 +90,6 @@ class Transportista(models.Model):
     vehiculo = models.ForeignKey(
         Vehiculo, on_delete=models.CASCADE, blank=True, null=True
     )
-    history = HistoricalRecords()
 
     def __str__(self):
         return self.usuario.get_full_name() or self.usuario.username

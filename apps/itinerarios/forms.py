@@ -1,6 +1,6 @@
 from django import forms
 
-from apps.core.models import Roles, Transportista
+from apps.core.models import Grupos, Transportista
 from apps.remitos.models import Comercio, EstadoRemito
 
 from .models import EstadoItinerario, Itinerario
@@ -28,7 +28,7 @@ class CrearItinerariosForm(forms.Form):
         self.fields["transportistas"].queryset = (
             Transportista.objects.filter(
                 usuario__is_active=True,
-                usuario__rol=Roles.TRANSPORTISTA,
+                usuario__groups__name=Grupos.TRANSPORTISTA,
                 vehiculo__isnull=False,
             )
             .select_related("usuario", "vehiculo")

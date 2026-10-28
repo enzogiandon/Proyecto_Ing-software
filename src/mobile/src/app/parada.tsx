@@ -161,28 +161,25 @@ export default function ParadaScreen() {
 
             <View style={styles.divisor} />
 
-            {/* Domicilio de entrega destacado */}
+            {/* Núcleo del cambio: Fila de domicilio limpia sin emoji */}
             <View style={styles.filaDato}>
-              <Text style={styles.iconoDato}>📍</Text>
               <View style={styles.columnaDato}>
                 <Text style={styles.labelDato}>DOMICILIO DE ENTREGA</Text>
                 <Text style={styles.valorDatoPrincipal}>{parada.comercio.domicilio}</Text>
               </View>
             </View>
 
-            {/* CUIT */}
+            {/* Núcleo del cambio: Fila de CUIT limpia sin emoji */}
             <View style={styles.filaDato}>
-              <Text style={styles.iconoDato}>🪪</Text>
               <View style={styles.columnaDato}>
                 <Text style={styles.labelDato}>IDENTIFICACIÓN FISCAL (CUIT)</Text>
                 <Text style={styles.valorDato}>{parada.comercio.cuit}</Text>
               </View>
             </View>
 
-            {/* Teléfono y Contacto */}
+            {/* Núcleo del cambio: Fila de contacto en destino limpia sin emoji */}
             {parada.comercio.telefono && (
               <View style={styles.filaDato}>
-                <Text style={styles.iconoDato}>📞</Text>
                 <View style={styles.columnaDato}>
                   <Text style={styles.labelDato}>CONTACTO EN DESTINO</Text>
                   <Text style={styles.valorDato}>
@@ -199,9 +196,8 @@ export default function ParadaScreen() {
               </View>
             )}
 
-            {/* Horario estimado */}
+            {/* Núcleo del cambio: Fila de horario programado limpia sin emoji */}
             <View style={styles.filaDato}>
-              <Text style={styles.iconoDato}>⏰</Text>
               <View style={styles.columnaDato}>
                 <Text style={styles.labelDato}>HORARIO PROGRAMADO</Text>
                 <Text style={styles.valorDato}>

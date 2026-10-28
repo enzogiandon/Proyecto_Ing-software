@@ -36,6 +36,8 @@ import { obtenerItinerarioJornada } from '../services/itinerarioService';
 import { getUsuarioActual, estaAutenticado } from '../services/authService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 import { seleccionarParadaItem } from '../services/paradaService';
+// Núcleo del cambio: Servicio para abrir chat de WhatsApp con soporte de Base Logística
+import { contactarSoporteWhatsApp } from '../services/soporteService';
 
 export default function ItinerarioScreen() {
   const router = useRouter();
@@ -119,11 +121,24 @@ export default function ItinerarioScreen() {
     } as any);
   };
 
+  // Núcleo del cambio: Abre WhatsApp para contactar a Base Logística sin números ficticios
   const handleContactarBase = () => {
     Alert.alert(
       'Soporte Operativo RepartoYA',
-      'Contactando a Base Logística...\n\nLínea directa: 0800-444-REPARTO (Int. 104)\nWhatsApp Guardia: +54 9 11 5555-0199',
-      [{ text: 'Cerrar' }]
+      '¿Deseás comunicarte con la Base Logística a través de WhatsApp para consultar tu asignación de ruta?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Abrir WhatsApp',
+          onPress: () => {
+            const usuario = getUsuarioActual();
+            const choferNombre = usuario?.first_name
+              ? `${usuario.first_name} ${usuario.last_name || ''}`.trim()
+              : 'Transportista';
+            contactarSoporteWhatsApp(`Hola, soy ${choferNombre} y me comunico con Base Logística de RepartoYA para consultar mi itinerario.`);
+          },
+        },
+      ]
     );
   };
 
@@ -216,13 +231,12 @@ export default function ItinerarioScreen() {
       ) : !itinerario || itinerario.paradas.length === 0 ? (
         /* ================= ESTADO FIGMA: ITINERARIO - SIN ASIGNAR ================= */
         <ScrollView contentContainerStyle={styles.sinAsignarScroll}>
-          {/* Botón Rutas Guardadas en la parte superior */}
+          {/* Núcleo del cambio: Botón sin emoji de rutas guardadas para estilo más limpio */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
             onPress={handleRutasGuardadas}
             activeOpacity={0.8}
           >
-            <Text style={styles.iconoBookmark}>🔖</Text>
             <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
           </TouchableOpacity>
 
@@ -291,13 +305,12 @@ export default function ItinerarioScreen() {
             </View>
           </View>
 
-          {/* Botón de Rutas Guardadas con borde Azul Ruta */}
+          {/* Núcleo del cambio: Botón sin emoji de rutas guardadas con borde Azul Ruta */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
             onPress={handleRutasGuardadas}
             activeOpacity={0.8}
           >
-            <Text style={styles.iconoBookmark}>🔖</Text>
             <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
           </TouchableOpacity>
 

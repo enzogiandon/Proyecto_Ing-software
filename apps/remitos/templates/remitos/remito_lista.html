@@ -7,7 +7,6 @@
 <link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
 {% endblock %}
 
-<<<<<<< HEAD
 {% block content %}
 <div class="remitos-page">
     <!-- ==============================================
@@ -60,15 +59,6 @@
                 </select>
             </div>
 
-            <!-- Filtro Fecha -->
-            <div class="remitos-filtro-item">
-                <input type="date" 
-                       name="fecha" 
-                       value="{{ filtro_fecha }}" 
-                       class="form-control" 
-                       title="Fecha de emisión">
-            </div>
-
             <!-- Botones de Acción -->
             <div class="remitos-filtro-btn d-flex gap-2">
                 <button type="submit" class="btn btn-outline-secondary d-flex align-items-center gap-1">
@@ -98,8 +88,7 @@
                             <th>Comercio</th>
                             <th>Monto Total</th>
                             <th>Estado</th>
-                            <th>Fecha Pactada</th>
-                            <th>Parada</th>
+                            <th>Estado Parada</th>
                             <th class="text-end pe-4">Acciones</th>
                         </tr>
                     </thead>
@@ -117,14 +106,13 @@
                                     <small class="text-c-muted">{{ remito.comercio.domicilio|truncatechars:35 }}</small>
                                 </td>
                                 <td class="fw-semibold">
-                                    ${{ remito.monto_total|floatformat:2 }}
+                                    ${{ remito.total|floatformat:2 }}
                                 </td>
                                 <td>
                                     <span class="remito-estado-badge remito-estado-badge--{{ remito.estado|lower }}">
                                         {{ remito.get_estado_display }}
                                     </span>
                                 </td>
-                                <td>{{ remito.fecha_pactada|date:"d/m/Y"|default:"-" }}</td>
                                 <td>
                                     {% if remito.parada %}
                                         <span class="text-c-secondary">Parada #{{ remito.parada.orden }}</span>
@@ -188,36 +176,6 @@
                         <a href="{% url 'remitos:remito_lista' %}" class="btn btn-outline-secondary">
                             Restablecer filtros
                         </a>
-=======
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Número</th>
-                <th>Marca</th>
-                <th>Comercio</th>
-                <th>Monto Total</th>
-                <th>Estado</th>
-                <th>Parada</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for remito in remitos %}
-            <tr>
-                <td>{{ remito.id }}</td>
-                <td>{{ remito.numero }}</td>
-                <td>{{ remito.marca.nombre }}</td>
-                <td>{{ remito.comercio.razon_social }}</td>
-                <td>${{ remito.monto_total }}</td>
-                <td>{{ remito.get_estado_display }}</td>
-                <td>{{ remito.eliminado }}</td>
-                <td>
-                    {% if remito.parada %}
-                        Parada #{{ remito.parada.orden }} (Itin: #{{ remito.parada.itinerario_id }})
-                    {% else %}
-                        Pendiente
->>>>>>> d48cdfd927014556ad1cd7541bed245e52f9e676
                     {% endif %}
                     <a href="{% url 'remitos:remito_crear' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
                         <i class="fas fa-plus"></i>

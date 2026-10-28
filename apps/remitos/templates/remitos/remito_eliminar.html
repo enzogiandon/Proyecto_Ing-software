@@ -45,11 +45,7 @@
                 </div>
                 <div class="remito-data-row">
                     <span class="remito-data-label">Monto total:</span>
-                    <span class="remito-data-value text-success fw-bold">${{ object.monto_total|floatformat:2 }}</span>
-                </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Ítems asociados:</span>
-                    <span class="remito-data-value">{{ object.items.count }} producto(s)</span>
+                    <span class="remito-data-value text-success fw-bold">${{ object.total|floatformat:2 }}</span>
                 </div>
             </div>
 

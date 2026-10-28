@@ -62,7 +62,7 @@
             <h2 class="text-section mb-3">Datos Principales</h2>
             <div class="row g-3">
                 <!-- Número de remito -->
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="{{ form.numero.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
                         Número de remito
                     </label>
@@ -77,9 +77,25 @@
                         <div class="invalid-feedback d-block small">{{ form.numero.errors.0 }}</div>
                     {% endif %}
                 </div>
+                <!-- Total a cobrar -->
+                <div class="col-md-6">
+                    <label for="{{ form.numero.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
+                        Total a cobrar
+                    </label>
+                    <input type="text"
+                           name="numero"
+                           id="{{ form.total.id_for_label }}"
+                           class="form-control {% if form.total.errors %}is-invalid{% endif %}"
+                           placeholder="Ej: $ 10.000"
+                           value="{{ form.total.value|default:'' }}"
+                           required>
+                    {% if form.total.errors %}
+                        <div class="invalid-feedback d-block small">{{ form.total.errors.0 }}</div>
+                    {% endif %}
+                </div>
 
                 <!-- Marca -->
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="{{ form.marca.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
                         Marca
                     </label>
@@ -90,7 +106,7 @@
                 </div>
 
                 <!-- Comercio destino -->
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="{{ form.comercio.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
                         Comercio destino
                     </label>
@@ -99,104 +115,6 @@
                         <div class="invalid-feedback d-block small">{{ form.comercio.errors.0 }}</div>
                     {% endif %}
                 </div>
-
-                <!-- Fecha de emisión -->
-                <div class="col-md-6">
-                    <label for="{{ form.fecha_emision.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
-                        Fecha de emisión
-                    </label>
-                    {{ form.fecha_emision }}
-                    {% if form.fecha_emision.errors %}
-                        <div class="invalid-feedback d-block small">{{ form.fecha_emision.errors.0 }}</div>
-                    {% endif %}
-                </div>
-
-                <!-- Fecha pactada -->
-                <div class="col-md-6">
-                    <label for="{{ form.fecha_pactada.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
-                        Fecha pactada de entrega
-                    </label>
-                    {{ form.fecha_pactada }}
-                    {% if form.fecha_pactada.errors %}
-                        <div class="invalid-feedback d-block small">{{ form.fecha_pactada.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </section>
-
-        <!-- ==============================================
-             TARJETA 2: PRODUCTOS DEL REMITO (FIGMA)
-        =============================================== -->
-        <section class="remitos-card mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <h2 class="text-section mb-0">Productos del remito</h2>
-                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" id="btn-add-item">
-                    <i class="fas fa-plus"></i>
-                    <span>Agregar producto</span>
-                </button>
-            </div>
-
-            {{ items_formset.management_form }}
-
-            <div class="table-responsive">
-                <table class="remitos-tabla" id="tabla-items">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th style="width: 140px;">Cantidad</th>
-                            <th style="width: 160px;">Precio Unitario</th>
-                            <th style="width: 150px;">Subtotal</th>
-                            <th style="width: 60px;" class="text-center"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="items-container">
-                        {% for item_form in items_formset.forms %}
-                            <tr class="item-fila {% if item_form.errors %}bg-danger-subtle{% endif %}">
-                                <!-- ID oculto -->
-                                {{ item_form.id }}
-
-                                <!-- Producto -->
-                                <td>
-                                    {{ item_form.producto }}
-                                    {% if item_form.producto.errors %}
-                                        <div class="text-danger small mt-1">{{ item_form.producto.errors.0 }}</div>
-                                    {% endif %}
-                                </td>
-
-                                <!-- Cantidad -->
-                                <td>
-                                    {{ item_form.cantidad }}
-                                    {% if item_form.cantidad.errors %}
-                                        <div class="text-danger small mt-1">{{ item_form.cantidad.errors.0 }}</div>
-                                    {% endif %}
-                                </td>
-
-                                <!-- Precio Unitario -->
-                                <td>
-                                    {{ item_form.precio_unitario }}
-                                    {% if item_form.precio_unitario.errors %}
-                                        <div class="text-danger small mt-1">{{ item_form.precio_unitario.errors.0 }}</div>
-                                    {% endif %}
-                                </td>
-
-                                <!-- Subtotal calculado en vivo -->
-                                <td>
-                                    <span class="item-subtotal-display fw-semibold text-c-primary">$ 0,00</span>
-                                </td>
-
-                                <!-- Botón Eliminar fila -->
-                                <td class="text-center">
-                                    {% if items_formset.can_delete %}
-                                        <span class="d-none">{{ item_form.DELETE }}</span>
-                                    {% endif %}
-                                    <button type="button" class="btn-accion-icon btn-accion-danger btn-eliminar-fila" title="Eliminar fila">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </section>
 
@@ -238,74 +156,4 @@
         </td>
     </tr>
 </template>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const itemsContainer = document.getElementById('items-container');
-    const btnAddItem = document.getElementById('btn-add-item');
-    const totalFormsInput = document.querySelector('input[name$="-TOTAL_FORMS"]');
-    const templateItem = document.getElementById('template-item-vacio');
-
-    // Calcula y actualiza el subtotal de una fila
-    function actualizarSubtotal(fila) {
-        const cantInput = fila.querySelector('input[name$="-cantidad"]');
-        const precioInput = fila.querySelector('input[name$="-precio_unitario"]');
-        const display = fila.querySelector('.item-subtotal-display');
-
-        const cant = parseFloat(cantInput?.value) || 0;
-        const precio = parseFloat(precioInput?.value) || 0;
-        const total = cant * precio;
-
-        if (display) {
-            display.textContent = `$ ${total.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        }
-    }
-
-    // Recalcular todos los subtotales existentes
-    document.querySelectorAll('.item-fila').forEach(fila => {
-        actualizarSubtotal(fila);
-        fila.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', () => actualizarSubtotal(fila));
-        });
-    });
-
-    // Delegación de eventos para eliminar fila
-    itemsContainer.addEventListener('click', (e) => {
-        const btnEliminar = e.target.closest('.btn-eliminar-fila');
-        if (!btnEliminar) return;
-
-        const fila = btnEliminar.closest('.item-fila');
-        const deleteCheckbox = fila.querySelector('input[type="checkbox"][name$="-DELETE"]');
-
-        if (deleteCheckbox) {
-            deleteCheckbox.checked = true;
-            fila.style.display = 'none';
-        } else {
-            fila.remove();
-        }
-    });
-
-    // Agregar nueva fila al formset
-    if (btnAddItem && templateItem && totalFormsInput) {
-        btnAddItem.addEventListener('click', () => {
-            const index = parseInt(totalFormsInput.value, 10);
-            const htmlString = templateItem.innerHTML.replace(/__prefix__/g, index);
-            
-            const tempDiv = document.createElement('tbody');
-            tempDiv.innerHTML = htmlString;
-            const nuevaFila = tempDiv.firstElementChild;
-
-            itemsContainer.appendChild(nuevaFila);
-            totalFormsInput.value = index + 1;
-
-            nuevaFila.querySelectorAll('input').forEach(input => {
-                input.addEventListener('input', () => actualizarSubtotal(nuevaFila));
-            });
-            actualizarSubtotal(nuevaFila);
-        });
-    }
-});
-</script>
 {% endblock %}

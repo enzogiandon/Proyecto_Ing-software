@@ -4,16 +4,16 @@
 {% block title %}Flota - RepartosYA{% endblock %}
 
 {% block extra_css %}
-{# home.css: botón y badges. empleado_lista.css: panel, encabezado y chip de matrícula compartidos #}
+{# home.css: botones compartidos; empleado_lista.css: grid, bordes y estilos de tabla #}
 <link href="{% static 'core/css/home.css' %}" rel="stylesheet">
 <link href="{% static 'core/css/empleado_lista.css' %}" rel="stylesheet">
-<link href="{% static 'core/css/vehiculo_lista.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 {% now "l, j \d\e F \d\e Y" as fecha_hoy %}
 <div class="empleados flota">
 
+    <!-- Encabezado de página idéntico al de empleados -->
     <div class="empleados-encabezado">
         <header class="empleados-encabezado_texto">
             <h1 class="text-title">Vehículos</h1>
@@ -21,90 +21,125 @@
         </header>
         <div>
             <a href="{% url 'core:vehiculo_crear' %}" class="home-btn home-btn--primary home-btn--compacto">
-                Agregar vehículo
-                <i class="fa fa-plus"></i>
+                <i class="fa fa-plus me-1" aria-hidden="true"></i>
+                <span>Agregar vehículo</span>
             </a>
         </div>
     </div>
 
+    <!-- Panel contenedor tipo tarjeta -->
     <section class="panel-tabla" aria-labelledby="titulo-vehiculos">
-
         <div id="flota-resultado" class="flota-resultado">
 
             <div class="tabla-scroll">
-                <div class="tabla-flota" role="table" aria-label="Vehículos">
+                <div class="tabla-empleados" role="table" aria-label="Vehículos">
 
-                    <div class="tabla-flota__fila tabla-flota__fila--encabezado" role="row">
+                    <!-- Fila de Encabezado (5 columnas idénticas al grid) -->
+                    <div class="tabla-empleados__fila tabla-empleados__fila--encabezado" role="row">
                         <div role="columnheader">Vehículo</div>
                         <div role="columnheader">Estado</div>
                         <div role="columnheader">Matrícula</div>
                         <div role="columnheader">Transportista asignado</div>
-                        <div role="columnheader">Acciones</div>
+                        <div role="columnheader" class="text-end">Acción</div>
                     </div>
 
+                    <!-- Filas de Datos con borde inferior entre filas -->
                     {% for vehiculo in vehiculos %}
-                        <div class="tabla-flota__fila" role="row">
-                            <div class="celda-vehiculo" role="cell">
-                                <span class="celda-vehiculo__nombre">{{ vehiculo.modelo|default:"Sin modelo" }}</span>
-                                {# Figma muestra tipo y combustible, que el modelo no tiene: se usa la póliza #}
-                                {% if vehiculo.poliza %}<span class="celda-vehiculo__detalle">Póliza {{ vehiculo.poliza }}</span>{% endif %}
+                        <div class="tabla-empleados__fila" role="row">
+                            <!-- Col 1: Vehículo (Modelo y Póliza) -->
+                            <div class="celda-nombre" role="cell">
+                                <span class="d-block text-truncate">{{ vehiculo.modelo|default:"Sin modelo" }}</span>
+                                {% if vehiculo.poliza %}
+                                    <small class="text-muted d-block">Póliza {{ vehiculo.poliza }}</small>
+                                {% endif %}
                             </div>
+
+                            <!-- Col 2: Estado -->
                             <div role="cell">
                                 {% if vehiculo.estado == "disponible" %}
-                                    <span class="estado-badge estado-badge--success text-badge">Disponible</span>
+                                    <span class="estado-badge estado-badge--info text-badge">Disponible</span>
                                 {% elif vehiculo.estado == "no_operativo" %}
                                     <span class="estado-badge estado-badge--error text-badge">No operativo</span>
                                 {% else %}
-                                    <span class="estado-badge estado-badge--info text-badge">Asignado</span>
+                                    <span class="estado-badge estado-badge--warning text-badge">Asignado</span>
                                 {% endif %}
                             </div>
-                            <div role="cell"><span class="chip-matricula">{{ vehiculo.patente }}</span></div>
-                            <div class="celda-transportista" role="cell">
-                                {% for transportista in vehiculo.transportista_set.all %}{{ transportista }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="celda-vacia">Sin asignar</span>{% endfor %}
-                            </div>
+
+                            <!-- Col 3: Matrícula -->
                             <div role="cell">
-                                <a href="{% url 'core:vehiculo_editar' vehiculo.pk %}" class="home-btn home-btn--editar" aria-label="Editar vehículo {{ vehiculo.patente }}">
+                                <span class="chip-matricula">{{ vehiculo.patente }}</span>
+                            </div>
+
+                            <!-- Col 4: Transportista asignado -->
+                            <div role="cell" class="text-break">
+                                {% for transportista in vehiculo.transportista_set.all %}
+                                    {{ transportista }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    <span class="celda-vacia">Sin asignar</span>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Col 5: Botón Editar compacto y alineado a la derecha -->
+                            <div role="cell">
+                                <a href="{% url 'core:vehiculo_editar' vehiculo.pk %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" aria-label="Editar a {{ nombre }}">
                                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                                     <span>Editar</span>
                                 </a>
                             </div>
                         </div>
                     {% empty %}
-                        <div class="tabla-flota__vacia" role="row">
-                            <div role="cell">
-                                {% if filtros.q or filtros.estado %}No se encontraron vehículos para los criterios seleccionados{% else %}No hay vehículos registrados.{% endif %}
-                            </div>
+                        <div class="tabla-empleados__vacia" role="row">
+                            {% if filtros.q or filtros.estado %}
+                                No se encontraron vehículos para los criterios seleccionados.
+                            {% else %}
+                                No hay vehículos registrados.
+                            {% endif %}
                         </div>
                     {% endfor %}
 
                 </div>
             </div>
 
-            {# Resumen del listado #}
-            <div class="resumen-listado">
-                {% if page_obj %}
-                    <p>Mostrando {{ page_obj.object_list|length }} de {{ page_obj.paginator.count }} vehículo{{ page_obj.paginator.count|pluralize }}</p>
-                {% else %}
-                    <p>Mostrando {{ vehiculos|length }} de {{ vehiculos|length }} vehículo{{ vehiculos|length|pluralize }}</p>
-                {% endif %}
+            <!-- Resumen y Paginación HTMX -->
+            {% if page_obj.has_other_pages %}
+                <div class="resumen-listado d-flex justify-content-between align-items-center flex-wrap gap-2 pt-3 border-top mt-3">
+                    {% if page_obj %}
+                        <p class="text-muted small m-0">Mostrando {{ page_obj.object_list|length }} de {{ page_obj.paginator.count }} vehículo{{ page_obj.paginator.count|pluralize }}</p>
+                    {% else %}
+                        <p class="text-muted small m-0">Mostrando {{ vehiculos|length }} de {{ vehiculos|length }} vehículo{{ vehiculos|length|pluralize }}</p>
+                    {% endif %}
 
-                <div class="paginacion">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&q={{ filtros.q|urlencode }}&estado={{ filtros.estado|urlencode }}"
-                        hx-get="{% url 'core:vehiculo_lista' %}" hx-include="#filtros-flota"
-                        hx-vals='{"page": {{ page_obj.previous_page_number }}}'
-                        hx-target="#flota-resultado" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#flota-resultado">Anterior</a>
-                    {% endif %}
-                    <p>Página {{ page_obj.number|default:1 }} de {{ page_obj.paginator.num_pages|default:1 }}</p>
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&q={{ filtros.q|urlencode }}&estado={{ filtros.estado|urlencode }}"
-                        hx-get="{% url 'core:vehiculo_lista' %}" hx-include="#filtros-flota"
-                        hx-vals='{"page": {{ page_obj.next_page_number }}}'
-                        hx-target="#flota-resultado" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#flota-resultado">Siguiente</a>
-                    {% endif %}
+                    <div class="paginacion d-flex align-items-center gap-2 m-0">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}&q={{ filtros.q|urlencode }}&estado={{ filtros.estado|urlencode }}"
+                              class="btn btn-outline-secondary btn-sm"
+                              hx-get="{% url 'core:vehiculo_lista' %}" 
+                              hx-include="#filtros-flota"
+                              hx-vals='{"page": {{ page_obj.previous_page_number }}}'
+                              hx-target="#flota-resultado" 
+                              hx-swap="outerHTML" 
+                              hx-push-url="true" 
+                              hx-indicator="#flota-resultado">Anterior</a>
+                        {% endif %}
+                        
+                        <span class="text-muted small px-1">Página {{ page_obj.number|default:1 }} de {{ page_obj.paginator.num_pages|default:1 }}</span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}&q={{ filtros.q|urlencode }}&estado={{ filtros.estado|urlencode }}"
+                              class="btn btn-outline-secondary btn-sm"
+                              hx-get="{% url 'core:vehiculo_lista' %}" 
+                              hx-include="#filtros-flota"
+                              hx-vals='{"page": {{ page_obj.next_page_number }}}'
+                              hx-target="#flota-resultado" 
+                              hx-swap="outerHTML" 
+                              hx-push-url="true" 
+                              hx-indicator="#flota-resultado">Siguiente</a>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
+            {% endif %}
+
         </div>
-            </section>
-        </div>
+    </section>
+</div>
 {% endblock %}

@@ -17,9 +17,18 @@
             <i class="fas fa-arrow-left" aria-hidden="true"></i>
             <span>Volver a flota</span>
         </a>
-        <div class="form-pagina__titulos">
-            <h1 class="text-title">{% if object.pk %}Editar vehículo{% else %}Añadir vehículo{% endif %}</h1>
-            <p class="text-body">{% if object.pk %}Actualiza los datos del vehículo.{% else %}Añade un nuevo vehículo a la flota{% endif %}</p>
+
+        <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-3">
+            <div class="form-pagina__titulos">
+                <h1 class="text-title">{% if object.pk %}Editar vehículo{% else %}Añadir vehículo{% endif %}</h1>
+                <p class="text-body">{% if object.pk %}Actualiza los datos del vehículo.{% else %}Añade un nuevo vehículo a la flota{% endif %}</p>
+            </div>
+
+            {% if object.pk and object.estado %}
+                <span class="estado-badge {% if object.estado == 'disponible' %}estado-badge--info{% elif object.estado == 'no_operativo' %}estado-badge--error{% else %}estado-badge--warning{% endif %} text-badge">
+                    {{ object.get_estado_display }}
+                </span>
+            {% endif %}
         </div>
     </header>
 
@@ -59,7 +68,7 @@
 
                 <!-- Campo de póliza -->
                 <div class="campo-form{% if form.poliza.errors %} campo-form--error{% endif %}">
-                    <label for="{{ form.poliza.id_for_label }}" class="campo-form__etiqueta">Número de póliza del seguro del vehículo</label>
+                    <label for="{{ form.poliza.id_for_label }}" class="campo-form__etiqueta">Número de póliza de seguro</label>
                     {{ form.poliza }}
                     {% for error in form.poliza.errors %}
                         <p class="campo-form__error" role="alert">{{ error }}</p>
@@ -91,7 +100,7 @@
             <p class="text-help acciones-form__nota">Los cambios se aplicarán al guardar.</p>
             <div class="acciones-form__botones">
                 <a href="{% url 'core:vehiculo_lista' %}" class="home-btn">Cancelar</a>
-                <button type="submit" class="home-btn home-btn--primary">Guardar cambios</button>
+                <button type="submit" class="home-btn home-btn--primary">Guardar</button>
             </div>
         </div>
     </form>

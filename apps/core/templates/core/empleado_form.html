@@ -143,7 +143,69 @@
                     {% endfor %}
                 </div>
             </div>
+            {# Selector de Vehículo: oculto por defecto vía clase CSS #}
+            <div class="fila-campos fila-campos--2 campo-vehiculo-wrapper d-none" id="contenedor-vehiculo">
+                <div class="campo-form{% if form.vehiculo.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.vehiculo.id_for_label }}" class="campo-form__etiqueta">Vehículo asignado</label>
+                    {{ form.vehiculo }}
+                    {% for error in form.vehiculo.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <script>
+                (function() {
+                    function initVehiculoToggle() {
+                        const contenedor = document.getElementById("contenedor-vehiculo");
+                        const inputsGrupos = document.querySelectorAll('input[name="{{ form.grupos.html_name }}"]');
 
+                        if (!contenedor) {
+                            console.warn("No se encontró #contenedor-vehiculo");
+                            return;
+                        }
+
+                        function actualizar() {
+                            let esTransportista = false;
+
+                            inputsGrupos.forEach((input) => {
+                                if (input.checked) {
+                                    const label = document.querySelector(`label[for="${input.id}"]`);
+                                    const texto = (label ? label.textContent : "").toLowerCase();
+                                    const val = (input.value || "").toLowerCase();
+
+                                    // Detecta si es transportista por texto visible o por ID/nombre del grupo
+                                    if (texto.includes("transportista") || val.includes("transportista")) {
+                                        esTransportista = true;
+                                    }
+                                }
+                            });
+
+                            if (esTransportista) {
+                                contenedor.classList.remove("d-none");
+                                contenedor.style.display = "grid";
+                            } else {
+                                contenedor.classList.add("d-none");
+                                contenedor.style.display = "none";
+                                const select = contenedor.querySelector("select");
+                                if (select) select.value = "";
+                            }
+                        }
+
+                        inputsGrupos.forEach((input) => {
+                            input.addEventListener("change", actualizar);
+                        });
+
+                        // Verificación inmediata al cargar
+                        actualizar();
+                    }
+
+                    if (document.readyState === "loading") {
+                        document.addEventListener("DOMContentLoaded", initVehiculoToggle);
+                    } else {
+                        initVehiculoToggle();
+                    }
+                })();
+            </script>
             {# Contraseña: solo en el alta #}
             {% if form.password %}
                 <div class="fila-campos fila-campos--2">
@@ -178,3 +240,53 @@
     </form>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const contenedorVehiculo = document.getElementById("contenedor-vehiculo");
+    const rolesCheckboxes = document.querySelectorAll(".js-rol-checkbox");
+
+    if (!contenedorVehiculo) return;
+
+    function sincronizarVisibilidadVehiculo() {
+        let esTransportista = false;
+
+        rolesCheckboxes.forEach((cb) => {
+            if (!cb.checked) return;
+
+            // Busca coincidencia en el data-label, en el value del input o en el texto del <label>
+            const dataLabel = (cb.getAttribute("data-label") || "").toLowerCase();
+            const valor = (cb.value || "").toLowerCase();
+            const labelEl = document.querySelector(`label[for="${cb.id}"]`);
+            const textoLabel = labelEl ? labelEl.textContent.toLowerCase() : "";
+
+            if (
+                dataLabel.includes("transportista") || 
+                valor.includes("transportista") || 
+                textoLabel.includes("transportista")
+            ) {
+                esTransportista = true;
+            }
+        });
+
+        if (esTransportista) {
+            contenedorVehiculo.style.removeProperty("display");
+            contenedorVehiculo.classList.remove("d-none");
+        } else {
+            contenedorVehiculo.style.display = "none";
+            const selectVehiculo = contenedorVehiculo.querySelector("select");
+            if (selectVehiculo) {
+                selectVehiculo.value = "";
+            }
+        }
+    }
+
+    rolesCheckboxes.forEach((cb) => {
+        cb.addEventListener("change", sincronizarVisibilidadVehiculo);
+    });
+
+    // Ejecución inicial por si viene seleccionado al editar
+    sincronizarVisibilidadVehiculo();
+});
+</script>{% endblock %}

@@ -1,4 +1,5 @@
 {% load static %}
+{% load auth_extras %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -63,7 +64,7 @@
                 </a>
 
                 
-                    {% if user.rol == 'planificacion' %}
+                    {% if request.user|has_group:'administrativo-planificacion' %}
                         <!-- Sección: PLANIFICACIÓN -->
                         <div class="nav-section-title">Planificación</div>
                         <a href="{% url 'remitos:importacion_lista' %}" class="sidebar-link {% if 'importacion' in request.resolver_match.url_name %}active{% endif %}">
@@ -79,7 +80,7 @@
                             <span>Itinerarios</span>
                         </a>
 
-                    {% elif user.rol == "conciliacion" %}
+                    {% elif request.user|has_group:'administrativo-conciliacion' %}
                         <!-- Sección: CONCILIACIÓN -->
                         <div class="nav-section-title">Conciliación</div>
                         <a href="#" class="sidebar-link text-muted opacity-75">
@@ -99,7 +100,7 @@
                             <span>Arqueo de caja</span>
                         </a>
 
-                    {% elif user.rol == "administrativo"%}
+                    {% elif request.user|has_group:'gestion-usuarios' %}
                         <!-- Sección: ADMINISTRACIÓN -->
                         <div class="nav-section-title">Administración</div>
                         <a href="{% url 'core:empleado_lista' %}" class="sidebar-link {% if 'empleado' in request.resolver_match.url_name %}active{% endif %}">

@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.cobranza.models import MedioPago
 from apps.itinerarios.models import (
@@ -25,16 +24,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         password = attrs.get("password")
 
         # Buscamos si el usuario existe para chequear su estado antes
-        user = Usuario.objects.filter(**{self.username_field: username}).first()
+        user = User.objects.filter(**{self.username_field: username}).first()
 
-        if user and user.check_password(password):
-            if not user.is_active:
-                raise exceptions.AuthenticationFailed(
-                    {
-                        "detail": "Tu cuenta se encuentra suspendida. Contacta al administrador.",
-                        "codigo": "CUENTA_SUSPENDIDA",
-                    }
-                )
+        if user and user.check_password(password) and not user.is_active:
+            raise exceptions.AuthenticationFailed(
+                {
+                    "detail": "Tu cuenta se encuentra suspendida. Contacta al administrador.",
+                    "codigo": "CUENTA_SUSPENDIDA",
+                }
+            )
 
         # Si no está suspendido, sigue con la validación estándar de Simple JWT
         return super().validate(attrs)

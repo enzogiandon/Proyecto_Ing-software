@@ -389,7 +389,7 @@ class ParadaViewSet(viewsets.ModelViewSet):
         "remitos"
     )
     serializer_class = DetalleParadaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsActiveUser]
 
     @action(detail=True, methods=["post"], url_path="registrar-cobranza")
     def registrar_cobranza(self, request, pk=None):

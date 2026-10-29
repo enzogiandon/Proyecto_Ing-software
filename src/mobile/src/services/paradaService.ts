@@ -1,7 +1,7 @@
 // src/mobile/src/services/paradaService.ts
 // Gestión de estado y consulta de parada seleccionada con soporte dinámico y contratos de Django
 
-import { API_BASE_URL, getAuthToken } from './authService';
+import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { ParadaItem } from '../types/itinerario';
 import { MOCK_ITINERARIO_ASIGNADO, MOCK_ITINERARIO_44444444 } from '../data/mockItinerario';
@@ -22,6 +22,28 @@ export const setParadaSeleccionada = (parada: DetalleParada) => {
 };
 
 export const getParadaSeleccionada = (): DetalleParada => {
+  return paradaSeleccionadaActual;
+};
+
+export const obtenerParadaSeleccionadaOId = (paradaId?: number): DetalleParada => {
+  if (paradaId !== undefined && paradaSeleccionadaActual?.id !== paradaId) {
+    const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+    const itinerarioUsuario = usuario?.dni === '44444444'
+      ? MOCK_ITINERARIO_44444444
+      : MOCK_ITINERARIO_ASIGNADO;
+    const paradasDisponibles = [
+      ...(itinerarioUsuario?.paradas || []),
+      ...(MOCK_ITINERARIO_ASIGNADO?.paradas || []),
+      ...((MOCK_ITINERARIO_44444444 as any)?.paradas || []),
+    ];
+    const encontrada =
+      paradasDisponibles.find((p) => p.id === paradaId) ||
+      paradasDisponibles.find((p) => p.orden === paradaId);
+    if (encontrada) {
+      const total = itinerarioUsuario?.totalParadas || 8;
+      return seleccionarParadaItem(encontrada, total);
+    }
+  }
   return paradaSeleccionadaActual;
 };
 
@@ -163,15 +185,21 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
   } catch (error: any) {
     // Si no hay backend, buscar la parada solicitada en el itinerario
     if (paradaId !== undefined) {
+      const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+      const itinerarioUsuario = usuario?.dni === '44444444'
+        ? MOCK_ITINERARIO_44444444
+        : MOCK_ITINERARIO_ASIGNADO;
       const paradasDisponibles = [
+        ...(itinerarioUsuario?.paradas || []),
         ...(MOCK_ITINERARIO_ASIGNADO?.paradas || []),
         ...((MOCK_ITINERARIO_44444444 as any)?.paradas || []),
       ];
-      const encontrada = paradasDisponibles.find(
-        (p) => p.id === paradaId || p.orden === paradaId
-      );
+      const encontrada =
+        paradasDisponibles.find((p) => p.id === paradaId) ||
+        paradasDisponibles.find((p) => p.orden === paradaId);
       if (encontrada) {
-        const detalle = seleccionarParadaItem(encontrada, MOCK_ITINERARIO_ASIGNADO?.totalParadas || 6);
+        const total = itinerarioUsuario?.totalParadas || 8;
+        const detalle = seleccionarParadaItem(encontrada, total);
         return { parada: detalle };
       }
     }

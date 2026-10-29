@@ -83,7 +83,10 @@ export default function ParadaScreen() {
   // Navegación hacia la pantalla de validación de cobro (HU-32)
   const handleRegistrarCobro = () => {
     setParadaSeleccionada(parada);
-    router.push('/validar-cobro' as any);
+    router.push({
+      pathname: '/validar-cobro',
+      params: { paradaId: String(parada.id) },
+    } as any);
   };
 
   // Llamada rápida al comercio

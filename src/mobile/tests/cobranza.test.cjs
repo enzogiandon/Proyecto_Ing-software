@@ -215,3 +215,40 @@ test('la ruta solo muestra el formulario tras verificar Django y convierte centa
   assert.equal(updated, 1); assert.equal(svc.posts[0].data[1].monto, 5400.5);
   h.alerts[0][2][0].onPress(); assert.equal(routes[0].params.paradaId, '42'); assert.equal(routes[0].params.cobranzaId, '71');
 });
+
+test('en modo fallback conserva los datos de la parada seleccionada y su retorno', async () => {
+  const h = reactHarness(), svc = serviceHarness();
+  const routes = [];
+  const quilmesStop = {
+    id: 21,
+    orden: 3,
+    montoCobranza: 98000.0,
+    comercio: { razonSocial: 'Distribuidora Quilmes', domicilio: 'Lavalle 450', localidad: 'Quilmes' },
+  };
+  const Route = load('app/validar-cobro.tsx', {
+    react: h.react, 'react-native': h.native,
+    'expo-router': {
+      useRouter: () => ({ replace: r => routes.push(r) }),
+      useFocusEffect: fn => { if (!h.focused) { h.focused = true; h.effects.push(fn()); } },
+      useLocalSearchParams: () => ({ paradaId: '21' }),
+    },
+    '../screens/ValidarCobro': 'ValidarCobro',
+    '../services/paradaService': {
+      getIdParadaSeleccionadaParaCobro: () => null,
+      actualizarEstadoCobroParada: () => {},
+      getParadaSeleccionada: () => quilmesStop,
+      obtenerParadaSeleccionadaOId: () => quilmesStop,
+    },
+    '../services/itinerarios': svc.service,
+  }, { setTimeout, clearTimeout }).default;
+
+  h.render(Route);
+  await new Promise(resolve => setTimeout(resolve, 1300));
+  const screen = h.render(Route);
+  assert.equal(screen.type, 'ValidarCobro');
+  assert.equal(screen.props.nombreComercio, 'Distribuidora Quilmes');
+  assert.equal(screen.props.montoTotalCentavos, 9800000);
+  assert.equal(screen.props.ordenParada, 3);
+  screen.props.onVolver();
+  assert.equal(routes[0].params.paradaId, '21');
+});

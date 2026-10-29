@@ -3,30 +3,13 @@
 
 {% block title %}Importaciones - RepartosYA{% endblock %}
 
-
 {% block extra_css %}
-<!-- CSS para los botones principales -->
 <link href="{% static 'core/css/home.css' %}" rel="stylesheet">
 <link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
 {% endblock %}
 
-
-
 {% block content %}
 <div class="remitos-page">
-
-    <!-- Mensajes de Django (alertas de éxito / error) -->
-    {% if messages %}
-        <div class="mb-3">
-            {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
-                    <i class="bi bi-info-circle me-1"></i> {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
     <!-- Encabezado y botón para subir nueva planilla -->
     <header class="remitos-header">
         <div class="remitos-header-info">
@@ -40,8 +23,9 @@
             </a>
         </div>
     </header>
+
     <!-- Tabla de importaciones -->
-    <div class="remitos-card p-0 overflow-hidden">
+    <div class="remitos-card p-3 overflow-hidden">
         {% if importaciones %}
             <div class="table-responsive">
                 <table class="remitos-tabla">
@@ -50,18 +34,19 @@
                             <th>ID</th>
                             <th>Archivo</th>
                             <th>Marca</th>
+                            <th>Remitos</th>
                             <th>Estado</th>
-                            <th class="text-end pe-4">Acciones</th>
+                            <th class="text-end pe-3">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for importacion in importaciones %}
                             <tr>
-                                <td class="fw-medium">L-{{importacion.id}}</td>
+                                <td class="fw-medium">Lote {{ importacion.id|stringformat:"04d" }}</td>
                                 <td>
                                     {% if importacion.archivo %}
                                         <a href="{{ importacion.archivo.url }}" class="text-decoration-none fw-medium" target="_blank">
-                                            <i class="bi bi-file-earmark-spreadsheet me-1 text-success"></i>
+                                            <i class="fas fa-file-csv me-1 text-success"></i>
                                             {{ importacion.archivo.name }}
                                         </a>
                                     {% else %}
@@ -69,10 +54,11 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ importacion.marca.nombre }}</td>
+                                <td>{% if importacion.cantidad %}{{ importacion.cantidad }}{% else %}—{% endif %}</td>
                                 <td>
-                                    {% if importacion.estado == "exitoso" %}
+                                    {% if importacion.estado == "exito" or importacion.estado == "exitoso" %}
                                         <span class="remito-estado-badge remito-estado-badge--entregado">
-                                            Exitoso
+                                            Procesado
                                         </span>
                                     {% else %}
                                         <span class="remito-estado-badge remito-estado-badge--rechazado">
@@ -80,13 +66,13 @@
                                         </span>
                                     {% endif %}
                                 </td>
-                                <td class="text-end pe-3">
+                                <td class="text-end pe-2">
                                     <div class="remitos-acciones-btns justify-content-end">
                                         <a href="{% url 'remitos:importacion_detalle' importacion.pk %}" class="btn-accion-icon" title="Ver detalle">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="far fa-eye"></i>
                                         </a>
                                         <a href="{% url 'remitos:importacion_eliminar' importacion.pk %}" class="btn-accion-icon btn-accion-danger" title="Eliminar importación">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="far fa-trash-can"></i>
                                         </a>
                                     </div>
                                 </td>
@@ -136,6 +122,5 @@
             </div>
         {% endif %}
     </div>
-
 </div>
 {% endblock %}

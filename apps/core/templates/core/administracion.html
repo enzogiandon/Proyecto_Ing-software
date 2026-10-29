@@ -1,19 +1,19 @@
 {% block content %}
 {% url 'core:empleado_lista' as url_empleados %}
 {% url 'core:empleado_crear' as url_empleado_nuevo %}
-{% url 'flota:vehiculo_lista' as url_flota %}
-{% url 'flota:vehiculo_crear' as url_vehiculo_nuevo %}
+{% url 'core:vehiculo_lista' as url_flota %}
+{% url 'core:vehiculo_crear' as url_vehiculo_nuevo %}
 {% url 'core:permisos' as url_permisos %}{# tentativo #}
 
 <div class="home">
     <header class="home-encabezado">
         <div>
             <h1 class="text-title mb-1">Inicio</h1>
-            <p class="text-body home-fecha mb-0">Lunes, 26 de octubre de 2026</p>
+            <p class="text-body home-fecha mb-0">Viernes, 16 de octubre de 2026</p>
         </div>
         <div class="home-actualizacion">
-            <span class="text-help home-actualizado">Actualizado 3 minutos</span>
-            <button type="button" class="home-btn" id="btn-actualizar">
+            <span class="text-help home-actualizado">Actualizado hace 2 min</span>
+            <button type="button" class="home-btn" id="btn-actualizar" onclick="window.location.reload()">
                 <i class="fas fa-rotate"></i>
                 <span>Actualizar</span>
             </button>
@@ -21,10 +21,10 @@
     </header>
 
     <section class="home-indicadores" aria-label="Indicadores">
-        {% include "core/componentes/indicador.html" with etiqueta="Empleados activos" valor=2 pie="transportistas y administrativos" url=url_empleados only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Administrativos sin permisos" valor=1 alerta=1 url=url_empleados only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Vehículos disponibles" valor=132 pie="de" pie_valor=200 url=url_flota only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Vehículos no disponibles" valor=68 alerta=0 url=url_flota only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Empleados activos" valor=310 pie="transportistas y administrativos" url=url_empleados only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Administrativos sin permisos" valor=2 alerta=1 url=url_empleados only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Vehículos disponibles" valor=186 pie="de" pie_valor=200 url=url_flota only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Vehículos no disponibles" valor=14 alerta=1 url=url_flota only %}
     </section>
 
     <div class="home-paneles">
@@ -34,12 +34,12 @@
             <!-- Botón de "Agregar personal" -->
             {% if url_empleado_nuevo %}
             <a href="{{ url_empleado_nuevo }}" class="home-btn home-btn--bloque home-btn--primary">
-                <i class="fas fa-users" aria-hidden="true"></i>
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
                 <span>Agregar personal</span>
             </a>
             {% else %}
             <span class="home-btn home-btn--bloque home-btn--primary is-disabled" aria-disabled="true">
-                <i class="fas fa-users" aria-hidden="true"></i>
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
                 <span>Agregar personal</span>
             </span>
             {% endif %}
@@ -57,7 +57,7 @@
             </span>
             {% endif %}
             
-            <!-- Botón de "Revisar pagos con diferencia" -->
+            <!-- Botón de "Asignar permisos" -->
             {% if url_permisos %}
             <a href="{{ url_permisos }}" class="home-btn home-btn--bloque">
                 <i class="fas fa-shield-halved" aria-hidden="true"></i>
@@ -76,8 +76,8 @@
             <table class="home-tabla">
                 <thead>
                     <tr>
-                        <th class="col-100">Nombre</th>
-                        <th>Rol</th>
+                        <th class="col-130">Rol</th>
+                        <th>Nombre</th>
                         <th class="col-140 text-end">Desde</th>
                         <th class="col-130">Estado</th>
                         <th class="col-chevron"><span class="visually-hidden">Ver detalle</span></th>
@@ -86,26 +86,20 @@
                 <tbody>
                     {% for emp in empleados %}
                         <tr class="home-tabla__fila">
-                            <td class="fw-medium">{{ emp.last_name }}, {{ emp.first_name }}</td>
-                            <td class="home-tabla__texto-secundario">{{ emp.get_rol_display|default:emp.rol }}</td>
-                            <td class="text-end">Hace 2 horas</td>
+                            <td class="fw-medium">{{ emp.get_rol_display|default:"Transportista" }}</td>
+                            <td class="home-tabla__texto-secundario">{{ emp.last_name }}, {{ emp.first_name }}</td>
+                            <td class="text-end">Hoy</td>
                             <td>
                                 {% if emp.is_active %}
                                 <span class="estado-badge estado-badge--info text-badge">Activo</span>
                                 {% else %}
-                                <span class="estado-badge estado-badge--warning text-badge">Suspendido</span>
+                                <span class="estado-badge estado-badge--error text-badge">Suspendido</span>
                                 {% endif %}
                             </td>
                             <td class="col-chevron">
-                                {% if url_pendiente %}
                                 <a href="{% url 'core:empleado_editar' emp.pk %}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle">
                                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                 </a>
-                                {% else %}
-                                <span class="home-tabla__chevron home-tabla__chevron--inactivo" aria-hidden="true">
-                                    <i class="fas fa-chevron-right"></i>
-                                </span>
-                                {% endif %}
                             </td>
                         </tr>
                     {% empty %}

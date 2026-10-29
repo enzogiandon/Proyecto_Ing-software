@@ -1,106 +1,217 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Lista de Itinerarios</title>
-</head>
-<body>
-    <h1>Seguimiento de entregas</h1>
+{% extends 'base.html' %}
+{% load static %}
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li><strong>{{ message }}</strong></li>
-            {% endfor %}
-        </ul>
+{% block title %}Itinerarios - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="itinerarios-page">
+    <!-- ==============================================
+         ENCABEZADO DE PÁGINA (FIGMA)
+    =============================================== -->
+    <header class="itinerarios-header">
+        <div class="itinerarios-header-info">
+            <h1 class="text-title mb-0">Itinerarios</h1>
+            <p class="text-body text-c-secondary mb-0">Consultá los itinerarios y gestioná la asignación de tus repartos.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'itinerarios:paradas_crear' %}" class="btn-itinerario-outline">
+                <i class="fas fa-map-pin"></i>
+                <span>Asignar paradas</span>
+            </a>
+            <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
+                <i class="fas fa-plus"></i>
+                <span>Agregar itinerario</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- ==============================================
+         BARRA DE FILTROS (FIGMA)
+    =============================================== -->
+    <form method="get" class="itinerarios-filtros">
+        <div class="itinerarios-filtro-item">
+            <label class="itinerarios-filtro-label">Fecha</label>
+            <input type="date" name="fecha" value="{{ filtro_fecha }}" class="form-control" placeholder="dd/mm/aaaa">
+        </div>
+
+        <div class="itinerarios-filtro-item">
+            <label class="itinerarios-filtro-label">Transportista</label>
+            <select name="transportista" class="form-select">
+                <option value="">Todos los transportistas</option>
+                {% for t in transportistas %}
+                    <option value="{{ t.pk }}" {% if filtro_transportista == t.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ t.usuario.get_full_name|default:t.usuario.username }}
+                    </option>
+                {% endfor %}
+                <option value="sin_asignar" {% if filtro_transportista == 'sin_asignar' %}selected{% endif %}>Sin asignar</option>
+            </select>
+        </div>
+
+        <div class="itinerarios-filtro-item">
+            <label class="itinerarios-filtro-label">Estado</label>
+            <select name="estado" class="form-select">
+                <option value="">Todos los estados</option>
+                {% for valor, etiqueta in estados %}
+                    <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-itinerario-outline">
+                Filtrar
+            </button>
+            {% if filtro_fecha or filtro_transportista or filtro_estado %}
+                <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline text-muted">
+                    Limpiar
+                </a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- ==============================================
+         TABLA DE ITINERARIOS (FIGMA)
+    =============================================== -->
+    <div class="itinerarios-card p-3 overflow-hidden">
+        {% if itinerarios %}
+            <div class="table-responsive">
+                <table class="itinerarios-tabla">
+                    <thead>
+                        <tr>
+                            <th>Itinerario / Fecha <i class="fas fa-arrow-down ms-1 small"></i></th>
+                            <th>Transportista / Vehículo <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Paradas / Remitos</th>
+                            <th>Total a cobrar</th>
+                            <th>Estado <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for itinerario in itinerarios %}
+                            <tr>
+                                <td>
+                                    <div class="cell-main">IT-{{ itinerario.fecha|date:"Y" }}-{{ itinerario.id|stringformat:"05d" }}</div>
+                                    <div class="cell-sub">{{ itinerario.fecha|date:"d/m/Y" }}</div>
+                                </td>
+                                <td>
+                                    {% if itinerario.transportista %}
+                                        <div class="cell-main cell-main--medium">
+                                            {{ itinerario.transportista.usuario.get_full_name|default:itinerario.transportista.usuario.username }}
+                                        </div>
+                                        <div class="cell-sub">
+                                            {{ itinerario.vehiculo.patente|default:"Sin patente" }}{% if itinerario.vehiculo.modelo %} &middot; {{ itinerario.vehiculo.modelo }}{% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="cell-main cell-main--medium">Sin asignar</div>
+                                        <div class="cell-sub">Vehículo pendiente</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="cell-main cell-main--medium">
+                                        {{ itinerario.total_paradas|default:itinerario.paradas.count }} paradas &middot; {{ itinerario.total_remitos|default:0 }} remitos
+                                    </div>
+                                    <div class="cell-sub">Reparto programado</div>
+                                </td>
+                                <td>
+                                    <span class="cell-main">$ {{ itinerario.monto_total|default:0|floatformat:2 }}</span>
+                                </td>
+                                <td>
+                                    <span class="itin-badge itin-badge--{{ itinerario.estado|lower }}">
+                                        {{ itinerario.get_estado_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% with primera_parada=itinerario.paradas.first %}
+                                        {% if primera_parada %}
+                                            <a href="{% url 'itinerarios:parada_detalle' primera_parada.pk %}" class="btn-ver-detalle">
+                                                <i class="far fa-eye"></i>
+                                                <span>Ver detalle</span>
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}" class="btn-ver-detalle">
+                                                <i class="fas fa-plus"></i>
+                                                <span>Agregar paradas</span>
+                                            </a>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="itinerarios-tabla-footer">
+                Se muestran {{ itinerarios|length }} itinerarios. Ajustá los filtros para acotar la búsqueda.
+            </div>
+        {% else %}
+            <div class="itin-paradas-empty mb-0 border-0">
+                <div class="itin-paradas-empty__icon">
+                    <i class="fas fa-route fa-2x"></i>
+                </div>
+                <div class="itin-paradas-empty__title">No hay itinerarios registrados</div>
+                <p class="itin-paradas-empty__desc mb-3">Creá un nuevo itinerario para comenzar a planificar las entregas del día.</p>
+                <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
+                    <i class="fas fa-plus"></i>
+                    <span>Agregar itinerario</span>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ==============================================
+         SEGUIMIENTO DE ENTREGAS Y PARADAS
+    =============================================== -->
+    {% if paradas_seguimiento %}
+        <div class="itinerarios-card p-3 overflow-hidden">
+            <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+                <div>
+                    <h2 class="text-section text-c-brand mb-0">Entregas y paradas</h2>
+                    <p class="text-help text-c-muted mb-0">Las paradas con estado Error aparecen primero para facilitar su seguimiento.</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="itinerarios-tabla">
+                    <thead>
+                        <tr>
+                            <th>Entrega</th>
+                            <th>Comercio</th>
+                            <th>Dirección</th>
+                            <th>Itinerario</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for parada in paradas_seguimiento %}
+                            <tr>
+                                <td class="fw-semibold">#{{ parada.pk }}</td>
+                                <td class="fw-medium"><span>{{ parada.comercio.razon_social }}</span></td>
+                                <td class="text-c-secondary">{{ parada.comercio.domicilio }}</td>
+                                <td>IT-{{ parada.itinerario_id|stringformat:"04d" }}</td>
+                                <td>{{ parada.itinerario.fecha|date:"d/m/Y" }}</td>
+                                <td>
+                                    <span class="itin-badge itin-badge--{{ parada.estado|lower }}">
+                                        {{ parada.get_estado_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'itinerarios:parada_detalle' parada.pk %}" class="btn-ver-detalle">
+                                        <i class="far fa-eye"></i>
+                                        <span>Ver detalle</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     {% endif %}
-
-    <p>
-        <a href="{% url 'itinerarios:itinerario_crear' %}">[+] Crear Itinerarios</a> | 
-        <a href="{% url 'itinerarios:paradas_crear' %}">[+] Asignar Paradas</a>
-    </p>
-
-    <hr>
-
-    <h2>Entregas y paradas</h2>
-    <p>Las paradas con estado Error aparecen primero para facilitar su seguimiento.</p>
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Entrega</th>
-                <th>Estado</th>
-                <th>Comercio</th>
-                <th>Dirección</th>
-                <th>Itinerario</th>
-                <th>Fecha</th>
-                <th>Detalle</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for parada in paradas_seguimiento %}
-                <tr>
-                    <td>#{{ parada.pk }}</td>
-                    <td>{{ parada.get_estado_display }}</td>
-                    <td>{{ parada.comercio.razon_social }}</td>
-                    <td>{{ parada.comercio.domicilio }}</td>
-                    <td>#{{ parada.itinerario_id }}</td>
-                    <td>{{ parada.itinerario.fecha|date:"d/m/Y" }}</td>
-                    <td><a href="{% url 'itinerarios:parada_detalle' parada.pk %}">Ver detalle</a></td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="7">No hay entregas registradas.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <h2>Itinerarios</h2>
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th>Transportista</th>
-                <th>Vehículo</th>
-                <th>Paradas Asignadas</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for itinerario in itinerarios %}
-                <tr>
-                    <td>#{{ itinerario.id }}</td>
-                    <td>{{ itinerario.fecha|date:"d/m/Y" }}</td>
-                    <td>{{ itinerario.get_estado_display }}</td>
-                    <td>
-                        {% if itinerario.transportista %}
-                            {{ itinerario.transportista.usuario.get_full_name|default:itinerario.transportista.usuario.username }}
-                        {% else %}
-                            <em>Sin asignar</em>
-                        {% endif %}
-                    </td>
-                    <td>{{ itinerario.vehiculo.patente|default:"-" }}</td>
-                    <td>
-                        <ul>
-                            {% for parada in itinerario.paradas.all %}
-                                <li>
-                                    Orden {{ parada.orden }}:
-                                    <a href="{% url 'itinerarios:parada_detalle' parada.pk %}">{{ parada.comercio.razon_social }}</a>
-                                    ({{ parada.get_estado_display }})
-                                </li>
-                            {% empty %}
-                                <li><em>Sin paradas asignadas</em></li>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="6">No hay itinerarios registrados.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+</div>
+{% endblock %}

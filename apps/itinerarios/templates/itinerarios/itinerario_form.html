@@ -1,43 +1,105 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Crear Itinerarios</title>
-</head>
-<body>
-    <h1>Crear Itinerarios por Transportista</h1>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agregar itinerario - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="itinerarios-page">
+    <!-- Botón Volver -->
+    <div>
+        <a href="{% url 'itinerarios:itinerario_lista' %}" class="home-btn home-btn--compacto">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver a itinerarios</span>
+        </a>
+    </div>
+
+    <!-- Encabezado -->
+    <header>
+        <h1 class="text-title mb-1">Agregar itinerario</h1>
+        <p class="text-body text-c-secondary mb-0">
+            Completá los datos del itinerario y seleccioná los transportistas a asignar.
+        </p>
+    </header>
 
     {% if form.non_field_errors %}
-        <div style="color: red;">
-            {{ form.non_field_errors }}
+        <div class="alert alert-danger alert-clean mb-0">
+            <i class="fas fa-triangle-exclamation me-2"></i>
+            <div>
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
         </div>
     {% endif %}
 
-    <form method="post">
+    <form method="post" class="itinerarios-card">
         {% csrf_token %}
 
-        <p>
-            <label for="{{ form.fecha.id_for_label }}"><strong>{{ form.fecha.label }}:</strong></label><br>
-            {{ form.fecha }}
-            {{ form.fecha.errors }}
-        </p>
-
-        <fieldset>
-            <legend><strong>{{ form.transportistas.label }}</strong></legend>
-            {{ form.transportistas.errors }}
-            {% for checkbox in form.transportistas %}
-                <div>
-                    {{ checkbox.tag }}
-                    <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="itin-field">
+                    <label>Identificación del itinerario</label>
+                    <input type="text" class="form-control" value="Autogenerado al guardar" readonly>
                 </div>
-            {% empty %}
-                <p><em>No hay transportistas activos con vehículo asignado disponibles.</em></p>
-            {% endfor %}
-        </fieldset>
+            </div>
+            <div class="col-md-4">
+                <div class="itin-field">
+                    <label for="{{ form.fecha.id_for_label }}">Fecha del itinerario</label>
+                    {{ form.fecha }}
+                    {% if form.fecha.errors %}
+                        <div class="text-danger small mt-1">{{ form.fecha.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-        <br>
-        <button type="submit">Generar Itinerarios</button>
-        <a href="{% url 'itinerarios:itinerario_lista' %}">Cancelar</a>
+        <div class="mb-4">
+            <div class="itin-paradas-header">
+                <h2 class="text-section mb-0">{{ form.transportistas.label }} disponibles</h2>
+            </div>
+            {% if form.transportistas.errors %}
+                <div class="text-danger small mb-2">{{ form.transportistas.errors.0 }}</div>
+            {% endif %}
+
+            <div class="itin-stop-groups">
+                {% for checkbox in form.transportistas %}
+                    <label class="itin-stop-group" for="{{ checkbox.id_for_label }}">
+                        <div class="itin-stop-group__header">
+                            <div class="itin-stop-group__left">
+                                {{ checkbox.tag }}
+                                <div>
+                                    <div class="cell-main">{{ checkbox.choice_label }}</div>
+                                    <div class="cell-sub">Transportista activo con vehículo asignado</div>
+                                </div>
+                            </div>
+                            <span class="itin-badge itin-badge--asignado">Disponible</span>
+                        </div>
+                    </label>
+                {% empty %}
+                    <div class="itin-paradas-empty">
+                        <div class="itin-paradas-empty__icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="itin-paradas-empty__title">No hay transportistas disponibles</div>
+                        <p class="itin-paradas-empty__desc">No hay transportistas activos con vehículo asignado disponibles.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="itin-form-actions">
+            <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+                Cancelar
+            </a>
+            <button type="submit" class="btn-itinerario-primary">
+                Guardar itinerario
+            </button>
+        </div>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}

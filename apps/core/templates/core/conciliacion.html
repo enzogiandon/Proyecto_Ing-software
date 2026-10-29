@@ -7,11 +7,11 @@
    <header class="home-encabezado">
         <div>
             <h1 class="text-title mb-1">Inicio</h1>
-            <p class="text-body home-fecha mb-0">Lunes, 26 de octubre de 2026</p>
+            <p class="text-body home-fecha mb-0">Viernes, 16 de octubre de 2026</p>
         </div>
         <div class="home-actualizacion">
-            <span class="text-help home-actualizado">Actualizado 3 minutos</span>
-            <button type="button" class="home-btn" id="btn-actualizar">
+            <span class="text-help home-actualizado">Actualizado hace 2 min</span>
+            <button type="button" class="home-btn" id="btn-actualizar" onclick="window.location.reload()">
                 <i class="fas fa-rotate"></i>
                 <span>Actualizar</span>
             </button>
@@ -22,7 +22,7 @@
         {% include "core/componentes/indicador.html" with etiqueta="Cobranzas por validar" valor=318 pie="hoy" url=url_cobranzas only %}
         {% include "core/componentes/indicador.html" with etiqueta="Pagos con diferencia" valor=7 alerta=1 url=url_pagos only %}
         {% include "core/componentes/indicador.html" with etiqueta="Pagos no encontrados" valor=3 alerta=1 url=url_pagos only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Arqueo de caja" valor="PENDIENTE" pie="sin iniciar" url=url_arqueo only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Arqueo de caja" valor="Pendiente" pie="sin iniciar" url=url_arqueo only %}
     </section>
 
     <div class="home-paneles">

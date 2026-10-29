@@ -51,20 +51,20 @@ export default function ItinerarioScreen() {
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
 
-  // Chofer que inició sesión (se obtiene de authService)
+  // Chofer que inició sesión (se obtiene de authService o del itinerario asignado)
   const usuarioLogueado = getUsuarioActual();
   const nombreChofer = usuarioLogueado?.first_name 
     ? `${usuarioLogueado.first_name} ${usuarioLogueado.last_name || ''}`.trim()
-    : (itinerario?.transportistaNombre || 'Carlos Gómez');
+    : (itinerario?.transportistaNombre || 'Martín Rodríguez');
 
-  // Iniciales dinámicas para el badge del avatar (ej: Carlos Gómez -> CG)
+  // Iniciales dinámicas para el badge del avatar (ej: Martín Rodríguez -> MR)
   const inicialesChofer = usuarioLogueado?.first_name
     ? `${usuarioLogueado.first_name[0] || ''}${usuarioLogueado.last_name ? usuarioLogueado.last_name[0] : ''}`.toUpperCase()
-    : (itinerario?.transportistaIniciales || 'CG');
+    : (itinerario?.transportistaIniciales || 'MR');
 
   const vehiculoChofer = usuarioLogueado?.vehiculo
     ? `${usuarioLogueado.vehiculo.modelo} · ${usuarioLogueado.vehiculo.patente}`
-    : `${itinerario?.vehiculo.modelo || 'Mercedes-Benz 710'} · ${itinerario?.vehiculo.patente || 'AB 123 CD'}`;
+    : `${itinerario?.vehiculo.modelo || 'Unidad 024 · Iveco Daily'} · ${itinerario?.vehiculo.patente || 'AB 458 CD'}`;
 
   // Función para pegarle al servicio o cargar los datos simulados
   const cargarDatos = async () => {

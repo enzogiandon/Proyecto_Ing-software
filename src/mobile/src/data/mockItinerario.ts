@@ -3,18 +3,18 @@ import { ItinerarioJornada } from '../types/itinerario';
 
 /**
  * Itinerario asignado para el chofer de reparto
- * Sincronizado con mockData (Carlos Gómez) y los bocetos de Figma
+ * Sincronizado con los bocetos oficiales de Figma (Martín Rodríguez - MR)
  */
 export const MOCK_ITINERARIO_ASIGNADO: ItinerarioJornada = {
   id: 101,
   fecha: 'Lun, 19 oct 2026',
   rutaNombre: 'Ruta 12 · San Martín',
   estado: 'en_ruta',
-  transportistaNombre: 'Carlos Gómez',
-  transportistaIniciales: 'CG',
+  transportistaNombre: 'Martín Rodríguez',
+  transportistaIniciales: 'MR',
   vehiculo: {
-    patente: 'AB 123 CD',
-    modelo: 'Mercedes-Benz 710',
+    patente: 'AB 458 CD',
+    modelo: 'Unidad 024 · Iveco Daily',
   },
   totalParadas: 8,
   paradasCompletadas: 4,

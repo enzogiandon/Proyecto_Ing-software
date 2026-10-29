@@ -275,7 +275,11 @@ export default function ParadaScreen() {
             activeOpacity={0.85}
           >
             <View style={styles.botonIconoCirculo}>
-              <Text style={styles.botonIcono}>💵</Text>
+              <Image
+                source={require('../../assets/icons/icono-efectivo.png')}
+                style={styles.iconoBotonCobro}
+                resizeMode="contain"
+              />
             </View>
             <View style={styles.botonTextoCol}>
               <Text style={styles.textoBotonCobroPrincipal}>Registrar Cobro</Text>
@@ -286,20 +290,24 @@ export default function ParadaScreen() {
             <Text style={styles.flechaBoton}>➔</Text>
           </TouchableOpacity>
 
-          {/* 2. Botón: Ver Remitos (HU-25) */}
+          {/* 2. Botón: Ver Remitos */}
           <TouchableOpacity
             style={styles.botonSecundario}
             onPress={() => setModalRemitosVisible(true)}
             activeOpacity={0.8}
           >
-            <Text style={styles.iconoBotonSecundario}>📄</Text>
+            <Image
+              source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+              style={styles.iconoAccionSecundario}
+              resizeMode="contain"
+            />
             <View style={styles.textoSecundarioCol}>
-              <Text style={styles.textoBotonSecundario}>Ver remitos asociados</Text>
+              <Text style={styles.textoBotonSecundario}>Ver remitos</Text>
               <Text style={styles.subtextoBotonSecundario}>
-                {parada.cantidadRemitos} documentos comerciales en esta parada
+                {parada.cantidadRemitos} documentos comerciales asociados
               </Text>
             </View>
-            <Text style={styles.indicadorBotonSecundario}>👁️</Text>
+            <Text style={styles.indicadorBotonSecundario}>›</Text>
           </TouchableOpacity>
 
           {/* 3. Botón: Adjuntar Documento */}
@@ -369,7 +377,11 @@ export default function ParadaScreen() {
           <View style={styles.modalCardGrande}>
             <View style={styles.modalHeaderRow}>
               <View style={styles.modalTituloContainer}>
-                <Text style={styles.modalIconoTitulo}>📄</Text>
+                <Image
+                  source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                  style={{ width: 22, height: 22, marginRight: 8 }}
+                  resizeMode="contain"
+                />
                 <Text style={styles.modalTitulo}>Remitos de la Parada</Text>
               </View>
               <TouchableOpacity
@@ -394,8 +406,8 @@ export default function ParadaScreen() {
                     </Text>
                   </View>
                   <View style={styles.remitoInfoFila}>
-                    <Text style={styles.remitoProveedor}>🏭 {remito.proveedor}</Text>
-                    <Text style={styles.remitoBultos}>📦 {remito.bultos} bultos</Text>
+                    <Text style={styles.remitoProveedor}>Marca: {remito.proveedor}</Text>
+                    <Text style={styles.remitoBultos}>{remito.bultos} bultos</Text>
                   </View>
                 </View>
               ))}
@@ -553,6 +565,8 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     marginRight: 6,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   logoTextoReparto: {
     color: RepartoYA.blanco,
@@ -816,6 +830,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
+  },
+  iconoBotonCobro: {
+    width: 26,
+    height: 26,
+    tintColor: RepartoYA.blanco,
   },
   botonIcono: {
     fontSize: 22,

@@ -4,7 +4,7 @@
 import { API_BASE_URL, getAuthToken } from './authService';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { ParadaItem } from '../types/itinerario';
-import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
+import { MOCK_ITINERARIO_ASIGNADO, MOCK_ITINERARIO_44444444 } from '../data/mockItinerario';
 
 // Parada seleccionada en memoria durante la navegación
 let paradaSeleccionadaActual: DetalleParada = MOCK_PARADA_SELECCIONADA;
@@ -163,11 +163,15 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
   } catch (error: any) {
     // Si no hay backend, buscar la parada solicitada en el itinerario
     if (paradaId !== undefined) {
-      const encontrada = MOCK_ITINERARIO_ASIGNADO.paradas.find(
+      const paradasDisponibles = [
+        ...(MOCK_ITINERARIO_ASIGNADO?.paradas || []),
+        ...((MOCK_ITINERARIO_44444444 as any)?.paradas || []),
+      ];
+      const encontrada = paradasDisponibles.find(
         (p) => p.id === paradaId || p.orden === paradaId
       );
       if (encontrada) {
-        const detalle = seleccionarParadaItem(encontrada, MOCK_ITINERARIO_ASIGNADO.totalParadas);
+        const detalle = seleccionarParadaItem(encontrada, MOCK_ITINERARIO_ASIGNADO?.totalParadas || 6);
         return { parada: detalle };
       }
     }

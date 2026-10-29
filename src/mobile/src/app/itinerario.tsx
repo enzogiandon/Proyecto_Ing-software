@@ -15,7 +15,7 @@
  *    poder mostrárselo a los profes en la demo del sprint sin tener que tocar la base de datos.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,8 +27,9 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  BackHandler,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
@@ -85,6 +86,19 @@ export default function ItinerarioScreen() {
     }
     cargarDatos();
   }, []);
+
+  // Bloquea el botón físico o gesto de retroceso del celular para no volver al login una vez autenticado
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        // En el itinerario no se debe volver al login bajo ninguna circunstancia
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
 
   // Botón para la demo del sprint: permite alternar entre vista asignada y sin asignar
   const toggleModoDemostracion = () => {
@@ -520,6 +534,8 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     marginRight: 6,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   logoTextoReparto: {
     color: RepartoYA.blanco,

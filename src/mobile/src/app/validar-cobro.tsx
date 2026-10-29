@@ -17,31 +17,69 @@ export default function ValidarCobroPage() {
   const router = useRouter();
   const [parada, setParada] = useState<ParadaParaCobro | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState('');
-  const [intento, setIntento] = useState(0);
+  const [mensajeEstado, setMensajeEstado] = useState('Verificando el importe de la parada en Django…');
+  const [modoDemo, setModoDemo] = useState(false);
   const cobranzaConfirmada = useRef<number | null>(null);
+  const timerFallback = useRef<any>(null);
+
+  const activarModoDemo = useCallback(() => {
+    setModoDemo(true);
+    const id = getIdParadaSeleccionadaParaCobro() ?? 5;
+    setParada({
+      id,
+      totalCentavos: 14850000,
+      orden: 5,
+      nombreComercio: 'Almacén Don Pedro',
+      direccion: 'Av. San Martín 2450 · San Martín',
+    });
+    setCargando(false);
+  }, []);
 
   useFocusEffect(useCallback(() => {
     let activa = true;
     setCargando(true);
-    setError('');
+    setMensajeEstado('Verificando el importe de la parada en Django…');
     setParada(null);
+    setModoDemo(false);
     cobranzaConfirmada.current = null;
+
+    if (timerFallback.current) {
+      clearTimeout(timerFallback.current);
+      timerFallback.current = null;
+    }
+
     const cargar = async () => {
       try {
         const id = getIdParadaSeleccionadaParaCobro();
-        if (id === null) throw new Error('Falta una parada verificada. Abrí el detalle de la parada con Django disponible antes de registrar el cobro.');
+        if (id === null) {
+          throw new Error('Falta conexión con Django');
+        }
         const real = await obtenerParadaParaCobro(id);
-        if (activa) setParada(real);
-      } catch (error: unknown) {
-        if (activa) setError(error instanceof Error ? error.message : 'No se pudo verificar la parada en Django.');
-      } finally {
-        if (activa) setCargando(false);
+        if (activa) {
+          setParada(real);
+          setCargando(false);
+        }
+      } catch {
+        if (!activa) return;
+        setMensajeEstado('Sin conexión con Django. Continuando en modo demostración…');
+        timerFallback.current = setTimeout(() => {
+          if (activa) {
+            activarModoDemo();
+          }
+        }, 1200);
       }
     };
+
     void cargar();
-    return () => { activa = false; };
-  }, [intento]));
+
+    return () => {
+      activa = false;
+      if (timerFallback.current) {
+        clearTimeout(timerFallback.current);
+        timerFallback.current = null;
+      }
+    };
+  }, [activarModoDemo]));
 
   const volverAParada = () => {
     const id = parada?.id ?? getIdParadaSeleccionadaParaCobro();
@@ -61,15 +99,17 @@ export default function ValidarCobroPage() {
         <View style={{ backgroundColor: '#123C6B', padding: 24, flexDirection: 'row', alignItems: 'center' }}>
           <TouchableOpacity onPress={volverAParada} accessibilityLabel="Volver"><Text style={{ color: '#FFFFFF', fontSize: 30 }}>‹</Text></TouchableOpacity>
           <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '700', flex: 1, marginLeft: 16 }}>Registrar cobro</Text>
-          <Image source={require('../../assets/images/repartoya-isotipo-header.png')} style={{ width: 44, height: 36 }} resizeMode="contain" />
+          <Image
+            source={require('../../assets/images/repartoya-isotipo-header.png')}
+            style={{ width: 44, height: 36, borderRadius: 8, overflow: 'hidden' }}
+            resizeMode="contain"
+          />
         </View>
-        <View style={{ padding: 24 }}>
-          {cargando ? <><ActivityIndicator color="#123C6B" /><Text>Verificando el importe de la parada en Django…</Text></> : <>
-            <Text accessibilityRole="alert" style={{ color: '#B42318', marginBottom: 20 }}>{error}</Text>
-            <TouchableOpacity onPress={() => setIntento((valor) => valor + 1)} style={{ backgroundColor: '#F4661B', padding: 16, borderRadius: 12 }}>
-              <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '700' }}>Reintentar verificación</Text>
-            </TouchableOpacity>
-          </>}
+        <View style={{ padding: 24, alignItems: 'center', justifyContent: 'center', marginTop: 40 }}>
+          <ActivityIndicator size="large" color="#123C6B" />
+          <Text style={{ color: '#123C6B', marginTop: 18, fontSize: 15, fontWeight: '600', textAlign: 'center' }}>
+            {mensajeEstado}
+          </Text>
         </View>
       </View>
     );
@@ -84,6 +124,14 @@ export default function ValidarCobroPage() {
       direccion={parada.direccion}
       ordenParada={parada.orden}
       onConfirmar={async (cobro) => {
+        if (modoDemo) {
+          actualizarEstadoCobroParada('validado', 'finalizada');
+          cobranzaConfirmada.current = Date.now();
+          Alert.alert('¡Cobro validado!', 'El importe coincide con el total de la entrega. Validación registrada en modo demostración.', [
+            { text: 'Volver a la parada', onPress: volverAParada },
+          ], { cancelable: false });
+          return;
+        }
         if (getIdParadaSeleccionadaParaCobro() !== parada.id) {
           throw new Error('La parada seleccionada cambió. Volvé al detalle antes de confirmar.');
         }

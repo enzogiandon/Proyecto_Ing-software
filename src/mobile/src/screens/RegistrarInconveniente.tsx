@@ -283,6 +283,30 @@ export default function RegistrarInconveniente() {
             </Text>
           </TouchableOpacity>
 
+          {(!paradaVerificada || error) && tipo ? (
+            <TouchableOpacity
+              style={[styles.botonRegistrar, { backgroundColor: RepartoYA.azulRuta, marginTop: 12 }]}
+              onPress={() => {
+                router.replace({
+                  pathname: '/inconveniente-registrado',
+                  params: {
+                    problemaId: String(Date.now()),
+                    paradaId: String(parada.id),
+                    tipo,
+                    descripcion: descripcion.trim(),
+                    impideEntrega: String(impideCompletarEntrega),
+                    modoDemo: 'true',
+                  },
+                });
+              }}
+              accessibilityRole="button"
+            >
+              <Text style={styles.textoRegistrar}>
+                Registrar en modo demostración (Offline)
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
           <Text style={styles.notaEnvio}>
             El registro se confirmará cuando Django reciba la información.
           </Text>
@@ -329,6 +353,8 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     marginRight: 7,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   nombreMarca: {
     color: RepartoYA.blanco,

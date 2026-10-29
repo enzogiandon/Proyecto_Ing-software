@@ -1,6 +1,6 @@
 // src/services/itinerarioService.ts
-import { API_BASE_URL, getAuthToken } from './authService';
-import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
+import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
+import { MOCK_ITINERARIO_ASIGNADO, MOCK_ITINERARIO_44444444 } from '../data/mockItinerario';
 import { ItinerarioJornada } from '../types/itinerario';
 
 /**
@@ -41,7 +41,11 @@ export async function obtenerItinerarioJornada(): Promise<{
     throw new Error(`HTTP ${response.status}`);
   } catch (error: any) {
     console.warn('Backend de itinerario no disponible. Usando datos Mock de Figma:', error?.message);
-    // Modo híbrido: retorna el itinerario con paradas simuladas para testeo visual
+    // Modo híbrido: retorna el itinerario del usuario autenticado
+    const usuario = getUsuarioActual();
+    if (usuario?.dni === '44444444') {
+      return { itinerario: MOCK_ITINERARIO_44444444 };
+    }
     return { itinerario: MOCK_ITINERARIO_ASIGNADO };
   }
 }

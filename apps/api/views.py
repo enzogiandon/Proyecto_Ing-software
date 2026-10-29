@@ -6,8 +6,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.api.serializers import (
+    CustomTokenObtainPairSerializer,
     DetalleParadaSerializer,
     EvidenciaParadaSerializer,
     GuardarRutaSerializer,
@@ -36,6 +38,10 @@ from .serializers import (
 )
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class IsActiveUser(BasePermission):

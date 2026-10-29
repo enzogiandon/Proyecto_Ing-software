@@ -40,10 +40,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return super().validate(attrs)
 
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
-
-
 def calcular_monto_recaudar(parada) -> str:
     total_remitos = parada.remitos.filter(eliminado=False).aggregate(
         total=Sum("total")

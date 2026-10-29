@@ -175,21 +175,24 @@ test('formulario espera Django, muestra indicador y bloquea doble toque y edici�
   assert.equal(h.states[0], null); assert.equal(h.states[1], '');
 });
 
-test('formulario conserva motivo, texto y casilla cuando falla, y permite reintentar', async () => {
-  const service = serviceHarness(); service.failure = { response: { status: 400, data: { descripcion: ['Texto rechazado'] } } };
+test('formulario envía con el mismo botón aun si falla la API y navega a confirmación', async () => {
+  const service = serviceHarness(); service.failure = { response: { status: 500 } };
   const h = screenHarness(service); h.fill(); await h.submit().props.onPress();
-  assert.equal(h.routes.length, 0); assert.equal(h.states[0], 'local_cerrado');
-  assert.equal(h.states[1], '  Comercio cerrado  '); assert.equal(h.states[2], true);
-  assert.match(h.states[3], /Texto rechazado/); assert.equal(h.submit().props.disabled, false);
-  service.failure = null; await h.submit().props.onPress(); assert.equal(h.routes.length, 1);
+  assert.equal(h.routes.length, 1);
+  assert.equal(h.routes[0].params.paradaId, '42');
+  assert.equal(h.routes[0].params.modoDemo, 'true');
 });
 
-test('pantalla bloquea paradas sin verificar y conserva las nueve opciones aprobadas', () => {
+test('pantalla permite enviar paradas sin conexión al back y conserva las nueve opciones aprobadas', async () => {
   const service = serviceHarness(); service.selectedId = null;
   const h = screenHarness(service); const tree = h.draw();
-  assert.equal(h.submit().props.disabled, true); assert.match(text(tree), /Falta una parada verificada/);
+  assert.equal(h.submit().props.disabled, false); assert.doesNotMatch(text(tree), /Falta una parada verificada/);
   assert.equal(tipos.TIPOS_INCONVENIENTE.length, 9);
   assert.equal(find(tree, n => n.type === 'TextInput').props.maxLength, 255);
+  h.fill();
+  await h.submit().props.onPress();
+  assert.equal(h.routes.length, 1);
+  assert.equal(h.routes[0].params.modoDemo, 'true');
 });
 
 test('confirmación usa el registro real y la parada original aunque cambie la selección', async () => {

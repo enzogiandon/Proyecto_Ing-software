@@ -100,15 +100,6 @@ export default function ItinerarioScreen() {
     }, [])
   );
 
-  // Botón para la demo del sprint: permite alternar entre vista asignada y sin asignar
-  const toggleModoDemostracion = () => {
-    if (itinerario && itinerario.paradas.length > 0) {
-      setItinerario(MOCK_ITINERARIO_SIN_ASIGNAR);
-    } else {
-      cargarDatos();
-    }
-  };
-
   // Acciones de los botones según el diagrama de navegación de la cátedra
   const handleRutasGuardadas = () => {
     Alert.alert(
@@ -221,19 +212,6 @@ export default function ItinerarioScreen() {
             </Text>
           </View>
         </View>
-
-        {/* Botoncito para alternar en vivo entre boceto con paradas y sin asignar */}
-        <TouchableOpacity
-          style={styles.toggleDemoButton}
-          onPress={toggleModoDemostracion}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.toggleDemoTexto}>
-            {itinerario && itinerario.paradas.length > 0
-              ? 'Ver Boceto: Sin Asignar'
-              : 'Ver Boceto: Asignado'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* ================= CONTENIDO DE LA HOJA DE RUTA ================= */}
@@ -595,19 +573,6 @@ const styles = StyleSheet.create({
     color: RepartoYA.azulRutaBorde,
     fontSize: 12,
     marginTop: 2,
-  },
-  toggleDemoButton: {
-    alignSelf: 'flex-end',
-    marginTop: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  toggleDemoTexto: {
-    color: RepartoYA.blanco,
-    fontSize: 10,
-    fontWeight: '600',
   },
 
   // Tarjeta de progreso

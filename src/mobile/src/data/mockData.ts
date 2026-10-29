@@ -94,11 +94,30 @@ export const CHOFERES_PRUEBA: UsuarioTransportista[] = [
     is_active: true,
     intentos_fallidos: 0,
     telefono: "11-4444-5555",
-    habilitado: true, // Cuenta ACTIVA y HABILITADA
+    habilitado: true, // Cuenta ACTIVA con itinerario asignado
     vehiculo: {
       id: 3,
       patente: "AF 444 YA",
       modelo: "Ford Ranger XLT",
+      estado: "disponible"
+    }
+  },
+  {
+    id: 5,
+    transportista_id: 4,
+    dni: "55555555",
+    password: "5555",
+    first_name: "Lucas",
+    last_name: "Romero",
+    email: "lucas.romero@softech.com.ar",
+    is_active: true,
+    intentos_fallidos: 0,
+    telefono: "11-5555-6666",
+    habilitado: true, // Cuenta ACTIVA pero SIN ITINERARIO ASIGNADO (Figma)
+    vehiculo: {
+      id: 4,
+      patente: "AC 555 YA",
+      modelo: "Renault Kangoo Maxi",
       estado: "disponible"
     }
   }

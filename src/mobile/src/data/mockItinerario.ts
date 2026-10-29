@@ -95,14 +95,14 @@ export const MOCK_ITINERARIO_ASIGNADO: ItinerarioJornada = {
  */
 export const MOCK_ITINERARIO_SIN_ASIGNAR: ItinerarioJornada = {
   id: 0,
-  fecha: 'Lun, 19 oct 2026',
-  rutaNombre: 'Ruta 12 · San Martín',
+  fecha: 'Mié, 28 oct 2026',
+  rutaNombre: 'Sin ruta asignada',
   estado: 'sin_asignar',
-  transportistaNombre: 'Carlos Gómez',
-  transportistaIniciales: 'CG',
+  transportistaNombre: 'Lucas Romero',
+  transportistaIniciales: 'LR',
   vehiculo: {
-    patente: 'AB 123 CD',
-    modelo: 'Mercedes-Benz 710',
+    patente: 'AC 555 YA',
+    modelo: 'Renault Kangoo Maxi',
   },
   totalParadas: 0,
   paradasCompletadas: 0,

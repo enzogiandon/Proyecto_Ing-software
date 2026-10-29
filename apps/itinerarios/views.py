@@ -1,14 +1,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.db.models import Case, IntegerField, Prefetch, When
+from django.db.models import Case, IntegerField, Prefetch, Sum, Count, When
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView
 
+from apps.core.models import Transportista
 from apps.remitos.models import Remito
 
 from .forms import CrearItinerariosForm, CrearParadasForm
-from .models import EvidenciaParada, Itinerario, Parada, ProblemaParada
+from .models import EstadoItinerario, EvidenciaParada, Itinerario, Parada, ProblemaParada
 from .services import crear_itinerarios, crear_paradas
 
 
@@ -19,14 +20,42 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     permission_required = "itinerarios.view_itinerario"
 
     def get_queryset(self):
-        return (
+        qs = (
             Itinerario.objects.select_related("transportista__usuario", "vehiculo")
-            .prefetch_related("paradas__comercio")
+            .prefetch_related("paradas__comercio", "paradas__remitos")
+            .annotate(
+                total_paradas=Count("paradas", distinct=True),
+                total_remitos=Count("paradas__remitos", distinct=True),
+                monto_total=Sum("paradas__remitos__total"),
+            )
             .order_by("-fecha", "id")
         )
 
+        fecha = self.request.GET.get("fecha", "").strip()
+        transportista = self.request.GET.get("transportista", "").strip()
+        estado = self.request.GET.get("estado", "").strip()
+
+        if fecha:
+            qs = qs.filter(fecha=fecha)
+        if transportista:
+            if transportista == "sin_asignar":
+                qs = qs.filter(transportista__isnull=True)
+            else:
+                qs = qs.filter(transportista_id=transportista)
+        if estado:
+            qs = qs.filter(estado=estado)
+
+        return qs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["estados"] = EstadoItinerario.choices
+        context["transportistas"] = Transportista.objects.select_related("usuario", "vehiculo").order_by(
+            "usuario__last_name", "usuario__first_name"
+        )
+        context["filtro_fecha"] = self.request.GET.get("fecha", "")
+        context["filtro_transportista"] = self.request.GET.get("transportista", "")
+        context["filtro_estado"] = self.request.GET.get("estado", "")
         context["paradas_seguimiento"] = (
             Parada.objects.select_related("comercio", "itinerario")
             .annotate(

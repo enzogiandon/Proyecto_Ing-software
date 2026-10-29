@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Detalle Remito #{{ remito.numero }} - RepartosYA{% endblock %}
+{% block title %}Remito {{ remito.numero }} - RepartosYA{% endblock %}
 
 {% block extra_css %}
 <link href="{% static 'core/css/home.css' %}" rel="stylesheet">
@@ -10,109 +10,135 @@
 
 {% block content %}
 <div class="remitos-page">
-    <!-- Breadcrumb -->
+    <!-- Volver -->
     <div>
-        <a href="{% url 'remitos:remito_lista' %}" class="home-btn">
+        <a href="{% url 'remitos:remito_lista' %}" class="home-btn home-btn--compacto">
             <i class="fas fa-arrow-left"></i>
             <span>Volver a remitos</span>
         </a>
     </div>
 
     <!-- Encabezado con Número y Estado -->
-    <header class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+    <header class="d-flex align-items-center gap-3 flex-wrap">
         <h1 class="text-title mb-0">Remito {{ remito.numero }}</h1>
-        <span class="remito-estado-badge remito-estado-badge--{{ remito.estado|lower }} fs-6 px-3 py-1">
+        <span class="remito-estado-badge remito-estado-badge--{{ remito.estado|lower }}">
             {{ remito.get_estado_display }}
         </span>
     </header>
 
-    <!-- ==============================================
-         TARJETA 1: DATOS DEL REMITO (FIGMA)
-    =============================================== -->
-    <section class="remitos-card mb-3">
-        <h2 class="text-section mb-3">Datos del remito</h2>
-        <div class="remitos-detail-grid">
-            <!-- Columna 1 -->
-            <div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Número de remito:</span>
-                    <span class="remito-data-value fw-semibold text-c-primary">#{{ remito.numero }}</span>
+    <div class="remitos-detalle-layout">
+        <!-- COLUMNA IZQUIERDA: DATOS DEL REMITO + ITINERARIO ASOCIADO -->
+        <div class="remitos-detalle-col">
+            <section class="remitos-card">
+                <h2 class="text-section text-c-brand mb-3">Datos del remito</h2>
+                <div class="remitos-kv-grid">
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Número de remito</span>
+                        <span class="remito-kv-value">{{ remito.numero }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Marca proveedora</span>
+                        <span class="remito-kv-value">{{ remito.marca.nombre }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Destinatario</span>
+                        <span class="remito-kv-value">{{ remito.comercio.razon_social }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Domicilio</span>
+                        <span class="remito-kv-value">{{ remito.comercio.domicilio }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Estado actual</span>
+                        <span class="remito-kv-value">{{ remito.get_estado_display }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Monto a cobrar</span>
+                        <span class="remito-kv-value fw-bold">${{ remito.total|floatformat:2 }}</span>
+                    </div>
                 </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Comercio destino:</span>
-                    <span class="remito-data-value">{{ remito.comercio.razon_social }}</span>
-                </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Dirección destino:</span>
-                    <span class="remito-data-value text-c-secondary">{{ remito.comercio.domicilio }}</span>
-                </div>
-            </div>
+            </section>
 
-            <!-- Columna 2 -->
-            <div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Marca proveedora:</span>
-                    <span class="remito-data-value">{{ remito.marca.nombre }}</span>
-                </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Transportista asignado:</span>
-                    <span class="remito-data-value"> {{ remito.parada.itinerario.transportista.usuario.get_full_name|default:"Sin asignar" }}
-                </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Monto total:</span>
-                    <span class="remito-data-value fw-bold text-success fs-6">${{ remito.total|floatformat:2 }}</span>
-                </div>
-            </div>
+            {% if remito.parada %}
+                <section class="remitos-card">
+                    <div class="remito-itinerario-bar">
+                        <div class="remito-kv-item">
+                            <span class="remito-kv-label">Itinerario asociado</span>
+                            <span class="remito-kv-value text-c-brand fw-bold">IT-{{ remito.parada.itinerario_id|stringformat:"04d" }}</span>
+                        </div>
+                        <a href="{% url 'itinerarios:parada_detalle' remito.parada.pk %}" class="home-btn home-btn--compacto">
+                            <i class="far fa-eye"></i>
+                            <span>Ver itinerario</span>
+                        </a>
+                    </div>
+                </section>
+            {% endif %}
         </div>
-    </section>
 
-    <!-- ==============================================
-         TARJETA 2: DATOS DE LA ENTREGA / ITINERARIO (FIGMA)
-    =============================================== -->
-    <section class="remitos-card mb-3">
-        <h2 class="text-section mb-3">Datos de la entrega</h2>
-        {% if remito.parada %}
-            <div class="remitos-detail-grid">
-              <div>
-                <div class="parada-data-row">
-                    <span class="remito-data-label">Itinerario asignado:</span>
-                    <span class="remito-data-value fw-semibold">Itinerario #{{ remito.parada.itinerario_id }}</span>
-                </div>
-                <div class="parada-data-row">
-                    <span class="remito-data-label">Parada en ruta:</span>
-                    <span class="remito-data-value">Parada #{{ remito.parada.orden }}</span>
-                </div>
-              </div>
+        <!-- COLUMNA DERECHA: DATOS DE LA ENTREGA (CUANDO ESTÁ ENTREGADO O TIENE PARADA FINALIZADA) -->
+        {% if remito.estado == 'entregado' or remito.parada.hora_entrega %}
+            <div class="remitos-detalle-col">
+                <section class="remitos-card">
+                    <h2 class="text-section text-c-brand mb-3">Datos de la entrega</h2>
+                    <div class="remitos-kv-grid mb-3">
+                        <div class="remito-kv-item">
+                            <span class="remito-kv-label">Fecha y hora de entrega</span>
+                            <span class="remito-kv-value">{{ remito.parada.hora_entrega|date:"d/m/Y · H:i"|default:"Registrada" }}</span>
+                        </div>
+                        <div class="remito-kv-item">
+                            <span class="remito-kv-label">Transportista responsable</span>
+                            <span class="remito-kv-value">
+                                {{ remito.parada.itinerario.transportista.usuario.get_full_name|default:"Sin asignar" }}
+                            </span>
+                        </div>
+                    </div>
 
-              <div>
-                <div class="parada-data-row">
-                    <span class="remito-data-label">Estado:</span>
-                    <span class="remito-data-value">{{ remito.parada.get_estado_display }}</span>
-                </div>
-                <div class="parada-data-row">
-                    <span class="remito-data-label">Fecha y hora de entrega:</span>
-                    <span class="remito-data-value">{{ remito.parada.hora_entrega|default:'No entregado' }}</span>
-                </div>
-              </div>
-            </div>
-        {% else %}
-            <div class="p-3 bg-light rounded text-c-muted d-flex align-items-center gap-2">
-                <i class="fas fa-info-circle text-c-secondary"></i>
-                <span>Este remito se encuentra actualmente <strong>pendiente</strong> de asignación a un itinerario.</span>
+                    <div class="remito-kv-item mb-3">
+                        <span class="remito-kv-label">Comentarios registrados</span>
+                        <span class="remito-kv-value">
+                            {% with problema=remito.parada.problemas.first %}
+                                {% if problema %}
+                                    {{ problema.get_tipo_display }}{% if problema.descripcion %}: {{ problema.descripcion }}{% endif %}
+                                {% else %}
+                                    Entrega registrada sin contingencias.
+                                {% endif %}
+                            {% endwith %}
+                        </span>
+                    </div>
+
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Constancia / foto firmada</span>
+                        {% with evidencia=remito.parada.evidencias.first %}
+                            {% if evidencia %}
+                                <div class="remito-constancia-box">
+                                    <i class="far fa-image fs-4"></i>
+                                    <span>Vista previa de la constancia firmada</span>
+                                </div>
+                                <span class="remitos-field-help">{{ evidencia.archivo.name }}</span>
+                            {% else %}
+                                <div class="remito-constancia-box">
+                                    <i class="far fa-image fs-4"></i>
+                                    <span>Vista previa de la constancia firmada</span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </section>
             </div>
         {% endif %}
-    </section>
-
-    <!-- Botones de Acción Inferiores -->
-    <div class="remitos-form-actions">
-        <a href="{% url 'remitos:remito_editar' remito.pk %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
-            <i class="fas fa-pen"></i>
-            <span>Editar remito</span>
-        </a>
-        <a href="{% url 'remitos:remito_eliminar' remito.pk %}" class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
-            <i class="fas fa-trash"></i>
-            <span>Eliminar</span>
-        </a>
     </div>
+
+    {% if remito.estado == 'pendiente' %}
+        <div class="d-flex gap-2 mt-2">
+            <a href="{% url 'remitos:remito_editar' remito.pk %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                <i class="fas fa-pen"></i>
+                <span>Editar remito</span>
+            </a>
+            <a href="{% url 'remitos:remito_eliminar' remito.pk %}" class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
+                <i class="fas fa-trash"></i>
+                <span>Eliminar</span>
+            </a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

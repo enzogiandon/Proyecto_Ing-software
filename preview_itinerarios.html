@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerarios - RepartosYA</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos del Proyecto basados en Figma -->
+    <link href="apps/core/static/core/css/paletas.css" rel="stylesheet">
+    <link href="apps/core/static/core/css/base.css" rel="stylesheet">
+    <link href="apps/core/static/core/css/home.css" rel="stylesheet">
+    <link href="apps/remitos/static/remitos/css/remitos.css" rel="stylesheet">
+    <link href="apps/itinerarios/static/itinerarios/css/itinerarios.css" rel="stylesheet">
+
+    <style>
+        .toast-notif {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            min-width: 320px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            animation: slideIn 0.25s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .demo-switcher-bar {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 8px 14px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .demo-pill-btn {
+            border: 1px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-text-secondary);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .demo-pill-btn:hover, .demo-pill-btn.active {
+            background: var(--color-primary-tint);
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container"></div>
+
+    <div class="app-wrapper">
+        <!-- ==============================================
+             BARRA LATERAL DE NAVEGACIÓN (SIDEBAR FIGMA)
+        =============================================== -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <div class="sidebar-header">
+                <a href="preview.html" class="brand-link">
+                    <svg class="isotipo-ya" width="128" height="65" viewBox="0 0 33.866666 17.197916" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="translate(0,-8.3343753)">
+                            <g id="speed-lines" transform="matrix(1.2510113,0,0,1.2510113,-4.3320862,-3.8082672)">
+                                <rect style="fill:#f4661b;fill-opacity:1" width="2.7006216" height="0.90590471" x="3.7090816" y="12.323723" ry="0.45295236" />
+                                <rect style="fill:#f4661b;fill-opacity:1" width="1.794717" height="0.85462707" x="4.6353593" y="14.662833" ry="0.42731354" />
+                                <rect style="fill:#f4661b;fill-opacity:1" width="2.7006216" height="0.90590471" x="3.7315609" y="16.875265" ry="0.45295236" />
+                            </g>
+                            <g id="truck-body">
+                                <path style="fill:#123c6b;fill-opacity:1" d="m 7.2146578,8.8504187 c -0.876616,0 -1.5825783,0.705962 -1.5825783,1.5825783 v 9.836162 c 0,0.876616 0.7059623,1.581933 1.5825783,1.581933 h 1.9846874 a 2.6087217,2.6087217 0 0 0 -0.060122,0.55597 2.6087217,2.6087217 0 0 0 2.6085388,2.609186 2.6087217,2.6087217 0 0 0 2.609185,-2.609186 2.6087217,2.6087217 0 0 0 -0.06012,-0.55597 h 8.399043 c 0.876616,0 1.582578,-0.705317 1.582578,-1.581933 v -9.836162 c 0,-0.8766163 -0.705962,-1.5825783 -1.582578,-1.5825783 z M 11.747762,21.209786 a 1.1974461,1.1974461 0 0 1 1.197277,1.197276 1.1974461,1.1974461 0 0 1 -1.197277,1.197924 1.1974461,1.1974461 0 0 1 -1.197278,-1.197924 1.1974461,1.1974461 0 0 1 1.197278,-1.197276 z" />
+                                <path style="fill:#f4661b;fill-opacity:1" d="m 24.278445,12.80945 v 5.000507 0.552739 3.488396 h 3.47288 a 1.1974461,1.1974461 0 0 1 1.060223,-0.641306 1.1974461,1.1974461 0 0 1 1.060225,0.641306 h 2.070022 c 0.893042,0 1.612107,-0.319371 1.60973,-0.713712 -0.0039,-0.628958 -0.0016,-1.221203 0.0013,-1.809492 h -0.83331 c -0.245808,0 -0.44413,-0.197676 -0.44413,-0.443484 0,-0.245808 0.198322,-0.443483 0.44413,-0.443483 h 0.837835 c 9.6e-5,-0.02598 -8.7e-5,-0.05219 0,-0.07823 h 0.0013 l -0.0013,-0.03749 c 5.43e-4,-0.170232 0.0013,-0.341763 0.0013,-0.515244 H 33.5399 L 33.5334,17.621833 A 4.3674382,2.650143 0 0 0 33.049212,16.460758 L 30.371501,13.309177 A 1.5214415,0.92320427 0 0 0 29.019069,12.80945 Z m 1.506294,1.405443 h 2.971213 a 0.11224162,0.11224162 0 0 1 0.08598,0.04008 l 2.382272,2.826402 a 0.05887887,0.05887887 0 0 1 -0.04525,0.09698 h -5.415545 a 0.05218861,0.05218861 0 0 1 -0.05172,-0.05237 v -2.838039 a 0.0731078,0.0731078 0 0 1 0.07306,-0.07305 z" />
+                                <path style="fill:#123c6b;fill-opacity:1" d="m 28.811548,19.798523 a 2.6087217,2.6087217 0 0 0 -2.608538,2.608539 2.6087217,2.6087217 0 0 0 2.608538,2.609186 2.6087217,2.6087217 0 0 0 2.608539,-2.609186 2.6087217,2.6087217 0 0 0 -2.608539,-2.608539 z m 0,1.411261 a 1.1974461,1.1974461 0 0 1 1.197278,1.197278 1.1974461,1.1974461 0 0 1 -1.197278,1.197924 1.1974461,1.1974461 0 0 1 -1.197276,-1.197924 1.1974461,1.1974461 0 0 1 1.197276,-1.197278 z" />
+                                <text style="font-weight:900;font-size:8.82659px;font-family:Arial;text-anchor:middle;fill:#f4661b" x="14.940179" y="18.569387">YA</text>
+                            </g>
+                        </g>
+                    </svg>
+                    <div>
+                        <div class="brand-text">
+                            <span class="text-repartos">Repartos</span>
+                            <span class="text-ya">YA</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="preview.html" class="sidebar-link">
+                    <i class="fas fa-house"></i>
+                    <span>Inicio</span>
+                </a>
+
+                <div class="nav-section-title">Planificación</div>
+                <a href="preview.html#importaciones" class="sidebar-link">
+                    <i class="fas fa-download"></i>
+                    <span>Importaciones</span>
+                </a>
+                <a href="preview_remitos.html" class="sidebar-link">
+                    <i class="fas fa-file-lines"></i>
+                    <span>Remitos</span>
+                </a>
+                <a href="javascript:void(0)" onclick="verPantallaListado()" class="sidebar-link active">
+                    <i class="fas fa-route"></i>
+                    <span>Itinerarios</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-badge">
+                    <div class="user-avatar-circle" style="background-color: var(--color-skeleton); color: transparent;">NA</div>
+                    <div class="user-info-text">
+                        <div class="user-display-name">Nombre Apellido</div>
+                        <div class="user-role-label">Planificación e<br>importación</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-logout-clean" onclick="location.href='preview_login.html'">
+                    <i class="fas fa-arrow-right-from-bracket"></i>
+                    <span>Cerrar sesión</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ==============================================
+             CONTENIDO PRINCIPAL
+        =============================================== -->
+        <main class="app-main">
+            <div class="content-container">
+
+                <!-- Barra rápida para previsualizar las 4 pantallas de la imagen -->
+                <div class="demo-switcher-bar">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-semibold text-c-brand"><i class="fas fa-layer-group me-1"></i> Vistas de Itinerarios (Figma):</span>
+                        <button type="button" class="demo-pill-btn active" id="pill-lista" onclick="verPantallaListado()">1. Listado de itinerarios</button>
+                        <button type="button" class="demo-pill-btn" id="pill-vacio" onclick="abrirCrearItinerarioVacio()">2. Agregar itinerario (vacío)</button>
+                        <button type="button" class="demo-pill-btn" id="pill-modal" onclick="abrirCrearConModal()">3. Modal Agregar paradas</button>
+                        <button type="button" class="demo-pill-btn" id="pill-cargado" onclick="abrirCrearConParadasCargadas()">4. Agregar itinerario (con 3 paradas)</button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="preview.html" class="text-decoration-none small fw-medium text-c-brand">Ir a Inicio &rarr;</a>
+                        <span class="text-muted">|</span>
+                        <a href="preview_remitos.html" class="text-decoration-none small fw-medium text-c-brand">Ir a Remitos &rarr;</a>
+                    </div>
+                </div>
+
+                <!-- ==============================================
+                     PANTALLA 1: LISTADO DE ITINERARIOS
+                =============================================== -->
+                <div id="screen-lista" class="itinerarios-page itin-screen">
+                    <header class="itinerarios-header">
+                        <div class="itinerarios-header-info">
+                            <h1 class="text-title">Itinerarios</h1>
+                            <p class="text-body text-c-secondary mb-0">Consultá los itinerarios y gestioná la asignación de tus repartos.</p>
+                        </div>
+                        <button type="button" class="btn-itinerario-primary" onclick="abrirCrearItinerarioVacio()">
+                            <i class="fas fa-plus"></i>
+                            <span>Agregar itinerario</span>
+                        </button>
+                    </header>
+
+                    <!-- Filtros -->
+                    <section class="itinerarios-filtros">
+                        <div class="itinerarios-filtro-item">
+                            <label class="itinerarios-filtro-label">Fecha</label>
+                            <div class="position-relative">
+                                <input type="text" id="filtro-fecha" class="form-control pe-4" placeholder="dd/mm/aaaa - dd/mm/aaaa" oninput="filtrarTablaItinerarios()">
+                                <i class="far fa-calendar position-absolute text-muted" style="right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+                            </div>
+                        </div>
+
+                        <div class="itinerarios-filtro-item">
+                            <label class="itinerarios-filtro-label">Transportista</label>
+                            <select id="filtro-transportista" class="form-select" onchange="filtrarTablaItinerarios()">
+                                <option value="">Todos los transportistas</option>
+                                <option value="Juan Pérez">Juan Pérez</option>
+                                <option value="María González">María González</option>
+                                <option value="Sin asignar">Sin asignar</option>
+                                <option value="Carlos Rodríguez">Carlos Rodríguez</option>
+                                <option value="Lucía Fernández">Lucía Fernández</option>
+                            </select>
+                        </div>
+
+                        <div class="itinerarios-filtro-item">
+                            <label class="itinerarios-filtro-label">Estado</label>
+                            <select id="filtro-estado" class="form-select" onchange="filtrarTablaItinerarios()">
+                                <option value="">Todos los estados</option>
+                                <option value="asignado">Asignado</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="en_ruta">En ruta</option>
+                                <option value="finalizado">Finalizado</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <button type="button" class="btn-itinerario-outline" onclick="filtrarTablaItinerarios()">
+                                Filtrar
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Tabla -->
+                    <section class="itinerarios-card p-3">
+                        <div class="table-responsive">
+                            <table class="itinerarios-tabla">
+                                <thead>
+                                    <tr>
+                                        <th>Itinerario / Fecha <i class="fas fa-arrow-down ms-1 small"></i></th>
+                                        <th>Transportista / Vehículo <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                                        <th>Paradas / Remitos</th>
+                                        <th>Total a cobrar</th>
+                                        <th>Estado <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itinerarios-tbody">
+                                    <!-- Renderizado por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="itinerarios-tabla-footer" id="itinerarios-footer-count">
+                            Se muestran 7 itinerarios. Ajustá los filtros para acotar la búsqueda.
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ==============================================
+                     PANTALLA 2 & 4: AGREGAR ITINERARIO (VACÍO Y CON PARADAS)
+                =============================================== -->
+                <div id="screen-crear" class="itinerarios-page itin-screen d-none">
+                    <div>
+                        <button type="button" class="btn-itinerario-outline" onclick="verPantallaListado()">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Volver a itinerarios</span>
+                        </button>
+                    </div>
+
+                    <header class="itinerarios-header-info">
+                        <h1 class="text-title">Agregar itinerario</h1>
+                        <p class="text-body text-c-secondary mb-0">Completá los datos del itinerario y agregá las paradas que vas a asignar.</p>
+                    </header>
+
+                    <section class="itinerarios-card">
+                        <!-- Fila de 4 campos superiores -->
+                        <div class="itin-form-grid-4">
+                            <div class="itin-field">
+                                <label>Identificación del itinerario</label>
+                                <input type="text" id="crear-id" class="form-control" value="IT-2026-00128" readonly>
+                            </div>
+                            <div class="itin-field">
+                                <label>Fecha del itinerario</label>
+                                <div class="position-relative">
+                                    <input type="text" id="crear-fecha" class="form-control pe-4" value="16/10/2026">
+                                    <i class="far fa-calendar position-absolute text-muted" style="right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+                                </div>
+                            </div>
+                            <div class="itin-field">
+                                <label>Transportista</label>
+                                <select id="crear-transportista" class="form-select" onchange="sincronizarVehiculoTransportista()">
+                                    <option value="Juan Pérez">Juan Pérez</option>
+                                    <option value="María González">María González</option>
+                                    <option value="Carlos Rodríguez">Carlos Rodríguez</option>
+                                    <option value="Lucía Fernández">Lucía Fernández</option>
+                                    <option value="Sin asignar">Sin asignar</option>
+                                </select>
+                            </div>
+                            <div class="itin-field">
+                                <label>Vehículo asignado</label>
+                                <select id="crear-vehiculo" class="form-select">
+                                    <option value="AB 123 CD · Fiat Ducato">AB 123 CD - Fiat Ducato</option>
+                                    <option value="AC 456 EF · Renault Master">AC 456 EF - Renault Master</option>
+                                    <option value="AD 789 GH · Peugeot Boxer">AD 789 GH - Peugeot Boxer</option>
+                                    <option value="AE 234 IJ · Mercedes Sprinter">AE 234 IJ - Mercedes Sprinter</option>
+                                    <option value="Vehículo pendiente">Vehículo pendiente</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Cabecera Paradas -->
+                        <div class="itin-paradas-header">
+                            <h2 class="text-section mb-0" id="crear-paradas-titulo">Paradas</h2>
+                            <button type="button" class="btn-itinerario-outline" onclick="abrirModalParadas()">
+                                <i class="fas fa-plus"></i>
+                                <span>Agregar paradas</span>
+                            </button>
+                        </div>
+
+                        <!-- Estado Vacío de Paradas -->
+                        <div id="crear-paradas-vacio" class="itin-paradas-empty">
+                            <div class="itin-paradas-empty__icon">
+                                <i class="fas fa-route"></i>
+                            </div>
+                            <div class="itin-paradas-empty__title">Todavía no agregaste paradas</div>
+                            <p class="itin-paradas-empty__desc">
+                                Agregá paradas seleccionando remitos pendientes por destinatario y domicilio.
+                            </p>
+                        </div>
+
+                        <!-- Tabla de Paradas Agregadas -->
+                        <div id="crear-paradas-tabla-container" class="itin-paradas-table-box d-none">
+                            <div class="table-responsive">
+                                <table class="itinerarios-tabla">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 70px;">Orden</th>
+                                            <th>Destinatario / Domicilio</th>
+                                            <th>Remitos asociados</th>
+                                            <th class="text-end" style="width: 110px;">Productos</th>
+                                            <th class="text-end" style="width: 150px;">Monto a cobrar</th>
+                                            <th class="text-center" style="width: 70px;">Quitar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="crear-paradas-tbody">
+                                        <!-- Renderizado por JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Barra resumen crema -->
+                        <div class="itin-summary-bar">
+                            <span id="crear-resumen-izq">0 paradas &middot; 0 remitos &middot; 0 productos</span>
+                            <span id="crear-resumen-der">Total a cobrar: $ 0,00</span>
+                        </div>
+
+                        <!-- Botones inferiores -->
+                        <div class="itin-form-actions">
+                            <button type="button" class="btn-itinerario-outline" onclick="verPantallaListado()">
+                                Cancelar
+                            </button>
+                            <button type="button" id="btn-guardar-itinerario" class="btn-itinerario-primary" disabled onclick="guardarNuevoItinerario()">
+                                Guardar itinerario
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ==============================================
+                     PANTALLA DETALLE DE ITINERARIO
+                =============================================== -->
+                <div id="screen-detalle" class="itinerarios-page itin-screen d-none">
+                    <div>
+                        <button type="button" class="btn-itinerario-outline" onclick="verPantallaListado()">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Volver a itinerarios</span>
+                        </button>
+                    </div>
+
+                    <header class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <h1 class="text-title mb-0" id="det-itin-codigo">Itinerario IT-2026-00128</h1>
+                            <span id="det-itin-badge" class="itin-badge itin-badge--asignado">Asignado</span>
+                        </div>
+                    </header>
+
+                    <section class="itinerarios-card">
+                        <h2 class="text-section text-c-brand mb-3">Datos del itinerario</h2>
+                        <div class="itin-form-grid-4 mb-0">
+                            <div class="remito-kv-item">
+                                <span class="remito-kv-label">Identificación</span>
+                                <span class="remito-kv-value" id="det-itin-id">IT-2026-00128</span>
+                            </div>
+                            <div class="remito-kv-item">
+                                <span class="remito-kv-label">Fecha programada</span>
+                                <span class="remito-kv-value" id="det-itin-fecha">16/10/2026</span>
+                            </div>
+                            <div class="remito-kv-item">
+                                <span class="remito-kv-label">Transportista asignado</span>
+                                <span class="remito-kv-value" id="det-itin-transp">Juan Pérez</span>
+                            </div>
+                            <div class="remito-kv-item">
+                                <span class="remito-kv-label">Vehículo</span>
+                                <span class="remito-kv-value" id="det-itin-vehiculo">AB 123 CD · Fiat Ducato</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="itinerarios-card">
+                        <h2 class="text-section text-c-brand mb-3" id="det-paradas-header">Paradas del itinerario</h2>
+                        <div class="table-responsive">
+                            <table class="itinerarios-tabla">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70px;">Orden</th>
+                                        <th>Destinatario / Domicilio</th>
+                                        <th>Remitos asociados</th>
+                                        <th class="text-end">Productos</th>
+                                        <th class="text-end">Monto a cobrar</th>
+                                        <th class="text-end">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="det-paradas-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div class="itin-summary-bar mt-3 mb-0">
+                            <span id="det-resumen-izq">3 paradas · 4 remitos · 50 productos</span>
+                            <span id="det-resumen-der">Total a cobrar: $ 388.950,00</span>
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==============================================
+         PANTALLA 3: MODAL "AGREGAR PARADAS" (FIGMA)
+    =============================================== -->
+    <div id="modal-agregar-paradas" class="itin-modal-backdrop d-none" onclick="if(event.target === this) cerrarModalParadas()">
+        <div class="itin-modal-dialog">
+            <div class="itin-modal-header">
+                <div>
+                    <h2 class="text-title fs-4 mb-1">Agregar paradas</h2>
+                    <p class="text-body text-c-secondary mb-0">
+                        Seleccioná las paradas que querés agregar. Cada parada incluye todos los remitos pendientes del mismo destinatario y domicilio.
+                    </p>
+                </div>
+                <button type="button" class="itin-modal-close" onclick="cerrarModalParadas()" aria-label="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Filtros del modal -->
+            <div class="itin-modal-filtros">
+                <div class="itinerarios-filtro-item" style="flex: 1.5 1 240px; max-width: none;">
+                    <label class="itinerarios-filtro-label">Destinatario o domicilio</label>
+                    <input type="text" id="modal-filtro-q" class="form-control" placeholder="Buscar destinatario o domicilio" oninput="renderizarGruposModal()">
+                </div>
+                <div class="itinerarios-filtro-item" style="flex: 1 1 180px; max-width: 240px;">
+                    <label class="itinerarios-filtro-label">Marca proveedora</label>
+                    <select id="modal-filtro-marca" class="form-select" onchange="renderizarGruposModal()">
+                        <option value="">Todas las marcas</option>
+                        <option value="Coca-Cola">Coca-Cola</option>
+                        <option value="Marca B">Marca B</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="button" class="btn-itinerario-outline" onclick="renderizarGruposModal()">
+                        Filtrar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contadores -->
+            <div class="itin-modal-counters">
+                <span class="fw-semibold text-c-primary" id="modal-counter-disp">3 paradas disponibles &middot; 4 remitos pendientes</span>
+                <span class="text-c-muted" id="modal-counter-sel">3 paradas seleccionadas</span>
+            </div>
+
+            <!-- Lista de paradas agrupadas -->
+            <div class="itin-stop-groups" id="modal-grupos-container">
+                <!-- Inyectado por JS -->
+            </div>
+
+            <!-- Resumen inferior del modal -->
+            <div class="itin-summary-bar">
+                <span id="modal-resumen-izq">3 paradas &middot; 4 remitos &middot; 50 productos</span>
+                <span id="modal-resumen-der">Total a cobrar: $ 388.950,00</span>
+            </div>
+
+            <!-- Acciones del modal -->
+            <div class="itin-form-actions">
+                <button type="button" class="btn-itinerario-outline" onclick="cerrarModalParadas()">
+                    Cancelar
+                </button>
+                <button type="button" id="modal-btn-confirmar" class="btn-itinerario-primary" onclick="confirmarSeleccionParadas()">
+                    Agregar 3 paradas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Paradas disponibles con sus remitos pendientes (exactos de la imagen Figma)
+        const PARADAS_DISPONIBLES = [
+            {
+                id: "p1",
+                destinatario: "Kiosco San Martín",
+                domicilio: "San Martín 1240, Rosario",
+                remitos: [
+                    { id: "1", numero: "0001-00012350", estado: "Pendiente", marca: "Coca-Cola", fecha: "16/10/2026", productos: 24, monto: 205600.00 },
+                    { id: "9", numero: "0001-00012352", estado: "Pendiente", marca: "Marca B", fecha: "16/10/2026", productos: 6, monto: 32000.00 }
+                ]
+            },
+            {
+                id: "p2",
+                destinatario: "Kiosco Central",
+                domicilio: "Córdoba 850, Rosario",
+                remitos: [
+                    { id: "2", numero: "0001-00012349", estado: "Pendiente", marca: "Coca-Cola", fecha: "15/10/2026", productos: 8, monto: 64150.00 }
+                ]
+            },
+            {
+                id: "p3",
+                destinatario: "Almacén El Progreso",
+                domicilio: "Mendoza 2150, Rosario",
+                remitos: [
+                    { id: "5", numero: "0001-00012346", estado: "Pendiente", marca: "Marca B", fecha: "15/10/2026", productos: 12, monto: 87200.00 }
+                ]
+            }
+        ];
+
+        // Los 7 itinerarios exactos de la imagen Figma
+        const ITINERARIOS_INICIALES = [
+            {
+                id: "IT-2026-00128",
+                fecha: "16/10/2026",
+                transportista: "Juan Pérez",
+                vehiculo: "AB 123 CD · Fiat Ducato",
+                paradasCount: 3,
+                remitosCount: 4,
+                productosCount: 50,
+                total: 388950.00,
+                estado: "asignado",
+                estadoLabel: "Asignado",
+                paradasDetalle: PARADAS_DISPONIBLES
+            },
+            {
+                id: "IT-2026-00127",
+                fecha: "16/10/2026",
+                transportista: "María González",
+                vehiculo: "AC 456 EF · Renault Master",
+                paradasCount: 5,
+                remitosCount: 7,
+                productosCount: 86,
+                total: 624300.00,
+                estado: "asignado",
+                estadoLabel: "Asignado",
+                paradasDetalle: PARADAS_DISPONIBLES
+            },
+            {
+                id: "IT-2026-00126",
+                fecha: "16/10/2026",
+                transportista: "Sin asignar",
+                vehiculo: "Vehículo pendiente",
+                paradasCount: 4,
+                remitosCount: 5,
+                productosCount: 62,
+                total: 412800.00,
+                estado: "pendiente",
+                estadoLabel: "Pendiente",
+                paradasDetalle: PARADAS_DISPONIBLES
+            },
+            {
+                id: "IT-2026-00125",
+                fecha: "15/10/2026",
+                transportista: "Carlos Rodríguez",
+                vehiculo: "AD 789 GH · Peugeot Boxer",
+                paradasCount: 6,
+                remitosCount: 8,
+                productosCount: 104,
+                total: 917650.00,
+                estado: "en_ruta",
+                estadoLabel: "En ruta",
+                paradasDetalle: PARADAS_DISPONIBLES
+            },
+            {
+                id: "IT-2026-00124",
+                fecha: "15/10/2026",
+                transportista: "Lucía Fernández",
+                vehiculo: "AE 234 IJ · Mercedes Sprinter",
+                paradasCount: 4,
+                remitosCount: 6,
+                productosCount: 72,
+                total: 538400.00,
+                estado: "en_ruta",
+                estadoLabel: "En ruta",
+                paradasDetalle: PARADAS_DISPONIBLES
+            },
+            {
+                id: "IT-2026-00123",
+                fecha: "15/10/2026",
+                transportista: "Juan Pérez",
+                vehiculo: "AB 123 CD · Fiat Ducato",
+                paradasCount: 5,
+                remitosCount: 6,
+                productosCount: 79,
+                total: 680200.00,
+                estado: "finalizado",
+                estadoLabel: "Finalizado",
+                paradasDetalle: PARADAS_DISPONIBLES
+            },
+            {
+                id: "IT-2026-00122",
+                fecha: "14/10/2026",
+                transportista: "María González",
+                vehiculo: "AC 456 EF · Renault Master",
+                paradasCount: 3,
+                remitosCount: 4,
+                productosCount: 45,
+                total: 326750.00,
+                estado: "finalizado",
+                estadoLabel: "Finalizado",
+                paradasDetalle: PARADAS_DISPONIBLES
+            }
+        ];
+
+        let itinerarios = [...ITINERARIOS_INICIALES];
+        let paradasEnFormulario = [];
+        let seleccionModalIds = new Set(["p1", "p2", "p3"]);
+
+        function formatoMoneda(valor) {
+            return '$ ' + Number(valor || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function activarPill(id) {
+            document.querySelectorAll('.demo-pill-btn').forEach(b => b.classList.remove('active'));
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active');
+        }
+
+        function mostrarPantalla(id) {
+            document.querySelectorAll('.itin-screen').forEach(s => s.classList.add('d-none'));
+            document.getElementById('screen-' + id).classList.remove('d-none');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function mostrarToast(mensaje) {
+            const container = document.getElementById('toast-container');
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-clean toast-notif d-flex align-items-center gap-2 p-3';
+            alert.innerHTML = `
+                <i class="fas fa-check-circle text-success fs-5"></i>
+                <div class="flex-grow-1">${mensaje}</div>
+                <button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>
+            `;
+            container.appendChild(alert);
+            setTimeout(() => alert.remove(), 3200);
+        }
+
+        // ==========================================
+        // 1. LISTADO DE ITINERARIOS
+        // ==========================================
+        function verPantallaListado() {
+            cerrarModalParadas();
+            activarPill('pill-lista');
+            filtrarTablaItinerarios();
+            mostrarPantalla('lista');
+        }
+
+        function filtrarTablaItinerarios() {
+            const qFecha = (document.getElementById('filtro-fecha').value || '').toLowerCase().trim();
+            const qTransp = document.getElementById('filtro-transportista').value;
+            const qEstado = document.getElementById('filtro-estado').value;
+
+            const filtrados = itinerarios.filter(it => {
+                if (qFecha && !it.fecha.toLowerCase().includes(qFecha) && !it.id.toLowerCase().includes(qFecha)) return false;
+                if (qTransp && it.transportista !== qTransp) return false;
+                if (qEstado && it.estado !== qEstado) return false;
+                return true;
+            });
+
+            const tbody = document.getElementById('itinerarios-tbody');
+            tbody.innerHTML = filtrados.map(it => `
+                <tr>
+                    <td>
+                        <div class="cell-main">${it.id}</div>
+                        <div class="cell-sub">${it.fecha}</div>
+                    </td>
+                    <td>
+                        <div class="cell-main cell-main--medium">${it.transportista}</div>
+                        <div class="cell-sub">${it.vehiculo}</div>
+                    </td>
+                    <td>
+                        <div class="cell-main cell-main--medium">${it.paradasCount} paradas &middot; ${it.remitosCount} remitos</div>
+                        <div class="cell-sub">${it.productosCount} productos</div>
+                    </td>
+                    <td>
+                        <div class="cell-main">${formatoMoneda(it.total)}</div>
+                    </td>
+                    <td>
+                        <span class="itin-badge itin-badge--${it.estado}">${it.estadoLabel}</span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn-ver-detalle" onclick="verDetalleItinerario('${it.id}')">
+                            <i class="far fa-eye"></i>
+                            <span>Ver detalle</span>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('itinerarios-footer-count').textContent =
+                `Se muestran ${filtrados.length} itinerarios. Ajustá los filtros para acotar la búsqueda.`;
+        }
+
+        // ==========================================
+        // 2 & 4. AGREGAR ITINERARIO
+        // ==========================================
+        function sincronizarVehiculoTransportista() {
+            const t = document.getElementById('crear-transportista').value;
+            const vSelect = document.getElementById('crear-vehiculo');
+            const mapa = {
+                "Juan Pérez": "AB 123 CD · Fiat Ducato",
+                "María González": "AC 456 EF · Renault Master",
+                "Carlos Rodríguez": "AD 789 GH · Peugeot Boxer",
+                "Lucía Fernández": "AE 234 IJ · Mercedes Sprinter",
+                "Sin asignar": "Vehículo pendiente"
+            };
+            if (mapa[t]) vSelect.value = mapa[t];
+        }
+
+        function abrirCrearItinerarioVacio() {
+            cerrarModalParadas();
+            activarPill('pill-vacio');
+            paradasEnFormulario = [];
+            renderizarParadasFormulario();
+            mostrarPantalla('crear');
+        }
+
+        function abrirCrearConModal() {
+            activarPill('pill-modal');
+            paradasEnFormulario = [];
+            renderizarParadasFormulario();
+            mostrarPantalla('crear');
+            seleccionModalIds = new Set(["p1", "p2", "p3"]);
+            abrirModalParadas();
+        }
+
+        function abrirCrearConParadasCargadas() {
+            cerrarModalParadas();
+            activarPill('pill-cargado');
+            paradasEnFormulario = PARADAS_DISPONIBLES.map(p => ({ ...p }));
+            renderizarParadasFormulario();
+            mostrarPantalla('crear');
+        }
+
+        function renderizarParadasFormulario() {
+            const emptyBox = document.getElementById('crear-paradas-vacio');
+            const tableBox = document.getElementById('crear-paradas-tabla-container');
+            const tbody = document.getElementById('crear-paradas-tbody');
+            const titulo = document.getElementById('crear-paradas-titulo');
+            const btnGuardar = document.getElementById('btn-guardar-itinerario');
+
+            if (!paradasEnFormulario.length) {
+                titulo.textContent = 'Paradas';
+                emptyBox.classList.remove('d-none');
+                tableBox.classList.add('d-none');
+                document.getElementById('crear-resumen-izq').innerHTML = '0 paradas &middot; 0 remitos &middot; 0 productos';
+                document.getElementById('crear-resumen-der').textContent = 'Total a cobrar: $ 0,00';
+                btnGuardar.disabled = true;
+                return;
+            }
+
+            titulo.textContent = `Paradas (${paradasEnFormulario.length})`;
+            emptyBox.classList.add('d-none');
+            tableBox.classList.remove('d-none');
+            btnGuardar.disabled = false;
+
+            let totalRemitos = 0;
+            let totalProductos = 0;
+            let totalMonto = 0;
+
+            tbody.innerHTML = paradasEnFormulario.map((p, idx) => {
+                const cantRemitos = p.remitos.length;
+                const prodParada = p.remitos.reduce((acc, r) => acc + r.productos, 0);
+                const montoParada = p.remitos.reduce((acc, r) => acc + r.monto, 0);
+
+                totalRemitos += cantRemitos;
+                totalProductos += prodParada;
+                totalMonto += montoParada;
+
+                const remitosLineas = p.remitos.map(r => `<div>${r.numero} &middot; ${r.marca}</div>`).join('');
+
+                return `
+                    <tr>
+                        <td class="fw-medium">${idx + 1}</td>
+                        <td>
+                            <div class="cell-main">${p.destinatario}</div>
+                            <div class="cell-sub">${p.domicilio}</div>
+                        </td>
+                        <td>
+                            <div class="cell-sub mb-1">${cantRemitos} ${cantRemitos === 1 ? 'remito' : 'remitos'}</div>
+                            <div class="small text-c-primary">${remitosLineas}</div>
+                        </td>
+                        <td class="text-end fw-medium">${prodParada}</td>
+                        <td class="text-end fw-semibold">${formatoMoneda(montoParada)}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn-accion-icon" onclick="quitarParadaFormulario('${p.id}')" title="Quitar parada">
+                                <i class="far fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('crear-resumen-izq').innerHTML =
+                `${paradasEnFormulario.length} ${paradasEnFormulario.length === 1 ? 'parada' : 'paradas'} &middot; ${totalRemitos} ${totalRemitos === 1 ? 'remito' : 'remitos'} &middot; ${totalProductos} productos`;
+            document.getElementById('crear-resumen-der').textContent =
+                `Total a cobrar: ${formatoMoneda(totalMonto)}`;
+        }
+
+        function quitarParadaFormulario(id) {
+            paradasEnFormulario = paradasEnFormulario.filter(p => p.id !== id);
+            renderizarParadasFormulario();
+        }
+
+        function guardarNuevoItinerario() {
+            if (!paradasEnFormulario.length) return;
+            const id = document.getElementById('crear-id').value;
+            const fecha = document.getElementById('crear-fecha').value;
+            const transp = document.getElementById('crear-transportista').value;
+            const vehiculo = document.getElementById('crear-vehiculo').value;
+
+            const remitosCount = paradasEnFormulario.reduce((acc, p) => acc + p.remitos.length, 0);
+            const productosCount = paradasEnFormulario.reduce((acc, p) => acc + p.remitos.reduce((s, r) => s + r.productos, 0), 0);
+            const total = paradasEnFormulario.reduce((acc, p) => acc + p.remitos.reduce((s, r) => s + r.monto, 0), 0);
+
+            const existenteIdx = itinerarios.findIndex(i => i.id === id);
+            const nuevoObj = {
+                id,
+                fecha,
+                transportista: transp,
+                vehiculo,
+                paradasCount: paradasEnFormulario.length,
+                remitosCount,
+                productosCount,
+                total,
+                estado: transp === 'Sin asignar' ? 'pendiente' : 'asignado',
+                estadoLabel: transp === 'Sin asignar' ? 'Pendiente' : 'Asignado',
+                paradasDetalle: [...paradasEnFormulario]
+            };
+
+            if (existenteIdx >= 0) {
+                itinerarios[existenteIdx] = nuevoObj;
+            } else {
+                itinerarios.unshift(nuevoObj);
+            }
+
+            mostrarToast(`Itinerario ${id} guardado correctamente.`);
+            verPantallaListado();
+        }
+
+        // ==========================================
+        // 3. MODAL AGREGAR PARADAS
+        // ==========================================
+        function abrirModalParadas() {
+            if (paradasEnFormulario.length > 0) {
+                seleccionModalIds = new Set(paradasEnFormulario.map(p => p.id));
+            } else if (seleccionModalIds.size === 0) {
+                seleccionModalIds = new Set(["p1", "p2", "p3"]);
+            }
+            renderizarGruposModal();
+            document.getElementById('modal-agregar-paradas').classList.remove('d-none');
+        }
+
+        function cerrarModalParadas() {
+            document.getElementById('modal-agregar-paradas').classList.add('d-none');
+        }
+
+        function toggleParadaModal(id) {
+            if (seleccionModalIds.has(id)) {
+                seleccionModalIds.delete(id);
+            } else {
+                seleccionModalIds.add(id);
+            }
+            renderizarGruposModal();
+        }
+
+        function renderizarGruposModal() {
+            const q = (document.getElementById('modal-filtro-q').value || '').toLowerCase().trim();
+            const marca = document.getElementById('modal-filtro-marca').value;
+
+            const gruposFiltrados = PARADAS_DISPONIBLES.filter(p => {
+                const coincideTexto = !q || p.destinatario.toLowerCase().includes(q) || p.domicilio.toLowerCase().includes(q);
+                const coincideMarca = !marca || p.remitos.some(r => r.marca === marca);
+                return coincideTexto && coincideMarca;
+            });
+
+            const container = document.getElementById('modal-grupos-container');
+            container.innerHTML = gruposFiltrados.map(p => {
+                const isSelected = seleccionModalIds.has(p.id);
+                const montoParada = p.remitos.reduce((s, r) => s + r.monto, 0);
+                const cantRemitos = p.remitos.length;
+
+                return `
+                    <div class="itin-stop-group ${isSelected ? 'is-selected' : ''}">
+                        <div class="itin-stop-group__header" onclick="toggleParadaModal('${p.id}')">
+                            <div class="itin-stop-group__left">
+                                <input type="checkbox" class="itin-stop-checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleParadaModal('${p.id}')">
+                                <div>
+                                    <div class="cell-main">${p.destinatario}</div>
+                                    <div class="cell-sub">${p.domicilio}</div>
+                                </div>
+                            </div>
+                            <div class="itin-stop-group__right">
+                                <span class="cell-sub">${cantRemitos} ${cantRemitos === 1 ? 'remito' : 'remitos'}</span>
+                                <span class="cell-main">${formatoMoneda(montoParada)}</span>
+                            </div>
+                        </div>
+                        <div class="itin-stop-group__remitos">
+                            ${p.remitos.map(r => `
+                                <div class="itin-stop-remito-row">
+                                    <span class="fw-semibold">${r.numero}</span>
+                                    <span><span class="itin-badge itin-badge--pendiente">Pendiente</span></span>
+                                    <span>${r.marca}</span>
+                                    <span class="text-c-secondary">${r.fecha}</span>
+                                    <span class="text-c-secondary text-end">${r.productos} productos</span>
+                                    <span class="fw-semibold text-end">${formatoMoneda(r.monto)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Actualizar contadores y barra inferior del modal
+            const totalDispRemitos = gruposFiltrados.reduce((acc, p) => acc + p.remitos.length, 0);
+            document.getElementById('modal-counter-disp').innerHTML =
+                `${gruposFiltrados.length} paradas disponibles &middot; ${totalDispRemitos} remitos pendientes`;
+
+            const seleccionadas = PARADAS_DISPONIBLES.filter(p => seleccionModalIds.has(p.id));
+            const selParadasCount = seleccionadas.length;
+            const selRemitosCount = seleccionadas.reduce((acc, p) => acc + p.remitos.length, 0);
+            const selProdCount = seleccionadas.reduce((acc, p) => acc + p.remitos.reduce((s, r) => s + r.productos, 0), 0);
+            const selMontoTotal = seleccionadas.reduce((acc, p) => acc + p.remitos.reduce((s, r) => s + r.monto, 0), 0);
+
+            document.getElementById('modal-counter-sel').textContent =
+                `${selParadasCount} ${selParadasCount === 1 ? 'parada seleccionada' : 'paradas seleccionadas'}`;
+            document.getElementById('modal-resumen-izq').innerHTML =
+                `${selParadasCount} ${selParadasCount === 1 ? 'parada' : 'paradas'} &middot; ${selRemitosCount} ${selRemitosCount === 1 ? 'remito' : 'remitos'} &middot; ${selProdCount} productos`;
+            document.getElementById('modal-resumen-der').textContent =
+                `Total a cobrar: ${formatoMoneda(selMontoTotal)}`;
+
+            const btnConfirmar = document.getElementById('modal-btn-confirmar');
+            btnConfirmar.textContent = `Agregar ${selParadasCount} ${selParadasCount === 1 ? 'parada' : 'paradas'}`;
+            btnConfirmar.disabled = selParadasCount === 0;
+        }
+
+        function confirmarSeleccionParadas() {
+            paradasEnFormulario = PARADAS_DISPONIBLES.filter(p => seleccionModalIds.has(p.id)).map(p => ({ ...p }));
+            cerrarModalParadas();
+            activarPill('pill-cargado');
+            renderizarParadasFormulario();
+        }
+
+        // ==========================================
+        // DETALLE DE ITINERARIO
+        // ==========================================
+        function verDetalleItinerario(id) {
+            const it = itinerarios.find(i => i.id === id) || itinerarios[0];
+            document.getElementById('det-itin-codigo').textContent = `Itinerario ${it.id}`;
+            const badge = document.getElementById('det-itin-badge');
+            badge.className = `itin-badge itin-badge--${it.estado}`;
+            badge.textContent = it.estadoLabel;
+
+            document.getElementById('det-itin-id').textContent = it.id;
+            document.getElementById('det-itin-fecha').textContent = it.fecha;
+            document.getElementById('det-itin-transp').textContent = it.transportista;
+            document.getElementById('det-itin-vehiculo').textContent = it.vehiculo;
+            document.getElementById('det-paradas-header').textContent = `Paradas del itinerario (${it.paradasDetalle.length})`;
+
+            const tbody = document.getElementById('det-paradas-tbody');
+            tbody.innerHTML = it.paradasDetalle.map((p, idx) => {
+                const prodParada = p.remitos.reduce((s, r) => s + r.productos, 0);
+                const montoParada = p.remitos.reduce((s, r) => s + r.monto, 0);
+                return `
+                    <tr>
+                        <td class="fw-medium">${idx + 1}</td>
+                        <td>
+                            <div class="cell-main">${p.destinatario}</div>
+                            <div class="cell-sub">${p.domicilio}</div>
+                        </td>
+                        <td>
+                            <div class="cell-sub mb-1">${p.remitos.length} ${p.remitos.length === 1 ? 'remito' : 'remitos'}</div>
+                            ${p.remitos.map(r => `
+                                <div>
+                                    <a href="preview_remitos.html?remito=${r.numero}" class="text-decoration-none text-c-brand fw-medium small">
+                                        ${r.numero} &middot; ${r.marca}
+                                    </a>
+                                </div>
+                            `).join('')}
+                        </td>
+                        <td class="text-end fw-medium">${prodParada}</td>
+                        <td class="text-end fw-semibold">${formatoMoneda(montoParada)}</td>
+                        <td class="text-end">
+                            <a href="preview_remitos.html?remito=${p.remitos[0].numero}" class="btn-ver-detalle">
+                                <i class="far fa-eye"></i>
+                                <span>Ver remitos</span>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('det-resumen-izq').innerHTML =
+                `${it.paradasCount} paradas &middot; ${it.remitosCount} remitos &middot; ${it.productosCount} productos`;
+            document.getElementById('det-resumen-der').textContent =
+                `Total a cobrar: ${formatoMoneda(it.total)}`;
+
+            mostrarPantalla('detalle');
+        }
+
+        // Inicialización y soporte de parámetros URL (?action=crear, ?id=IT-...)
+        document.addEventListener('DOMContentLoaded', () => {
+            filtrarTablaItinerarios();
+            const params = new URLSearchParams(window.location.search);
+            const action = params.get('action');
+            const itinId = params.get('id');
+            if (action === 'crear') {
+                abrirCrearItinerarioVacio();
+            } else if (action === 'modal') {
+                abrirCrearConModal();
+            } else if (action === 'cargado') {
+                abrirCrearConParadasCargadas();
+            } else if (itinId) {
+                verDetalleItinerario(itinId);
+            }
+        });
+    </script>
+</body>
+</html>
+

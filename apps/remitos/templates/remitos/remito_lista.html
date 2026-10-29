@@ -4,7 +4,6 @@
 {% block title %}Remitos - RepartosYA{% endblock %}
 
 {% block extra_css %}
-<!-- CSS para los botones principales -->
 <link href="{% static 'core/css/home.css' %}" rel="stylesheet">
 <link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
 {% endblock %}
@@ -16,7 +15,7 @@
     =============================================== -->
     <header class="remitos-header">
         <div class="remitos-header-info">
-            <h1 class="text-title mb-1">Remitos</h1>
+            <h1 class="text-title mb-0">Remitos</h1>
             <p class="text-body text-c-secondary mb-0">Consultá y gestioná los remitos registrados en el sistema.</p>
         </div>
         <div>
@@ -32,27 +31,9 @@
     =============================================== -->
     <section class="remitos-filtros-card">
         <form method="get" class="remitos-filtros-form">
-            <!-- Buscar por comercio -->
-            <div class="remitos-filtro-item" style="flex: 1.5 1 220px;">
-                <input type="text" 
-                       name="comercio" 
-                       value="{{ filtro_comercio }}" 
-                       class="form-control" 
-                       placeholder="Buscar por comercio...">
-            </div>
-
-            <!-- Filtro Estado -->
+            <!-- Filtro Marca proveedora -->
             <div class="remitos-filtro-item">
-                <select name="estado" class="form-select">
-                    <option value="">Todos los estados</option>
-                    {% for valor, etiqueta in estados %}
-                        <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Filtro Marca -->
-            <div class="remitos-filtro-item">
+                <label class="remitos-filtro-label">Marca proveedora</label>
                 <select name="marca" class="form-select">
                     <option value="">Todas las marcas</option>
                     {% for marca in marcas %}
@@ -61,14 +42,34 @@
                 </select>
             </div>
 
+            <!-- Filtro Estado -->
+            <div class="remitos-filtro-item">
+                <label class="remitos-filtro-label">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    {% for valor, etiqueta in estados %}
+                        <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro Fecha / Comercio -->
+            <div class="remitos-filtro-item">
+                <label class="remitos-filtro-label">Destinatario / Comercio</label>
+                <input type="text" 
+                       name="comercio" 
+                       value="{{ filtro_comercio }}" 
+                       class="form-control" 
+                       placeholder="Buscar destinatario...">
+            </div>
+
             <!-- Botones de Acción -->
             <div class="remitos-filtro-btn d-flex gap-2">
-                <button type="submit" class="btn btn-outline-secondary d-flex align-items-center gap-1">
-                    <i class="fas fa-filter"></i>
+                <button type="submit" class="btn-filtrar-figma">
                     <span>Filtrar</span>
                 </button>
                 {% if filtro_comercio or filtro_estado or filtro_marca or filtro_fecha %}
-                    <a href="{% url 'remitos:remito_lista' %}" class="btn btn-light text-muted">
+                    <a href="{% url 'remitos:remito_lista' %}" class="btn-filtrar-figma text-decoration-none text-muted">
                         Limpiar
                     </a>
                 {% endif %}
@@ -79,61 +80,69 @@
     <!-- ==============================================
          TABLA DE REMITOS O ESTADO VACÍO (FIGMA)
     =============================================== -->
-    <div class="remitos-card p-0 overflow-hidden">
+    <div class="remitos-card p-3 overflow-hidden">
         {% if remitos %}
             <div class="table-responsive">
                 <table class="remitos-tabla">
                     <thead>
                         <tr>
-                            <th>N° de remito</th>
-                            <th>Marca</th>
-                            <th>Comercio</th>
-                            <th>Monto Total</th>
-                            <th>Estado</th>
-                            <th>Estado Parada</th>
-                            <th class="text-end pe-4">Acciones</th>
+                            <th>N° de remito <i class="fas fa-arrow-down ms-1 small"></i></th>
+                            <th>Estado <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Marca proveedora <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Monto a cobrar</th>
+                            <th>Destinatario <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Itinerario</th>
+                            <th class="text-end pe-3">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for remito in remitos %}
                             <tr>
-                                <td class="fw-medium">
+                                <td class="fw-semibold">
                                     <a href="{% url 'remitos:remito_detalle' remito.pk %}" class="text-decoration-none text-c-primary fw-semibold">
                                         {{ remito.numero }}
                                     </a>
-                                </td>
-                                <td>{{ remito.marca.nombre }}</td>
-                                <td>
-                                    <div>{{ remito.comercio.razon_social }}</div>
-                                    <small class="text-c-muted">{{ remito.comercio.domicilio|truncatechars:35 }}</small>
-                                </td>
-                                <td class="fw-semibold">
-                                    ${{ remito.total|floatformat:2 }}
                                 </td>
                                 <td>
                                     <span class="remito-estado-badge remito-estado-badge--{{ remito.estado|lower }}">
                                         {{ remito.get_estado_display }}
                                     </span>
                                 </td>
+                                <td>{{ remito.marca.nombre }}</td>
+                                <td class="fw-medium">
+                                    $ {{ remito.total|floatformat:2 }}
+                                </td>
+                                <td>
+                                    <div class="fw-medium">{{ remito.comercio.razon_social }}</div>
+                                    <small class="text-c-muted">{{ remito.comercio.domicilio|truncatechars:35 }}</small>
+                                </td>
                                 <td>
                                     {% if remito.parada %}
-                                        <span class="text-c-secondary">Parada #{{ remito.parada.orden }}</span>
-                                        <small class="d-block text-c-muted">Itin #{{ remito.parada.itinerario_id }}</small>
+                                        <span class="text-c-secondary">IT-{{ remito.parada.itinerario_id|stringformat:"04d" }}</span>
                                     {% else %}
-                                        <span class="text-c-muted fst-italic">Pendiente</span>
+                                        <span class="text-c-muted">—</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-end pe-3">
+                                <td class="text-end pe-2">
                                     <div class="remitos-acciones-btns justify-content-end">
                                         <a href="{% url 'remitos:remito_detalle' remito.pk %}" class="btn-accion-icon" title="Ver detalle">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="far fa-eye"></i>
                                         </a>
-                                        <a href="{% url 'remitos:remito_editar' remito.pk %}" class="btn-accion-icon" title="Editar remito">
-                                            <i class="fas fa-pen"></i>
-                                        </a>
-                                        <a href="{% url 'remitos:remito_eliminar' remito.pk %}" class="btn-accion-icon btn-accion-danger" title="Eliminar remito">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
+                                        {% if remito.estado == 'pendiente' %}
+                                            <a href="{% url 'remitos:remito_editar' remito.pk %}" class="btn-accion-icon" title="Editar remito">
+                                                <i class="fas fa-pen"></i>
+                                            </a>
+                                            <a href="{% url 'remitos:remito_eliminar' remito.pk %}" class="btn-accion-icon btn-accion-danger" title="Eliminar remito">
+                                                <i class="far fa-trash-can"></i>
+                                            </a>
+                                        {% else %}
+                                            <span class="btn-accion-icon is-disabled" title="Solo editable en estado pendiente">
+                                                <i class="fas fa-pen"></i>
+                                            </span>
+                                            <span class="btn-accion-icon is-disabled" title="Solo eliminable en estado pendiente">
+                                                <i class="far fa-trash-can"></i>
+                                            </span>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -142,26 +151,25 @@
                 </table>
             </div>
 
-            <!-- Paginación -->
-            {% if is_paginated %}
-                <div class="p-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="text-help text-c-muted">
-                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} ({{ paginator.count }} remitos)
-                    </span>
+            <div class="remitos-tabla-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span>
+                    Se muestran {{ remitos|length }} {% if is_paginated %}de {{ paginator.count }} {% endif %}remitos. Ajustá los filtros para acotar la búsqueda.
+                </span>
+                {% if is_paginated %}
                     <div class="d-flex gap-2">
                         {% if page_obj.has_previous %}
-                            <a href="?page={{ page_obj.previous_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_marca %}&marca={{ filtro_marca }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}" class="btn btn-sm btn-outline-secondary">
+                            <a href="?page={{ page_obj.previous_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_marca %}&marca={{ filtro_marca }}{% endif %}" class="btn btn-sm btn-outline-secondary">
                                 Anterior
                             </a>
                         {% endif %}
                         {% if page_obj.has_next %}
-                            <a href="?page={{ page_obj.next_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_marca %}&marca={{ filtro_marca }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}" class="btn btn-sm btn-outline-secondary">
+                            <a href="?page={{ page_obj.next_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_marca %}&marca={{ filtro_marca }}{% endif %}" class="btn btn-sm btn-outline-secondary">
                                 Siguiente
                             </a>
                         {% endif %}
                     </div>
-                </div>
-            {% endif %}
+                {% endif %}
+            </div>
 
         {% else %}
             <!-- ESTADO VACÍO (FIGMA) -->

@@ -1,43 +1,96 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Asignar Paradas</title>
-</head>
-<body>
-    <h1>Asignar Comercios a Itinerario</h1>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agregar paradas - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="itinerarios-page">
+    <div>
+        <a href="{% url 'itinerarios:itinerario_lista' %}" class="home-btn home-btn--compacto">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver a itinerarios</span>
+        </a>
+    </div>
+
+    <header>
+        <h1 class="text-title mb-1">Agregar paradas</h1>
+        <p class="text-body text-c-secondary mb-0">
+            Seleccioná las paradas que querés agregar. Cada parada incluye todos los remitos pendientes del mismo destinatario y domicilio.
+        </p>
+    </header>
 
     {% if form.non_field_errors %}
-        <div style="color: red;">
-            {{ form.non_field_errors }}
+        <div class="alert alert-danger alert-clean mb-0">
+            <i class="fas fa-triangle-exclamation me-2"></i>
+            <div>
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
         </div>
     {% endif %}
 
-    <form method="post">
+    <form method="post" class="itinerarios-card">
         {% csrf_token %}
 
-        <p>
-            <label for="{{ form.itinerario.id_for_label }}"><strong>{{ form.itinerario.label }}:</strong></label><br>
-            {{ form.itinerario }}
-            {{ form.itinerario.errors }}
-        </p>
-
-        <fieldset>
-            <legend><strong>{{ form.comercios.label }}</strong></legend>
-            {{ form.comercios.errors }}
-            {% for checkbox in form.comercios %}
-                <div>
-                    {{ checkbox.tag }}
-                    <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="itin-field">
+                    <label for="{{ form.itinerario.id_for_label }}">{{ form.itinerario.label }}</label>
+                    {{ form.itinerario }}
+                    {% if form.itinerario.errors %}
+                        <div class="text-danger small mt-1">{{ form.itinerario.errors.0 }}</div>
+                    {% endif %}
                 </div>
-            {% empty %}
-                <p><em>No hay comercios con remitos pendientes de asignación.</em></p>
-            {% endfor %}
-        </fieldset>
+            </div>
+        </div>
 
-        <br>
-        <button type="submit">Asignar Paradas</button>
-        <a href="{% url 'itinerarios:itinerario_lista' %}">Cancelar</a>
+        <div class="mb-4">
+            <div class="itin-paradas-header">
+                <h2 class="text-section mb-0">{{ form.comercios.label }}</h2>
+            </div>
+            {% if form.comercios.errors %}
+                <div class="text-danger small mb-2">{{ form.comercios.errors.0 }}</div>
+            {% endif %}
+
+            <div class="itin-stop-groups">
+                {% for checkbox in form.comercios %}
+                    <label class="itin-stop-group" for="{{ checkbox.id_for_label }}">
+                        <div class="itin-stop-group__header">
+                            <div class="itin-stop-group__left">
+                                {{ checkbox.tag }}
+                                <div>
+                                    <div class="cell-main">{{ checkbox.choice_label }}</div>
+                                </div>
+                            </div>
+                            <span class="itin-badge itin-badge--pendiente">Remitos pendientes</span>
+                        </div>
+                    </label>
+                {% empty %}
+                    <div class="itin-paradas-empty">
+                        <div class="itin-paradas-empty__icon">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div class="itin-paradas-empty__title">Todavía no hay paradas pendientes</div>
+                        <p class="itin-paradas-empty__desc">No hay comercios con remitos pendientes de asignación.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="itin-form-actions">
+            <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+                Cancelar
+            </a>
+            <button type="submit" class="btn-itinerario-primary">
+                Asignar paradas
+            </button>
+        </div>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -1,0 +1,488 @@
+/* ===================================================
+   ITINERARIOS - ESTILOS BASADOS EN FIGMA
+   Usa los tokens de paletas.css (--color-*, --spacing-*, --radius-*)
+=================================================== */
+
+.itinerarios-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-20, 20px);
+}
+
+/* ---------- Encabezado ---------- */
+.itinerarios-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-16, 16px);
+}
+
+.itinerarios-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itinerarios-header-info h1 {
+  margin: 0;
+  color: var(--color-primary, #123c6b);
+}
+
+/* ---------- Barra de Filtros ---------- */
+.itinerarios-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-12, 12px);
+}
+
+.itinerarios-filtro-item {
+  flex: 1 1 200px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.itinerarios-filtro-label {
+  font: 500 13px/normal var(--font-family);
+  color: var(--color-text, #1b1b1f);
+  margin: 0;
+}
+
+.itinerarios-filtro-item .form-control,
+.itinerarios-filtro-item .form-select {
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--color-text, #1b1b1f);
+  height: 40px;
+}
+
+.btn-itinerario-outline {
+  height: 40px;
+  padding: 0 18px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text, #1b1b1f);
+  font: 600 14px/normal var(--font-family);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-itinerario-outline:hover {
+  background: var(--color-bg, #fff6ec);
+  border-color: var(--color-primary, #123c6b);
+  color: var(--color-primary, #123c6b);
+}
+
+.btn-itinerario-primary {
+  height: 40px;
+  padding: 0 20px;
+  background: var(--color-accent, #f4661b);
+  border: 1px solid var(--color-accent, #f4661b);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-surface, #ffffff);
+  font: 600 14px/normal var(--font-family);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-itinerario-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover, #ea580b);
+  border-color: var(--color-accent-hover, #ea580b);
+  color: var(--color-surface, #ffffff);
+}
+
+.btn-itinerario-primary:disabled,
+.btn-itinerario-primary.is-disabled {
+  background: #f9b08a;
+  border-color: #f9b08a;
+  color: var(--color-surface, #ffffff);
+  cursor: not-allowed;
+}
+
+/* ---------- Tarjeta y Tabla Principal ---------- */
+.itinerarios-card {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--spacing-20, 20px);
+}
+
+.itinerarios-tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.itinerarios-tabla thead th {
+  padding: 11px 16px;
+  background: var(--color-bg, #fff6ec);
+  color: var(--color-text-secondary, #545457);
+  font: 500 13px/normal var(--font-family, sans-serif);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.itinerarios-tabla thead th:first-child {
+  border-radius: var(--radius-md, 8px) 0 0 var(--radius-md, 8px);
+}
+
+.itinerarios-tabla thead th:last-child {
+  border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
+}
+
+.itinerarios-tabla tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border, #d1cac3);
+  color: var(--color-text, #1b1b1f);
+  font: 400 14px/normal var(--font-family, sans-serif);
+  vertical-align: middle;
+}
+
+.itinerarios-tabla tbody tr:hover td {
+  background: rgba(255, 246, 236, 0.55);
+}
+
+.cell-main {
+  font-weight: 600;
+  color: var(--color-text, #1b1b1f);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.cell-main--medium {
+  font-weight: 500;
+}
+
+.cell-sub {
+  color: var(--color-text-muted, #6b6b6d);
+  font-size: 12.5px;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.itinerarios-tabla-footer {
+  padding: 14px 16px 2px;
+  color: var(--color-text-muted, #6b6b6d);
+  font: 400 13px/normal var(--font-family, sans-serif);
+}
+
+/* ---------- Badges de Estado ---------- */
+.itin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.itin-badge--asignado {
+  background-color: var(--color-info-tint, #e0f2fe);
+  color: var(--color-info, #0369a1);
+}
+
+.itin-badge--pendiente {
+  background-color: var(--color-warning-tint, #fef3c7);
+  color: var(--color-warning, #b45309);
+}
+
+.itin-badge--en_ruta,
+.itin-badge--ruta {
+  background-color: var(--color-route-tint, #ede9fe);
+  color: var(--color-route, #6d28d9);
+}
+
+.itin-badge--finalizado,
+.itin-badge--finalizada,
+.itin-badge--entregado,
+.itin-badge--resuelto {
+  background-color: var(--color-success-tint, #dcfce7);
+  color: var(--color-success, #15803d);
+}
+
+.itin-badge--error,
+.itin-badge--rechazado {
+  background-color: var(--color-error-tint, #fee2e2);
+  color: var(--color-error, #b91c1c);
+}
+
+/* Botón Ver detalle en fila */
+.btn-ver-detalle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text, #1b1b1f);
+  font: 500 13px/normal var(--font-family);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.btn-ver-detalle:hover {
+  background: var(--color-bg, #fff6ec);
+  border-color: var(--color-primary, #123c6b);
+  color: var(--color-primary, #123c6b);
+}
+
+/* ---------- Pantalla Agregar Itinerario ---------- */
+.itin-form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-16, 16px);
+  margin-bottom: var(--spacing-24, 24px);
+}
+
+.itin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.itin-field label {
+  font: 500 13px/normal var(--font-family);
+  color: var(--color-text, #1b1b1f);
+  margin: 0;
+}
+
+.itin-field .form-control,
+.itin-field .form-select {
+  height: 40px;
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  color: var(--color-text, #1b1b1f);
+  background-color: var(--color-surface, #ffffff);
+}
+
+.itin-field .form-control[readonly] {
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-text, #1b1b1f);
+}
+
+.itin-paradas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-12, 12px);
+}
+
+.itin-paradas-empty {
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  padding: 44px 24px;
+  text-align: center;
+  background: var(--color-surface, #ffffff);
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+.itin-paradas-empty__icon {
+  color: var(--color-text-muted, #6b6b6d);
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.itin-paradas-empty__title {
+  font: 600 14px/normal var(--font-family);
+  color: var(--color-text, #1b1b1f);
+  margin-bottom: 4px;
+}
+
+.itin-paradas-empty__desc {
+  font: 400 13px/normal var(--font-family);
+  color: var(--color-text-muted, #6b6b6d);
+  margin: 0;
+}
+
+.itin-paradas-table-box {
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--spacing-12, 12px);
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+.itin-summary-bar {
+  background: var(--color-bg, #fff6ec);
+  border-radius: var(--radius-md, 8px);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font: 600 13.5px/normal var(--font-family);
+  color: var(--color-text, #1b1b1f);
+  margin-bottom: var(--spacing-20, 20px);
+}
+
+.itin-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-12, 12px);
+}
+
+/* ---------- Modal Agregar Paradas (Figma) ---------- */
+.itin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 27, 31, 0.45);
+  z-index: 1055;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.itin-modal-dialog {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 780px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+.itin-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.itin-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted, #6b6b6d);
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.itin-modal-close:hover {
+  color: var(--color-text, #1b1b1f);
+}
+
+.itin-modal-filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.itin-modal-counters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.itin-stop-groups {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-right: 2px;
+}
+
+.itin-stop-group {
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  background: var(--color-surface, #ffffff);
+}
+
+.itin-stop-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f5f0eb;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.itin-stop-group.is-selected .itin-stop-group__header {
+  background: var(--color-primary-tint, #dee4ea);
+}
+
+.itin-stop-group__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.itin-stop-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary, #123c6b);
+  cursor: pointer;
+}
+
+.itin-stop-group__right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.itin-stop-remito-row {
+  display: grid;
+  grid-template-columns: 135px 95px 1fr 95px 95px 110px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px 9px 42px;
+  border-top: 1px solid var(--color-skeleton, #ede6de);
+  font-size: 13px;
+  color: var(--color-text, #1b1b1f);
+  background: var(--color-surface, #ffffff);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991px) {
+  .itin-form-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .itin-stop-remito-row {
+    grid-template-columns: 1fr 1fr;
+    padding-left: 16px;
+  }
+}
+
+@media (max-width: 575px) {
+  .itin-form-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+

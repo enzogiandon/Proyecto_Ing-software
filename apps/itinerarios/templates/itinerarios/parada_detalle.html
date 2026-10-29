@@ -1,69 +1,153 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Detalle de entrega #{{ parada.pk }}</title>
-</head>
-<body>
-    <h1>Detalle de entrega #{{ parada.pk }}</h1>
+{% extends 'base.html' %}
+{% load static %}
 
-    <h2>Información de la entrega</h2>
-    <ul>
-        <li><strong>Estado:</strong> {{ parada.get_estado_display }}</li>
-        <li><strong>Orden:</strong> {{ parada.orden }}</li>
-        <li><strong>Comercio:</strong> {{ parada.comercio.razon_social }}</li>
-        <li><strong>Dirección:</strong> {{ parada.comercio.domicilio }}</li>
-        <li><strong>Itinerario:</strong> #{{ parada.itinerario.pk }}</li>
-        <li><strong>Fecha:</strong> {{ parada.itinerario.fecha|date:"d/m/Y" }}</li>
-        <li><strong>Transportista:</strong>
-            {% if parada.itinerario.transportista %}
-                {{ parada.itinerario.transportista.usuario.get_full_name|default:parada.itinerario.transportista.usuario.username }}
-            {% else %}
-                Sin asignar
-            {% endif %}
-        </li>
-        <li><strong>Vehículo:</strong> {{ parada.itinerario.vehiculo.patente|default:"-" }}</li>
-        <li><strong>Fecha y hora de entrega:</strong> {{ parada.hora_entrega|date:"d/m/Y H:i"|default:"Sin registrar" }}</li>
-    </ul>
+{% block title %}Detalle de entrega #{{ parada.pk }} - RepartosYA{% endblock %}
 
-    <h2>Remitos asociados</h2>
-    <ul>
-        {% for remito in parada.remitos_vigentes %}
-            <li>
-                <a href="{% url 'remitos:remito_detalle' remito.pk %}">Remito #{{ remito.numero }}</a>
-                — {{ remito.marca.nombre }} — {{ remito.get_estado_display }} — ${{ remito.total }}
-            </li>
-        {% empty %}
-            <li>No hay remitos asociados a esta entrega.</li>
-        {% endfor %}
-    </ul>
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <h2>Evidencias</h2>
-    <ul>
-        {% for evidencia in parada.evidencias.all %}
-            <li>
-                <a href="{{ evidencia.archivo.url }}">Ver evidencia #{{ evidencia.pk }}</a>
-                — {{ evidencia.fecha|date:"d/m/Y H:i" }}
-            </li>
-        {% empty %}
-            <li>No hay evidencias registradas.</li>
-        {% endfor %}
-    </ul>
+{% block content %}
+<div class="itinerarios-page">
+    <div>
+        <a href="{% url 'itinerarios:itinerario_lista' %}" class="home-btn home-btn--compacto">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver a itinerarios</span>
+        </a>
+    </div>
 
-    <h2>Contingencias</h2>
-    <ul>
-        {% for problema in parada.problemas.all %}
-            <li>
-                <strong>{{ problema.get_tipo_display }}</strong>
-                {% if problema.descripcion %}— {{ problema.descripcion }}{% endif %}
-                — {% if problema.impide_entrega %}Impide la entrega{% else %}No impide la entrega{% endif %}
-                — {{ problema.fecha|date:"d/m/Y H:i" }}
-            </li>
-        {% empty %}
-            <li>No hay contingencias registradas.</li>
-        {% endfor %}
-    </ul>
+    <header class="d-flex align-items-center gap-3 flex-wrap">
+        <h1 class="text-title mb-0">Detalle de entrega #{{ parada.pk }}</h1>
+        <span class="itin-badge itin-badge--{{ parada.estado|lower }}">
+            {{ parada.get_estado_display }}
+        </span>
+    </header>
 
-    <p><a href="{% url 'itinerarios:itinerario_lista' %}">Volver a entregas</a></p>
-</body>
-</html>
+    <div class="remitos-detalle-layout">
+        <!-- Columna Izquierda: Información de la Parada y Remitos Asociados -->
+        <div class="remitos-detalle-col">
+            <section class="itinerarios-card">
+                <h2 class="text-section text-c-brand mb-3">Información de la entrega</h2>
+                <div class="remitos-kv-grid">
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Destinatario</span>
+                        <span class="remito-kv-value">{{ parada.comercio.razon_social }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Domicilio</span>
+                        <span class="remito-kv-value">{{ parada.comercio.domicilio }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Itinerario</span>
+                        <span class="remito-kv-value">IT-{{ parada.itinerario.fecha|date:"Y" }}-{{ parada.itinerario.pk|stringformat:"05d" }} (#{{ parada.itinerario.pk }})</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Orden de parada</span>
+                        <span class="remito-kv-value">Parada #{{ parada.orden }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Transportista</span>
+                        <span class="remito-kv-value">
+                            {% if parada.itinerario.transportista %}
+                                {{ parada.itinerario.transportista.usuario.get_full_name|default:parada.itinerario.transportista.usuario.username }}
+                            {% else %}
+                                Sin asignar
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Vehículo</span>
+                        <span class="remito-kv-value">{{ parada.itinerario.vehiculo.patente|default:"-" }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Fecha programada</span>
+                        <span class="remito-kv-value">{{ parada.itinerario.fecha|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="remito-kv-item">
+                        <span class="remito-kv-label">Fecha y hora de entrega</span>
+                        <span class="remito-kv-value">{{ parada.hora_entrega|date:"d/m/Y H:i"|default:"Sin registrar" }}</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="itinerarios-card">
+                <h2 class="text-section text-c-brand mb-3">Remitos asociados</h2>
+                {% if parada.remitos_vigentes %}
+                    <div class="table-responsive">
+                        <table class="itinerarios-tabla">
+                            <thead>
+                                <tr>
+                                    <th>N° de remito</th>
+                                    <th>Marca</th>
+                                    <th>Estado</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for remito in parada.remitos_vigentes %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'remitos:remito_detalle' remito.pk %}" class="text-decoration-none text-c-brand fw-semibold">
+                                                Remito #{{ remito.numero }}
+                                            </a>
+                                        </td>
+                                        <td>{{ remito.marca.nombre }}</td>
+                                        <td>
+                                            <span class="itin-badge itin-badge--{{ remito.estado|lower }}">
+                                                {{ remito.get_estado_display }}
+                                            </span>
+                                        </td>
+                                        <td class="fw-semibold">${{ remito.total|floatformat:2 }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-body text-c-muted mb-0">No hay remitos asociados a esta entrega.</p>
+                {% endif %}
+            </section>
+        </div>
+
+        <!-- Columna Derecha: Evidencias y Contingencias -->
+        <div class="remitos-detalle-col">
+            <section class="itinerarios-card">
+                <h2 class="text-section text-c-brand mb-3">Evidencias y constancias</h2>
+                {% for evidencia in parada.evidencias.all %}
+                    <div class="mb-2">
+                        <div class="remito-constancia-box">
+                            <i class="far fa-image fs-4"></i>
+                            <a href="{{ evidencia.archivo.url }}" class="text-c-brand fw-medium text-decoration-none">
+                                Ver evidencia #{{ evidencia.pk }} ({{ evidencia.archivo.name }})
+                            </a>
+                        </div>
+                        <div class="remitos-field-help">{{ evidencia.archivo.name }} &middot; {{ evidencia.fecha|date:"d/m/Y H:i" }}</div>
+                    </div>
+                {% empty %}
+                    <p class="text-body text-c-muted mb-0">No hay evidencias registradas.</p>
+                {% endfor %}
+            </section>
+
+            <section class="itinerarios-card">
+                <h2 class="text-section text-c-brand mb-3">Contingencias</h2>
+                {% for problema in parada.problemas.all %}
+                    <div class="p-3 rounded border mb-2" style="background: var(--color-bg);">
+                        <div class="fw-semibold text-c-primary">{{ problema.get_tipo_display }}</div>
+                        {% if problema.descripcion %}
+                            <div class="text-body text-c-secondary mt-1">{{ problema.descripcion }}</div>
+                        {% endif %}
+                        <div class="remitos-field-help mt-1">
+                            {% if problema.impide_entrega %}Impide la entrega{% else %}No impide la entrega{% endif %}
+                            &middot; {{ problema.fecha|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-body text-c-muted mb-0">No hay contingencias registradas.</p>
+                {% endfor %}
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

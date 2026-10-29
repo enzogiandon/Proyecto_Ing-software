@@ -12,27 +12,31 @@
 
 {% block content %}
 <div class="remitos-page">
-    <!-- Breadcrumb / Volver -->
+    <!-- Volver -->
     <div>
-        <a href="{% url 'remitos:remito_lista' %}" class="home-btn">
+        <a href="{% url 'remitos:remito_lista' %}" class="home-btn home-btn--compacto">
             <i class="fas fa-arrow-left"></i>
             <span>Volver a remitos</span>
         </a>
     </div>
 
     <!-- Encabezado del Formulario -->
-    <header class="mb-3">
+    <header>
         <h1 class="text-title mb-1">
             {% if form.instance.pk %}Editar remito{% else %}Agregar remito{% endif %}
         </h1>
         <p class="text-body text-c-secondary mb-0">
-            Completá los datos del remito y agregá los productos correspondientes.
+            {% if form.instance.pk %}
+                Modificá los datos permitidos del remito mientras siga en estado pendiente.
+            {% else %}
+                Completá los datos para registrar manualmente un remito en el sistema.
+            {% endif %}
         </p>
     </header>
 
     <!-- Errores generales -->
     {% if form.non_field_errors %}
-        <div class="alert alert-danger alert-clean mb-3">
+        <div class="alert alert-danger alert-clean mb-0">
             <i class="fas fa-triangle-exclamation me-2"></i>
             <div>
                 {% for error in form.non_field_errors %}
@@ -42,63 +46,42 @@
         </div>
     {% endif %}
 
-    {% if items_formset.non_form_errors %}
-        <div class="alert alert-danger alert-clean mb-3">
-            <i class="fas fa-triangle-exclamation me-2"></i>
-            <div>
-                {% for error in items_formset.non_form_errors %}
-                    <div>{{ error }}</div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
-
     <form method="post" id="form-remito" novalidate>
         {% csrf_token %}
 
-        <!-- ==============================================
-             TARJETA 1: DATOS PRINCIPALES (FIGMA)
-        =============================================== -->
-        <section class="remitos-card mb-4">
-            <h2 class="text-section mb-3">Datos Principales</h2>
+        <section class="remitos-card remitos-card--form">
             <div class="row g-3">
                 <!-- Número de remito -->
                 <div class="col-md-6">
-                    <label for="{{ form.numero.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
+                    <label for="{{ form.numero.id_for_label }}" class="text-label text-c-primary mb-1 d-block">
                         Número de remito
                     </label>
-                    <input type="text"
-                           name="numero"
-                           id="{{ form.numero.id_for_label }}"
-                           class="form-control {% if form.numero.errors %}is-invalid{% endif %}"
-                           placeholder="Ej: 0001-00012350"
-                           value="{{ form.numero.value|default:'' }}"
-                           required>
+                    <div class="remitos-input-readonly-wrapper">
+                        <input type="text"
+                               name="numero"
+                               id="{{ form.numero.id_for_label }}"
+                               class="form-control {% if form.numero.errors %}is-invalid{% endif %}"
+                               placeholder="0000-00000000"
+                               value="{{ form.numero.value|default:'' }}"
+                               {% if form.instance.pk %}readonly{% endif %}
+                               required>
+                        {% if form.instance.pk %}
+                            <i class="fas fa-lock remitos-input-lock-icon"></i>
+                        {% endif %}
+                    </div>
                     {% if form.numero.errors %}
                         <div class="invalid-feedback d-block small">{{ form.numero.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                <!-- Total a cobrar -->
-                <div class="col-md-6">
-                    <label for="{{ form.numero.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
-                        Total a cobrar
-                    </label>
-                    <input type="text"
-                           name="numero"
-                           id="{{ form.total.id_for_label }}"
-                           class="form-control {% if form.total.errors %}is-invalid{% endif %}"
-                           placeholder="Ej: $ 10.000"
-                           value="{{ form.total.value|default:'' }}"
-                           required>
-                    {% if form.total.errors %}
-                        <div class="invalid-feedback d-block small">{{ form.total.errors.0 }}</div>
+                    {% elif form.instance.pk %}
+                        <div class="remitos-field-help">El número de remito no puede modificarse.</div>
+                    {% else %}
+                        <div class="remitos-field-help">Se guarda con formato 0000-00000000. Si ya existe uno activo, no se podrá crear.</div>
                     {% endif %}
                 </div>
 
-                <!-- Marca -->
+                <!-- Marca proveedora -->
                 <div class="col-md-6">
-                    <label for="{{ form.marca.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
-                        Marca
+                    <label for="{{ form.marca.id_for_label }}" class="text-label text-c-primary mb-1 d-block">
+                        Marca proveedora
                     </label>
                     {{ form.marca }}
                     {% if form.marca.errors %}
@@ -106,55 +89,49 @@
                     {% endif %}
                 </div>
 
-                <!-- Comercio destino -->
+                <!-- Destinatario / Comercio -->
                 <div class="col-md-6">
-                    <label for="{{ form.comercio.id_for_label }}" class="text-label text-c-secondary mb-1 d-block">
-                        Comercio destino
+                    <label for="{{ form.comercio.id_for_label }}" class="text-label text-c-primary mb-1 d-block">
+                        Destinatario
                     </label>
                     {{ form.comercio }}
                     {% if form.comercio.errors %}
                         <div class="invalid-feedback d-block small">{{ form.comercio.errors.0 }}</div>
                     {% endif %}
                 </div>
+
+                <!-- Monto a cobrar -->
+                <div class="col-md-6">
+                    <label for="{{ form.total.id_for_label }}" class="text-label text-c-primary mb-1 d-block">
+                        Monto a cobrar
+                    </label>
+                    <input type="number"
+                           name="total"
+                           step="0.01"
+                           min="0.01"
+                           id="{{ form.total.id_for_label }}"
+                           class="form-control {% if form.total.errors %}is-invalid{% endif %}"
+                           placeholder="$ 0,00"
+                           value="{{ form.total.value|default:'' }}"
+                           required>
+                    {% if form.total.errors %}
+                        <div class="invalid-feedback d-block small">{{ form.total.errors.0 }}</div>
+                    {% else %}
+                        <div class="remitos-field-help">Ingresá el importe total del remito.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Botón Guardar alineado a la derecha como en Figma -->
+            <div class="remitos-form-actions">
+                <a href="{% url 'remitos:remito_lista' %}" class="btn btn-outline-secondary px-4">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary px-4">
+                    Guardar
+                </button>
             </div>
         </section>
-
-        <!-- Botones de Acción -->
-        <div class="remitos-form-actions">
-            <a href="{% url 'remitos:remito_lista' %}" class="btn btn-outline-secondary px-4">
-                Cancelar
-            </a>
-            <button type="submit" class="btn btn-primary px-4">
-                Guardar
-            </button>
-        </div>
     </form>
 </div>
-
-<!-- Template HTML oculto para agregar nuevas filas dinámicamente -->
-<template id="template-item-vacio">
-    <tr class="item-fila">
-        {{ items_formset.empty_form.id }}
-        <td>
-            {{ items_formset.empty_form.producto }}
-        </td>
-        <td>
-            {{ items_formset.empty_form.cantidad }}
-        </td>
-        <td>
-            {{ items_formset.empty_form.precio_unitario }}
-        </td>
-        <td>
-            <span class="item-subtotal-display fw-semibold text-c-primary">$ 0,00</span>
-        </td>
-        <td class="text-center">
-            {% if items_formset.can_delete %}
-                <span class="d-none">{{ items_formset.empty_form.DELETE }}</span>
-            {% endif %}
-            <button type="button" class="btn-accion-icon btn-accion-danger btn-eliminar-fila" title="Eliminar fila">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    </tr>
-</template>
 {% endblock %}

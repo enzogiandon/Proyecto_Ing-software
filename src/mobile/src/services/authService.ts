@@ -193,6 +193,22 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
     }
 
     if (response.status === 401) {
+      let data: any = {};
+      try {
+        data = await response.json(); // <-- Leemos el body JSON de fetch
+      } catch {}
+
+      const detail = (data?.detail || '').toLowerCase();
+      const codigo = data?.codigo || data?.code;
+
+      if (codigo === 'CUENTA_SUSPENDIDA' || detail.includes('suspendida') || detail.includes('inhabilitada')) {
+        return {
+          success: false,
+          error: data?.detail || 'Tu cuenta se encuentra inhabilitada.',
+          tipoError: 'INHABILITADO',
+        };
+      }
+
       return {
         success: false,
         error: 'El DNI o la clave ingresada son incorrectos.',

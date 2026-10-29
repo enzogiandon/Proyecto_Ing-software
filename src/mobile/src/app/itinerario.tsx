@@ -240,7 +240,11 @@ export default function ItinerarioScreen() {
           {/* Tarjeta central ilustrativa del boceto sin asignar */}
           <View style={styles.sinAsignarCentro}>
             <View style={styles.sinAsignarCirculo}>
-              <Text style={styles.sinAsignarIcono}>📋</Text>
+              <Image
+                source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                style={styles.sinAsignarIconoImagen}
+                resizeMode="contain"
+              />
             </View>
             <Text style={styles.sinAsignarTitulo}>Itinerario sin asignar</Text>
             <Text style={styles.sinAsignarDescripcion}>
@@ -252,7 +256,12 @@ export default function ItinerarioScreen() {
               onPress={cargarDatos}
               activeOpacity={0.85}
             >
-              <Text style={styles.botonActualizarTexto}>🔄 Actualizar Estado</Text>
+              <Image
+                source={require('../../assets/icons/icono-transferencia.png')}
+                style={styles.iconoBotonActualizar}
+                resizeMode="contain"
+              />
+              <Text style={styles.botonActualizarTexto}>Actualizar Estado</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -260,8 +269,13 @@ export default function ItinerarioScreen() {
               onPress={handleContactarBase}
               activeOpacity={0.85}
             >
+              <Image
+                source={require('../../assets/icons/icono-soporte.png')}
+                style={styles.iconoBotonSoporte}
+                resizeMode="contain"
+              />
               <Text style={styles.botonContactarBaseTexto}>
-                🎧 Contactar a Base Operativa
+                Contactar a Base de Despacho
               </Text>
             </TouchableOpacity>
           </View>
@@ -349,7 +363,11 @@ export default function ItinerarioScreen() {
 
               {/* Dirección del comercio */}
               <View style={styles.direccionRow}>
-                <Text style={styles.iconoPin}>📍</Text>
+                <Image
+                  source={require('../../assets/icons/icono-domicilio.png')}
+                  style={styles.iconoPinCustom}
+                  resizeMode="contain"
+                />
                 <Text style={styles.direccionTexto}>
                   {proximaParada.comercio.domicilio}
                   {proximaParada.comercio.localidad ? ` · ${proximaParada.comercio.localidad}` : ''}
@@ -360,9 +378,16 @@ export default function ItinerarioScreen() {
               <View style={styles.montosRow}>
                 <View>
                   <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
-                  <Text style={styles.metaValorRemitos}>
-                    📄 {proximaParada.cantidadRemitos} remitos
-                  </Text>
+                  <View style={styles.remitosFila}>
+                    <Image
+                      source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                      style={styles.iconoRemitoCustom}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.metaValorRemitos}>
+                      {proximaParada.cantidadRemitos} remitos
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.alignEnd}>
                   <Text style={styles.metaLabel}>TOTAL A RECAUDAR</Text>
@@ -406,7 +431,11 @@ export default function ItinerarioScreen() {
 
               {/* Dirección */}
               <View style={styles.direccionRow}>
-                <Text style={styles.iconoPin}>📍</Text>
+                <Image
+                  source={require('../../assets/icons/icono-domicilio.png')}
+                  style={styles.iconoPinCustom}
+                  resizeMode="contain"
+                />
                 <Text style={styles.direccionTexto}>
                   {parada.comercio.domicilio}
                   {parada.comercio.localidad ? ` · ${parada.comercio.localidad}` : ''}
@@ -417,9 +446,16 @@ export default function ItinerarioScreen() {
               <View style={styles.montosRow}>
                 <View>
                   <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
-                  <Text style={styles.metaValorRemitos}>
-                    📄 {parada.cantidadRemitos} remitos
-                  </Text>
+                  <View style={styles.remitosFila}>
+                    <Image
+                      source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                      style={styles.iconoRemitoCustom}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.metaValorRemitos}>
+                      {parada.cantidadRemitos} remitos
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.alignEnd}>
                   <Text style={styles.metaLabel}>TOTAL A RECAUDAR</Text>
@@ -437,7 +473,11 @@ export default function ItinerarioScreen() {
                 onPress={() => handleVerDetalle(parada)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.iconoVerDetalle}>📋</Text>
+                <Image
+                  source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                  style={styles.iconoVerDetalleCustom}
+                  resizeMode="contain"
+                />
                 <Text style={styles.textoBotonVerDetalle}>Ver detalle de parada</Text>
               </TouchableOpacity>
             </View>
@@ -445,7 +485,11 @@ export default function ItinerarioScreen() {
 
           {/* Pie de lista con las paradas restantes del recorrido */}
           <View style={styles.footerParadasRestantes}>
-            <Text style={styles.iconoRutaPunteada}>🔀</Text>
+            <Image
+              source={require('../../assets/icons/icono-transferencia.png')}
+              style={styles.iconoRutaPunteadaCustom}
+              resizeMode="contain"
+            />
             <View style={styles.footerParadasInfo}>
               <Text style={styles.footerParadasTitulo}>Luego, paradas 7 y 8</Text>
               <Text style={styles.footerParadasDetalle}>
@@ -761,6 +805,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 14,
   },
+  iconoPinCustom: {
+    width: 16,
+    height: 16,
+    marginRight: 6,
+  },
   iconoPin: {
     fontSize: 14,
     marginRight: 6,
@@ -785,6 +834,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.8,
     marginBottom: 4,
+  },
+  remitosFila: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconoRemitoCustom: {
+    width: 14,
+    height: 14,
+    marginRight: 6,
   },
   metaValorRemitos: {
     fontSize: 14,
@@ -842,6 +900,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  iconoVerDetalleCustom: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+  },
   iconoVerDetalle: {
     fontSize: 15,
     marginRight: 8,
@@ -862,6 +925,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
     borderWidth: 1,
     borderColor: RepartoYA.grisBorde,
+  },
+  iconoRutaPunteadaCustom: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
   },
   iconoRutaPunteada: {
     fontSize: 20,
@@ -894,15 +962,19 @@ const styles = StyleSheet.create({
     paddingVertical: 32,
   },
   sinAsignarCirculo: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 2,
-    borderColor: RepartoYA.azulRuta,
-    backgroundColor: RepartoYA.blanco,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 1.5,
+    borderColor: '#2B527A',
+    backgroundColor: '#EDF2F7',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  sinAsignarIconoImagen: {
+    width: 44,
+    height: 44,
   },
   sinAsignarIcono: {
     fontSize: 38,
@@ -927,9 +999,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 48,
     borderRadius: 12,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  iconoBotonActualizar: {
+    width: 18,
+    height: 18,
+    marginRight: 8,
+    tintColor: RepartoYA.blanco,
   },
   botonActualizarTexto: {
     color: RepartoYA.blanco,
@@ -943,8 +1022,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 48,
     borderRadius: 12,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconoBotonSoporte: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
   },
   botonContactarBaseTexto: {
     color: RepartoYA.carbon,

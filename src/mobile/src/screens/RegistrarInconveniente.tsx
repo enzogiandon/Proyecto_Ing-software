@@ -57,7 +57,7 @@ export default function RegistrarInconveniente() {
 
   const paradaVerificada = getIdParadaSeleccionadaParaCobro() === parada.id;
   const mensajeError = error || (!paradaVerificada
-    ? 'Falta una parada verificada. Abrí su detalle con conexión a Django antes de enviar.' : '');
+    ? 'Falta una parada verificada. Abrí su detalle con conexión antes de enviar.' : '');
 
   const volver = () => {
     router.replace('/parada');
@@ -79,7 +79,7 @@ export default function RegistrarInconveniente() {
 
     const paradaId = getIdParadaSeleccionadaParaCobro();
     if (paradaId === null || paradaId !== parada.id) {
-      setError('La parada no está verificada. Volvé a abrir su detalle con Django disponible.');
+      setError('La parada no está verificada. Volvé a abrir su detalle desde el itinerario.');
       return;
     }
     envioEnCurso.current = true;
@@ -92,7 +92,7 @@ export default function RegistrarInconveniente() {
       });
       if (!Number.isSafeInteger(respuesta.problema?.id) || respuesta.problema.id <= 0 ||
           respuesta.problema.parada !== paradaId) {
-        throw new Error('No se recibió una confirmación válida de Django para esta parada.');
+        throw new Error('No se recibió una confirmación válida del servidor para esta parada.');
       }
       if (activa.current && getParadaSeleccionada().id === paradaId) {
         router.replace({
@@ -308,7 +308,7 @@ export default function RegistrarInconveniente() {
           ) : null}
 
           <Text style={styles.notaEnvio}>
-            El registro se confirmará cuando Django reciba la información.
+            El registro se confirmará al procesar la entrega.
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

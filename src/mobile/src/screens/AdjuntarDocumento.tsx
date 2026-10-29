@@ -175,7 +175,7 @@ export default function AdjuntarDocumento() {
     if (uploadInProgress.current || !selectedFile) return;
     const paradaId = getIdParadaSeleccionadaParaCobro();
     if (paradaId === null || paradaId !== parada.id) {
-      const mensaje = 'La parada no está verificada o cambió la selección. Abrí su detalle con conexión a Django antes de subir el documento. El archivo seleccionado se conserva.';
+      const mensaje = 'La parada no está verificada o cambió la selección. Abrí su detalle con conexión antes de subir el documento. El archivo seleccionado se conserva.';
       setUploadError(mensaje);
       Alert.alert('No se pudo guardar el documento', mensaje);
       return;
@@ -195,7 +195,7 @@ export default function AdjuntarDocumento() {
         archivo.webFile
       );
 
-      // Solo navegar después de recibir una evidencia confirmada por Django.
+      // Solo navegar después de recibir una evidencia confirmada por el servidor.
       router.replace({
         pathname: './documento-guardado',
         params: {
@@ -286,20 +286,7 @@ export default function AdjuntarDocumento() {
 
         <View style={styles.previewHeading}>
           <Text style={styles.sectionTitle}>Vista previa</Text>
-          {selectedFile ? (
-            <TouchableOpacity
-              style={styles.botonEliminarHeader}
-              onPress={eliminarDocumento}
-              disabled={isUploading}
-              activeOpacity={0.7}
-              accessibilityLabel="Eliminar documento seleccionado"
-            >
-              <Text style={styles.iconoEliminar}>🗑️</Text>
-              <Text style={styles.textoBotonEliminar}>Eliminar</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.previewStatus}>Sin guardar</Text>
-          )}
+          <Text style={styles.previewStatus}>Sin guardar</Text>
         </View>
 
         <View style={styles.previewCard}>
@@ -535,25 +522,6 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     fontSize: 14,
     fontWeight: '600',
-  },
-  botonEliminarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-  },
-  iconoEliminar: {
-    fontSize: 14,
-    marginRight: 6,
-  },
-  textoBotonEliminar: {
-    color: '#DC2626',
-    fontSize: 13,
-    fontWeight: '700',
   },
   previewCard: {
     minHeight: 340,

@@ -94,7 +94,7 @@ export default function InconvenienteRegistrado() {
         <Text style={styles.titulo}>Inconveniente registrado</Text>
 
         <Text style={styles.subtitulo}>
-          Django confirmó el registro de la información.
+          El inconveniente fue registrado exitosamente.
         </Text>
 
         <View style={styles.tarjeta}>

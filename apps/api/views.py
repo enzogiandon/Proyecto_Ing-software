@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework import parsers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.api.serializers import (
@@ -38,6 +38,17 @@ from .serializers import (
 User = get_user_model()
 
 
+class IsActiveUser(BasePermission):
+    """
+    Permite acceso únicamente a usuarios autenticados que NO estén suspendidos (is_active=True).
+    """
+    def has_permission(self, request, view):
+        return bool(
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.is_active
+        )
+
 class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoints de itinerarios y rutas contextualizados al transportista autenticado:
@@ -49,7 +60,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Itinerario.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsActiveUser]
 
     def _get_itinerario_activo(self, request):
         """

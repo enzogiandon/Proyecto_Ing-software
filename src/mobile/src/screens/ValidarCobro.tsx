@@ -280,7 +280,7 @@ export default function ValidarCobro({
             </Text>
             <Text style={[styles.detalleMensaje, { color: completo ? VERDE : ROJO }]}>
               {cobroConfirmado
-                ? 'Django confirmó que los movimientos fueron registrados.'
+                ? 'Los movimientos de pago fueron registrados correctamente.'
                 : completo
                   ? `Ya podés confirmar el cobro de ${formatoPesos(TOTAL_ENTREGA)}.`
                   : insuficiente
@@ -314,7 +314,7 @@ export default function ValidarCobro({
         </TouchableOpacity>
         <Text style={styles.pie}>
           {cobroConfirmado
-            ? 'Cobro registrado y confirmado por Django.'
+            ? 'Cobro registrado y confirmado correctamente.'
             : completo
               ? 'El importe coincide con el total de la entrega.'
               : insuficiente

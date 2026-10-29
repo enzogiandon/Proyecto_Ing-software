@@ -187,7 +187,7 @@ function errorDeCobranza(error: any): Error {
   if (status === 401 || status === 403) {
     return new Error('No se pudo autorizar el cobro. Volvé a iniciar sesión y verificá tu acceso a esta parada.');
   }
-  if (status === 404) return new Error('La parada no está disponible en Django. Volvé a seleccionarla desde el itinerario.');
+  if (status === 404) return new Error('La parada no está disponible en el servidor. Volvé a seleccionarla desde el itinerario.');
   if (status) {
     const textos = (dato: unknown): string[] => {
       if (typeof dato === 'string') return [dato];
@@ -195,7 +195,7 @@ function errorDeCobranza(error: any): Error {
       return [];
     };
     const detalle = status < 500 ? textos(error.response.data).join(' ') : '';
-    return new Error(detalle || ('Django rechazó la operación (error ' + status + '). No se confirmó el cobro.'));
+    return new Error(detalle || ('El servidor rechazó la operación (error ' + status + '). No se confirmó el cobro.'));
   }
   if (error.request || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
     return new Error('No se pudo confirmar el cobro. Revisá la conexión y el servidor. Si el envío ya había comenzado, verificá en administración si se registró antes de reintentar.');
@@ -208,13 +208,13 @@ export async function obtenerParadaParaCobro(paradaId: number): Promise<ParadaPa
   try {
     if (!Number.isSafeInteger(paradaId) || paradaId <= 0 ||
         getIdParadaSeleccionadaParaCobro() !== paradaId) {
-      throw new Error('Falta una parada verificada. Abrí su detalle con conexión a Django antes de registrar el cobro.');
+      throw new Error('Falta una parada verificada. Abrí su detalle con conexión antes de registrar el cobro.');
     }
     const { data } = await api.get<Parada>('paradas/' + paradaId + '/');
     const totalCentavos = decimalACentavos(data?.monto_recaudar);
     if (data?.id !== paradaId || totalCentavos === null || totalCentavos <= 0 ||
         !Number.isSafeInteger(data.orden) || data.orden <= 0) {
-      throw new Error('Django no devolvió un ID y un importe válidos para la parada. No se puede confirmar el cobro.');
+      throw new Error('El servidor no devolvió un ID y un importe válidos para la parada. No se puede confirmar el cobro.');
     }
     if (data.estado === 'finalizada' || data.estado === 'completada') {
       throw new Error('Esta parada ya está finalizada. Verificá la cobranza en administración antes de volver a enviarla.');
@@ -267,7 +267,7 @@ export async function registrarCobranza(
     if (!Number.isSafeInteger(data?.cobranza_id) || data.cobranza_id <= 0 ||
         data.pagos_registrados !== pagos.length ||
         !['finalizada', 'completada'].includes(data.parada_estado)) {
-      throw new Error('Django no confirmó todos los pagos. Verificá la cobranza en administración antes de reintentar.');
+      throw new Error('El servidor no confirmó todos los pagos. Verificá la cobranza en administración antes de reintentar.');
     }
     return data;
   } catch (error: unknown) {
@@ -291,7 +291,7 @@ export interface ConfirmacionInconveniente {
 const inconvenientesEnCurso = new Set<number>();
 const inconvenientesConfirmados = new Map<number, ConfirmacionInconveniente>();
 
-/** Una URL por sí sola no acredita que Django haya guardado un inconveniente. */
+/** Una URL por sí sola no acredita que el servidor haya guardado un inconveniente. */
 export function getConfirmacionInconveniente(problemaId: number, paradaId: number): ConfirmacionInconveniente | null {
   if (!Number.isSafeInteger(problemaId) || problemaId <= 0 ||
       !Number.isSafeInteger(paradaId) || paradaId <= 0) return null;
@@ -304,7 +304,7 @@ function errorDeInconveniente(error: any): Error {
   if (status === 401 || status === 403) {
     return new Error('No se pudo autorizar el inconveniente. Volvé a iniciar sesión y verificá el acceso a esta parada.');
   }
-  if (status === 404) return new Error('Django no encontró la parada. Volvé a abrir su detalle desde el itinerario.');
+  if (status === 404) return new Error('El servidor no encontró la parada. Volvé a abrir su detalle desde el itinerario.');
   if (status) {
     const textos = (dato: unknown): string[] => {
       if (typeof dato === 'string') return [dato];
@@ -312,7 +312,7 @@ function errorDeInconveniente(error: any): Error {
       return [];
     };
     const detalle = status < 500 ? textos(error.response.data).join(' ') : '';
-    return new Error(detalle || ('Django rechazó el inconveniente (error ' + status + '). Podés reintentar.'));
+    return new Error(detalle || ('El servidor rechazó el inconveniente (error ' + status + '). Podés reintentar.'));
   }
   if (error.request || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
     return new Error('No se pudo confirmar el envío. Revisá la conexión y el servidor. Si el envío ya había comenzado, verificá en administración si se registró antes de reintentar.');
@@ -331,7 +331,7 @@ export async function reportarProblemaParada(
     // Reutiliza la verificación de procedencia existente sin aceptar IDs de mocks.
     if (!Number.isSafeInteger(paradaId) || paradaId <= 0 ||
         getIdParadaSeleccionadaParaCobro() !== paradaId || seleccionada.id !== paradaId) {
-      throw new Error('Falta una parada verificada. Abrí el detalle con conexión a Django antes de registrar el inconveniente.');
+      throw new Error('Falta una parada verificada. Abrí el detalle con conexión antes de registrar el inconveniente.');
     }
     if (typeof datos.tipo !== 'string' || !datos.tipo.trim() ||
         typeof datos.impide_entrega !== 'boolean' ||
@@ -358,7 +358,7 @@ export async function reportarProblemaParada(
         !['pendiente', 'en_curso', 'finalizada', 'error'].includes(data.parada_estado) ||
         (payload.impide_entrega && data.parada_estado !== 'error') ||
         typeof data.itinerario_finalizado !== 'boolean') {
-      throw new Error('Django no confirmó un inconveniente válido para esta parada. Verificá en administración si se registró antes de reintentar.');
+      throw new Error('El servidor no confirmó un inconveniente válido para esta parada. Verificá en administración si se registró antes de reintentar.');
     }
     inconvenientesConfirmados.set(problema.id, Object.freeze({
       problema: Object.freeze({ ...problema }), parada,
@@ -385,7 +385,7 @@ export async function subirEvidenciaParada(
 ): Promise<EvidenciaResponse> {
   if (!Number.isSafeInteger(paradaId) || paradaId <= 0 ||
       getIdParadaSeleccionadaParaCobro() !== paradaId) {
-    throw new Error('La parada no está verificada. Abrí su detalle con conexión a Django antes de subir el documento. El archivo seleccionado se conserva.');
+    throw new Error('La parada no está verificada. Abrí su detalle con conexión antes de subir el documento. El archivo seleccionado se conserva.');
   }
 
   try {

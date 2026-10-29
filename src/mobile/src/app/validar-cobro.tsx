@@ -17,7 +17,7 @@ export default function ValidarCobroPage() {
   const router = useRouter();
   const [parada, setParada] = useState<ParadaParaCobro | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [mensajeEstado, setMensajeEstado] = useState('Verificando el importe de la parada en Django…');
+  const [mensajeEstado, setMensajeEstado] = useState('Verificando información de la entrega…');
   const [modoDemo, setModoDemo] = useState(false);
   const cobranzaConfirmada = useRef<number | null>(null);
   const timerFallback = useRef<any>(null);
@@ -38,7 +38,7 @@ export default function ValidarCobroPage() {
   useFocusEffect(useCallback(() => {
     let activa = true;
     setCargando(true);
-    setMensajeEstado('Verificando el importe de la parada en Django…');
+    setMensajeEstado('Verificando información de la entrega…');
     setParada(null);
     setModoDemo(false);
     cobranzaConfirmada.current = null;
@@ -52,7 +52,7 @@ export default function ValidarCobroPage() {
       try {
         const id = getIdParadaSeleccionadaParaCobro();
         if (id === null) {
-          throw new Error('Falta conexión con Django');
+          throw new Error('Servidor no disponible');
         }
         const real = await obtenerParadaParaCobro(id);
         if (activa) {
@@ -61,7 +61,7 @@ export default function ValidarCobroPage() {
         }
       } catch {
         if (!activa) return;
-        setMensajeEstado('Sin conexión con Django. Continuando en modo demostración…');
+        setMensajeEstado('Cargando entrega en modo local…');
         timerFallback.current = setTimeout(() => {
           if (activa) {
             activarModoDemo();
@@ -141,7 +141,7 @@ export default function ValidarCobroPage() {
           const respuesta = await registrarCobranza(parada.id, pagos);
           cobranzaConfirmada.current = respuesta.cobranza_id;
           if (getIdParadaSeleccionadaParaCobro() === parada.id) actualizarEstadoCobroParada('validado', 'finalizada');
-          Alert.alert('¡Cobro validado!', 'Django confirmó el registro de los ' + respuesta.pagos_registrados + ' movimientos de pago.', [
+          Alert.alert('¡Cobro validado!', 'Se confirmaron los ' + respuesta.pagos_registrados + ' movimientos de pago.', [
             { text: 'Volver a la parada', onPress: volverAParada },
           ], { cancelable: false });
         } catch (error: unknown) {

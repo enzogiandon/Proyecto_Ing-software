@@ -24,8 +24,46 @@ export interface UsuarioTransportista {
   vehiculo: Vehiculo;
 }
 
-// Choferes simulados para probar los 4 estados de Figma
+// Choferes simulados para probar los estados de Figma y credenciales del backend
 export const CHOFERES_PRUEBA: UsuarioTransportista[] = [
+  {
+    id: 10,
+    transportista_id: 10,
+    dni: "12345678",
+    password: "1234",
+    first_name: "Martín",
+    last_name: "Rodríguez",
+    email: "martin.rodriguez@softech.com.ar",
+    is_active: true,
+    intentos_fallidos: 0,
+    telefono: "11-5555-7777",
+    habilitado: true, // Chofer principal oficial de los bocetos Figma (MR)
+    vehiculo: {
+      id: 10,
+      patente: "AB 458 CD",
+      modelo: "Unidad 024 · Iveco Daily",
+      estado: "disponible"
+    }
+  },
+  {
+    id: 11,
+    transportista_id: 11,
+    dni: "1234567",
+    password: "1234",
+    first_name: "Lautaro",
+    last_name: "Gómez",
+    email: "lautaro.gomez@softech.com.ar",
+    is_active: true,
+    intentos_fallidos: 0,
+    telefono: "11-5555-4444",
+    habilitado: true, // Chofer de poblar_db del backend Django
+    vehiculo: {
+      id: 11,
+      patente: "AF 123 CD",
+      modelo: "Mercedes-Benz Accelo 815",
+      estado: "disponible"
+    }
+  },
   {
     id: 1,
     transportista_id: 1,

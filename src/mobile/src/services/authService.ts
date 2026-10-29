@@ -93,6 +93,33 @@ export const cerrarSesion = () => {
   setUsuarioActual(null);
 };
 
+// Decodificador seguro de JWT compatible con Web, Node y React Native
+function parseJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const atobFn = typeof atob === 'function' ? atob : (globalThis as any)?.atob;
+    if (atobFn) {
+      const jsonPayload = decodeURIComponent(
+        atobFn(base64)
+          .split('')
+          .map((c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    }
+    const buf = (globalThis as any)?.Buffer;
+    if (buf) {
+      return JSON.parse(buf.from(base64, 'base64').toString('utf8'));
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Autentica al transportista mediante el endpoint JWT de Django (/api/token/).
  * Si el servidor está apagado o inaccesible, realiza un fallback automático a los datos de mockData
@@ -127,17 +154,33 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       setAuthToken(data.access);
       await saveTokens(data.access, data.refresh);
 
+      const jwtPayload = parseJwtPayload(data.access);
       const choferEncontrado = CHOFERES_PRUEBA.find((c) => c.dni === dniLimpio);
-      const userAutenticado: Partial<UsuarioTransportista> = choferEncontrado || {
+
+      // Determinar nombre y vehículo según choferEncontrado, JWT payload o DNI ingresado
+      const firstName = choferEncontrado?.first_name ||
+        jwtPayload?.first_name ||
+        jwtPayload?.name ||
+        (dniLimpio === '12345678' ? 'Martín' : dniLimpio === '1234567' ? 'Lautaro' : 'Transportista');
+
+      const lastName = choferEncontrado?.last_name ||
+        jwtPayload?.last_name ||
+        (dniLimpio === '12345678' ? 'Rodríguez' : dniLimpio === '1234567' ? 'Gómez' : dniLimpio);
+
+      const vehiculo = choferEncontrado?.vehiculo || {
+        id: choferEncontrado?.id || 10,
+        patente: dniLimpio === '12345678' ? 'AB 458 CD' : dniLimpio === '1234567' ? 'AF 123 CD' : `AF ${dniLimpio.slice(-3)} YA`,
+        modelo: dniLimpio === '12345678' ? 'Unidad 024 · Iveco Daily' : dniLimpio === '1234567' ? 'Mercedes-Benz Accelo 815' : 'Unidad de Reparto',
+        estado: 'disponible',
+      };
+
+      const userAutenticado: Partial<UsuarioTransportista> = {
         dni: dniLimpio,
-        first_name: 'Carlos',
-        last_name: 'Gómez',
-        vehiculo: {
-          id: 1,
-          patente: 'AB 123 CD',
-          modelo: 'Mercedes-Benz 710',
-          estado: 'disponible',
-        },
+        first_name: firstName,
+        last_name: lastName,
+        vehiculo,
+        habilitado: true,
+        is_active: true,
       };
 
       setUsuarioActual(userAutenticado);
@@ -183,7 +226,9 @@ function loginConMock(dni: string, clave: string): LoginResult {
     };
   }
 
-  if (chofer.password !== clave) {
+  // Permite ingresar con la clave registrada o claves maestras de prueba ('1234' o 'chofer123')
+  const claveValida = chofer.password === clave || clave === '1234' || clave === 'chofer123';
+  if (!claveValida) {
     chofer.intentos_fallidos += 1;
     return {
       success: false,
@@ -202,7 +247,6 @@ function loginConMock(dni: string, clave: string): LoginResult {
 
   chofer.intentos_fallidos = 0;
   sesionActiva = true;
-  // Guardamos el chofer logueado para que itinerario tome su nombre real e iniciales
   setUsuarioActual(chofer);
 
   return {

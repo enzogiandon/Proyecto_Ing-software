@@ -56,6 +56,7 @@ El **Sprint 1** marca el arranque formal del desarrollo del producto mínimo via
 | **[sprint-planning-01.md](sprint-planning-01.md)** | 09/10/2026 | Sprint Planning 1 | Definición de subgrupos, stack preliminar, estimación Planning Poker y selección de 28 HUs (71 pts). |
 | **[daily-scrum-01.md](daily-scrum-01.md)** | 19/10/2026 (10:00 hs) | Scrum #1 (con Cliente) | Validación de maquetas Figma con Martín Rodríguez; 5 definiciones operativas de negocio (estados `pendiente` / `terminada`, vista conjunta flota/choferes, etc.). |
 | **[daily-scrum-02.md](daily-scrum-02.md)** | 19/10/2026 (14:46 hs) | Scrum #2 (Técnico Interno) | Sincronización entre frentes y backend; detección de dependencia circular (IMP-01, IMP-02, IMP-03); plan de acción (DTOs, esquemas y mock server). |
+| **[guia-testing-mobile.md](guia-testing-mobile.md)** | 28/10/2026 | Protocolo de Calidad / QA | Plan y guía de pruebas de aceptación del Front Transportistas para la validación de HUs en la Demo 1. |
 
 ---
 

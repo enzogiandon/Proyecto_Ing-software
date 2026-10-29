@@ -41,7 +41,7 @@ ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1", "192.168.1.33", "
 
 SESSION_COOKIE_AGE = 3600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_SAVE_EVERY_REQUEST = False
 
 # Application definition
 
@@ -183,8 +183,23 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20,
+        },
     }
 }
+
+# Habilitar modo WAL en SQLite para permitir lectura y escritura concurrentes sin bloqueos
+from django.db.backends.signals import connection_created
+
+def activar_sqlite_wal(sender, connection, **kwargs):
+    if connection.vendor == 'sqlite':
+        with connection.cursor() as cursor:
+            cursor.execute('PRAGMA journal_mode = WAL;')
+            cursor.execute('PRAGMA synchronous = NORMAL;')
+            cursor.execute('PRAGMA busy_timeout = 20000;')
+
+connection_created.connect(activar_sqlite_wal)
 
 
 # Password validation

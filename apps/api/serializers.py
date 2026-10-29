@@ -2,7 +2,9 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.cobranza.models import MedioPago
 from apps.itinerarios.models import (
@@ -15,6 +17,31 @@ from apps.itinerarios.models import (
 from apps.remitos.models import Comercio, Remito
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        username = attrs.get(self.username_field)
+        password = attrs.get("password")
+
+        # Buscamos si el usuario existe para chequear su estado antes
+        user = Usuario.objects.filter(**{self.username_field: username}).first()
+
+        if user and user.check_password(password):
+            if not user.is_active:
+                raise exceptions.AuthenticationFailed(
+                    {
+                        "detail": "Tu cuenta se encuentra suspendida. Contacta al administrador.",
+                        "codigo": "CUENTA_SUSPENDIDA",
+                    }
+                )
+
+        # Si no está suspendido, sigue con la validación estándar de Simple JWT
+        return super().validate(attrs)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 def calcular_monto_recaudar(parada) -> str:
@@ -84,9 +111,7 @@ class DetalleParadaSerializer(serializers.ModelSerializer):
     comercio = ComercioSerializer(read_only=True)
     remitos = RemitoSerializer(many=True, read_only=True)
     monto_recaudar = serializers.SerializerMethodField()
-    evidencias = EvidenciaParadaSerializer(
-        many=True, read_only=True
-    )
+    evidencias = EvidenciaParadaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Parada

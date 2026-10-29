@@ -42,12 +42,12 @@ class IsActiveUser(BasePermission):
     """
     Permite acceso únicamente a usuarios autenticados que NO estén suspendidos (is_active=True).
     """
+
     def has_permission(self, request, view):
         return bool(
-            request.user 
-            and request.user.is_authenticated 
-            and request.user.is_active
+            request.user and request.user.is_authenticated and request.user.is_active
         )
+
 
 class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -116,7 +116,9 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         user = request.user
         if not hasattr(user, "perfil_transportista"):
             raise ValidationError(
-                {"detail": "El usuario autenticado no tiene asignado un perfil de transportista."}
+                {
+                    "detail": "El usuario autenticado no tiene asignado un perfil de transportista."
+                }
             )
 
         itinerario = Itinerario.objects.filter(
@@ -137,39 +139,50 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         for p in paradas:
             remitos_activos = p.remitos.filter(eliminado=False)
             monto_parada = sum(float(r.total) for r in remitos_activos)
-            paradas_data.append({
-                "id": p.id,
-                "orden": p.orden,
-                "estado": p.estado,
-                "comercio": {
-                    "id": p.comercio.id,
-                    "razonSocial": p.comercio.razon_social,
-                    "cuit": p.comercio.cuit,
-                    "domicilio": p.comercio.domicilio,
-                    "telefono": p.comercio.telefono or "",
-                },
-                "montoCobranza": monto_parada,
-                "cantidadRemitos": remitos_activos.count(),
-                "horaEstimada": p.hora_entrega.strftime("%H:%M") if p.hora_entrega else "10:30",
-            })
+            paradas_data.append(
+                {
+                    "id": p.id,
+                    "orden": p.orden,
+                    "estado": p.estado,
+                    "comercio": {
+                        "id": p.comercio.id,
+                        "razonSocial": p.comercio.razon_social,
+                        "cuit": p.comercio.cuit,
+                        "domicilio": p.comercio.domicilio,
+                        "telefono": p.comercio.telefono or "",
+                    },
+                    "montoCobranza": monto_parada,
+                    "cantidadRemitos": remitos_activos.count(),
+                    "horaEstimada": p.hora_entrega.strftime("%H:%M")
+                    if p.hora_entrega
+                    else "10:30",
+                }
+            )
 
         transportista = user.perfil_transportista
         vehiculo = transportista.vehiculo
 
-        return Response({
-            "id": itinerario.id,
-            "fecha": str(itinerario.fecha),
-            "estado": itinerario.estado,
-            "transportistaNombre": user.get_full_name() or user.username,
-            "transportistaIniciales": f"{user.first_name[:1]}{user.last_name[:1]}".upper() if user.first_name else "TG",
-            "vehiculo": {
-                "patente": vehiculo.patente if vehiculo else "S/D",
-                "modelo": vehiculo.modelo if vehiculo else "Camión de Reparto",
+        return Response(
+            {
+                "id": itinerario.id,
+                "fecha": str(itinerario.fecha),
+                "estado": itinerario.estado,
+                "transportistaNombre": user.get_full_name() or user.username,
+                "transportistaIniciales": f"{user.first_name[:1]}{user.last_name[:1]}".upper()
+                if user.first_name
+                else "TG",
+                "vehiculo": {
+                    "patente": vehiculo.patente if vehiculo else "S/D",
+                    "modelo": vehiculo.modelo if vehiculo else "Camión de Reparto",
+                },
+                "totalParadas": len(paradas_data),
+                "paradasCompletadas": sum(
+                    1 for p in paradas if p.estado == EstadoParada.FINALIZADA
+                ),
+                "paradas": paradas_data,
             },
-            "totalParadas": len(paradas_data),
-            "paradasCompletadas": sum(1 for p in paradas if p.estado == EstadoParada.FINALIZADA),
-            "paradas": paradas_data,
-        }, status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=False, methods=["post"], url_path="guardar-ruta")
     def guardar_ruta(self, request):

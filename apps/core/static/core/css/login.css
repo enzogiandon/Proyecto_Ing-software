@@ -31,6 +31,10 @@ html, body {
     padding: 3rem 2rem;
     text-align: center;
     color: #FFFFFF;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .isotipo-ya {

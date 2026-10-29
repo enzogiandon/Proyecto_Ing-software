@@ -133,7 +133,7 @@ class Command(BaseCommand):
                     },
                 )
                 user.groups.add(grupo_transportista)
-                user.set_password("chofer123")
+                user.set_password("123")
                 user.save()
 
                 transportista, _ = Transportista.objects.get_or_create(

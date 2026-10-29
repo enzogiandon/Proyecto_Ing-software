@@ -1,9 +1,9 @@
-// src/services/authService.ts
 import { CHOFERES_PRUEBA, UsuarioTransportista, MOCK_CHOFER_ACTUAL } from '../data/mockData';
 import { saveTokens, clearTokens } from './storage';
+import { BACKEND_URL } from './config';
 
-// Configuración de la URL base del Backend Django
-export const API_BASE_URL = 'http://localhost:8000';
+// Configuración dinámica de la URL base del Backend Django
+export const API_BASE_URL = BACKEND_URL;
 
 export interface AuthTokens {
   access: string;
@@ -103,8 +103,9 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
   const claveLimpia = clave.trim();
 
   try {
+    console.log(`[AuthService] Conectando a ${API_BASE_URL}/api/token/ con DNI: ${dniLimpio}`);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500); // 3.5 segundos de timeout
+    const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 segundos de timeout para Wi-Fi/red local
 
     const response = await fetch(`${API_BASE_URL}/api/token/`, {
       method: 'POST',

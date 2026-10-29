@@ -19,7 +19,7 @@ export async function obtenerItinerarioJornada(): Promise<{
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
 
     const response = await fetch(`${API_BASE_URL}/api/itinerarios/hoy/`, {
       method: 'GET',

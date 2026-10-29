@@ -3,11 +3,10 @@
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from './storage';
+import { BACKEND_URL } from './config';
 
-// URL base del backend Django.
-// - En local (Web o emulador con Docker en la misma máquina): http://localhost:8000/api/
-// - En dispositivo físico: reemplazar con la IP de la máquina (ej: http://192.168.1.X:8000/api/)
-export let API_BASE_URL = 'http://localhost:8000/api/';
+// URL base del backend Django calculada dinámicamente según la plataforma
+export let API_BASE_URL = `${BACKEND_URL}/api/`;
 
 export const setApiBaseUrl = (newUrl: string) => {
   API_BASE_URL = newUrl.endsWith('/') ? newUrl : `${newUrl}/`;
@@ -16,7 +15,7 @@ export const setApiBaseUrl = (newUrl: string) => {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 5000,
+  timeout: 7000,
   headers: {
     'Content-Type': 'application/json',
   },

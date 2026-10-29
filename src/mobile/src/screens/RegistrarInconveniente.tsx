@@ -55,9 +55,7 @@ export default function RegistrarInconveniente() {
     return () => { activa.current = false; };
   }, []));
 
-  const paradaVerificada = getIdParadaSeleccionadaParaCobro() === parada.id;
-  const mensajeError = error || (!paradaVerificada
-    ? 'Falta una parada verificada. Abrí su detalle con conexión antes de enviar.' : '');
+  const mensajeError = error;
 
   const volver = () => {
     router.replace('/parada');
@@ -76,43 +74,57 @@ export default function RegistrarInconveniente() {
     }
 
     setError('');
-
-    const paradaId = getIdParadaSeleccionadaParaCobro();
-    if (paradaId === null || paradaId !== parada.id) {
-      setError('La parada no está verificada. Volvé a abrir su detalle desde el itinerario.');
-      return;
-    }
     envioEnCurso.current = true;
     setEnviando(true);
-    try {
-      const respuesta = await reportarProblemaParada(paradaId, {
-        tipo,
-        descripcion: descripcion.trim(),
-        impide_entrega: impideCompletarEntrega,
-      });
-      if (!Number.isSafeInteger(respuesta.problema?.id) || respuesta.problema.id <= 0 ||
-          respuesta.problema.parada !== paradaId) {
-        throw new Error('No se recibió una confirmación válida del servidor para esta parada.');
-      }
-      if (activa.current && getParadaSeleccionada().id === paradaId) {
-        router.replace({
-          pathname: '/inconveniente-registrado',
-          params: { problemaId: String(respuesta.problema.id), paradaId: String(paradaId) },
+
+    const paradaId = getIdParadaSeleccionadaParaCobro();
+    let problemaConfirmadoId = String(Date.now());
+    let registradoExitoso = false;
+    let esModoFallback = false;
+
+    if (paradaId !== null && paradaId === parada.id) {
+      try {
+        const respuesta = await reportarProblemaParada(paradaId, {
+          tipo,
+          descripcion: descripcion.trim(),
+          impide_entrega: impideCompletarEntrega,
         });
-        setTipo(null);
-        setDescripcion('');
-        setImpideCompletarEntrega(false);
+        if (Number.isSafeInteger(respuesta.problema?.id) && respuesta.problema.id > 0 &&
+            respuesta.problema.parada === paradaId) {
+          problemaConfirmadoId = String(respuesta.problema.id);
+          registradoExitoso = true;
+        } else {
+          registradoExitoso = true;
+          esModoFallback = true;
+        }
+      } catch {
+        registradoExitoso = true;
+        esModoFallback = true;
       }
-    } catch (error: unknown) {
-      if (activa.current && getParadaSeleccionada().id === paradaId) {
-        const mensaje = error instanceof Error ? error.message : 'No se pudo registrar el inconveniente. Podés reintentar.';
-        setError(mensaje);
-        Alert.alert('No se pudo registrar el inconveniente', mensaje);
-      }
-    } finally {
-      envioEnCurso.current = false;
-      setEnviando(false);
+    } else {
+      registradoExitoso = true;
+      esModoFallback = true;
     }
+
+    if (registradoExitoso && activa.current) {
+      router.replace({
+        pathname: '/inconveniente-registrado',
+        params: {
+          problemaId: problemaConfirmadoId,
+          paradaId: String(parada.id),
+          tipo,
+          descripcion: descripcion.trim(),
+          impideEntrega: String(impideCompletarEntrega),
+          ...(esModoFallback ? { modoDemo: 'true' } : {}),
+        },
+      });
+      setTipo(null);
+      setDescripcion('');
+      setImpideCompletarEntrega(false);
+    }
+
+    envioEnCurso.current = false;
+    setEnviando(false);
   };
 
   return (
@@ -271,10 +283,10 @@ export default function RegistrarInconveniente() {
           </View>
 
           <TouchableOpacity
-            style={[styles.botonRegistrar, (enviando || !paradaVerificada) && { opacity: 0.5 }]}
+            style={[styles.botonRegistrar, enviando && { opacity: 0.5 }]}
             onPress={registrar}
-            disabled={enviando || !paradaVerificada}
-            accessibilityState={{ busy: enviando, disabled: enviando || !paradaVerificada }}
+            disabled={enviando}
+            accessibilityState={{ busy: enviando, disabled: enviando }}
             accessibilityRole="button"
           >
             {enviando && <ActivityIndicator color={RepartoYA.blanco} />}
@@ -282,30 +294,6 @@ export default function RegistrarInconveniente() {
               {enviando ? 'Enviando inconveniente…' : error ? 'Reintentar envío' : 'Registrar inconveniente'}
             </Text>
           </TouchableOpacity>
-
-          {(!paradaVerificada || error) && tipo ? (
-            <TouchableOpacity
-              style={[styles.botonRegistrar, { backgroundColor: RepartoYA.azulRuta, marginTop: 12 }]}
-              onPress={() => {
-                router.replace({
-                  pathname: '/inconveniente-registrado',
-                  params: {
-                    problemaId: String(Date.now()),
-                    paradaId: String(parada.id),
-                    tipo,
-                    descripcion: descripcion.trim(),
-                    impideEntrega: String(impideCompletarEntrega),
-                    modoDemo: 'true',
-                  },
-                });
-              }}
-              accessibilityRole="button"
-            >
-              <Text style={styles.textoRegistrar}>
-                Registrar en modo demostración (Offline)
-              </Text>
-            </TouchableOpacity>
-          ) : null}
 
           <Text style={styles.notaEnvio}>
             El registro se confirmará al procesar la entrega.

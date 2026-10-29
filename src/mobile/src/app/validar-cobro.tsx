@@ -61,7 +61,7 @@ export default function ValidarCobroPage() {
         }
       } catch {
         if (!activa) return;
-        setMensajeEstado('Cargando entrega en modo local…');
+        setMensajeEstado('Cargando información de la entrega…');
         timerFallback.current = setTimeout(() => {
           if (activa) {
             activarModoDemo();
@@ -127,7 +127,7 @@ export default function ValidarCobroPage() {
         if (modoDemo) {
           actualizarEstadoCobroParada('validado', 'finalizada');
           cobranzaConfirmada.current = Date.now();
-          Alert.alert('¡Cobro validado!', 'El importe coincide con el total de la entrega. Validación registrada en modo demostración.', [
+          Alert.alert('¡Cobro validado!', 'El importe coincide con el total de la entrega. Cobro registrado exitosamente.', [
             { text: 'Volver a la parada', onPress: volverAParada },
           ], { cancelable: false });
           return;

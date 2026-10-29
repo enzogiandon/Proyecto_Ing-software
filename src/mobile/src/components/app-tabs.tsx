@@ -21,53 +21,34 @@ export default function AppTabs() {
       backBehavior="history"
       initialRouteName="login"
       screenOptions={{
-        // Barra inferior blanca con borde suave y colores de la marca
-        tabBarStyle: {
-          backgroundColor: RepartoYA.blanco,
-          borderTopColor: RepartoYA.grisBorde,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6,
-        },
-        tabBarActiveTintColor: RepartoYA.azulRuta,
-        tabBarInactiveTintColor: RepartoYA.grisTexto,
+        tabBarStyle: { display: 'none' },
         headerShown: false,
       }}
     >
-      {/* Ruta raíz invisible para que solo haga el redirect y no ensucie el tab bar */}
+      {/* Ruta raíz invisible */}
       <Tabs.Screen
         name="index"
         options={{
           href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 
-      {/* Pantalla de login: oculto la barra de pestañas acá para que coincida con Figma */}
+      {/* Pantalla de login: sin pestaña inferior */}
       <Tabs.Screen
         name="login"
         options={{
-          title: 'Acceso',
+          href: null,
           tabBarStyle: { display: 'none' },
-          tabBarIcon: ({ color }) => (
-            <Image
-              source={require('@/assets/images/tabIcons/home.png')}
-              style={{ width: 24, height: 24, tintColor: color }}
-            />
-          ),
         }}
       />
 
-      {/* Pantalla principal de Itinerario */}
+      {/* Pantalla principal de Itinerario: sin barra de pestañas */}
       <Tabs.Screen
         name="itinerario"
         options={{
-          title: 'Itinerario',
-          tabBarIcon: ({ color }) => (
-            <Image
-              source={require('@/assets/images/tabIcons/explore.png')}
-              style={{ width: 24, height: 24, tintColor: color }}
-            />
-          ),
+          href: null,
+          tabBarStyle: { display: 'none' },
         }}
       />
 

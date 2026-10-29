@@ -256,6 +256,8 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     marginLeft: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   scroll: {
     flex: 1,

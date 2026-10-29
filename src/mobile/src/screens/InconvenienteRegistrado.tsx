@@ -18,13 +18,42 @@ import {
   obtenerNombreInconveniente,
 } from '../types/inconveniente';
 import { getConfirmacionInconveniente } from '../services/itinerarios';
+import { getParadaSeleccionada } from '../services/paradaService';
 
 export default function InconvenienteRegistrado() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const params = useLocalSearchParams<{ problemaId?: string; paradaId?: string }>();
-  const confirmacion = getConfirmacionInconveniente(Number(params.problemaId), Number(params.paradaId));
+  const params = useLocalSearchParams<{
+    problemaId?: string;
+    paradaId?: string;
+    tipo?: string;
+    descripcion?: string;
+    impideEntrega?: string;
+    modoDemo?: string;
+  }>();
+  let confirmacion = getConfirmacionInconveniente(Number(params.problemaId), Number(params.paradaId));
+  if (!confirmacion && params.modoDemo === 'true') {
+    const paradaSeleccionada = getParadaSeleccionada();
+    confirmacion = {
+      problema: {
+        id: Number(params.problemaId) || Date.now(),
+        parada: Number(params.paradaId) || paradaSeleccionada.id,
+        tipo: (params.tipo as TipoInconveniente) || 'otro',
+        descripcion: params.descripcion ?? '',
+        impide_entrega: params.impideEntrega === 'true',
+        fecha: new Date().toISOString(),
+      },
+      parada: {
+        id: paradaSeleccionada.id,
+        orden: paradaSeleccionada.orden,
+        razonSocial: paradaSeleccionada.comercio?.razonSocial || 'Comercio',
+        domicilio: paradaSeleccionada.comercio?.domicilio || '',
+      },
+      estadoParada: params.impideEntrega === 'true' ? 'error' : 'pendiente',
+      itinerarioFinalizado: false,
+    };
+  }
   if (!confirmacion) return <Redirect href="/registrar-inconveniente" />;
 
   const { problema, parada } = confirmacion;
@@ -152,6 +181,8 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     marginRight: 7,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   nombreMarca: {
     color: RepartoYA.blanco,

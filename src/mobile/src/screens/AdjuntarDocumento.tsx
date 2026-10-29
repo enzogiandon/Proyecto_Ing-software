@@ -358,9 +358,34 @@ export default function AdjuntarDocumento() {
         )}
 
         {uploadError && (
-          <Text accessibilityRole="alert" style={{ color: '#B42318', marginTop: 16 }}>
-            {uploadError}
-          </Text>
+          <View style={{ marginTop: 16 }}>
+            <Text accessibilityRole="alert" style={{ color: '#B42318', marginBottom: 10 }}>
+              {uploadError}
+            </Text>
+            <TouchableOpacity
+              style={[styles.outlineButton, { borderColor: COLORS.orange, backgroundColor: COLORS.white }]}
+              onPress={() => {
+                if (!selectedFile) return;
+                const archivo = selectedFile;
+                router.replace({
+                  pathname: './documento-guardado',
+                  params: {
+                    evidenciaId: String(Date.now()),
+                    paradaId: String(parada.id),
+                    nombreArchivo: archivo.name,
+                    uriArchivo: archivo.uri,
+                    tipoArchivo: archivo.mimeType ?? '',
+                    tamanoBytes: archivo.size?.toString() ?? '',
+                  },
+                });
+                setSelectedFile(null);
+              }}
+            >
+              <Text style={{ color: COLORS.orange, fontWeight: '700', textAlign: 'center' }}>
+                Guardar en modo demostración (Offline)
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         <Text style={styles.note}>
@@ -424,6 +449,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 36,
     marginLeft: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   content: {
     padding: 20,

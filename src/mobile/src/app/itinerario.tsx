@@ -15,7 +15,7 @@
  *    poder mostrárselo a los profes en la demo del sprint sin tener que tocar la base de datos.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,8 +27,9 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  BackHandler,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
@@ -86,14 +87,18 @@ export default function ItinerarioScreen() {
     cargarDatos();
   }, []);
 
-  // Botón para la demo del sprint: permite alternar entre vista asignada y sin asignar
-  const toggleModoDemostracion = () => {
-    if (itinerario && itinerario.paradas.length > 0) {
-      setItinerario(MOCK_ITINERARIO_SIN_ASIGNAR);
-    } else {
-      cargarDatos();
-    }
-  };
+  // Bloquea el botón físico o gesto de retroceso del celular para no volver al login una vez autenticado
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        // En el itinerario no se debe volver al login bajo ninguna circunstancia
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
 
   // Acciones de los botones según el diagrama de navegación de la cátedra
   const handleRutasGuardadas = () => {
@@ -207,19 +212,6 @@ export default function ItinerarioScreen() {
             </Text>
           </View>
         </View>
-
-        {/* Botoncito para alternar en vivo entre boceto con paradas y sin asignar */}
-        <TouchableOpacity
-          style={styles.toggleDemoButton}
-          onPress={toggleModoDemostracion}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.toggleDemoTexto}>
-            {itinerario && itinerario.paradas.length > 0
-              ? 'Ver Boceto: Sin Asignar'
-              : 'Ver Boceto: Asignado'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* ================= CONTENIDO DE LA HOJA DE RUTA ================= */}
@@ -520,6 +512,8 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     marginRight: 6,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   logoTextoReparto: {
     color: RepartoYA.blanco,
@@ -579,19 +573,6 @@ const styles = StyleSheet.create({
     color: RepartoYA.azulRutaBorde,
     fontSize: 12,
     marginTop: 2,
-  },
-  toggleDemoButton: {
-    alignSelf: 'flex-end',
-    marginTop: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  toggleDemoTexto: {
-    color: RepartoYA.blanco,
-    fontSize: 10,
-    fontWeight: '600',
   },
 
   // Tarjeta de progreso

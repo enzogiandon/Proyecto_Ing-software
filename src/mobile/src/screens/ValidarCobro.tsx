@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   flecha: { color: '#FFFFFF', fontSize: 34 },
   titulo: { flex: 1, color: '#FFFFFF', fontSize: 23, fontWeight: 'bold' },
   logo: { width: 40, alignItems: 'flex-end' },
-  imagenLogo: { width: 40, height: 40 },
+  imagenLogo: { width: 40, height: 40, borderRadius: 8, overflow: 'hidden' },
   scroll: { flex: 1 },
   contenido: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 20, paddingBottom: 26 },
   tarjetaParada: { backgroundColor: '#FFFFFF', borderRadius: 10, padding: 16, marginBottom: 18 },

@@ -364,7 +364,7 @@ export default function LoginScreen() {
             </View>
 
             <Text style={styles.modalMensaje}>
-              Canal de guardia y asistencia para transportistas de RepartoYA. Si tenés problemas para ingresar o dudas con tu jornada, comunicate con Despacho.
+              Canal de asistencia para transportistas de RepartoYA.
             </Text>
 
             {/* Núcleo del cambio: Reemplaza números ficticios por enlace real a WhatsApp */}
@@ -424,6 +424,8 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     marginRight: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   logoTextoRow: {
     flexDirection: 'row',

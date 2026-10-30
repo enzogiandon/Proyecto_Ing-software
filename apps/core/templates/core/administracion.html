@@ -5,11 +5,12 @@
 {% url 'core:vehiculo_crear' as url_vehiculo_nuevo %}
 {% url 'core:permisos' as url_permisos %}{# tentativo #}
 
+{% now "l, j \d\e F \d\e Y" as fecha_hoy %}
 <div class="home">
     <header class="home-encabezado">
         <div>
             <h1 class="text-title mb-1">Inicio</h1>
-            <p class="text-body home-fecha mb-0">Viernes, 16 de octubre de 2026</p>
+            <p class="text-body home-fecha mb-0">{{ fecha_hoy|capfirst }}</p>
         </div>
         <div class="home-actualizacion">
             <span class="text-help home-actualizado">Actualizado hace 2 min</span>

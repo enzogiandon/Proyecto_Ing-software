@@ -6,11 +6,12 @@
 {% url 'itinerarios:itinerario_lista' as url_itinerarios %}
 {% url 'itinerarios:itinerario_crear' as url_itinerario_nuevo %}
 
+{% now "l, j \d\e F \d\e Y" as fecha_hoy %}
 <div class="home">
     <header class="home-encabezado">
         <div>
             <h1 class="text-title mb-1">Inicio</h1>
-            <p class="text-body home-fecha mb-0">Lunes, 26 de octubre de 2026</p>
+            <p class="text-body home-fecha mb-0">{{ fecha_hoy|capfirst }}</p>
         </div>
         <div class="home-actualizacion">
             <span class="text-help home-actualizado">Actualizado 3 minutos</span>

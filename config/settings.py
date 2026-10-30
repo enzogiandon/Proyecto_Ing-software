@@ -23,8 +23,6 @@ AUTH_USER_MODEL = "core.Usuario"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_PASSWORD_VALIDATORS = []
-
 load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
@@ -208,18 +206,6 @@ connection_created.connect(activar_sqlite_wal)
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
 ]
 
 

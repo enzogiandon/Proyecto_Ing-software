@@ -1,45 +1,27 @@
-# Minuta de Reunión — Scrum #4 del Sprint 1
-**Sincronización Técnica, Validaciones con el Cliente y Preparación de la Demo 1**
+# Scrum #4
 
-| **Proyecto:** Sistema de Gestión Logística | **Softech** — Octubre de 2026 |
-| :--- | ---: |
-| **Identificación del Equipo:**<br>• Carlos, Aylén — 03538/0<br>• Caruso, Catalina — 03298/4<br>• Chica Herrero, Ian<br>• Giandon, Enzo Agustín — 03532/4<br>• Giralde, Lautaro — 03568/7<br>• Sinion Mendoza, Mayerly<br>• Tolaba, Alan — 4122/3 | <img src="assets/logo-softech-scrum.png" alt="Softech Logo" width="80" /> |
+**Proyecto:** Sistema de Gestión Logística  
+**Identificación:** Carlos, Aylén 03538/0  
+Caruso, Catalina 03298/4  
+Chica Herrero, Ian  
+Giandon, Enzo Agustín 03532/4  
+Giralde, Lautaro 03568/7  
+Sinion Mendoza, Mayerly  
+Tolaba, Alan 4122/3  
 
-- **Empresa:** Softech — Consultoría y Desarrollo de Software  
-- **Proyecto:** Sistema Integral de Gestión Logística y Liquidación de Cobranzas  
-- **Cliente:** Centro de Distribución Logística  
-- **Interlocutor del Cliente:** Martín Rodríguez (Responsable de Planificación Logística y Rutas)  
-- **Fecha de Realización:** 26 de octubre de 2026  
-- **Horario:** 11:00 hs – 12:15 hs  
-- **Canal / Sede:** Discord (Sala Técnica de Desarrollo Softech) y Laboratorio de Ingeniería  
-- **Modalidad:** Daily Scrum de sincronización técnica interna y validación de reglas de negocio con el cliente Martín Rodríguez  
-- **Facilitador (Scrum Master):** Enzo Giandon  
-
----
-
-## Participantes y Roles
-
-| Nombre y Apellido | Legajo / Identificación | Rol en el Proyecto | Subgrupo Técnico / Representación |
-| :--- | :--- | :--- | :--- |
-| **Martín Rodríguez** | — | Responsable de Planificación Logística y Rutas | Cliente / Interlocutor Clave |
-| **Enzo Giandon** | 03532/4 | Scrum Master | Facilitación Ágil y Coordinación Metodológica |
-| **Alan Tolaba** | 4122/3 | Desarrollador Frontend Web | Front Administrativos (Web) |
-| **Ian Chica Herrero** | — | Desarrollador Frontend Web | Front Administrativos (Web) |
-| **Mayerly Sinion Mendoza** | — | Desarrolladora Backend | Backend, Persistencia y APIs |
-| **Lautaro Giralde** | 03568/7 | Desarrollador Backend | Backend, Persistencia y APIs |
-| **Catalina Caruso** | 03298/4 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile Android) |
-| **Aylén Carlos** | 03538/0 | Desarrolladora Frontend Mobile | Front Transportistas (Mobile Android) |
+**Softech**  
+Octubre de 2026  
 
 ---
 
 ## 1. Propósito de la Sesión
 
-El equipo de **Softech** llevó a cabo su cuarta sesión de **Scrum Diario**, constituyendo la reunión de cierre técnico y validación de negocio previa a la presentación formal de la **Demo 1 (MVP Iteración 1)**. Con cuatro días hábiles restantes para la demostración ante el cliente Martín Rodríguez, los objetivos de la sesión fueron:
+El equipo de **Softech** llevó a cabo su cuarta sesión de **Scrum Diario**, constituyendo la reunión de cierre técnico y validación de negocio previa a la presentación formal de la **Demo 1**. Con cuatro días hábiles restantes para la demostración ante el cliente **Martín Rodríguez**, los objetivos de la sesión fueron:
 
 1. Exhibir y validar el estado funcional consolidado de ambas plataformas (web administrativa y aplicación móvil de transportistas) tras la intensa actividad de desarrollo del fin de semana.
 2. Formalizar con Martín Rodríguez las reglas de negocio críticas que aún requerían definición, en particular las referidas a remitos, cobranzas y soporte documental.
-3. Registrar y cerrar formalmente los impedimentos técnicos abiertos desde el Scrum #3 (`IMP-04` a `IMP-07`) que condicionaban la integración entre módulos.
-4. Definir el alcance definitivo de la Demo 1 y acordar las restricciones técnicas para el congelamiento de código (*Code Freeze*).
+3. Registrar y cerrar formalmente los impedimentos técnicos abiertos desde el Scrum #3 (IMP-04 a IMP-07) que condicionaban la integración entre módulos.
+4. Definir el alcance definitivo de la Demo 1 y acordar las restricciones técnicas para el congelamiento de código.
 5. Establecer la contingencia operativa para la presentación presencial en las instalaciones del cliente, considerando las limitaciones de infraestructura de red en el laboratorio.
 
 ---
@@ -57,11 +39,12 @@ Durante la sesión se evaluó una restricción de infraestructura en las instala
 
 ---
 
-## 3. Resumen de Características Implementadas hasta el Lunes 26 de Octubre
+## 3. Resumen de Características Implementadas hasta el lunes 26 de Octubre
 
 A continuación se detalla el conjunto de características técnicas desarrolladas y consolidadas por el equipo en el repositorio hasta la jornada del lunes 26 de octubre:
 
-### Subgrupo Front Administrativos (Alan Tolaba e Ian Chica Herrero)
+### Subgrupo Front Administrativos
+
 - **Módulo de Autenticación y Asistencia Técnica Web:**
   - Formulario de login homologado con la paleta de azules corporativos y tipografía Inter.
   - Validación de credenciales y manejo de excepciones en pantalla ante intentos fallidos.
@@ -76,11 +59,12 @@ A continuación se detalla el conjunto de características técnicas desarrollad
   - Hoja de estilos centralizada `apps/core/static/core/css/home.css` (205 líneas) alineada con tokens de diseño.
   - Renderizado condicional del menú lateral (sidebar) en `config/templates/base.html` según el perfil del usuario autenticado.
 - **Módulo de Gestión de Remitos y Marcas:**
-  - Formulario de alta simplificada de remitos acotado a datos de cabecera y monto total ($> 0$), con los campos de carga de productos deshabilitados.
+  - Formulario de alta simplificada de remitos acotado a datos de cabecera y monto total (>0), con los campos de carga de productos deshabilitados.
   - Pantalla de edición de remitos con soporte para modificar datos generales de cabecera en estado pendiente.
   - Interfaz independiente y exclusiva para el rol Administrador destinada a la administración del catálogo de marcas proveedoras.
 
-### Subgrupo Backend y Persistencia (Mayerly Sinion Mendoza y Lautaro Giralde)
+### Subgrupo Backend y Persistencia
+
 - **Capa de Servicios y API REST para Itinerarios (`apps/api`):**
   - `GET /api/itinerarios/paradas/`: Consulta de paradas asignadas al chofer con desglose de montos pendientes a cobrar.
   - `GET /api/itinerarios/rutas-guardadas/`: Consulta de recorridos habituales guardados.
@@ -93,10 +77,11 @@ A continuación se detalla el conjunto de características técnicas desarrollad
   - Estandarización del estado inicial de itinerarios en `asignado` en formularios y servicios backend para sincronización inmediata con la app móvil.
   - Estructuración de modelos y permisos para el rol de Superusuario / Administrador Central.
 
-### Subgrupo Front Transportistas (Catalina Caruso y Aylén Carlos)
+### Subgrupo Front Transportistas
+
 - **Identidad Visual y Tokens (`src/mobile/src/constants/theme.ts`):**
-  - Configuración formal de la paleta cromática RepartoYA: `Azul Ruta` (`#1E3A8A`), `Naranja YA` (`#F97316`) y `Crema Pan` (`#FFFBEB`).
-- **Autenticación Móvil y Manejo de Inhabilitaciones (`src/mobile/src/app/login.tsx`):**
+  - Configuración formal de la paleta cromática RepartoYA: Azul Ruta (`#1E3A8A`), Naranja YA (`#F97316`) y Crema Pan (`#FFFBEB`).
+- **Autenticación Móvil y Manejo de Inhabilitaciones:**
   - Inicio de sesión mediante DNI del transportista y persistencia de sesión en memoria en `authService.ts`.
   - Tratamiento explícito de cuentas inhabilitadas o suspendidas: captura del estado HTTP correspondiente y despliegue de alerta informativa diferenciada en pantalla, con derivación directa al canal de soporte técnico.
   - Ocultamiento de la barra de pestañas (`tabBar`) durante el flujo de inicio de sesión.
@@ -125,43 +110,43 @@ A lo largo de la sesión se revisaron las interfaces y el alcance funcional junt
 
 ### 4.1 Identidad Visual y Logotipo en Front Transportistas
 - **Presentación:** Se expuso la interfaz móvil estructurada con la paleta de RepartoYA (Azul Ruta, Naranja YA y Crema Pan).
-- **Intervención del cliente:** Martín Rodríguez validó la armonía cromática pero remarcó que el isotipo visualizado en la versión móvil difería del logotipo institucional aprobado, indicando puntualmente que **el logotipo oficial debe respetar el color naranja corporativo**.
+- **Intervención del cliente:** Martín Rodríguez validó la armonía cromática pero remarcó que el isotipo visualizado en la versión móvil difería del logotipo institucional aprobado, indicando puntualmente que el logotipo oficial debe respetar el color naranja corporativo.
 - **Resolución Softech:** Front Transportistas homogeneizará los activos gráficos en `src/mobile/assets/images/` para incorporar el isotipo oficial naranja en las cabeceras de Login, Itinerario y Validación de Cobros.
 
 ### 4.2 Validación del Perfil Superusuario / Administrador Central
-- **Planteo del equipo:** Se propuso habilitar un rol jerárquico de **Superusuario / Administrador Central** en la plataforma web para tareas globales de soporte técnico, auditoría y parametrización de cuentas.
+- **Planteo del equipo:** Se propuso habilitar un rol jerárquico de Superusuario / Administrador Central en la plataforma web para tareas globales de soporte técnico, auditoría y parametrización de cuentas.
 - **Respuesta de Martín Rodríguez:** El cliente validó positivamente la iniciativa, confirmando que la empresa requiere esta figura técnica centralizada para supervisión sin interferir con las operaciones cotidianas de los administrativos de turno.
 
 ### 4.3 Administración de Marcas Proveedoras (EP-01 / Ingesta)
 - **Consulta del cliente:** Al inspeccionar la carga de planillas de remitos, Martín Rodríguez consultó cómo se mantiene y actualiza la nómina de marcas proveedoras (ej. cerveceras, distribuidoras de gaseosas y consumo masivo).
-- **Definición acordada:** Se resolvió no forzar la creación desordenada de marcas durante la ingesta de archivos. El sistema dispondrá de una **interfaz administrativa independiente (vista/CRUD de Marcas)** exclusiva para el rol **Administrador**, garantizando que las marcas se gestionen de forma centralizada y protegiendo la base de datos contra duplicaciones e inconsistencias tipográficas.
+- **Definición acordada:** Se resolvió no forzar la creación desordenada de marcas durante la ingesta de archivos. El sistema dispondrá de una interfaz administrativa independiente (vista/CRUD de Marcas) exclusiva para el rol Administrador, garantizando que las marcas se gestionen de forma centralizada y protegiendo la base de datos contra duplicaciones e inconsistencias tipográficas.
 
 ### 4.4 Decisión Clave de Alcance: Carga y Procesamiento de Remitos
 - **Definición de negocio:** Se acordó una simplificación estructural del alcance técnico para la carga individual y la importación masiva por planillas Excel:  
-  **Se declara la eliminación de la carga pormenorizada de productos ítem por ítem en el software.**
-- **Arquitectura de datos adoptada:** La aplicación procesa única y exclusivamente la **cabecera del remito** vinculada al **monto total a cobrar** ($> 0$). El desglose detallado de los productos permanece retenido exclusivamente en el remito físico en papel que porta el transportista. La plataforma solo requiere el monto final de cabecera para la cobranza electrónica y la posterior conciliación. La carga de productos ítem por ítem se declara **Fuera de Alcance** en el software para la Demo 1.
-- **Edición de remitos:** Se acordó permitir la modificación de datos generales de cabecera mientras el remito permanezca en estado pendiente. Para preservar la trazabilidad fiscal y operativa, el campo **número de remito permanece bloqueado como solo lectura** (`readonly`).
+  Se declara la eliminación de la carga pormenorizada de productos ítem por ítem en el software.
+- **Arquitectura de datos adoptada:** La aplicación procesa única y exclusivamente la cabecera del remito vinculada al monto total a cobrar (>0). El desglose detallado de los productos permanece retenido exclusivamente en el remito físico en papel que porta el transportista. La plataforma solo requiere el monto final de cabecera para la cobranza electrónica y la posterior conciliación. La carga de productos ítem por ítem se declara Fuera de Alcance en el software para la Demo 1.
+- **Edición de remitos:** Se acordó permitir la modificación de datos generales de cabecera mientras el remito permanezca en estado pendiente. Para preservar la trazabilidad fiscal y operativa, el campo número de remito permanece bloqueado como solo lectura (`readonly`).
 
 ### 4.5 Pauta Metodológica Softech: Desacople de Funcionalidades Iterativas
-- **Estándar de calidad interna:** Durante la revisión de las historias asociadas a remitos, se ratificó el estándar metodológico interno de Softech: cualquier funcionalidad que involucre una iteración repetitiva o ejecutable $N$ veces (por ejemplo, alta o carga masiva de productos por remito) debe formalizarse como una **Historia de Usuario diferenciada en el Backlog de Producto**, garantizando independencia técnica, transaccionalidad atómica y estimaciones certeras.
+- **Estándar de calidad interna:** Durante la revisión de las historias asociadas a remitos, se ratificó el estándar metodológico interno de Softech: cualquier funcionalidad que involucre una iteración repetitiva o ejecutable N veces (por ejemplo, alta o carga masiva de productos por remito) debe formalizarse como una Historia de Usuario diferenciada en el Backlog de Producto, garantizando independencia técnica, transaccionalidad atómica y estimaciones certeras.
 
 ### 4.6 Definición de "Parada", CUIT y Direcciones Físicas Compartidas (EP-02 / EP-03)
-- **Problema operativo planteado:** Se analizó el caso donde dos sociedades o razones sociales distintas (diferentes CUITs, ej. *Almacén Don Pedro* y *Vinoteca Don Pedro*) funcionan en el mismo inmueble físico y reciben pedidos en la misma jornada.
-- **Definición acordada para la Demo 1:** Para la Demo 1, dos CUITs distintos en la misma dirección generarán dos paradas independientes en el sistema. No obstante, se dejó formalmente asentada la definición conceptual requerida por Martín Rodríguez: una "Parada" representa el punto físico de detención del vehículo, por lo que se deja **abierta la funcionalidad para fusionar o agrupar paradas de una misma dirección física en una sola entrega para etapas posteriores (Sprint 2)**.
+- **Problema operativo planteado:** Se analizó el caso donde dos sociedades o razones sociales distintas (diferentes CUITs, ej. Almacén Don Pedro y Vinoteca Don Pedro) funcionan en el mismo inmueble físico y reciben pedidos en la misma jornada.
+- **Definición acordada para la Demo 1:** Para la Demo 1, dos CUITs distintos en la misma dirección generarán dos paradas independientes en el sistema. No obstante, se dejó formalmente asentada la definición conceptual requerida por Martín Rodríguez: una "Parada" representa el punto físico de detención del vehículo, por lo que se deja abierta la funcionalidad para fusionar o agrupar paradas de una misma dirección física en una sola entrega para etapas posteriores (Sprint 2).
 - **Asignación por recorrido histórico:** El cliente solicitó que el sistema incorpore el historial de recorridos del transportista como una guía dinámica no restrictiva para sugerir la asignación de paradas futuras en la zona habitual de cada chofer, permitiendo al transportista reordenar paradas en ruta frente a contingencias del tránsito.
 
 ### 4.7 Reglas de Negocio en Validación de Cobros (HU-32)
 - **Estado al momento de la sesión:** La pantalla funcional respetaba estrictamente la regla mandatoria de cobro exacto, pero estaba estructurada para registrar un único pago por medio (a lo sumo un pago en efectivo, uno por transferencia y uno por QR).
-- **Observación crítica de Martín Rodríguez:** El cliente señaló que en la operatoria de calle un comercio suele abonar con múltiples transferencias fraccionadas de diferentes bancos. Por ende, solicitó que la interfaz permita registrar **múltiples pagos por un mismo medio** (ej. dos transferencias bancarias más un saldo en efectivo).
+- **Observación crítica de Martín Rodríguez:** El cliente señaló que en la operatoria de calle un comercio suele abonar con múltiples transferencias fraccionadas de diferentes bancos. Por ende, solicitó que la interfaz permita registrar múltiples pagos por un mismo medio (ej. dos transferencias bancarias más un saldo en efectivo).
 - **Reglas mandatorias ratificadas:**
-  - **Prohibición de saldos a favor:** El sistema impide ingresar montos que excedan el valor de la cabecera.
-  - **Prohibición absoluta de cierres con diferencias:** No se puede finalizar una parada si el monto cobrado presenta discrepancias (por exceso o defecto) respecto al remito.
+  - Prohibición de saldos a favor: El sistema impide ingresar montos que excedan el valor de la cabecera.
+  - Prohibición absoluta de cierres con diferencias: No se puede finalizar una parada si el monto cobrado presenta discrepancias (por exceso o defecto) respecto al remito.
 - **Resolución técnica para la Demo 1:** Se mantendrán las reglas de cobro exacto y se actualizará la vista de cobros para permitir registrar múltiples pagos por medio (múltiples transferencias bancarias secuenciales), exhibiendo este flujo dinámico en la Demo 1.
 
 ### 4.8 Soporte Documental en Remitos: Alcance Demo 1 y Requerimiento Pendiente (HU-55)
-- **Requerimiento del cliente:** Martín Rodríguez solicitó que la aplicación móvil permita adjuntar **más de un documento o fotografía por remito** (remito firmado y sellado, constancias de retención impositiva o remito adicional), asegurando el respaldo legal y contable de 5 años.
-- **Definición de alcance consensuada:** Para la **Demo 1**, el equipo exhibirá la vista operativa acotada a **un único documento/comprobante por entrega** (captura fotográfica o archivo PDF), tal como se encuentra implementada en la aplicación.  
-- **Requerimiento Pendiente (Sprint 2):** Se documenta formalmente como caso pendiente para el **Sprint 2 / Demo 2** la extensión del selector y previsualizador para permitir la carga multidocumental (múltiples fotos/archivos por remito).
+- **Requerimiento del cliente:** Martín Rodríguez solicitó que la aplicación móvil permita adjuntar más de un documento o fotografía por remito (remito firmado y sellado, constancias de retención impositiva o remito adicional), asegurando el respaldo legal y contable de 5 años.
+- **Definición de alcance consensuada:** Para la Demo 1, el equipo exhibirá la vista operativa acotada a un único documento/comprobante por entrega (captura fotográfica o archivo PDF), tal como se encuentra implementada en la aplicación.
+- **Requerimiento Pendiente (Sprint 2):** Se documenta formalmente como caso pendiente para el Sprint 2 / Demo 2 la extensión del selector y previsualizador para permitir la carga multidocumental (múltiples fotos/archivos por remito).
 
 ### 4.9 Reporte de Inconvenientes en Ruta
 - **Resolución acordada:** Se validó la pantalla de registro de inconvenientes para entregas no realizadas, contemplando un menú desplegable con motivos tipificados (comercio cerrado, cliente ausente, mercadería dañada) complementado por un campo de texto libre para observaciones específicas del chofer.
@@ -174,9 +159,9 @@ A lo largo de la sesión se revisaron las interfaces y el alcance funcional junt
 
 ## 5. Matriz Integrada de Historias de Usuario y Decisiones de Alcance
 
-| ID / Historia de Usuario | Módulo | Estado al Lunes 26 | Criterio Técnico y Definición de Alcance |
+| Historia de Usuario | Módulo | Estado al Lunes 26 | Criterio Técnico y Definición de Alcance |
 | :--- | :---: | :--- | :--- |
-| **Agregar Remito** | Web | Ajustado (Alcance Acotado) | Carga simplificada solo a nivel de cabecera del remito y monto total a cobrar ($> 0$). Se elimina la carga de ítems pormenorizados. |
+| **Agregar Remito** | Web | Ajustado (Alcance Acotado) | Carga simplificada solo a nivel de cabecera del remito y monto total a cobrar (> 0). Se elimina la carga de ítems pormenorizados. |
 | **Editar Remito** | Web | Implementado | Permite modificar datos generales de cabecera en estado pendiente. El campo número de remito se mantiene bloqueado como solo lectura (`readonly`). |
 | **Carga de Productos** | Web | Fuera de Alcance | Funcionalidad deshabilitada en interfaz. El detalle de productos se gestiona exclusivamente en la documentación física en papel. |
 | **Administración de Marcas** | Web | Implementado | Gestión restringida exclusivamente al rol Administrador para garantizar la integridad de la base de datos. |
@@ -208,31 +193,23 @@ Los siguientes impedimentos registrados en el Scrum #3 quedaron formalmente resu
 
 En la recta final hacia la Demo 1, el Scrum Master coordinó activamente tanto las tareas de integración técnica como las instancias de relevamiento y comunicación entre subgrupos durante el fin de semana previo al Scrum #4:
 
-1. **Auditoría y Relevamiento de Avances entre Subgrupos (Sábado 24 y Domingo 25 de Octubre):**
-   El Scrum Master mantuvo reuniones de relevamiento con los distintos integrantes a través de los canales del equipo, con el objetivo de conocer de primera mano las últimas funcionalidades implementadas en cada rama, identificar puntos de integración pendientes y comunicar los contratos de datos necesarios (estructura de respuestas de la API, tokens cromáticos, flujos de navegación) para asegurar la coherencia entre los módulos web, backend y móvil en la última semana del Sprint.
-
-2. **Integración Técnica en la Aplicación Móvil (`fix(mobile)` — Lunes 26):**
-   Se realizó una corrección directa en el módulo de navegación de la aplicación móvil (`src/mobile/src/app/_layout.tsx`) para eliminar el componente de pestañas duplicado en la previsualización web de Expo (`app-tabs.web.tsx`, 112 líneas eliminadas) y añadir el componente de icono animado compatible con la plataforma web (`animated-icon.web.tsx`). Adicionalmente, se ajustó en `authService.ts` la inicialización del estado de sesión para garantizar una transición limpia al flujo de navegación post-login. Estos cambios corrigieron el comportamiento de la capa de navegación en la vista de previsualización web del proyecto Expo, evitando superposiciones visuales que comprometían la revisión de interfaces por parte del equipo.
-
-3. **Documentación Formal de los Scrums 3 y 4 (`docs(scrum)` — Lunes 26):**
-   Se generaron y publicaron las actas formales de los Scrums #3 y #4 en la rama de documentación del repositorio (`docs/sprint-1-scrums`), consolidando los compromisos técnicos, definiciones de alcance y decisiones de negocio acordadas con Martín Rodríguez en la minuta oficial del proyecto.
-
-4. **Definición y Comunicación de los Criterios de Code Freeze:**
-   Se estableció formalmente el congelamiento de código para el **Jueves 29 de Octubre a las 23:59 hs** y se comunicó a todos los integrantes la obligatoriedad de la presencia en la Demo 1 del **Viernes 30 de Octubre**, instruyendo al equipo sobre la modalidad de operación con datos locales precargados para garantizar la estabilidad del sistema en el entorno de presentación.
+1. **Auditoría y Relevamiento de Avances entre Subgrupos (Sábado 24 y Domingo 25 de Octubre):** El Scrum Master mantuvo reuniones de relevamiento con los distintos integrantes a través de los canales del equipo, con el objetivo de conocer de primera mano las últimas funcionalidades implementadas en cada rama, identificar puntos de integración pendientes y comunicar los contratos de datos necesarios (estructura de respuestas de la API, tokens cromáticos, flujos de navegación) para asegurar la coherencia entre los módulos web, backend y móvil en la última semana del Sprint.
+2. **Integración Técnica en la Aplicación Móvil (`fix(mobile)` — Lunes 26):** Se realizó una corrección directa en el módulo de navegación de la aplicación móvil (`src/mobile/src/app/_layout.tsx`) para eliminar el componente de pestañas duplicado en la previsualización web de Expo (`app-tabs.web.tsx`, 112 líneas eliminadas) y añadir el componente de icono animado compatible con la plataforma web (`animated-icon.web.tsx`). Adicionalmente, se ajustó en `authService.ts` la inicialización del estado de sesión para garantizar una transición limpia al flujo de navegación post-login. Estos cambios corrigieron el comportamiento de la capa de navegación en la vista de previsualización web del proyecto Expo, evitando superposiciones visuales que comprometían la revisión de interfaces por parte del equipo.
+3. **Documentación Formal de los Scrums 3 y 4 (`docs(scrum)` — Lunes 26):** Se generaron y publicaron las actas formales de los Scrums #3 y #4 en la rama de documentación del repositorio (`docs/sprint-1-scrums`), consolidando los compromisos técnicos, definiciones de alcance y decisiones de negocio acordadas con Martín Rodríguez en la minuta oficial del proyecto.
+4. **Definición y Comunicación de los Criterios de Code Freeze:** Se estableció formalmente el congelamiento de código para el **Jueves 29 de Octubre a las 23:59 hs** y se comunicó a todos los integrantes la obligatoriedad de la presencia en la Demo 1 del **Viernes 30 de Octubre**, instruyendo al equipo sobre la modalidad de operación con datos locales precargados para garantizar la estabilidad del sistema en el entorno de presentación.
 
 ---
 
 ## 8. Objetivos Planteados para la Demo 1 (Viernes 30 de Octubre)
 
-Para alcanzar la **Definition of Done (DoD)** del Sprint 1 y asegurar una presentación formal sólida ante Martín Rodríguez el **Viernes 30 de Octubre**, el equipo de desarrollo se comprometió a cumplir los siguientes objetivos prioritarios:
+Para alcanzar la Definition of Done (DoD) del Sprint 1 y asegurar una presentación formal sólida ante Martín Rodríguez el Viernes 30 de Octubre, el equipo de desarrollo se comprometió a cumplir los siguientes objetivos prioritarios:
 
 1. **Corrección de Identidad Visual:** Reemplazar el activo del logo en el frontend web para alinear con el diseño corporativo de Figma y asegurar que en la app móvil se visualice el isotipo oficial naranja en las cabeceras de Login, Itinerario y Cobro.
 2. **Ajuste Definitivo en Remitos:** Deshabilitar formalmente los campos de carga de productos en el formulario web, operando exclusivamente con la cabecera y el monto total, manteniendo el número de remito bloqueado en la edición.
 3. **Actualización de Validación de Cobros (HU-32):** Ajustar la pantalla de cobros en Expo para que permita registrar más de un pago por medio (múltiples transferencias bancarias secuenciales), garantizando la regla de cobro exacto sin diferencias ni saldos a favor.
 4. **Validación de Planilla Excel e Importación:** Obtener y verificar la planilla Excel de ejemplo adaptada al esquema de cabeceras simplificadas para la prueba de carga masiva en el entorno de pruebas.
-5. **Ensayo General Punta a Punta (*End-to-End*):** Simular el flujo completo (Web y Mobile) operando sobre datos locales precargados de forma autónoma con el seeder `poblar.py`, sin dependencia de redes externas.
-6. **Aplicación Estricta de Code Freeze:** Congelamiento definitivo de código el **Jueves 29 de Octubre a las 23:59 hs**, bloqueando modificaciones en la rama de desarrollo previo a la presentación formal.
-7. **Presentación Presencial Obligatoria:** Asistencia presencial obligatoria de la totalidad del equipo de Softech en el horario y sede asignados para la demostración ante el cliente Martín Rodríguez.
+5. **Ensayo General Punta a Punta (End-to-End):** Simular el flujo completo (Web y Mobile) operando sobre datos locales precargados de forma autónoma con el seeder `poblar.py`, sin dependencia de redes externas.
+6. **Presentación Presencial Obligatoria:** Asistencia presencial obligatoria de la totalidad del equipo de Softech en el horario y sede asignados para la demostración ante el cliente Martín Rodríguez.
 
 ---
 

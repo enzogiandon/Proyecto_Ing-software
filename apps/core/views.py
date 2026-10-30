@@ -159,7 +159,7 @@ class Inicio(LoginRequiredMixin, TemplateView):
         # --------------------------------------------------
         context["remitos_asignados"] = Remito.objects.filter(estado=EstadoRemito.ASIGNADO).count()
         context["itinerarios_asignados"] = Itinerario.objects.filter(estado=EstadoItinerario.ASIGNADO).count()
-        context["importaciones_pendientes"] = ImportacionRemitos.objects.filter(EstadoImportacion.PENDIENTE).count()
+        context["importaciones_pendientes"] = ImportacionRemitos.objects.filter(estado=EstadoImportacion.PENDIENTE).count()
 
         # --------------------------------------------------
         # Conciliación

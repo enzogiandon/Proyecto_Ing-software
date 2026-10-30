@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.db.models import Case, IntegerField, Prefetch, Sum, Count, When
+from django.db.models import Case, Count, IntegerField, Prefetch, Sum, When
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView
 
@@ -9,7 +9,13 @@ from apps.core.models import Transportista
 from apps.remitos.models import Remito
 
 from .forms import CrearItinerariosForm, CrearParadasForm
-from .models import EstadoItinerario, EvidenciaParada, Itinerario, Parada, ProblemaParada
+from .models import (
+    EstadoItinerario,
+    EvidenciaParada,
+    Itinerario,
+    Parada,
+    ProblemaParada,
+)
 from .services import crear_itinerarios, crear_paradas
 
 

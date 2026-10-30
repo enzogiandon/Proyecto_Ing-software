@@ -195,13 +195,13 @@ class Inicio(LoginRequiredMixin, TemplateView):
         context["ultimos_empleados"] = (
             Usuario.objects.filter(is_active=True)
             .prefetch_related("groups")
-            .order_by("-date_joined")[:5]
+            .order_by("-date_joined")[:3]
         )
         context["cobranzas_pendientes"] = (
             Cobranza.objects.filter(estado=EstadoCobranza.REGISTRADO)
-            .order_by("-id")[:5]
+            .order_by("-id")[:3]
         )
-        context["importaciones"] = ImportacionRemitos.objects.all().order_by("-id")[:5]
+        context["importaciones"] = ImportacionRemitos.objects.all().order_by("-id")[:3]
 
         return context
 

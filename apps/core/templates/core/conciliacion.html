@@ -11,7 +11,6 @@
             <p class="text-body home-fecha mb-0">{{ fecha_hoy|capfirst }}</p>
         </div>
         <div class="home-actualizacion">
-            <span class="text-help home-actualizado">Actualizado hace 2 min</span>
             <button type="button" class="home-btn" id="btn-actualizar" onclick="window.location.reload()">
                 <i class="fas fa-rotate"></i>
                 <span>Actualizar</span>
@@ -74,7 +73,7 @@
             <table class="home-tabla">
                 <thead>
                     <tr>
-                        <th class="col-100">Itinerario</th>
+                        <th class="col-100">Parada</th>
                         <th>Transportista</th>
                         <th class="col-140 text-end">Importe</th>
                         <th class="col-130">Estado</th>
@@ -87,12 +86,12 @@
                   <tr class="home-tabla__fila">
                       <td class="fw-medium">
                           {% if cobranza.itinerario_id %}
-                              Itin. {{ cobranza.itinerario_id|stringformat:"04d" }}
+                              Itin. {{ cobranza.parada.id|stringformat:"04d" }}
                           {% else %}
                               -
                           {% endif %}
                       </td>
-                      <td class="home-tabla__texto-secundario">{{ cobranza.transportista }}</td>
+                      <td class="home-tabla__texto-secundario">{{ cobranza.parada.transportista.user.first_name}} {{ cobranza.parada.transportista.last_name }}</td>
                       <td class="text-end">$ {{ cobranza.importe|floatformat:"2g" }}</td>
                       <td>
                           {% if cobranza.estado == "registrado" %}

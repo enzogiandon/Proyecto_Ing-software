@@ -22,10 +22,9 @@
     </header>
 
     <section class="home-indicadores" aria-label="Indicadores">
-        {% include "core/componentes/indicador.html" with etiqueta="Empleados activos" valor=310 pie="transportistas y administrativos" url=url_empleados only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Administrativos sin permisos" valor=2 alerta=1 url=url_empleados only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Vehículos disponibles" valor=186 pie="de" pie_valor=200 url=url_flota only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Vehículos no disponibles" valor=14 alerta=1 url=url_flota only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Empleados activos" valor=empleados_activos url=url_empleados only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Vehículos disponibles" valor=vehiculos_disponibles url=url_flota only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Vehículos no disponibles" valor=vehiculos_asignados url=url_flota only %}
     </section>
 
     <div class="home-paneles">

@@ -20,10 +20,9 @@
     </header>
 
     <section class="home-indicadores" aria-label="Indicadores">
-        {% include "core/componentes/indicador.html" with etiqueta="Cobranzas por validar" valor=318 pie="hoy" url=url_cobranzas only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Pagos con diferencia" valor=7 alerta=1 url=url_pagos only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Pagos no encontrados" valor=3 alerta=1 url=url_pagos only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Arqueo de caja" valor="Pendiente" pie="sin iniciar" url=url_arqueo only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Cobranzas por validar" valor=cobranza_para_validar url=url_cobranzas only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Pagos con diferencia" valor=cobranza_con_diferencia url=url_pagos only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Pagos no encontrados" valor=cobranza_no_encontrados url=url_pagos only %}
     </section>
 
     <div class="home-paneles">

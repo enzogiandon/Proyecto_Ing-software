@@ -73,8 +73,10 @@
 /* ---------- Indicadores (KpiCard) ---------- */
 .home-indicadores {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Se distribuyen automáticamente con un ancho mínimo de 250px (puedes ajustarlo) y crecen para llenar el espacio */
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: var(--spacing-16);
+  width: 100%; /* Asegura que ocupe todo el ancho del contenedor padre */
 }
 .kpi-card {
   position: relative; /* para el stretched-link */

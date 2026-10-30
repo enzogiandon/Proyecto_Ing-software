@@ -84,7 +84,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for emp in empleados %}
+                    {% for emp in ultimos_empleados %}
                         <tr class="home-tabla__fila">
                             <td class="fw-medium">{{ emp.get_rol_display|default:"Transportista" }}</td>
                             <td class="home-tabla__texto-secundario">{{ emp.last_name }}, {{ emp.first_name }}</td>

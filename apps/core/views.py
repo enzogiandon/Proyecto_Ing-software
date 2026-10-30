@@ -9,7 +9,12 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
-from apps.remitos.models import Remito, ImportacionRemitos, EstadoImportacion, EstadoRemito
+from apps.remitos.models import (
+    Remito,
+    ImportacionRemitos,
+    EstadoImportacion,
+    EstadoRemito,
+)
 from apps.itinerarios.models import Parada, EstadoParada, EstadoItinerario, Itinerario
 from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
 
@@ -41,7 +46,10 @@ class CustomLoginView(LoginView):
                 if user.intentos_fallidos >= 5:
                     user.is_active = False
             else:
-                form.add_error(None, "La cuenta se encuentra suspendida. Contacte al administrador.")
+                form.add_error(
+                    None,
+                    "La cuenta se encuentra suspendida. Contacte al administrador.",
+                )
 
             user.save(update_fields=["intentos_fallidos", "is_active"])
 
@@ -146,37 +154,51 @@ class Inicio(LoginRequiredMixin, TemplateView):
         # --------------------------------------------------
         context["empleados_activos"] = Usuario.objects.filter(is_active=True).count()
 
-        # Agregamos ambos estados de vehículos en una sola query a la DB
         vehiculos_stats = Vehiculo.objects.aggregate(
             disponibles=Count("id", filter=Q(estado=EstadoVehiculo.DISPONIBLE)),
-            no_disponibles=Count("id", filter=~Q(estado=EstadoVehiculo.ASIGNADO)),
+            asignados=Count("id", filter=Q(estado=EstadoVehiculo.ASIGNADO)),
         )
         context["vehiculos_disponibles"] = vehiculos_stats["disponibles"]
-        context["vehiculos_asignados"] = vehiculos_stats["no_disponibles"]
+        context["vehiculos_asignados"] = vehiculos_stats["asignados"]
+
+        context["ultimos_empleados"] = (
+            Usuario.objects.filter(is_active=True)
+            .prefetch_related("groups")
+            .order_by("-date_joined")[:5]
+        )
 
         # --------------------------------------------------
         # Planificación
         # --------------------------------------------------
-        context["remitos_asignados"] = Remito.objects.filter(estado=EstadoRemito.ASIGNADO).count()
-        context["itinerarios_asignados"] = Itinerario.objects.filter(estado=EstadoItinerario.ASIGNADO).count()
-        context["importaciones_pendientes"] = ImportacionRemitos.objects.filter(estado=EstadoImportacion.PENDIENTE).count()
-
-        # --------------------------------------------------
-        # Conciliación
-        # --------------------------------------------------
-        context["cobranzas_para_validar"] = Cobranza.objects.filter(
-            estado=EstadoCobranza.REGISTRADO
+        context["remitos_asignados"] = Remito.objects.filter(
+            estado=EstadoRemito.ASIGNADO
+        ).count()
+        context["itinerarios_asignados"] = Itinerario.objects.filter(
+            estado=EstadoItinerario.ASIGNADO
+        ).count()
+        context["importaciones_pendientes"] = ImportacionRemitos.objects.filter(
+            estado=EstadoImportacion.PENDIENTE
         ).count()
 
-        # Mismo caso: pagos con diferencia y no encontrados en una sola query
+        # --------------------------------------------------
+        # Conciliación (Cobranzas)
+        # --------------------------------------------------
         pagos_stats = Cobranza.objects.aggregate(
             para_validar=Count("id", filter=Q(estado=EstadoCobranza.REGISTRADO)),
             con_diferencia=Count("id", filter=Q(estado=EstadoCobranza.DIFIERE)),
             no_encontrados=Count("id", filter=Q(estado=EstadoCobranza.NO_ENCONTRADO)),
         )
+        # Definimos singular y plural para compatibilidad con cualquier template
         context["cobranzas_para_validar"] = pagos_stats["para_validar"]
+        context["cobranza_para_validar"] = pagos_stats["para_validar"]
         context["cobranza_con_diferencia"] = pagos_stats["con_diferencia"]
         context["cobranza_no_encontrados"] = pagos_stats["no_encontrados"]
+
+        context["cobranzas_pendientes"] = (
+            Cobranza.objects.filter(estado=EstadoCobranza.REGISTRADO)
+            .select_related("itinerario", "transportista")
+            .order_by("-id")[:5]
+        )
 
         return context
 

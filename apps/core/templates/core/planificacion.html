@@ -25,8 +25,8 @@
 
     <section class="home-indicadores" aria-label="Indicadores">
         {% include "core/componentes/indicador.html" with etiqueta="Remitos pendientes de asignar" valor=remitos_asignados url=url_remitos only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Itinerarios del día" valor=itinerarios_asignados pie="hoy" url=url_itinerarios only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Importaciones del día" valor=importaciones_pendientes url=url_importaciones only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Itinerarios asignados" valor=itinerarios_asignados pie="hoy" url=url_itinerarios only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Importaciones pendientes" valor=importaciones_pendientes url=url_importaciones only %}
     </section>
 
     <div class="home-paneles">

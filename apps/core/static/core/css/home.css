@@ -73,11 +73,11 @@
 /* ---------- Indicadores (KpiCard) ---------- */
 .home-indicadores {
   display: grid;
-  /* Se distribuyen automáticamente con un ancho mínimo de 250px (puedes ajustarlo) y crecen para llenar el espacio */
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-16);
-  width: 100%; /* Asegura que ocupe todo el ancho del contenedor padre */
+  width: 100%;
 }
+
 .kpi-card {
   position: relative; /* para el stretched-link */
   display: flex;
@@ -115,7 +115,7 @@
 /* ---------- Paneles ---------- */
 .home-paneles {
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   gap: var(--spacing-16);
 }
 .home-panel {
@@ -201,14 +201,12 @@
 .home-ver-todo.is-disabled { opacity: 0.55; pointer-events: none; }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1199px) {
-  .home-indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 @media (max-width: 991px) {
   .home-paneles { flex-direction: column; }
   .home-panel--acciones { flex: 1 1 auto; width: 100%; }
 }
-@media (max-width: 575px) {
-  .home-indicadores { grid-template-columns: minmax(0, 1fr); }
+
+@media (max-width: 768px) {
+  .home-indicadores { grid-template-columns: 1fr; }
   .home-tabla { display: block; overflow-x: auto; }
 }

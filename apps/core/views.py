@@ -134,9 +134,15 @@ class SuspenderEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
 
     def post(self, request, pk):
         empleado = get_object_or_404(Usuario, pk=pk)
-        empleado.is_active = False
-        empleado.save(update_fields=["is_active"])
-        messages.success(request, "Cuenta del empleado deshabilitada.")
+        if empleado and empleado.is_active:
+            empleado.is_active = False
+            empleado.save(update_fields=["is_active"])
+            messages.success(request, "Cuenta del empleado deshabilitada.")
+        else:
+            empleado.is_active = True
+            empleado.save(update_fields=["is_active"])
+            messages.success(request, "Cuenta del empleado habilitada.")
+
         return redirect("core:empleado_lista")
 
 

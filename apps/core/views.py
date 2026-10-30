@@ -199,7 +199,6 @@ class Inicio(LoginRequiredMixin, TemplateView):
         )
         context["cobranzas_pendientes"] = (
             Cobranza.objects.filter(estado=EstadoCobranza.REGISTRADO)
-            .select_related("itinerario", "transportista")
             .order_by("-id")[:5]
         )
         context["importaciones"] = ImportacionRemitos.objects.all().order_by("-id")[:5]

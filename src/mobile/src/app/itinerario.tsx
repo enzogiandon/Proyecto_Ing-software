@@ -275,7 +275,7 @@ export default function ItinerarioScreen() {
                 resizeMode="contain"
               />
               <Text style={styles.botonContactarBaseTexto}>
-                Contactar a Base de Despacho
+                Contactar a Soporte
               </Text>
             </TouchableOpacity>
           </View>

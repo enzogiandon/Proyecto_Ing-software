@@ -23,6 +23,8 @@ AUTH_USER_MODEL = "core.Usuario"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+AUTH_PASSWORD_VALIDATORS = []
+
 load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production

@@ -1,8 +1,9 @@
 from decimal import Decimal
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Sum
 from rest_framework import exceptions, serializers
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from apps.cobranza.models import MedioPago
@@ -23,8 +24,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         username = attrs.get(self.username_field)
         password = attrs.get("password")
 
-        # Buscamos si el usuario existe para chequear su estado antes
-        user = User.objects.filter(**{self.username_field: username}).first()
+        try:
+            user = User.objects.get(**{self.username_field: username})
+        except User.DoesNotExist:
+            raise AuthenticationFailed("Credenciales inválidas.")
+
 
         if user and user.check_password(password) and not user.is_active:
             raise exceptions.AuthenticationFailed(
@@ -34,7 +38,22 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 }
             )
 
-        # Si no está suspendido, sigue con la validación estándar de Simple JWT
+        authenticated_user = authenticate(username=username, password=password)
+
+        if not authenticated_user:
+            user.intentos_fallidos += 1
+            if user.intentos_fallidos >= 5:
+                user.is_active = False
+                user.save(update_fields=['intentos_fallidos', 'is_active'])
+                raise AuthenticationFailed("Superaste el límite de intentos. Cuenta bloqueada.")
+
+            user.save(update_fields=['intentos_fallidos'])
+            raise AuthenticationFailed("Contraseña incorrecta.")
+
+        if user.intentos_fallidos > 0:
+            user.intentos_fallidos = 0
+            user.save(update_fields=['intentos_fallidos'])
+
         return super().validate(attrs)
 
 

@@ -154,18 +154,13 @@ class Inicio(LoginRequiredMixin, TemplateView):
         # --------------------------------------------------
         context["empleados_activos"] = Usuario.objects.filter(is_active=True).count()
 
+        # Agregamos ambos estados de vehículos en una sola query a la DB
         vehiculos_stats = Vehiculo.objects.aggregate(
             disponibles=Count("id", filter=Q(estado=EstadoVehiculo.DISPONIBLE)),
-            asignados=Count("id", filter=Q(estado=EstadoVehiculo.ASIGNADO)),
+            no_disponibles=Count("id", filter=Q(estado=EstadoVehiculo.ASIGNADO)),
         )
         context["vehiculos_disponibles"] = vehiculos_stats["disponibles"]
-        context["vehiculos_asignados"] = vehiculos_stats["asignados"]
-
-        context["ultimos_empleados"] = (
-            Usuario.objects.filter(is_active=True)
-            .prefetch_related("groups")
-            .order_by("-date_joined")[:5]
-        )
+        context["vehiculos_asignados"] = vehiculos_stats["no_disponibles"]
 
         # --------------------------------------------------
         # Planificación
@@ -181,26 +176,36 @@ class Inicio(LoginRequiredMixin, TemplateView):
         ).count()
 
         # --------------------------------------------------
-        # Conciliación (Cobranzas)
+        # Conciliación
         # --------------------------------------------------
+        context["cobranzas_para_validar"] = Cobranza.objects.filter(
+            estado=EstadoCobranza.REGISTRADO
+        ).count()
+
+        # Mismo caso: pagos con diferencia y no encontrados en una sola query
         pagos_stats = Cobranza.objects.aggregate(
             para_validar=Count("id", filter=Q(estado=EstadoCobranza.REGISTRADO)),
             con_diferencia=Count("id", filter=Q(estado=EstadoCobranza.DIFIERE)),
             no_encontrados=Count("id", filter=Q(estado=EstadoCobranza.NO_ENCONTRADO)),
         )
-        # Definimos singular y plural para compatibilidad con cualquier template
         context["cobranzas_para_validar"] = pagos_stats["para_validar"]
-        context["cobranza_para_validar"] = pagos_stats["para_validar"]
         context["cobranza_con_diferencia"] = pagos_stats["con_diferencia"]
         context["cobranza_no_encontrados"] = pagos_stats["no_encontrados"]
 
+        context["ultimos_empleados"] = (
+            Usuario.objects.filter(is_active=True)
+            .prefetch_related("groups")
+            .order_by("-date_joined")[:5]
+        )
         context["cobranzas_pendientes"] = (
             Cobranza.objects.filter(estado=EstadoCobranza.REGISTRADO)
             .select_related("itinerario", "transportista")
             .order_by("-id")[:5]
         )
+        context["importaciones"] = ImportacionRemitos.objects.all().order_by("-id")[:5]
 
         return context
+
 
 def error_404(request, exception):
     return render(request, "errores/404.html", status=404)

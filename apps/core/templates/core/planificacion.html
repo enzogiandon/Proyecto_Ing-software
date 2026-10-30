@@ -79,7 +79,6 @@
                 <thead>
                     <tr>
                         <th class="col-100">Lote</th>
-                        <th>Archivo</th>
                         <th class="col-80 text-end">Remitos</th>
                         <th class="col-130">Estado</th>
                         <th class="col-chevron"><span class="visually-hidden">Ver detalle</span></th>
@@ -90,13 +89,6 @@
                         {% url 'remitos:importacion_detalle' lote.id as url_lote %}
                         <tr class="home-tabla__fila">
                             <td class="fw-medium">Lote {{ lote.id|stringformat:"04d" }}</td>
-                            <td class="home-tabla__texto-secundario">
-                                {% if lote.archivo %}
-                                    {{ lote.archivo.name }}
-                                {% else %}
-                                    Sin archivo
-                                {% endif %}
-                            </td>
                             <td class="text-end">{% if lote.cantidad %}{{ lote.cantidad }}{% else %}—{% endif %}</td>
                             <td>
                                 {% if lote.estado == "exito" %}

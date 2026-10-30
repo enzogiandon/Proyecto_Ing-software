@@ -1,10 +1,12 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Image, Text, TouchableOpacity, View } from 'react-native';
 import ValidarCobro from '../screens/ValidarCobro';
 import {
   getIdParadaSeleccionadaParaCobro,
   actualizarEstadoCobroParada,
+  getParadaSeleccionada,
+  obtenerParadaSeleccionadaOId,
 } from '../services/paradaService';
 import {
   registrarCobranza,
@@ -15,6 +17,7 @@ import {
 
 export default function ValidarCobroPage() {
   const router = useRouter();
+  const params = typeof useLocalSearchParams === 'function' ? useLocalSearchParams<{ paradaId?: string }>() : {};
   const [parada, setParada] = useState<ParadaParaCobro | null>(null);
   const [cargando, setCargando] = useState(true);
   const [mensajeEstado, setMensajeEstado] = useState('Verificando información de la entrega…');
@@ -24,16 +27,30 @@ export default function ValidarCobroPage() {
 
   const activarModoDemo = useCallback(() => {
     setModoDemo(true);
-    const id = getIdParadaSeleccionadaParaCobro() ?? 5;
+    const paramId = params?.paradaId ? Number(params.paradaId) : undefined;
+    const seleccionada = typeof obtenerParadaSeleccionadaOId === 'function'
+      ? obtenerParadaSeleccionadaOId(paramId)
+      : (typeof getParadaSeleccionada === 'function' ? getParadaSeleccionada() : null);
+
+    const id = seleccionada?.id ?? paramId ?? (typeof getIdParadaSeleccionadaParaCobro === 'function' ? getIdParadaSeleccionadaParaCobro() : null) ?? 5;
+    const totalCentavos = seleccionada?.montoCobranza
+      ? Math.round(seleccionada.montoCobranza * 100)
+      : 14850000;
+    const orden = seleccionada?.orden ?? 5;
+    const nombreComercio = seleccionada?.comercio?.razonSocial ?? 'Almacén Don Pedro';
+    const direccion = seleccionada?.comercio
+      ? `${seleccionada.comercio.domicilio}${seleccionada.comercio.localidad ? ` · ${seleccionada.comercio.localidad}` : ''}`
+      : 'Av. San Martín 2450 · San Martín';
+
     setParada({
       id,
-      totalCentavos: 14850000,
-      orden: 5,
-      nombreComercio: 'Almacén Don Pedro',
-      direccion: 'Av. San Martín 2450 · San Martín',
+      totalCentavos,
+      orden,
+      nombreComercio,
+      direccion,
     });
     setCargando(false);
-  }, []);
+  }, [params?.paradaId]);
 
   useFocusEffect(useCallback(() => {
     let activa = true;
@@ -82,7 +99,9 @@ export default function ValidarCobroPage() {
   }, [activarModoDemo]));
 
   const volverAParada = () => {
-    const id = parada?.id ?? getIdParadaSeleccionadaParaCobro();
+    const paramId = params?.paradaId ? Number(params.paradaId) : null;
+    const seleccionadaId = typeof getParadaSeleccionada === 'function' ? getParadaSeleccionada()?.id : null;
+    const id = parada?.id ?? paramId ?? seleccionadaId ?? getIdParadaSeleccionadaParaCobro();
     router.replace({
       pathname: '/parada',
       params: {

@@ -376,7 +376,7 @@ export default function LoginScreen() {
               }}
               activeOpacity={0.8}
             >
-              <Text style={styles.modalBotonWhatsAppTexto}>💬 Abrir chat de WhatsApp</Text>
+              <Text style={styles.modalBotonWhatsAppTexto}>Abrir chat de WhatsApp</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

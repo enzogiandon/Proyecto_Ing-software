@@ -118,28 +118,28 @@ class EmpleadoCreateForm(forms.ModelForm):
             self.add_error("password_confirm", "Las contraseñas no coinciden.")
         return cleaned_data
 
-        def save(self, commit=True):
-            user = super().save(commit=False)
-            user.set_password(self.cleaned_data["password"])
-            if commit:
-                with transaction.atomic():
-                    user.save()
-                    nuevos_grupos = self.cleaned_data.get("grupos", [])
-                    user.groups.set(nuevos_grupos)
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password"])
+        if commit:
+            with transaction.atomic():
+                user.save()
+                nuevos_grupos = self.cleaned_data.get("grupos", [])
+                user.groups.set(nuevos_grupos)
 
-                    nombres_grupos = [g.name for g in nuevos_grupos]
-                    vehiculo = self.cleaned_data.get("vehiculo")
+                nombres_grupos = [g.name for g in nuevos_grupos]
+                vehiculo = self.cleaned_data.get("vehiculo")
+                
+                if Grupos.TRANSPORTISTA in nombres_grupos:
+                    perfil, _ = Transportista.objects.get_or_create(usuario=user)
+                    perfil.vehiculo = vehiculo
+                    perfil.save(update_fields=["vehiculo"])
                     
-                    if Grupos.TRANSPORTISTA in nombres_grupos:
-                        perfil, _ = Transportista.objects.get_or_create(usuario=user)
-                        perfil.vehiculo = vehiculo
-                        perfil.save(update_fields=["vehiculo"])
-                        
-                        if vehiculo:
-                            vehiculo.estado = EstadoVehiculo.ASIGNADO
-                            vehiculo.save(update_fields=["estado"])
+                    if vehiculo:
+                        vehiculo.estado = EstadoVehiculo.ASIGNADO
+                        vehiculo.save(update_fields=["estado"])
 
-            return user
+        return user
 
 class EmpleadoUpdateForm(forms.ModelForm):
     # Campos de contraseña opcionales para edición

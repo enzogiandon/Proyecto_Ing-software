@@ -44,14 +44,15 @@ html, body {
 }
 
 .isotipo-ya #speed-lines {
-    fill: var(--bg-surface, #ffffff);
+    fill: var(--color-accent, #f4661b);
 }
 
 .isotipo-ya #camion-caja {
     fill: var(--bg-surface, #ffffff);
 }
 
-.isotipo-ya #cabina {
+.isotipo-ya #cabina, 
+.isotipo-ya #logo-text {
     fill: var(--color-accent, #f4661b);
 }
 
@@ -60,7 +61,7 @@ html, body {
     font-weight: 700;
     letter-spacing: -0.02em;
     margin: 0 0 0.4rem;
-    color: var(--bg-surface, #FFFFFF);
+    color: var(--bg-surface, #fff6ec);
     display: flex;
     align-items: center;
     justify-content: center;

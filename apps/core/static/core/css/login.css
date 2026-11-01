@@ -48,7 +48,7 @@ html, body {
 }
 
 .isotipo-ya #camion-caja {
-    fill: var(--bg, #fff6ec);
+    fill: var(--color-bg, #ffffff);
 }
 
 .isotipo-ya #cabina, 

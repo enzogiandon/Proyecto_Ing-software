@@ -8,6 +8,7 @@ from django.utils import timezone
 
 
 class EstadoImportacion(models.TextChoices):
+    PENDIENTE = "pendiente", "Pendiente"
     EXITO = "exito", "Exito"
     RECHAZADO = "rechazado", "Rechazado"
 

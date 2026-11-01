@@ -14,19 +14,19 @@
             <p class="text-body home-fecha mb-0">{{ fecha_hoy|capfirst }}</p>
         </div>
         <div class="home-actualizacion">
-            <span class="text-help home-actualizado">Actualizado 3 minutos</span>
-            <button type="button" class="home-btn" id="btn-actualizar">
+            <span class="text-help home-actualizado">Actualizado hace 2 min</span>
+            <button type="button" class="home-btn" id="btn-actualizar" onclick="window.location.reload()">
                 <i class="fas fa-rotate"></i>
                 <span>Actualizar</span>
             </button>
         </div>
     </header>
 
+
     <section class="home-indicadores" aria-label="Indicadores">
-        {% include "core/componentes/indicador.html" with etiqueta="Remitos pendientes de asignar" valor=1240 pie="hoy" url=url_remitos only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Itinerarios del día" valor=172 pie="hoy" url=url_itinerarios only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Importaciones del día" valor=6 pie="procesadas" url=url_importaciones only %}
-        {% include "core/componentes/indicador.html" with etiqueta="Lotes rechazados" valor=2 alerta=1 url=url_importaciones only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Remitos pendientes de asignar" valor=remitos_asignados url=url_remitos only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Itinerarios asignados" valor=itinerarios_asignados pie="hoy" url=url_itinerarios only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Importaciones pendientes" valor=importaciones_pendientes url=url_importaciones only %}
     </section>
 
     <div class="home-paneles">
@@ -79,7 +79,6 @@
                 <thead>
                     <tr>
                         <th class="col-100">Lote</th>
-                        <th>Archivo</th>
                         <th class="col-80 text-end">Remitos</th>
                         <th class="col-130">Estado</th>
                         <th class="col-chevron"><span class="visually-hidden">Ver detalle</span></th>
@@ -90,13 +89,6 @@
                         {% url 'remitos:importacion_detalle' lote.id as url_lote %}
                         <tr class="home-tabla__fila">
                             <td class="fw-medium">Lote {{ lote.id|stringformat:"04d" }}</td>
-                            <td class="home-tabla__texto-secundario">
-                                {% if lote.archivo %}
-                                    {{ lote.archivo.name }}
-                                {% else %}
-                                    Sin archivo
-                                {% endif %}
-                            </td>
                             <td class="text-end">{% if lote.cantidad %}{{ lote.cantidad }}{% else %}—{% endif %}</td>
                             <td>
                                 {% if lote.estado == "exito" %}

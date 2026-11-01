@@ -1,8 +1,10 @@
 from decimal import Decimal
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.db.models import Sum
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from apps.cobranza.models import MedioPago
 from apps.itinerarios.models import (
@@ -15,6 +17,44 @@ from apps.itinerarios.models import (
 from apps.remitos.models import Comercio, Remito
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        username = attrs.get(self.username_field)
+        password = attrs.get("password")
+
+        try:
+            user = User.objects.get(**{self.username_field: username})
+        except User.DoesNotExist:
+            raise AuthenticationFailed("Credenciales inválidas.")
+
+
+        if user and user.check_password(password) and not user.is_active:
+            raise exceptions.AuthenticationFailed(
+                {
+                    "detail": "Tu cuenta se encuentra suspendida. Contacta al administrador.",
+                    "codigo": "CUENTA_SUSPENDIDA",
+                }
+            )
+
+        authenticated_user = authenticate(username=username, password=password)
+
+        if not authenticated_user:
+            user.intentos_fallidos += 1
+            if user.intentos_fallidos >= 5:
+                user.is_active = False
+                user.save(update_fields=['intentos_fallidos', 'is_active'])
+                raise AuthenticationFailed("Superaste el límite de intentos. Cuenta bloqueada.")
+
+            user.save(update_fields=['intentos_fallidos'])
+            raise AuthenticationFailed("Contraseña incorrecta.")
+
+        if user.intentos_fallidos > 0:
+            user.intentos_fallidos = 0
+            user.save(update_fields=['intentos_fallidos'])
+
+        return super().validate(attrs)
 
 
 def calcular_monto_recaudar(parada) -> str:
@@ -84,9 +124,7 @@ class DetalleParadaSerializer(serializers.ModelSerializer):
     comercio = ComercioSerializer(read_only=True)
     remitos = RemitoSerializer(many=True, read_only=True)
     monto_recaudar = serializers.SerializerMethodField()
-    evidencias = EvidenciaParadaSerializer(
-        many=True, read_only=True
-    )
+    evidencias = EvidenciaParadaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Parada

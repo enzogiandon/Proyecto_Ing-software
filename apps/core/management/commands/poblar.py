@@ -27,7 +27,7 @@ Usuario = get_user_model()
 
 class Command(BaseCommand):
     help = (
-        "Carga datos maestros (Vehículos, Usuarios Chofer, Marcas, Comercios) "
+        "Carga datos maestros (Superusuario, Vehículos, Usuarios Chofer, Marcas, Comercios) "
         "y Remitos PENDIENTES."
     )
 
@@ -71,7 +71,28 @@ class Command(BaseCommand):
                 Usuario.objects.filter(is_superuser=False).delete()
 
             # ------------------------------------------------------------------
-            # 1. Vehículos
+            # 1. Superusuario Administrador
+            # ------------------------------------------------------------------
+            admin_user, _ = Usuario.objects.get_or_create(
+                username="11111111",
+                defaults={
+                    "first_name": "Administrador",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": True,
+                    "is_active": True,
+                },
+            )
+            admin_user.is_staff = True
+            admin_user.is_superuser = True
+            admin_user.is_active = True
+            admin_user.set_password("11111111")
+            admin_user.save()
+
+            # ------------------------------------------------------------------
+            # 2. Vehículos
             # ------------------------------------------------------------------
             vehiculos_data = [
                 {
@@ -101,7 +122,7 @@ class Command(BaseCommand):
                 vehiculos[v_data["patente"]] = vehiculo
 
             # ------------------------------------------------------------------
-            # 2. Usuarios y Perfiles Transportista
+            # 3. Usuarios y Perfiles Transportista
             # ------------------------------------------------------------------
             choferes_data = [
                 {
@@ -145,7 +166,7 @@ class Command(BaseCommand):
                     transportista.save(update_fields=["vehiculo"])
 
             # ------------------------------------------------------------------
-            # 3. Marcas
+            # 4. Marcas
             # ------------------------------------------------------------------
             marcas_data = [
                 {
@@ -178,7 +199,7 @@ class Command(BaseCommand):
                 marcas[m_data["nombre"]] = marca
 
             # ------------------------------------------------------------------
-            # 4. Comercios
+            # 5. Comercios
             # ------------------------------------------------------------------
             comercios_data = [
                 {
@@ -233,7 +254,7 @@ class Command(BaseCommand):
                 comercios[c_data["cuit"]] = comercio
 
             # ------------------------------------------------------------------
-            # 5. Remitos PENDIENTES
+            # 6. Remitos PENDIENTES
             # ------------------------------------------------------------------
             remitos_definicion = [
                 # Supermercado Los Hermanos (2 marcas distintas para probar consolidación en una parada)
@@ -319,6 +340,7 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros y remitos cargados exitosamente.")
         )
+        self.stdout.write("  • Superusuario: 11111111 (clave: 11111111)")
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
         self.stdout.write(

@@ -16,7 +16,7 @@
         </span>
         <i class="fas fa-chevron-right kpi-card__chevron" aria-hidden="true"></i>
     </div>
-    <p class="text-kpi kpi-card__valor">{{ valor }}</p>
+    <p class="text-kpi kpi-card__valor">{{ valor|default:0 }}</p>
     {% if alerta %}
         <p class="text-badge kpi-card__pie kpi-card__pie--alerta">
             <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>

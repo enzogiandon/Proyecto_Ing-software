@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Importaciones - RepartosYA{% endblock %}
+
+
+{% block extra_css %}
+<!-- CSS para los botones principales -->
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'remitos/css/remitos.css' %}" rel="stylesheet">
+<link href="{% static 'remitos/css/importar_csv.css' %}" rel="stylesheet">
+{% endblock %}
+
+
+{% block content %}
+    <div class="remitos-page">
+        <div>
+            <a href="{% url 'remitos:importacion_lista' %}" class="home-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver a importaciones</span>
+            </a>
+        </div>
+        <header class="remitos-header">
+            <div class="remitos-header-info">
+                <h1 class="text-title mb-1">Subir Planilla</h1>
+                <p class="text-body text-c-secondary mb-0">Agrega un archivo CSV para importar datos</p>
+            </div>
+        </header>
+
+        <!-- Mensajes del backend (éxito / error) -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} py-2">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- FORMULARIO DIRECTO -->
+        <form method="post" enctype="multipart/form-data" class="panel-form">
+            {% csrf_token %}
+
+            <div class="campo-form{% if form.marca.errors %} campo-form--error{% endif %}">
+                <label for="{{ form.marca.id_for_label }}" class="campo-form__etiqueta">Marca</label>
+                {{ form.marca }}
+                {% for error in form.marca.errors %}
+                    <p class="campo-form__error" role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+            
+            <div class="campo-form{% if form.archivo.errors %} campo-form--error{% endif %}">
+                <label for="{{ form.archivo.id_for_label }}" class="campo-form__etiqueta">Archivo</label>
+                {{ form.archivo }}
+                {% for error in form.archivo.errors %}
+                    <p class="campo-form__error" role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="acciones-form__botones">
+                <button type="submit" class="home-btn home-btn--primary">Subir</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

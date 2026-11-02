@@ -1,0 +1,121 @@
+{% block content %}
+{% url 'core:empleado_lista' as url_empleados %}
+{% url 'core:empleado_crear' as url_empleado_nuevo %}
+{% url 'core:vehiculo_lista' as url_flota %}
+{% url 'core:vehiculo_crear' as url_vehiculo_nuevo %}
+{% url 'core:permisos' as url_permisos %}{# tentativo #}
+
+{% now "l, j \d\e F \d\e Y" as fecha_hoy %}
+<div class="home">
+    <header class="home-encabezado">
+        <div>
+            <h1 class="text-title mb-1">Inicio</h1>
+            <p class="text-body home-fecha mb-0">{{ fecha_hoy|capfirst }}</p>
+        </div>
+        <div class="home-actualizacion">
+            <button type="button" class="home-btn" id="btn-actualizar" onclick="window.location.reload()">
+                <i class="fas fa-rotate"></i>
+                <span>Actualizar</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="home-indicadores" aria-label="Indicadores">
+        {% include "core/componentes/indicador.html" with etiqueta="Empleados activos" valor=empleados_activos url=url_empleados only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Vehículos disponibles" valor=vehiculos_disponibles url=url_flota only %}
+        {% include "core/componentes/indicador.html" with etiqueta="Vehículos no disponibles" valor=vehiculos_asignados url=url_flota only %}
+    </section>
+
+    <div class="home-paneles">
+        <section class="home-panel home-panel--acciones">
+            <h2 class="text-section">Acciones rápidas</h2>
+
+            <!-- Botón de "Agregar personal" -->
+            {% if url_empleado_nuevo %}
+            <a href="{{ url_empleado_nuevo }}" class="home-btn home-btn--bloque home-btn--primary">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span>Agregar personal</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque home-btn--primary is-disabled" aria-disabled="true">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span>Agregar personal</span>
+            </span>
+            {% endif %}
+            
+            <!-- Botón de "Agregar vehículo" -->
+            {% if url_vehiculo_nuevo %}
+            <a href="{{ url_vehiculo_nuevo }}" class="home-btn home-btn--bloque">
+                <i class="fas fa-truck" aria-hidden="true"></i>
+                <span>Agregar vehículo</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
+                <i class="fas fa-truck" aria-hidden="true"></i>
+                <span>Agregar vehículo</span>
+            </span>
+            {% endif %}
+            
+            <!-- Botón de "Asignar permisos" -->
+            {% if url_permisos %}
+            <a href="{{ url_permisos }}" class="home-btn home-btn--bloque">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                <span>Asignar permisos</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                <span>Asignar permisos</span>
+            </span>
+            {% endif %}
+        </section>
+
+        <section class="home-panel home-panel--tabla">
+            <h2 class="text-section">Pendientes de administración</h2>
+            <table class="home-tabla">
+                <thead>
+                    <tr>
+                        <th class="col-130">Rol</th>
+                        <th>Nombre</th>
+                        <th class="col-140 text-end">Desde</th>
+                        <th class="col-130">Estado</th>
+                        <th class="col-chevron"><span class="visually-hidden">Ver detalle</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in ultimos_empleados %}
+                        <tr class="home-tabla__fila">
+                            <td class="fw-medium">{{ emp.get_rol_display|default:"Transportista" }}</td>
+                            <td class="home-tabla__texto-secundario">{{ emp.last_name }}, {{ emp.first_name }}</td>
+                            <td class="text-end">Hoy</td>
+                            <td>
+                                {% if emp.is_active %}
+                                <span class="estado-badge estado-badge--info text-badge">Activo</span>
+                                {% else %}
+                                <span class="estado-badge estado-badge--error text-badge">Suspendido</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-chevron">
+                                <a href="{% url 'core:empleado_editar' emp.pk %}" class="stretched-link home-tabla__chevron" aria-label="Ver detalle">
+                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="home-tabla__vacia">No hay pendientes de administración.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if url_empleados %}
+            <a href="{{ url_empleados }}" class="home-ver-todo">
+                <span>Ver todos los empleados</span><i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            {% else %}
+            <span class="home-ver-todo is-disabled" aria-disabled="true">
+                <span>Ver todos los empleados</span><i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </span>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

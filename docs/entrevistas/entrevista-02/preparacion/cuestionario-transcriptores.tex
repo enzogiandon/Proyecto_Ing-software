@@ -1,0 +1,261 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\IfFileExists{spanish.ldf}{\usepackage[spanish,es-tabla]{babel}}{}
+\usepackage[a4paper, left=1.4cm, right=1.4cm, top=2.2cm, bottom=2.0cm]{geometry}
+\usepackage{lmodern}
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{amssymb}
+
+% Definición de tonos sobrios
+\definecolor{grisCabecera}{gray}{0.92}
+\definecolor{grisSub}{gray}{0.96}
+\definecolor{azulPrimario}{RGB}{20, 45, 85}
+\definecolor{textoMuted}{gray}{0.35}
+
+% Configuración de listas compactas
+\setlist{nosep, leftmargin=1.2em, topsep=2pt, itemsep=2pt}
+
+% Configuración de títulos
+\titleformat{\section}
+  {\normalfont\small\bfseries\color{azulPrimario}}
+  {}{0em}
+  {}
+  [{\titlerule[0.5pt]}]
+
+\titlespacing*{\section}{0pt}{7pt}{3pt}
+
+% Encabezados y pies de página
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{\small\textbf{Softech} \textbar\ Cuestionario de Transcripción \textbar\ \textbf{Entrevista 2}}
+\fancyhead[R]{\small\textsl{Canal: Discord (Virtual)}}
+\fancyfoot[L]{\footnotesize\textcolor{textoMuted}{Planilla de transcripción de mesa (Duración: 30 minutos)}}
+\fancyfoot[R]{\small Hoja \thepage\ de \pageref{LastPage}}
+
+% Comando auxiliar para espacios de notas
+\newcommand{\espacioNotas}[1]{%
+  \vspace{2pt}%
+  \noindent\textbf{\footnotesize Registro / Notas textuales:}\par
+  \noindent\fbox{%
+    \parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{%
+      \vspace{#1pt}%
+    }%
+  }%
+  \vspace{3pt}%
+}
+
+\begin{document}
+
+% ENCABEZADO INSTITUCIONAL
+\noindent
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+  {\Large\bfseries\color{azulPrimario} PROTOCOLO DE TRANSCRIPCIÓN EN MESA} & \textbf{\normalsize ROL: TRANSCRIPTORES} \\
+  \textit{Empresa: Softech \textbar\ Proyecto: Plataforma Logística y Conciliación} & \small Registro de Requerimientos (30 min) \\
+\end{tabularx}
+\vspace{1pt}
+\hrule height 1pt
+\vspace{3pt}
+
+% TABLA DE METADATOS TIPO FICHA
+\noindent
+\begin{tabularx}{\textwidth}{|X|X|X|X|}
+\hline
+\rowcolor{grisCabecera}
+\textbf{Entrevistado:} Martín Rodríguez & \textbf{Fecha:} 14/09/2026 & \textbf{Hora:} 17:00 hs & \textbf{Duración:} 30 minutos \\
+\hline
+\multicolumn{4}{|p{\dimexpr\textwidth-2\tabcolsep-2\arrayrulewidth\relax}|}{%
+  \small\textbf{Transcriptores responsables:} \hrulefill%
+} \\
+\hline
+\end{tabularx}
+
+\vspace{2pt}
+
+\noindent
+\colorbox{grisSub}{%
+  \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
+    \scriptsize\textbf{Instrucciones para los transcriptores:}
+    \textbf{(1)} Registrar textualmente cifras, porcentajes, plazos y nombres de herramientas mencionadas.
+    \textbf{(2)} Marcar las casillas $[\quad]$ cuando Martín confirme o descarte una opción.
+    \textbf{(3)} Respetar el tiempo acotado de 30 minutos asignado al encuentro.
+  }%
+}
+
+\vspace{2pt}
+
+% BLOQUE 1
+\section*{Bloque 1: Apertura, Validación Rápida y Límites del Sistema [$\sim$5 min]}
+
+\noindent
+\textbf{1.1. Recepción y revisión de la Minuta E1:}
+\espacioNotas{22}
+
+\noindent
+\textbf{1.2. Punteo rápido de confirmación dimensional:}
+\begin{itemize}[label=$\square$]
+  \item 35 partidos zona sur \quad $\square$ 6 centros de acopio \quad $\square$ 200 camiones \quad $\square$ 300 transportistas \quad $\square$ 10 administrativos
+\end{itemize}
+\espacioNotas{16}
+
+\noindent
+\textbf{1.3. Punto de inicio del sistema en la cadena logística:}
+\begin{itemize}[label=$\square$]
+  \item Desde centro de acopio (última milla a comercios) \quad $\square$ Incluye flete fábrica $\rightarrow$ depósito
+\end{itemize}
+\espacioNotas{18}
+
+\noindent
+\textbf{1.4. Exclusiones confirmadas de alcance:}
+\begin{itemize}[label=$\square$]
+  \item Sin acceso directo de comercios barriales \quad $\square$ Sin acceso de clientes finales \quad $\square$ Remito papel legal obligatorio
+\end{itemize}
+\espacioNotas{16}
+
+\noindent
+\textbf{1.5. Modificaciones con respecto a lo charlado previamente:}
+\espacioNotas{20}
+
+\noindent
+\textbf{1.6. Cierre de la idea inicial (Móvil choferes + Escritorio administrativos):}
+\espacioNotas{22}
+
+% BLOQUE 2
+\section*{Bloque 2: Usuarios, Roles y Plataformas de Acceso [$\sim$5 min]}
+
+\noindent
+\textbf{2.1. Tipos de roles en la empresa:}
+\begin{itemize}[label=$\square$]
+  \item Transportista (Chofer) \quad $\square$ Administrativo \quad $\square$ Supervisor de depósito \quad $\square$ Administrador general
+\end{itemize}
+\espacioNotas{20}
+
+\noindent
+\textbf{2.2. Plataformas de acceso asignadas por rol:}
+\begin{itemize}[label=$\square$]
+  \item Choferes: Exclusivo App Móvil \quad $\square$ Administrativos: Exclusivo PC Escritorio / Web
+\end{itemize}
+\espacioNotas{18}
+
+\noindent
+\textbf{2.3. Unicidad de cuentas y altas/bajas de personal:}
+\espacioNotas{22}
+
+\clearpage
+
+% BLOQUE 3
+\section*{Bloque 3: Requerimientos No Funcionales (RNF) [$\sim$9 min]}
+
+\noindent
+\textbf{3.1. RNF de Dispositivos, Plataforma e Interfaces de Hardware:}
+\begin{itemize}
+  \item Celulares utilizados: \quad $\square$ Provistos por la empresa \quad $\square$ Teléfonos personales de los choferes (BYOD)
+  \item Sistema Operativo: \quad $\square$ Exclusivo Android (versión mínima: \hrulefill) \quad $\square$ Compatibilidad gama media/baja
+\end{itemize}
+\espacioNotas{26}
+
+\noindent
+\textbf{3.2. RNF de Rendimiento, Concurrencia y Capacidad:}
+\begin{itemize}
+  \item Horario pico de descarga de rutas: \quad $\square$ 4:00 a 9:00 AM \quad $\square$ Otro: \hrulefill
+  \item Horario pico de rendición y cobranzas: \quad $\square$ 14:00 a 18:00 hs \quad $\square$ Otro: \hrulefill
+  \item Volumen diario estimado de operaciones: \hrulefill \ entregas/día (200 camiones $\times$ 25--35 paradas)
+\end{itemize}
+\espacioNotas{26}
+
+\noindent
+\textbf{3.3. RNF de Seguridad, Auditoría y Resguardo Legal:}
+\begin{itemize}
+  \item Auditoría de arqueos y ajustes: \quad $\square$ Exige motivo obligatorio \quad $\square$ Log inmutable (usuario/fecha/monto anterior)
+  \item Plazo de conservación digital de fotos de remitos en servidor: \hrulefill \ años (Legal papel: 5 años)
+\end{itemize}
+\espacioNotas{26}
+
+\noindent
+\textbf{3.4. RNF de Usabilidad e Identidad Visual:}
+\begin{itemize}
+  \item Usabilidad en calle / luz solar: \quad $\square$ Botones grandes \quad $\square$ Alto contraste \quad $\square$ Mínima cantidad de toques
+  \item Imagen de marca / Paleta de colores institucional / Logotipo: \hrulefill
+\end{itemize}
+\espacioNotas{26}
+
+% BLOQUE 4
+\section*{Bloque 4: Reglas de Negocio, Cobranzas y Flujo de Entrega [$\sim$8 min]}
+
+\noindent
+\textbf{4.1. Hoja de Ruta y Datos Visibles:}
+\begin{itemize}
+  \item Formato de carga actual: \quad $\square$ Planilla Excel \quad $\square$ Archivo de texto \quad $\square$ Carga manual uno a uno
+  \item Orden de paradas: \quad $\square$ Libre albedrío total del chofer según tránsito y experiencia barrial
+  \item Datos visibles en parada: \quad $\square$ Nombre comercio \quad $\square$ Dirección \quad $\square$ Importe a cobrar \quad $\square$ Medio de pago
+  \item Detalle fino de ítems de mercadería: \quad $\square$ NO necesario en la app (está en remito papel)
+\end{itemize}
+\espacioNotas{26}
+
+\noindent
+\textbf{4.2. Validación del Remito (Físico vs Digital):}
+\begin{itemize}
+  \item ¿Consulta remito digital en app?: \quad $\square$ NO, solo toma foto del remito papel firmado físicamente
+\end{itemize}
+\espacioNotas{22}
+
+\clearpage
+
+\noindent
+\textbf{4.3. Circuito de Cobranzas y Arqueo (El Cuello de Botella):}
+\begin{itemize}
+  \item Cobro en Efectivo: \quad $\square$ Chofer solo tipea monto cobrado \quad $\square$ Entrega dinero en depósito para conteo y cuadre
+  \item Cobro por Transferencia: \quad $\square$ Cuenta bancaria central distribuidora \quad $\square$ Foto comprobante \quad $\square$ Código operación
+  \item Pagos combinados o saldo por falta de cambio: \quad $\square$ Se admite pago mixto \quad $\square$ Se registra saldo a favor
+  \item Cobro con QR (MODO / Mercado Pago): \quad $\square$ Mostrar alias/QR impreso fijo en camión para que escanee cliente
+  \item Alertas en panel administrativo: \quad $\square$ Alerta visual inmediata ante desfasajes de cobranzas
+\end{itemize}
+\espacioNotas{34}
+
+% BLOQUE 5
+\section*{Bloque 5: Muestras Reales, Cuestionario y Cierre [$\sim$3 min]}
+
+\noindent
+\textbf{5.1. Solicitud de documentación física de muestra:}
+\begin{itemize}[label=$\square$]
+  \item Hoja de ruta real de un día típico anonimizada (foto o archivo).
+\end{itemize}
+\espacioNotas{22}
+
+\noindent
+\textbf{5.2. Cuestionario complementario para transportistas y administrativos:}
+\begin{itemize}[label=$\square$]
+  \item Aprobado para envío previo por Discord antes de distribuirlo.
+\end{itemize}
+\espacioNotas{20}
+
+\noindent
+\textbf{5.3. Cierre y agradecimiento formal:}
+\begin{itemize}[label=$\square$]
+  \item Envío comprometido de la minuta ejecutiva de la reunión vía Discord.
+\end{itemize}
+\espacioNotas{18}
+
+\vspace{8pt}
+\hrule
+\vspace{6pt}
+
+% ACTA DE CONFORMIDAD DE TRANSCRIPCIÓN
+\noindent
+\begin{tabularx}{\textwidth}{@{}X X@{}}
+  \textbf{Firma Transcriptor 1 Softech:} \hrulefill & \textbf{Firma Transcriptor 2 Softech:} \hrulefill \\[10pt]
+  \textbf{Aclaración:} \hrulefill & \textbf{Aclaración:} \hrulefill \\[10pt]
+  \multicolumn{2}{@{}l@{}}{\textbf{Conformidad del Relevamiento (Martín Rodríguez):} Validado en llamada de Discord} \\
+\end{tabularx}
+
+\end{document}

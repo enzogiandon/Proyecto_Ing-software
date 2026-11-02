@@ -35,9 +35,9 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 | **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | Escritorio (Web) | 8 | 25 pts | 1 | 5 pts | 7 | 20 pts | HU-13 (5), HU-14 (2), HU-46 (5), HU-47 (3), HU-48 (2), HU-59 (3), HU-60 (2), HU-61 (3) |
 | **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | Escritorio (Web) | 8 | 30 pts | 2 | 4 pts | 6 | 26 pts | HU-17 (2), HU-18 (2), HU-19 (8), HU-20 (3), HU-21 (3), HU-49 (5), HU-50 (2), HU-58 (5) |
 | **EP-05 (#51)** | Gestión de usuarios | Personal Administrativo | Escritorio (Web) | 2 | 4 pts | 2 | 4 pts | 0 | 0 pts | HU-52 (2), HU-54 (2) |
-| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | Móvil (Smartphone) | 9 | 25 pts | 5 | 13 pts | 4 | 12 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3) |
-| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | Móvil (Smartphone) | 7 | 20 pts | 3 | 6 pts | 4 | 14 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
-| **TOTAL** | | | | **51 HUs** | **148 pts** | **28 HUs** | **71 pts** | **23 HUs** | **77 pts** | |
+| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | Móvil (Smartphone) | 9 | 25 pts | 4 | 10 pts | 5 | 15 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3) |
+| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | Móvil (Smartphone) | 7 | 20 pts | 4 | 11 pts | 3 | 9 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
+| **TOTAL** | | | | **51 HUs** | **148 pts** | **28 HUs** | **73 pts** | **23 HUs** | **75 pts** | |
 
 ---
 
@@ -605,24 +605,29 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 > 
 > **Actor Principal:** Personal Administrativo | **Plataforma:** Escritorio (Web)
 
-#### HU-17: CONSULTAR ENTREGAS
+#### HU-17: CONSULTAR ENTREGAS CON PROBLEMAS
 
 **Título:**
 - **Como** PERSONAL ADMINISTRATIVO
-- **quiero** CONSULTAR LAS ENTREGAS REALIZADAS Y PENDIENTES
-- **para** REALIZAR EL SEGUIMIENTO DE LA OPERACIÓN DE REPARTO.
+- **quiero** CONSULTAR LAS PARADAS DE LOS ITINERARIOS, PRIORIZANDO LAS QUE REGISTRAN ESTADO ERROR
+- **para** DAR SEGUIMIENTO PRIORITARIO A LAS ENTREGAS QUE REQUIEREN ATENCIÓN OPERATIVA.
 
 **Reglas a considerar:**
-- El estado de cada visita debe reflejar en tiempo real la situación operativa registrada en calle.
-- Las entregas deben agruparse por comercio y dirección de destino.
+- El estado de cada parada debe reflejar en tiempo real la situación operativa registrada en calle.
+- Las paradas en estado Error deben presentarse de forma prioritaria al inicio del listado.
+- Las paradas en los demás estados se listan posteriormente sin orden preferencial.
+- Desde una parada se debe acceder a la consulta detallada de sus remitos, evidencias respaldatorias y contingencias.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Consulta de pagos registrados por entrega**  
-  En la vista 'Pagos', el administrativo consulta la grilla de operaciones. Al seleccionar una entrega, el sistema exhibe el detalle de importes percibidos, medios de pago utilizados y el estado de la visita.
+- **ESCENARIO 1: Consulta con paradas en estado Error**  
+  En la vista 'Entregas', el sistema exhibe el listado de paradas registradas ordenando en primer lugar aquellas que se encuentran en estado Error. El administrativo puede seleccionar cualquier parada y consultar su detalle.
 
-- **ESCENARIO 2: Consulta de cobros consolidados en efectivo**  
-  El administrativo consulta los cobros en efectivo acumulados por itinerario. El sistema desglosa el subtotal recaudado en metálico y los comercios que componen dicho importe.
+- **ESCENARIO 2: Consulta sin paradas en estado Error**  
+  En la vista 'Entregas', al no registrarse paradas con error, el sistema muestra la totalidad de las paradas con su respectivo estado operativo y habilita el acceso a su información detallada.
+
+- **ESCENARIO 3: Acceso al detalle de una parada con incidencias**  
+  Al seleccionar una parada en estado Error, el sistema presenta los remitos involucrados, las constancias adjuntas y las contingencias reportadas.
 
 ---
 
@@ -857,13 +862,13 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
   El transportista con cuenta habilitada ingresa sus credenciales en la app. El sistema autentica la cuenta y presenta la pantalla principal con el itinerario de la fecha.
 
 - **ESCENARIO 2: Bloqueo de cuenta inhabilitada**  
-  Un transportista con cuenta suspendida ingresa credenciales correctas. El sistema rechaza el ingreso e impide el acceso a la aplicación.
+  Un transportista con cuenta inhabilitada ingresa credenciales válidas. El sistema rechaza el ingreso, bloquea la acción y emite la alerta "Cuenta inhabilitada".
 
 - **ESCENARIO 3: Credenciales erróneas**  
-  El usuario ingresa datos de autenticación incorrectos. El sistema impide el acceso y muestra la notificación "Credenciales inválidas".
+  El usuario ingresa credenciales inválidas. El sistema impide el acceso y muestra la notificación "El DNI o la clave ingresada son incorrectos".
 
-- **ESCENARIO 4: Acceso tras restablecimiento de clave**  
-  El transportista cuyas credenciales fueron restablecidas por la administración ingresa las claves provisionales. El sistema valida el acceso y le permite operar en la aplicación.
+- **ESCENARIO 4: Bloqueo preventivo tras múltiples intentos fallidos**  
+  El transportista con cuenta habilitada ingresa credenciales de identificación válidas pero contraseña incorrecta en 5 ocasiones consecutivas. El sistema bloquea preventivamente la cuenta e informa la alerta "Cuenta inhabilitada".
 
 ---
 
@@ -1010,12 +1015,13 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** OBTENER INFORMACIÓN SOBRE EL COMERCIO.
 
 **Reglas a considerar:**
-- Cada parada debe exhibir con claridad los datos de contacto del comercio, la dirección exacta y la liquidación total exigible antes de la descarga.
+- Cada parada debe exhibir con claridad los datos comerciales: nombre del comercio, domicilio exacto, identificador fiscal (CUIT), teléfono de contacto y el importe total a cobrar.
+- La vista de detalle de la parada debe incorporar las acciones operativas correspondientes: "Registrar cobro", "Ver remitos", "Adjuntar documento" y "Registrar Inconveniente".
 
 **Criterios de Aceptación:**
 
 - **ESCENARIO 1: Vista detallada de parada y cobranza exigible**  
-  En el itinerario, el chofer busca la parada deseada y presiona 'Ver detalles'. La aplicación presenta una tarjeta con el nombre del comercio, la dirección de entrega y el monto monetario total exacto que debe cobrarse.
+  En el itinerario, el chofer localiza la parada deseada y presiona 'Ir a la parada'. La aplicación presenta la información comercial completa (nombre del comercio, domicilio, identificador fiscal, contacto) y el monto monetario total a percibir en destino de forma clara.
 
 ---
 

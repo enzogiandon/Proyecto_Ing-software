@@ -1,0 +1,420 @@
+/* ===================================================
+   REMITOS - ESTILOS BASADOS EN FIGMA
+   Usa los tokens de paletas.css (--color-*, --spacing-*, --radius-*)
+=================================================== */
+
+/* ---------- Contenedor principal ---------- */
+.remitos-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-20, 20px);
+}
+
+/* ---------- Encabezado de página ---------- */
+.remitos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-16, 16px);
+}
+
+.remitos-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.remitos-header-info h1 {
+  margin: 0;
+  color: var(--color-primary);
+}
+
+/* ---------- Barra de filtros (estilo Figma con etiquetas arriba) ---------- */
+.remitos-filtros-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-12, 12px);
+}
+
+.remitos-filtros-card {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.remitos-filtros-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--spacing-12, 12px);
+}
+
+.remitos-filtro-item {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.remitos-filtro-label {
+  font: 500 13px/normal var(--font-family);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.remitos-filtro-item .form-control,
+.remitos-filtro-item .form-select {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 9px 14px;
+  font-size: 14px;
+  color: var(--color-text);
+  height: 40px;
+}
+
+.remitos-filtro-btn {
+  flex: 0 0 auto;
+}
+
+.remitos-filtro-btn .btn,
+.btn-filtrar-figma {
+  height: 40px;
+  padding: 0 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font: 600 14px/normal var(--font-family);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.remitos-filtro-btn .btn:hover,
+.btn-filtrar-figma:hover {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ---------- Tarjeta de tabla / contenido ---------- */
+.remitos-card {
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--spacing-20, 20px);
+}
+
+.remitos-card--form {
+  max-width: 680px;
+  padding: var(--spacing-24, 24px);
+}
+
+.remitos-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+/* ---------- Tabla de Remitos ---------- */
+.remitos-tabla-wrapper {
+  padding: var(--spacing-16, 16px);
+}
+
+.remitos-tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.remitos-tabla thead th {
+  padding: 11px 16px;
+  background: var(--color-bg, #fff6ec);
+  color: var(--color-text-secondary, #545457);
+  font: 500 13px/normal var(--font-family, sans-serif);
+  text-align: left;
+  border-bottom: none;
+  white-space: nowrap;
+}
+
+.remitos-tabla thead th:first-child {
+  border-radius: var(--radius-md, 8px) 0 0 var(--radius-md, 8px);
+}
+
+.remitos-tabla thead th:last-child {
+  border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
+}
+
+.remitos-tabla tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border, #d1cac3);
+  color: var(--color-text, #1b1b1f);
+  font: 400 14px/normal var(--font-family, sans-serif);
+  vertical-align: middle;
+}
+
+.remitos-tabla tbody tr:hover td {
+  background: rgba(255, 246, 236, 0.55);
+}
+
+.remitos-tabla-footer {
+  padding: 14px 16px 4px;
+  color: var(--color-text-muted, #6b6b6d);
+  font: 400 13px/normal var(--font-family, sans-serif);
+}
+
+/* Acciones en la tabla */
+.remitos-acciones-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-accion-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #d1cac3);
+  background: var(--color-surface, #ffffff);
+  color: var(--color-text, #1b1b1f);
+  text-decoration: none;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-accion-icon:hover:not(:disabled):not(.is-disabled) {
+  background: var(--color-bg, #fff6ec);
+  color: var(--color-primary, #123c6b);
+  border-color: var(--color-primary, #123c6b);
+}
+
+.btn-accion-icon.btn-accion-danger {
+  color: var(--color-error, #b91c1c);
+}
+
+.btn-accion-icon.btn-accion-danger:hover:not(:disabled):not(.is-disabled) {
+  background: var(--color-error-tint, #fee2e2);
+  color: var(--color-error, #b91c1c);
+  border-color: var(--color-error, #b91c1c);
+}
+
+.btn-accion-icon:disabled,
+.btn-accion-icon.is-disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+/* Badges de estado */
+.remito-estado-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.remito-estado-badge--pendiente {
+  background-color: var(--color-warning-tint, #fef3c7);
+  color: var(--color-warning, #b45309);
+}
+
+.remito-estado-badge--asignado {
+  background-color: var(--color-info-tint, #e0f2fe);
+  color: var(--color-info, #0369a1);
+}
+
+.remito-estado-badge--en_ruta,
+.remito-estado-badge--ruta {
+  background-color: var(--color-route-tint, #ede9fe);
+  color: var(--color-route, #6d28d9);
+}
+
+.remito-estado-badge--entregado,
+.remito-estado-badge--finalizado {
+  background-color: var(--color-success-tint, #dcfce7);
+  color: var(--color-success, #15803d);
+}
+
+.remito-estado-badge--rechazado,
+.remito-estado-badge--cancelado {
+  background-color: var(--color-error-tint, #fee2e2);
+  color: var(--color-error, #b91c1c);
+}
+
+/* Estado vacío */
+.remitos-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.remitos-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-bg, #fff6ec);
+  color: var(--color-text-muted, #6b6b6d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: var(--spacing-16, 16px);
+}
+
+/* ---------- Campos de Formulario Figma ---------- */
+.remitos-input-readonly-wrapper {
+  position: relative;
+}
+
+.remitos-input-readonly-wrapper .form-control[readonly],
+.remitos-input-readonly-wrapper .form-control:disabled {
+  background-color: var(--color-bg, #fff6ec);
+  color: var(--color-text-secondary, #545457);
+  padding-right: 36px;
+}
+
+.remitos-input-lock-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted, #6b6b6d);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.remitos-field-help {
+  font-size: 12px;
+  color: var(--color-text-muted, #6b6b6d);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+/* ---------- Vistas de Detalle (Estilo Figma) ---------- */
+.remitos-detalle-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 520px) minmax(0, 520px);
+  gap: var(--spacing-20, 20px);
+  align-items: start;
+}
+
+.remitos-detalle-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16, 16px);
+}
+
+.remitos-kv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+
+.remito-kv-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.remito-kv-label {
+  font-size: 12px;
+  color: var(--color-text-muted, #6b6b6d);
+  font-weight: 400;
+}
+
+.remito-kv-value {
+  font-size: 14px;
+  color: var(--color-text, #1b1b1f);
+  font-weight: 500;
+}
+
+.remito-itinerario-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.remito-constancia-box {
+  background-color: var(--color-bg, #fff6ec);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-text-muted, #6b6b6d);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* Compatibilidad con filas horizontales existentes */
+.remitos-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-20, 20px);
+}
+
+.remito-data-row, .parada-data-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-8, 8px) 0;
+  border-bottom: 1px solid var(--color-border, #d1cac3);
+}
+
+.remito-data-row:last-child, .parada-data-row:last-child {
+  border-bottom: none;
+}
+
+.remito-data-label {
+  color: var(--color-text-secondary, #545457);
+  font-size: 14px;
+}
+
+.remito-data-value {
+  color: var(--color-text, #1b1b1f);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* ---------- Botones de Formulario ---------- */
+.remitos-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-12, 12px);
+  margin-top: var(--spacing-20, 20px);
+  padding-top: var(--spacing-16, 16px);
+  border-top: 1px solid var(--color-border, #d1cac3);
+}
+
+/* Responsividad */
+@media (max-width: 991px) {
+  .remitos-detail-grid,
+  .remitos-detalle-layout {
+    grid-template-columns: 1fr;
+  }
+  .remitos-tabla {
+    display: block;
+    overflow-x: auto;
+  }
+}

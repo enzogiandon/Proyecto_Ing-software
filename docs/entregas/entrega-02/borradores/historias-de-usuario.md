@@ -32,9 +32,9 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 | **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | 8 | 25 pts | 1 | 5 pts | 7 | 20 pts | HU-13 (5), HU-14 (2), HU-46 (5), HU-47 (3), HU-48 (2), HU-59 (3), HU-60 (2), HU-61 (3) |
 | **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | 8 | 30 pts | 2 | 4 pts | 6 | 26 pts | HU-17 (2), HU-18 (2), HU-19 (8), HU-20 (3), HU-21 (3), HU-49 (5), HU-50 (2), HU-58 (5) |
 | **EP-05 (#51)** | Gestión de usuarios | Personal Administrativo | 2 | 4 pts | 2 | 4 pts | 0 | 0 pts | HU-52 (2), HU-54 (2) |
-| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | 9 | 25 pts | 5 | 13 pts | 4 | 12 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3) |
-| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | 7 | 20 pts | 3 | 6 pts | 4 | 14 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
-| **TOTAL** | | | **51 HUs** | **148 pts** | **28 HUs** | **71 pts** | **23 HUs** | **77 pts** | |
+| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | 9 | 25 pts | 4 | 10 pts | 5 | 15 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3) |
+| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | 7 | 20 pts | 4 | 11 pts | 3 | 9 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
+| **TOTAL** | | | **51 HUs** | **148 pts** | **28 HUs** | **73 pts** | **23 HUs** | **75 pts** | |
 
 ---
 
@@ -42,7 +42,7 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 
 > **Nota Metodológica de Estimación:** Los puntos asignados corresponden a la sesión de **Planning Poker** del equipo de **Softech**, representando la complejidad general y de implementación de cada historia de usuario. En el gestor Taiga se asientan sobre la columna base de puntos, reflejando el esfuerzo integral de la historia.
 > 
-> Para el **Sprint 1**, el equipo seleccionó **28 Historias de Usuario** que totalizan **71 puntos de historia** (48% del esfuerzo global del backlog), cubriendo el flujo operativo prioritario: ingesta de planillas, gestión de flota/personal, control de acceso, y consulta móvil de itinerarios.
+> Para el **Sprint 1**, el equipo seleccionó **28 Historias de Usuario** que totalizan **73 puntos de historia** (49% del esfuerzo global del backlog), cubriendo el flujo operativo prioritario: ingesta de planillas, gestión de flota/personal, control de acceso, y consulta móvil de itinerarios.
 
 | Ref | ID | Historia de Usuario | Épica Asociada | Puntos (Poker) | Estado de Planificación |
 | :---: | :---: | :--- | :--- | :---: | :---: |
@@ -53,10 +53,11 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 | 8 | HU-8 | Asignar permisos administrativos | EP-02 (#6) | 3 pts | Compromiso Sprint 1 |
 | 9 | HU-9 | Agregar vehículo | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
 | 13 | HU-13 | Agregar itinerario | EP-03 (#12) | 5 pts | Compromiso Sprint 1 |
-| 17 | HU-17 | Consultar entregas | EP-04 (#16) | 2 pts | Compromiso Sprint 1 |
+| 17 | HU-17 | Consultar entregas con problemas | EP-04 (#16) | 2 pts | Compromiso Sprint 1 |
 | 18 | HU-18 | Consultar detalle de entrega | EP-04 (#16) | 2 pts | Compromiso Sprint 1 |
 | 23 | HU-23 | Iniciar sesión | EP-06 (#22) | 2 pts | Compromiso Sprint 1 |
-| 26 | HU-26 | Guardar recorrido | EP-06 (#22) | 5 pts | Compromiso Sprint 1 |
+| 25 | HU-25 | Visualizar los remitos agrupados por parada | EP-06 (#22) | 3 pts | Compromiso Sprint 1 |
+| 31 | HU-31 | Registrar cobranza | EP-07 (#29) | 5 pts | Compromiso Sprint 1 |
 | 32 | HU-32 | Validar cobro íntegro | EP-07 (#29) | 3 pts | Compromiso Sprint 1 |
 | 37 | HU-37 | Consultar importaciones | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
 | 38 | HU-38 | Ver detalle de una importación | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
@@ -71,10 +72,9 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 | 55 | HU-55 | Adjuntar un documento | EP-07 (#29) | 2 pts | Compromiso Sprint 1 |
 | 56 | HU-56 | Registrar inconvenientes con la entrega | EP-07 (#29) | 1 pt | Compromiso Sprint 1 |
 | 62 | HU-62 | Consultar itinerario | EP-06 (#22) | 2 pts | Compromiso Sprint 1 |
-| 63 | HU-63 | Mostrar recorridos guardados | EP-06 (#22) | 3 pts | Compromiso Sprint 1 |
-| 65 | HU-65 | Eliminar recorrido | EP-06 (#22) | 1 pt | Compromiso Sprint 1 |
 | 66 | HU-66 | Suspender o deshabilitar personal | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
-| **TOTAL** | | **28 Historias de Usuario asignadas** | | **71 pts** | |
+| 67 | HU-67 | Visualizar detalle de parada y monto a cobrar | EP-06 (#22) | 3 pts | Compromiso Sprint 1 |
+| **TOTAL** | | **28 Historias de Usuario asignadas** | | **73 pts** | |
 
 ---
 
@@ -643,25 +643,29 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 > 
 > **Actor Principal:** Personal Administrativo | **Plataforma:** Escritorio (Web)
 
-#### HU-17: CONSULTAR ENTREGAS
+#### HU-17: CONSULTAR ENTREGAS CON PROBLEMAS
 
 **Título:**
 - **Como** ADMINISTRATIVO
-- **quiero** CONSULTAR LAS ENTREGAS REALIZADAS Y PENDIENTES
-- **para** REALIZAR EL SEGUIMIENTO DE LA OPERACIÓN DE REPARTO.
+- **quiero** CONSULTAR LAS PARADAS DE LOS ITINERARIOS, PRIORIZANDO LAS QUE ESTÁN EN ESTADO ERROR
+- **para** DAR SEGUIMIENTO A LAS ENTREGAS QUE REQUIEREN ATENCIÓN.
 
 **Reglas a considerar:**
-- El estado de cada entrega debe reflejar la situación registrada durante la operación.
-- Las entregas deben agruparse por dirección de destino.
-- Las entregas deben poder distinguirse según su estado.
+- El estado de cada parada debe reflejar la situación registrada durante la operación.
+- Las paradas en estado Error deben aparecer primero en el listado.
+- Las paradas en los demás estados se muestran después, sin prioridad especial entre ellas.
+- Desde una parada se puede consultar el detalle de la entrega y sus remitos, evidencias y contingencias.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Existe un pago registrado**  
-  En la vista “Pagos”, el sistema deberá mostrar el listado de pagos registrados. El administrativo deberá seleccionar un pago y el sistema deberá mostrar su detalle, incluyendo el importe, modalidad y operación asociada.
+- **ESCENARIO 1: Hay paradas con estado Error**  
+  En la vista “Entregas”, el sistema muestra las paradas registradas y coloca primero las que están en estado Error. El administrativo puede seleccionar una parada y consultar su detalle.
 
-- **ESCENARIO 2: Pago en efectivo agrupado**  
-  El administrativo deberá consultar un pago correspondiente a efectivo agrupado por itinerario. El sistema deberá mostrar el subtotal correspondiente y las entregas o comercios que componen dicho importe.
+- **ESCENARIO 2: No hay paradas con estado Error**  
+  El sistema muestra las paradas registradas con su estado y permite acceder al detalle de cada una.
+
+- **ESCENARIO 3: Consultar el detalle de una parada con error**  
+  Al seleccionar una parada, el sistema muestra los remitos asociados, las evidencias y las contingencias registradas.
 
 ---
 
@@ -903,13 +907,13 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
   El transportista con cuenta habilitada deberá ingresar credenciales válidas. El sistema deberá permitir el acceso.
 
 - **ESCENARIO 2: Cuenta no habilitada**  
-  El transportista con cuenta inhabilitada deberá ingresar credenciales válidas. El sistema deberá impedir el acceso.
+  El transportista con cuenta inhabilitada deberá ingresar credenciales válidas. El sistema deberá impedir el acceso y mostrar la alerta de “Cuenta inhabilitada”.
 
 - **ESCENARIO 3: Credenciales inválidas**  
-  El transportista con cuenta habilitada o inhabilitada deberá ingresar credenciales inválidas. El sistema deberá impedir el acceso y mostrar el mensaje “Credenciales inválidas”.
+  El transportista con cuenta habilitada o inhabilitada deberá ingresar credenciales inválidas. El sistema deberá impedir el acceso y mostrar el mensaje “El DNI o la clave ingresada son incorrectos”.
 
 - **ESCENARIO 4: Múltiples intentos fallidos**  
-  El transportista con cuenta habilitada y credenciales reseteadas por la administración, deberá ingresar las nuevas credenciales válidas. El sistema deberá permitir el acceso.
+  El transportista con cuenta habilitada deberá ingresar credenciales de identificación válidas pero de contraseña inválida en 5 ocasiones. El sistema deberá impedir el acceso, bloquear la cuenta del transportista y mostrar la alerta de “Cuenta inhabilitada”.
 
 ---
 
@@ -1057,12 +1061,13 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 - **para** OBTENER INFORMACIÓN SOBRE EL COMERCIO.
 
 **Reglas a considerar:**
-- El itinerario muestra las paradas con dirección, nombre del comercio y monto a cobrar.
+- El itinerario muestra las paradas con dirección, nombre del comercio, domicilio, identificador fiscal, contacto y monto a cobrar.
+- El detalle de la parada muestra botones “Registrar cobro”, “Ver remitos”, “Adjuntar documento” y “Registrar Inconveniente”.
 
 **Criterios de Aceptación:**
 
 - **ESCENARIO 1: Visualizar detalles de parada**  
-  El transportista deberá buscar la parada deseada. Luego tocará el botón “Ver detalles”. En pantalla aparecerá la información del nombre del comercio, la dirección y el monto a cobrar de forma clara.
+  El transportista deberá buscar la parada deseada. Luego tocará el botón “Ir a la parada”. En pantalla aparecerá la información del nombre del comercio, domicilio, identificador fiscal, contacto y el monto a cobrar de forma clara.
 
 ---
 

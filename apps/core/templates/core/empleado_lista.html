@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Empleados - RepartosYA{% endblock %}
+
+{% block extra_css %}
+{# home.css aporta el botón (.home-btn) y los badges (.estado-badge) compartidos #}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'core/css/empleado_lista.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% now "l, j \d\e F \d\e Y" as fecha_hoy %}
+<div class="empleados">
+
+    <div class="empleados-encabezado">
+        <header class="empleados-encabezado_texto">
+            <h1 class="text-title">Empleados</h1>
+            <p class="text-body empleados-fecha">{{ fecha_hoy|capfirst }}</p>
+        </header>
+        <div>
+            <a href="{% url 'core:empleado_crear' %}" class="home-btn home-btn--primary home-btn--compacto">
+                <i class="fa fa-plus"></i>
+                Agregar personal
+            </a>
+        </div>
+    </div>
+    
+    <section class="panel-tabla" aria-labelledby="titulo-transportistas">
+
+
+        <div class="tabla-scroll">
+            <div class="tabla-empleados" role="table" aria-label="Transportistas">
+
+                <div class="tabla-empleados__fila tabla-empleados__fila--encabezado" role="row">
+                    <div role="columnheader">Nombre y Apellido</div>
+                    <div role="columnheader">DNI</div>
+                    <div role="columnheader">Estado</div>
+                    <div role="columnheader">Grupos</div>
+                    <div role="columnheader">Acciones</div>
+                </div>
+
+                {% for emp in empleados %}
+                    <div class="tabla-empleados__fila" role="row">
+                        <div class="celda-nombre" role="cell">{{ emp.first_name }}, {{ emp.last_name }}</div>
+                        <div class="celda-vehiculo" role="cell">{{ emp.username }}</div>
+                        <div role="cell">
+                            {% if emp.is_active %}
+                                <span class="estado-badge estado-badge--info text-badge">Activo</span>
+                            {% else %}
+                                <span class="estado-badge estado-badge--error text-badge">Suspendido</span>
+                            {% endif %}
+                        </div>
+                        <div role="cell">
+                            {{ emp.groups.all|join:", "|default:'Sin grupo' }}
+                        </div>
+                        <div role="cell">
+                            <a href="{% url 'core:empleado_editar' emp.pk %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" aria-label="Editar a {{ nombre }}">
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                <span>Editar</span>
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    {# Estado vacío: no existe en Figma, texto provisorio #}
+                    <div class="tabla-empleados__vacia" role="row">
+                        <div role="cell">No hay transportistas registrados.</div>
+                    </div>
+                {% endfor %}
+
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

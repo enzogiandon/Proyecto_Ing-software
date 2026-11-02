@@ -30,19 +30,19 @@ python manage.py poblar --limpiar
 
 ### 2.1. Panel Web Administrativo (`/login/`)
 
-| Perfil / Rol | DNI (Usuario) | Contraseña | Rol / Grupos Asignados | Propósito de Prueba |
-| :--- | :---: | :---: | :--- | :--- |
-| **Superusuario Administrador** | `11111111` | `11111111` | `is_superuser = True`<br>`is_staff = True` | Acceso completo al sistema, panel Django y todas las pantallas de gestión. |
-| **Administrador General (Alternativo)** | `99999999` | `admin123` | Superusuario adicional | Verificación de acceso y backup administrativo. |
-| **Administrativo Operativo** | `12345677` | `1234` | `administrativo-planificacion`<br>`administrativo-conciliacion`<br>`gestion-personal` | Pruebas de importación de remitos, asignación de hojas de ruta y conciliación de cobranzas. |
-| **Administrativo Auxiliar** | `12341234` | `1234` | Acceso operativo | Pruebas de concurrencia y permisos operativos. |
+| Perfil / Rol | DNI (Usuario) | Contraseña | Rol / Grupos Asignados | Estado en BD Actual | Propósito de Prueba |
+| :--- | :---: | :---: | :--- | :---: | :--- |
+| **Superusuario Administrador** | `11111111` | `11111111` | `is_superuser = True`<br>`is_staff = True`<br>`administrativo-planificacion`<br>`administrativo-conciliacion`<br>`gestion-personal` | **Cargado en BD** | Acceso completo al sistema, panel Django y todas las pantallas de gestión. |
+| **Administrativo Operativo (Mock/Testing)** | `12345677` | `1234` | `administrativo-planificacion`<br>`administrativo-conciliacion` | *Creable vía web* | Pruebas de permisos acotados y vistas por rol en panel web. |
+| **Administrador General (Alternativo)** | `99999999` | `admin123` | Superusuario adicional | *Reserva* | Verificación de acceso y backup administrativo. |
 
 ### 2.2. App Móvil de Transportistas (Conexión Backend / API JWT `/api/token/`)
 
-| Chofer | DNI (Usuario) | Contraseña (PIN) | Vehículo Asignado | Estado Operativo |
-| :--- | :---: | :---: | :--- | :--- |
-| **Lautaro Gómez** | `1234567` | `123` | `AF123CD` *(Mercedes-Benz Accelo 815)* | Activo y habilitado, con vehículo asignado para despacho. |
-| **Martín Pérez** | `12345678` | `123` | `AG456EF` *(Iveco Daily 70C17)* | Activo y habilitado, con vehículo asignado para despacho. |
+| Chofer | DNI (Usuario) | Contraseña (PIN BD) | Vehículo Asignado | Estado en BD Actual | Modo Conexión |
+| :--- | :---: | :---: | :--- | :---: | :--- |
+| **Lautaro Gómez** | `1234567` | `123` *(o `1234` en mock)* | `AF123CD` *(Mercedes-Benz Accelo 815)* | **Cargado en BD** | API Django JWT / Backend conectado |
+| **Martín Pérez** | `12345678` | `123` *(o `1234` en mock)* | `AG456EF` *(Iveco Daily 70C17)* | **Cargado en BD** | API Django JWT / Backend conectado |
+| **Carlos Gómez** | `38492011` | `1234` | `AB 123 CD` *(Mercedes-Benz 710)* | *Mock local móvil* | Fallback offline / Mock decoupled |
 
 ### 2.3. Casos de Seguridad y Excepciones
 

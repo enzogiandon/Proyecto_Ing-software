@@ -172,6 +172,8 @@ class RegistrarPagoInputSerializer(serializers.Serializer):
         decimal_places=2,
         min_value=Decimal("0.01"),
     )
+    mp_payment_id = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
+    mp_preference_id = serializers.CharField(max_length=100, required=False, allow_blank=True, allow_null=True)
 
 
 class RegistrarProblemaInputSerializer(serializers.Serializer):

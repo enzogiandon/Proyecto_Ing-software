@@ -1,5 +1,4 @@
 # cobranza/models.py
-
 from django.db import models
 
 
@@ -37,7 +36,7 @@ class Cobranza(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Comercio {self.parada.comercio.razon_social} ~~ "
+        return f"Cobranza Parada #{self.parada.id} - {self.parada.comercio.razon_social}"
 
 
 class DetallePago(models.Model):
@@ -48,7 +47,7 @@ class DetallePago(models.Model):
     monto_declarado = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        help_text="Imprte informado por el transportista",
+        help_text="Importe informado por el transportista",
     )
     monto_verificado = models.DecimalField(
         max_digits=10,
@@ -58,9 +57,13 @@ class DetallePago(models.Model):
         help_text="Importe verificado por el administrativo",
     )
 
+    # Identificadores de Mercado Pago
+    mp_preference_id = models.CharField(max_length=100, blank=True, null=True)
+    mp_payment_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
+
     class Meta:
         verbose_name = "Detalle del pago"
         verbose_name_plural = "Detalles de pagos"
 
     def __str__(self):
-        return f"{self.get_medio_display()} - Declarado: ${self.monto_declarado} | Verificado ${self.monto_verificado}"
+        return f"{self.get_medio_display()} - Declarado: ${self.monto_declarado}"

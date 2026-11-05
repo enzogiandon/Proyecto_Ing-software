@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Cobranzas</title>
+    <!-- Bootstrap 5 CSS e Íconos -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light py-4">
+
+<div class="container-fluid px-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-cash-stack text-success me-2"></i>Gestión de Cobranzas
+            </h3>
+            <p class="text-muted small mb-0">Control general de cobros efectuados y acceso a validación administrativa.</p>
+        </div>
+    </div>
+
+    <!-- Filtros de Búsqueda -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-white rounded">
+            <form method="get" class="row g-3 align-items-end">
+                <!-- Filtro Comercio -->
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-secondary">Comercio / Razón Social</label>
+                    <input 
+                        type="text" 
+                        name="comercio" 
+                        class="form-control form-control-sm" 
+                        placeholder="Buscar por comercio..." 
+                        value="{{ filtro_comercio }}"
+                    >
+                </div>
+
+                <!-- Filtro Estado -->
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Estado</label>
+                    <select name="estado" class="form-select form-select-sm">
+                        <option value="">-- Todos los estados --</option>
+                        {% for valor, etiqueta in estados %}
+                            <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>
+                                {{ etiqueta }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro Fecha -->
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-secondary">Fecha</label>
+                    <input 
+                        type="date" 
+                        name="fecha" 
+                        class="form-control form-control-sm" 
+                        value="{{ filtro_fecha }}"
+                    >
+                </div>
+
+                <!-- Botones Filtrar / Limpiar -->
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary flex-grow-1 shadow-sm">
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                    {% if filtro_comercio or filtro_estado or filtro_fecha %}
+                        <a href="{% url 'cobranza:cobranza_lista' %}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Cobranzas -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3" style="width: 70px;">#ID</th>
+                        <th>Fecha</th>
+                        <th>Comercio</th>
+                        <th>Parada / Itinerario</th>
+                        <th>Estado</th>
+                        <th>Observación</th>
+                        <th class="text-end pe-3" style="width: 200px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cob in cobranzas %}
+                    <tr>
+                        <td class="ps-3 fw-bold text-secondary">#{{ cob.id }}</td>
+                        <td>
+                            <div class="small fw-semibold text-dark">{{ cob.fecha|date:"d/m/Y" }}</div>
+                            <small class="text-muted">{{ cob.fecha|date:"H:i" }} hs</small>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">
+                                {{ cob.parada.comercio.razon_social|default:"Sin comercio" }}
+                            </div>
+                            <small class="text-muted d-block">
+                                {{ cob.parada.comercio.domicilio|default:"-" }}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                Parada #{{ cob.parada.orden|default:cob.parada.id }}
+                            </span>
+                            <small class="text-muted d-block mt-1">
+                                Itinerario #{{ cob.parada.itinerario_id }}
+                            </small>
+                        </td>
+                        <td>
+                            {% if cob.estado == "aprobado" %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <i class="bi bi-check-circle me-1"></i>Aprobado
+                                </span>
+                            {% elif cob.estado == "registrado" %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                    <i class="bi bi-clock me-1"></i>Registrado
+                                </span>
+                            {% elif cob.estado == "difiere" %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Difiere
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                    <i class="bi bi-x-circle me-1"></i>No encontrado
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cob.observacion_ajuste %}
+                                <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cob.observacion_ajuste }}">
+                                    <i class="bi bi-info-circle me-1"></i>{{ cob.observacion_ajuste }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <!-- Botones de Acción -->
+                        <td class="text-end pe-3">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Botón Ver Detalle -->
+                                <a href="{% url 'cobranza:cobranza_detalle' cob.pk %}" 
+                                   class="btn btn-outline-secondary" 
+                                   title="Ver comprobantes y pagos">
+                                    <i class="bi bi-eye"></i> Detalle
+                                </a>
+
+                                <!-- Botón Validar -->
+                                <a href="{% url 'cobranza:cobranza_validar' cob.pk %}" 
+                                   class="btn {% if cob.estado == 'aprobado' %}btn-outline-success{% else %}btn-success{% endif %}" 
+                                   title="Arqueo y validación de importes">
+                                    <i class="bi bi-check2-circle"></i> Validar
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                            No se encontraron cobranzas registradas con los filtros seleccionados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center py-3">
+            <span class="text-muted small">
+                Mostrando página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} (Total: {{ paginator.count }} registros)
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
+                            Anterior
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
+                            Siguiente
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

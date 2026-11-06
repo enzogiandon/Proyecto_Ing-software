@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+{% load auth_extras %}
+
+{% block title %}Inicio - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+        {% if request.user|has_group:'gestion-personal' %}
+            {% include "core/administracion.html" %}
+        {% elif request.user|has_group:'administrativo-conciliacion' %}
+            {% include "core/conciliacion.html" %}
+        {% elif request.user|has_group:'administrativo-planificacion' %}
+            {% include "core/planificacion.html" %}
+        {% else %}
+            {% include "core/sin_perfil.html" %}
+        {% endif %}
+
+
+{% endblock %}

@@ -1,0 +1,628 @@
+import time
+from decimal import Decimal
+
+import mercadopago
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.utils import timezone
+from rest_framework import parsers, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.permissions import BasePermission
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from apps.api.serializers import (
+    CustomTokenObtainPairSerializer,
+    DetalleParadaSerializer,
+    EvidenciaParadaSerializer,
+    GuardarRutaSerializer,
+    ListaParadaSerializer,
+    ProblemaParadaSerializer,
+    RegistrarPagoInputSerializer,
+    RegistrarProblemaInputSerializer,
+    RutaGuardadaSerializer,
+)
+from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
+from apps.itinerarios.models import (
+    DetalleRutaGuardada,
+    EstadoItinerario,
+    EstadoParada,
+    EvidenciaParada,
+    Itinerario,
+    Parada,
+    ProblemaParada,
+    RutaGuardada,
+)
+from apps.itinerarios.services import ordenar_itinerario_segun_ruta
+from apps.remitos.models import EstadoRemito
+
+from .serializers import (
+    CrearRutaGuardadaSerializer,
+    DetalleParadaSerializer,
+    RegistrarPagoInputSerializer,
+)
+
+User = get_user_model()
+sdk = mercadopago.SDK(settings.MERCADO_PAGO_ACCESS_TOKEN)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+class IsActiveUser(BasePermission):
+    """
+    Permite acceso únicamente a usuarios autenticados que NO estén suspendidos (is_active=True).
+    """
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user and request.user.is_authenticated and request.user.is_active
+        )
+
+
+class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoints de itinerarios y rutas contextualizados al transportista autenticado:
+    - GET  /api/itinerarios/paradas/
+    - GET  /api/itinerarios/rutas-guardadas
+    - POST /api/itinerarios/crear-ruta/
+    - POST /api/itinerarios/guardar-ruta/
+    - POST /api/itinerarios/ordenar-por-ruta/
+    """
+
+    queryset = Itinerario.objects.all()
+    permission_classes = [IsActiveUser]
+
+    def _get_itinerario_activo(self, request):
+        """
+        Recupera el itinerario en curso o asignado al transportista autenticado.
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {
+                    "detail": "El usuario autenticado no tiene asignado un perfil de transportista."
+                }
+            )
+
+        itinerario = Itinerario.objects.filter(
+            transportista=user.perfil_transportista,
+            estado__in=[EstadoItinerario.ASIGNADO],
+        ).first()
+
+        if not itinerario:
+            raise ValidationError(
+                {
+                    "detail": "No posees ningún itinerario activo o asignado en este momento."
+                }
+            )
+
+        return itinerario
+
+    @action(detail=False, methods=["get"], url_path="paradas")
+    def paradas(self, request):
+        """
+        Devuelve la lista ordenada de paradas del chofer logueado.
+        Endpoint: GET /api/itinerarios/paradas/
+        """
+        itinerario = self._get_itinerario_activo(request)
+        paradas = (
+            itinerario.paradas.select_related("comercio", "cobranza")
+            .prefetch_related(
+                "remitos",
+                "cobranza__detalles",
+            )
+            .order_by("orden")
+        )
+        serializer = ListaParadaSerializer(paradas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], url_path="hoy")
+    def hoy(self, request):
+        """
+        Devuelve la cabecera y lista de paradas del itinerario asignado del día
+        en formato estructurado para la app móvil.
+        Endpoint: GET /api/itinerarios/hoy/
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {
+                    "detail": "El usuario autenticado no tiene asignado un perfil de transportista."
+                }
+            )
+
+        itinerario = Itinerario.objects.filter(
+            transportista=user.perfil_transportista,
+            estado__in=[EstadoItinerario.ASIGNADO],
+        ).first()
+
+        if not itinerario:
+            return Response(None, status=status.HTTP_404_NOT_FOUND)
+
+        paradas = (
+            itinerario.paradas.select_related("comercio", "cobranza")
+            .prefetch_related("remitos", "cobranza__detalles")
+            .order_by("orden")
+        )
+
+        paradas_data = []
+        for p in paradas:
+            remitos_activos = p.remitos.filter(eliminado=False)
+            monto_parada = sum(float(r.monto_total) for r in remitos_activos)
+            paradas_data.append(
+                {
+                    "id": p.id,
+                    "orden": p.orden,
+                    "estado": p.estado,
+                    "comercio": {
+                        "id": p.comercio.id,
+                        "razonSocial": p.comercio.razon_social,
+                        "cuit": p.comercio.cuit,
+                        "domicilio": p.comercio.domicilio,
+                        "telefono": p.comercio.telefono or "",
+                    },
+                    "montoCobranza": monto_parada,
+                    "cantidadRemitos": remitos_activos.count(),
+                    "horaEstimada": p.hora_entrega.strftime("%H:%M")
+                    if p.hora_entrega
+                    else "10:30",
+                }
+            )
+
+        transportista = user.perfil_transportista
+        vehiculo = transportista.vehiculo
+
+        return Response(
+            {
+                "id": itinerario.id,
+                "fecha": str(itinerario.fecha),
+                "estado": itinerario.estado,
+                "transportistaNombre": user.get_full_name() or user.username,
+                "transportistaIniciales": f"{user.first_name[:1]}{user.last_name[:1]}".upper()
+                if user.first_name
+                else "TG",
+                "vehiculo": {
+                    "patente": vehiculo.patente if vehiculo else "S/D",
+                    "modelo": vehiculo.modelo if vehiculo else "Camión de Reparto",
+                },
+                "totalParadas": len(paradas_data),
+                "paradasCompletadas": sum(
+                    1 for p in paradas if p.estado == EstadoParada.FINALIZADA
+                ),
+                "paradas": paradas_data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["post"], url_path="guardar-ruta")
+    def guardar_ruta(self, request):
+        """
+        Persiste el nuevo orden de paradas para el itinerario activo en curso.
+        Endpoint: POST /api/itinerarios/guardar-ruta/
+        Body: {"parada_ids": [3, 1, 2]}
+        """
+        itinerario = self._get_itinerario_activo(request)
+        serializer = GuardarRutaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        parada_ids = serializer.validated_data["parada_ids"]
+        paradas_actuales = {p.id: p for p in itinerario.paradas.all()}
+
+        if set(parada_ids) != set(paradas_actuales.keys()):
+            raise ValidationError(
+                {
+                    "detail": "La lista enviada no coincide exactamente con las paradas del itinerario."
+                }
+            )
+
+        paradas_para_actualizar = []
+        for index, p_id in enumerate(parada_ids, start=1):
+            parada = paradas_actuales[p_id]
+            parada.orden = index
+            paradas_para_actualizar.append(parada)
+
+        with transaction.atomic():
+            Parada.objects.bulk_update(paradas_para_actualizar, fields=["orden"])
+
+        respuesta = ListaParadaSerializer(paradas_para_actualizar, many=True)
+        return Response(respuesta.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="crear-ruta")
+    def crear_ruta(self, request):
+        """
+        Crea o actualiza una plantilla de RutaGuardada vinculada al transportista en sesión
+        y actualiza los comercios asociados con su prioridad correspondiente.
+        Endpoint: POST /api/itinerarios/crear-ruta/
+        Body: {
+            "nombre": "Ruta Lluvias",
+            "parada_ids": [3, 1, 2]
+        }
+        """
+        itinerario = self._get_itinerario_activo(request)
+        serializer = CrearRutaGuardadaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        nombre_ruta = serializer.validated_data["nombre"].strip()
+        parada_ids = serializer.validated_data["parada_ids"]
+
+        paradas_dict = {p.id: p for p in itinerario.paradas.select_related("comercio")}
+        if not set(parada_ids).issubset(set(paradas_dict.keys())):
+            raise ValidationError(
+                {
+                    "detail": (
+                        "Algunas de las paradas indicadas no pertenecen a tu itinerario activo."
+                    )
+                }
+            )
+
+        transportista = request.user.perfil_transportista
+
+        with transaction.atomic():
+            ruta_guardada, creada = RutaGuardada.objects.get_or_create(
+                transportista=transportista,
+                nombre=nombre_ruta,
+            )
+
+            if not creada:
+                ruta_guardada.detalles.all().delete()
+
+            detalles_para_crear = [
+                DetalleRutaGuardada(
+                    ruta_guardada=ruta_guardada,
+                    comercio=paradas_dict[p_id].comercio,
+                    prioridad=prioridad,
+                )
+                for prioridad, p_id in enumerate(parada_ids, start=1)
+            ]
+
+            DetalleRutaGuardada.objects.bulk_create(detalles_para_crear)
+            ordenar_itinerario_segun_ruta(itinerario, ruta_guardada)
+
+        status_code = status.HTTP_201_CREATED if creada else status.HTTP_200_OK
+        mensaje = (
+            "Ruta guardada exitosamente."
+            if creada
+            else "Ruta actualizada exitosamente."
+        )
+
+        return Response(
+            {
+                "id": ruta_guardada.id,
+                "nombre": ruta_guardada.nombre,
+                "total_comercios": len(detalles_para_crear),
+                "actualizada": not creada,
+                "mensaje": mensaje,
+            },
+            status=status_code,
+        )
+
+    @action(detail=False, methods=["get"], url_path="rutas-guardadas")
+    def listar_rutas_guardadas(self, request):
+        """
+        Devuelve solo el id y el nombre de las rutas guardadas del transportista.
+        Endpoint: GET /api/itinerarios/rutas-guardadas/
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {"detail": "El usuario autenticado no posee perfil de transportista."}
+            )
+
+        rutas = RutaGuardada.objects.filter(
+            transportista=user.perfil_transportista
+        ).order_by("nombre")
+        serializer = RutaGuardadaSerializer(rutas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="ordenar-por-ruta")
+    def ordenar_por_ruta(self, request):
+        """
+        Recibe {"ruta_id": <id>} y devuelve únicamente la lista de IDs de paradas ordenadas.
+        Endpoint: POST /api/itinerarios/ordenar-por-ruta/
+        """
+        ruta_id = request.data.get("ruta_id")
+        if not ruta_id:
+            raise ValidationError({"ruta_id": "El campo 'ruta_id' es obligatorio."})
+
+        itinerario = self._get_itinerario_activo(request)
+        transportista = request.user.perfil_transportista
+
+        try:
+            ruta_guardada = RutaGuardada.objects.get(
+                id=ruta_id, transportista=transportista
+            )
+        except RutaGuardada.DoesNotExist:
+            raise NotFound(
+                {"detail": "La ruta enviada no existe o no pertenece a tu usuario."}
+            )
+
+        paradas_ordenadas = ordenar_itinerario_segun_ruta(itinerario, ruta_guardada)
+        parada_ids_ordenadas = [parada.id for parada in paradas_ordenadas]
+        return Response(parada_ids_ordenadas, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post", "delete"], url_path="eliminar-ruta")
+    def eliminar_ruta(self, request):
+        """
+        Elimina una plantilla de RutaGuardada perteneciente al chofer autenticado.
+        Endpoint: POST o DELETE /api/itinerarios/eliminar-ruta/
+        Body: {"ruta_id": <id>}
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {"detail": "El usuario autenticado no posee perfil de transportista."}
+            )
+
+        ruta_id = request.data.get("ruta_id")
+        if not ruta_id:
+            raise ValidationError({"ruta_id": "El campo 'ruta_id' es obligatorio."})
+
+        try:
+            ruta_guardada = RutaGuardada.objects.get(
+                id=ruta_id, transportista=user.perfil_transportista
+            )
+        except RutaGuardada.DoesNotExist:
+            raise NotFound(
+                {"detail": "La ruta enviada no existe o no pertenece a tu usuario."}
+            )
+
+        with transaction.atomic():
+            ruta_guardada.detalles.all().delete()
+            ruta_guardada.delete()
+
+        return Response(
+            {"mensaje": "Ruta eliminada correctamente.", "id": ruta_id},
+            status=status.HTTP_200_OK,
+        )
+
+
+class ParadaViewSet(viewsets.ModelViewSet):
+    queryset = Parada.objects.select_related("comercio", "cobranza", "itinerario").prefetch_related(
+        "remitos"
+    )
+    serializer_class = DetalleParadaSerializer
+    permission_classes = [IsActiveUser]
+
+    @action(detail=True, methods=["post"], url_path="crear-preferencia-mp")
+    def crear_preferencia_mp(self, request, pk=None):
+        """
+        POST /api/paradas/{id}/crear-preferencia-mp/
+        Body: {"monto": 5000.00}
+        """
+        parada = self.get_object()
+        monto = request.data.get("monto")
+
+        if not monto:
+            raise ValidationError({"monto": "Debe especificar el monto a cobrar por Mercado Pago."})
+
+        try:
+            monto_decimal = Decimal(str(monto))
+            if monto_decimal <= Decimal("0.00"):
+                raise ValueError
+        except (ValueError, TypeError):
+            raise ValidationError({"monto": "El monto debe ser un número decimal mayor a 0."})
+
+        # Conversión a float nativo para compatibilidad con el JSONEncoder de Mercado Pago
+        monto_float = float(monto_decimal)
+        cobro_ref = f"cobro_{parada.id}_{int(time.time() * 1000)}"
+
+        preference_data = {
+            "items": [
+                {
+                    "title": f"Cobro Parada #{parada.id} - {parada.comercio.razon_social}",
+                    "quantity": 1,
+                    "currency_id": "ARS",
+                    "unit_price": monto_float,
+                }
+            ],
+            "external_reference": cobro_ref,
+        }
+
+        preference_res = sdk.preference().create(preference_data).get("response", {})
+        print("[MP SDK RESPONSE]:", preference_res)
+        preference_id = preference_res.get("id")
+        # checkout_url = preference_res.get("sandbox_init_point") or preference_res.get("init_point")
+        production_url = preference_res.get("init_point")
+        sandbox_url = preference_res.get("sandbox_init_point")
+
+        return Response(
+            {
+                "preference_id": preference_id,
+                "cobro_ref": cobro_ref,
+                "production_url": production_url,
+                "sandbox_url": sandbox_url,
+                "monto": monto_float,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["post"], url_path="verificar-cobro-mp")
+    def verificar_cobro_mp(self, request, pk=None):
+        """
+        POST /api/paradas/{id}/verificar-cobro-mp/
+        Body: {"cobro_ref": "cobro_1_1730592839123"}
+        """
+        cobro_ref = request.data.get("cobro_ref")
+
+        if not cobro_ref:
+            raise ValidationError({"cobro_ref": "Debe enviar el cobro_ref correspondiente a este QR."})
+
+        # Búsqueda precisa por esa transacción puntual
+        search_res = sdk.payment().search(filters={"external_reference": cobro_ref})
+        pagos = search_res.get("response", {}).get("results", [])
+
+        if not pagos:
+            return Response(
+                {
+                    "aprobado": False,
+                    "mensaje": "Aún no se detectó el pago de este QR en Mercado Pago.",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        ultimo_pago = pagos[0]
+        status_mp = ultimo_pago.get("status")
+
+        return Response(
+            {
+                "aprobado": status_mp == "approved",
+                "status": status_mp,
+                "payment_id": str(ultimo_pago.get("id")),
+                "cobro_ref": cobro_ref,
+                "monto": ultimo_pago.get("transaction_amount"),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=["post"], url_path="registrar-cobranza")
+    def registrar_cobranza(self, request, pk=None):
+        """
+        POST /api/paradas/{id}/registrar-cobranza/
+        Body:
+        [
+            {"medio": "qr", "monto": 100.00, "mp_payment_id": "123456789"},
+            {"medio": "efectivo", "monto": 100.00}
+        ]
+        """
+        parada = self.get_object()
+
+        if not isinstance(request.data, list) or len(request.data) == 0:
+            raise ValidationError(
+                "Se espera una lista con al menos un detalle de pago."
+            )
+
+        serializer = RegistrarPagoInputSerializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        pagos_validados = serializer.validated_data
+
+        with transaction.atomic():
+            cobranza, _ = Cobranza.objects.get_or_create(
+                parada=parada,
+                defaults={"estado": EstadoCobranza.REGISTRADO},
+            )
+
+            detalles_a_crear = [
+                DetallePago(
+                    cobranza=cobranza,
+                    medio=pago["medio"],
+                    monto_declarado=pago["monto"],
+                    mp_payment_id=pago.get("mp_payment_id"),
+                    mp_preference_id=pago.get("mp_preference_id"),
+                    monto_verificado=pago["monto"] if pago.get("mp_payment_id") else None,
+                )
+                for pago in pagos_validados
+            ]
+
+            DetallePago.objects.bulk_create(detalles_a_crear)
+
+            parada.remitos.filter(eliminado=False).update(estado=EstadoRemito.ENTREGADO)
+
+            parada.hora_entrega = timezone.now()
+            parada.estado = EstadoParada.FINALIZADA
+            parada.save(update_fields=["estado", "hora_entrega"])
+
+            itinerario = parada.itinerario
+            quedan_paradas_pendientes = (
+                itinerario.paradas.exclude(id=parada.id)
+                .filter(estado=EstadoParada.PENDIENTE)
+                .exists()
+            )
+
+            itinerario_finalizado = False
+            if not quedan_paradas_pendientes:
+                itinerario.estado = EstadoItinerario.FINALIZADO
+                itinerario.save(update_fields=["estado"])
+                itinerario_finalizado = True
+
+        return Response(
+            {
+                "mensaje": "Cobranza y pagos registrados correctamente.",
+                "cobranza_id": cobranza.id,
+                "pagos_registrados": len(detalles_a_crear),
+                "parada_estado": parada.estado,
+                "itinerario_finalizado": itinerario_finalizado,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["post"], url_path="reportar-problema")
+    def reportar_problema(self, request, pk=None):
+        parada = self.get_object()
+
+        serializer = RegistrarProblemaInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        tipo = serializer.validated_data["tipo"]
+        descripcion = serializer.validated_data.get("descripcion", "")
+        impide_entrega = serializer.validated_data["impide_entrega"]
+
+        with transaction.atomic():
+            problema = ProblemaParada.objects.create(
+                parada=parada,
+                tipo=tipo,
+                descripcion=descripcion,
+                impide_entrega=impide_entrega,
+            )
+
+            if impide_entrega:
+                parada.estado = EstadoParada.ERROR
+                parada.save(update_fields=["estado"])
+
+            itinerario = parada.itinerario
+            quedan_pendientes = (
+                itinerario.paradas.exclude(id=parada.id)
+                .filter(estado=EstadoParada.PENDIENTE)
+                .exists()
+            )
+
+            itinerario_finalizado = False
+            if not quedan_pendientes and parada.estado != EstadoParada.PENDIENTE:
+                itinerario.estado = EstadoItinerario.FINALIZADO
+                itinerario.save(update_fields=["estado"])
+                itinerario_finalizado = True
+
+        return Response(
+            {
+                "mensaje": "Problema registrado correctamente.",
+                "problema": ProblemaParadaSerializer(problema).data,
+                "parada_estado": parada.estado,
+                "itinerario_finalizado": itinerario_finalizado,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="subir-evidencia",
+        parser_classes=[parsers.MultiPartParser, parsers.FormParser],
+    )
+    def subir_evidencia(self, request, pk=None):
+        parada = self.get_object()
+
+        if "archivo" not in request.FILES:
+            raise ValidationError(
+                {
+                    "archivo": "No se envió ningún archivo de imagen en el campo 'archivo'."
+                }
+            )
+
+        archivo = request.FILES["archivo"]
+        evidencia = EvidenciaParada.objects.create(
+            parada=parada,
+            archivo=archivo,
+        )
+
+        serializer = EvidenciaParadaSerializer(evidencia, context={"request": request})
+        return Response(
+            {
+                "mensaje": "Evidencia subida correctamente.",
+                "evidencia": serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )

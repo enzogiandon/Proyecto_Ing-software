@@ -39,9 +39,11 @@ DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1", "192.168.1.33", "10.0.2.2"]
 
+MERCADO_PAGO_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN", "TEST-TU-ACCESS-TOKEN-AQUI")
+
 SESSION_COOKIE_AGE = 3600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_SAVE_EVERY_REQUEST = False
+SESSION_SAVE_EVERY_REQUEST = True
 
 # Application definition
 

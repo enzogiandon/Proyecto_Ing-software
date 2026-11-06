@@ -1,6 +1,12 @@
 from django.urls import path
 
-from .views import CrearItinerarios, CrearParadas, DetalleParada, ListaItinerarios
+from .views import (
+    CrearItinerarios,
+    CrearParadas,
+    DetalleParada,
+    ListaItinerarios,
+    ReordenarItinerario,
+)
 
 app_name = "itinerarios"
 
@@ -9,4 +15,5 @@ urlpatterns = [
     path("paradas/<int:pk>/", DetalleParada.as_view(), name="parada_detalle"),
     path("crear/", CrearItinerarios.as_view(), name="itinerario_crear"),
     path("paradas/crear/", CrearParadas.as_view(), name="paradas_crear"),
+    path("itinerario/<int:pk>/reordenar/", ReordenarItinerario.as_view(), name="itinerario_reordenar"),
 ]

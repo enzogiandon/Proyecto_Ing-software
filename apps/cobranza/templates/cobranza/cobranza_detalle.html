@@ -26,11 +26,29 @@
             <a href="{% url 'cobranza:cobranza_lista' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Volver al listado
             </a>
+
+            <!-- Botón Ajustar (habilitado para cobranzas con diferencia o registradas) -->
+            {% if cobranza.estado == "difiere" or cobranza.estado == "registrado" %}
+                <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" class="btn btn-warning btn-sm text-dark shadow-sm">
+                    <i class="bi bi-pencil-square me-1"></i> Ajustar
+                </a>
+            {% endif %}
+
             <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" class="btn btn-success btn-sm shadow-sm">
                 <i class="bi bi-check2-circle me-1"></i> Ir a Validar
             </a>
         </div>
     </div>
+
+    <!-- Mensajes Flash de Django -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
     <!-- Fila Superior: Datos de Parada / Comercio y Estado -->
     <div class="row g-3 mb-4">
@@ -193,6 +211,51 @@
             </table>
         </div>
     </div>
+
+    <!-- Historial de Ajustes Administrativos (Criterio Escenario 3) -->
+    {% if cobranza.ajustes.exists %}
+      <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white py-3 border-bottom">
+              <h6 class="card-title mb-0 fw-bold text-dark">
+                  <i class="bi bi-clock-history me-2 text-warning"></i>Historial de Ajustes por Medio de Pago
+              </h6>
+          </div>
+          <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0">
+                  <thead class="table-light small">
+                      <tr>
+                          <th class="ps-3">Fecha y Hora</th>
+                          <th>Medio de Pago</th>
+                          <th>Administrativo</th>
+                          <th>Importe Anterior</th>
+                          <th>Importe Nuevo</th>
+                          <th>Motivo</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for detalle in cobranza.detalles.all %}
+                          {% for ajuste in detalle.ajustes.all %}
+                          <tr>
+                              <td class="ps-3 small text-muted">{{ ajuste.fecha|date:"d/m/Y H:i" }} hs</td>
+                              <td>
+                                  <span class="badge bg-light text-dark border">{{ detalle.get_medio_display }}</span>
+                              </td>
+                              <td class="fw-semibold">{{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}</td>
+                              <td class="text-secondary">${{ ajuste.importe_anterior }}</td>
+                              <td class="text-success fw-bold">${{ ajuste.importe_nuevo }}</td>
+                              <td class="small">{{ ajuste.motivo }}</td>
+                          </tr>
+                          {% endfor %}
+                      {% empty %}
+                          <tr>
+                              <td colspan="6" class="text-center py-3 text-muted small">Sin ajustes registrados.</td>
+                          </tr>
+                      {% endfor %}
+                  </tbody>
+              </table>
+          </div>
+      </div>
+    {% endif %}
 
     <!-- Remitos asociados a la Parada -->
     <div class="card shadow-sm border-0">

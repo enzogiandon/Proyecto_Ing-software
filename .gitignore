@@ -31,6 +31,10 @@ config_bak/
 notes.md
 db.sqlite3-shm
 db.sqlite3-wal
+preview.html
+preview_itinerarios.html
+preview_login.html
+preview_remitos.html
 
 # PyInstaller
 #   Usually these files are written by a python script from a template

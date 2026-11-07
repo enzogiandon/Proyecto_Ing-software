@@ -126,19 +126,22 @@
                                     </span>
                                 </td>
                                 <td>
-                                    {% with primera_parada=itinerario.paradas.first %}
-                                        {% if primera_parada %}
-                                            <a href="{% url 'itinerarios:parada_detalle' primera_parada.pk %}" class="btn-ver-detalle">
-                                                <i class="far fa-eye"></i>
-                                                <span>Ver detalle</span>
-                                            </a>
-                                        {% else %}
-                                            <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}" class="btn-ver-detalle">
-                                                <i class="fas fa-plus"></i>
-                                                <span>Agregar paradas</span>
-                                            </a>
-                                        {% endif %}
-                                    {% endwith %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% with primera_parada=itinerario.paradas.first %}
+                                            {% if primera_parada %}
+                                                <!-- Botón para Reordenar Recorrido -->
+                                                <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn-ver-detalle btn-sm py-1 px-2" title="Reordenar secuencia de paradas">
+                                                    <i class="fas fa-arrows-alt-v"></i>
+                                                    <span>Reordenar</span>
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}" class="btn-ver-detalle">
+                                                    <i class="fas fa-plus"></i>
+                                                    <span>Agregar paradas</span>
+                                                </a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

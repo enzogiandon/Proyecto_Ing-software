@@ -1,4 +1,6 @@
 # cobranza/models.py
+
+from django.conf import settings
 from django.db import models
 
 
@@ -36,7 +38,9 @@ class Cobranza(models.Model):
     fecha = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Cobranza Parada #{self.parada.id} - {self.parada.comercio.razon_social}"
+        return (
+            f"Cobranza Parada #{self.parada.id} - {self.parada.comercio.razon_social}"
+        )
 
 
 class DetallePago(models.Model):
@@ -67,3 +71,42 @@ class DetallePago(models.Model):
 
     def __str__(self):
         return f"{self.get_medio_display()} - Declarado: ${self.monto_declarado}"
+
+
+class AjusteCobranza(models.Model):
+    detalle_pago = models.ForeignKey(
+        DetallePago,
+        on_delete=models.CASCADE,
+        related_name="ajustes",
+        help_text="Detalle de pago puntual sobre el cual se aplica la corrección",
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        help_text="Administrativo que autorizó el ajuste",
+    )
+    importe_anterior = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Monto verificado antes de aplicar el ajuste (o declarado si estaba sin verificar)",
+    )
+    importe_nuevo = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Monto corregido final determinado por el administrativo",
+    )
+    motivo = models.TextField(
+        help_text="Justificación obligatoria del ajuste",
+    )
+    fecha = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Fecha y hora exacta en que se registró el ajuste",
+    )
+
+    class Meta:
+        verbose_name = "Ajuste de cobranza"
+        verbose_name_plural = "Ajustes de cobranzas"
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"Ajuste {self.detalle_pago.get_medio_display()} (#{self.detalle_pago.id}): ${self.importe_anterior} -> ${self.importe_nuevo}"

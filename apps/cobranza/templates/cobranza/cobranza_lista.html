@@ -20,8 +20,10 @@
             </h3>
             <p class="text-muted small mb-0">Control general de cobros efectuados y acceso a validación administrativa.</p>
         </div>
+        <a href="{% url 'cobranza:ajuste_lista' %}" class="btn btn-outline-warning text-dark btn-sm shadow-sm">
+            <i class="bi bi-clock-history me-1"></i> Ver Historial de Ajustes
+        </a>
     </div>
-
     <!-- Filtros de Búsqueda -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body bg-white rounded">
@@ -89,7 +91,7 @@
                         <th>Parada / Itinerario</th>
                         <th>Estado</th>
                         <th>Observación</th>
-                        <th class="text-end pe-3" style="width: 200px;">Acciones</th>
+                        <th class="text-end pe-3" style="width: 240px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -153,6 +155,15 @@
                                    title="Ver comprobantes y pagos">
                                     <i class="bi bi-eye"></i> Detalle
                                 </a>
+
+                                <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
+                                {% if cob.estado == "difiere" or cob.estado == "registrado" %}
+                                    <a href="{% url 'cobranza:cobranza_ajustar' cob.pk %}" 
+                                       class="btn btn-outline-warning text-dark" 
+                                       title="Ajustar importe por diferencia">
+                                        <i class="bi bi-pencil-square"></i> Ajustar
+                                    </a>
+                                {% endif %}
 
                                 <!-- Botón Validar -->
                                 <a href="{% url 'cobranza:cobranza_validar' cob.pk %}" 

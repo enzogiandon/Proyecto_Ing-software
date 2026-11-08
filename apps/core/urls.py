@@ -16,6 +16,10 @@ from .views import (
 
 app_name = "core"
 
+handler404 = "apps.core.views.error_404"
+handler500 = "apps.core.views.error_500"
+handler403 = "apps.core.views.error_403"
+
 urlpatterns = [
     path("", Inicio.as_view(), name="inicio"),
     path("login/", CustomLoginView.as_view(), name="login"),
@@ -37,7 +41,6 @@ urlpatterns = [
         RestablecerCredencialesEmpleado.as_view(),
         name="empleado_restablecer_credenciales",
     ),
-    path("usuarios/crear", CrearEmpleado.as_view(), name="crear_usuario"),
 
     path("vehiculos/", ListaVehiculos.as_view(), name="vehiculo_lista"),
     path("vehiculos/nuevo/", CrearVehiculo.as_view(), name="vehiculo_crear"),

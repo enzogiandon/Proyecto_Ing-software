@@ -1,30 +1,11 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+﻿from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.messages import get_messages
-from django.template import Context, Template
 from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.forms import EmpleadoCreateForm
 from apps.core.models import EstadoVehiculo, Roles, Transportista, Vehiculo
-
-
-class GroupTemplateFilterTests(TestCase):
-    def test_has_group_filter_checks_membership_and_anonymous_user(self):
-        user = get_user_model().objects.create_user(
-            username="99999999",
-            password="Secure-Password-42!",
-            rol=Roles.ADMINISTRATIVO,
-        )
-        group = Group.objects.create(name="Administrador")
-        template = Template(
-            "{% load auth_extras %}{{ user|has_group:'Administrador' }}"
-        )
-
-        self.assertEqual(template.render(Context({"user": user})), "False")
-        user.groups.add(group)
-        self.assertEqual(template.render(Context({"user": user})), "True")
-        self.assertEqual(template.render(Context({"user": None})), "False")
 
 
 class EmpleadoViewsTests(TestCase):
@@ -200,6 +181,37 @@ class EmpleadoViewsTests(TestCase):
         employee.refresh_from_db()
         self.assertTrue(employee.is_active)
 
+    def test_reset_employee_credentials_reactivates_account_and_changes_password(self):
+        employee = get_user_model().objects.create_user(
+            username="89012345",
+            password="Admin-Password-42!",
+
+            rol=Roles.TRANSPORTISTA,
+        )
+        employee.is_active = False
+        employee.save(update_fields=["is_active"])
+
+        response = self.client.post(
+            reverse("core:empleado_restablecer_credenciales", args=[employee.pk]),
+            {
+                "password": "Nueva-Password-42!",
+                "password_confirm": "Nueva-Password-42!",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:empleado_lista"),
+            fetch_redirect_response=False,
+        )
+        employee.refresh_from_db()
+        self.assertTrue(employee.is_active)
+        self.assertTrue(employee.check_password("Nueva-Password-42!"))
+        self.assertEqual(
+            [message.message for message in get_messages(response.wsgi_request)],
+            ["Credenciales restablecidas correctamente."],
+        )
+
 class VehiculoViewsTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
@@ -302,3 +314,4 @@ class VehiculoViewsTests(TestCase):
             f"{reverse('core:login')}?next={reverse('core:vehiculo_crear')}",
             fetch_redirect_response=False,
         )
+

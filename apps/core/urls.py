@@ -10,14 +10,11 @@ from .views import (
     Inicio,
     ListaEmpleados,
     ListaVehiculos,
+    RestablecerCredencialesEmpleado,
     SuspenderEmpleado,
 )
 
 app_name = "core"
-
-handler404 = "apps.core.views.error_404"
-handler500 = "apps.core.views.error_500"
-handler403 = "apps.core.views.error_403"
 
 urlpatterns = [
     path("", Inicio.as_view(), name="inicio"),
@@ -35,6 +32,12 @@ urlpatterns = [
         SuspenderEmpleado.as_view(),
         name="empleado_suspender",
     ),
+    path(
+        "empleados/<int:pk>/restablecer-credenciales/",
+        RestablecerCredencialesEmpleado.as_view(),
+        name="empleado_restablecer_credenciales",
+    ),
+    path("usuarios/crear", CrearEmpleado.as_view(), name="crear_usuario"),
 
     path("vehiculos/", ListaVehiculos.as_view(), name="vehiculo_lista"),
     path("vehiculos/nuevo/", CrearVehiculo.as_view(), name="vehiculo_crear"),

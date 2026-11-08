@@ -3,23 +3,20 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
-from apps.remitos.models import (
-    Remito,
-    ImportacionRemitos,
-    EstadoImportacion,
-    EstadoRemito,
-)
-from apps.itinerarios.models import Parada, EstadoParada, EstadoItinerario, Itinerario
-from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
 
-from .forms import EmpleadoCreateForm, EmpleadoUpdateForm, LoginForm, VehiculoForm
-from .models import EstadoVehiculo, Usuario, Vehiculo
+from .forms import (
+    EmpleadoCreateForm,
+    EmpleadoUpdateForm,
+    LoginForm,
+    RestablecerCredencialesForm,
+    VehiculoForm,
+)
+from .models import Usuario, Vehiculo
 
 # Create your views here.
 
@@ -46,10 +43,7 @@ class CustomLoginView(LoginView):
                 if user.intentos_fallidos >= 5:
                     user.is_active = False
             else:
-                form.add_error(
-                    None,
-                    "La cuenta se encuentra suspendida. Contacte al administrador.",
-                )
+                form.add_error(None, "La cuenta se encuentra suspendida. Contacte al administrador.")
 
             user.save(update_fields=["intentos_fallidos", "is_active"])
 
@@ -134,15 +128,40 @@ class SuspenderEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
 
     def post(self, request, pk):
         empleado = get_object_or_404(Usuario, pk=pk)
-        if empleado and empleado.is_active:
-            empleado.is_active = False
-            empleado.save(update_fields=["is_active"])
-            messages.success(request, "Cuenta del empleado deshabilitada.")
-        else:
-            empleado.is_active = True
-            empleado.save(update_fields=["is_active"])
-            messages.success(request, "Cuenta del empleado habilitada.")
+        empleado.is_active = False
+        empleado.save(update_fields=["is_active"])
+        messages.success(request, "Cuenta del empleado deshabilitada.")
+        return redirect("core:empleado_lista")
 
+
+class RestablecerCredencialesEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "core.change_usuario"
+
+    def get(self, request, pk):
+        empleado = get_object_or_404(Usuario, pk=pk)
+        form = RestablecerCredencialesForm(user=empleado)
+        return render(
+            request,
+            "core/empleado_reset_password.html",
+            {"empleado": empleado, "form": form},
+        )
+
+    def post(self, request, pk):
+        empleado = get_object_or_404(Usuario, pk=pk)
+        form = RestablecerCredencialesForm(request.POST, user=empleado)
+
+        if not form.is_valid():
+            return render(
+                request,
+                "core/empleado_reset_password.html",
+                {"empleado": empleado, "form": form},
+            )
+
+        empleado.set_password(form.cleaned_data["password"])
+        empleado.is_active = True
+        empleado.save(update_fields=["password", "is_active"])
+
+        messages.success(request, "Credenciales restablecidas correctamente.")
         return redirect("core:empleado_lista")
 
 
@@ -154,71 +173,4 @@ class Inicio(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         context["username"] = user.first_name or user.username
-
-        # --------------------------------------------------
-        # Administración de Personal
-        # --------------------------------------------------
-        context["empleados_activos"] = Usuario.objects.filter(is_active=True).count()
-
-        # Agregamos ambos estados de vehículos en una sola query a la DB
-        vehiculos_stats = Vehiculo.objects.aggregate(
-            disponibles=Count("id", filter=Q(estado=EstadoVehiculo.DISPONIBLE)),
-            no_disponibles=Count("id", filter=Q(estado=EstadoVehiculo.ASIGNADO)),
-        )
-        context["vehiculos_disponibles"] = vehiculos_stats["disponibles"]
-        context["vehiculos_asignados"] = vehiculos_stats["no_disponibles"]
-
-        # --------------------------------------------------
-        # Planificación
-        # --------------------------------------------------
-        context["remitos_asignados"] = Remito.objects.filter(
-            estado=EstadoRemito.ASIGNADO
-        ).count()
-        context["itinerarios_asignados"] = Itinerario.objects.filter(
-            estado=EstadoItinerario.ASIGNADO
-        ).count()
-        context["importaciones_pendientes"] = ImportacionRemitos.objects.filter(
-            estado=EstadoImportacion.PENDIENTE
-        ).count()
-
-        # --------------------------------------------------
-        # Conciliación
-        # --------------------------------------------------
-        context["cobranzas_para_validar"] = Cobranza.objects.filter(
-            estado=EstadoCobranza.REGISTRADO
-        ).count()
-
-        # Mismo caso: pagos con diferencia y no encontrados en una sola query
-        pagos_stats = Cobranza.objects.aggregate(
-            para_validar=Count("id", filter=Q(estado=EstadoCobranza.REGISTRADO)),
-            con_diferencia=Count("id", filter=Q(estado=EstadoCobranza.DIFIERE)),
-            no_encontrados=Count("id", filter=Q(estado=EstadoCobranza.NO_ENCONTRADO)),
-        )
-        context["cobranzas_para_validar"] = pagos_stats["para_validar"]
-        context["cobranza_con_diferencia"] = pagos_stats["con_diferencia"]
-        context["cobranza_no_encontrados"] = pagos_stats["no_encontrados"]
-
-        context["ultimos_empleados"] = (
-            Usuario.objects.filter(is_active=True)
-            .prefetch_related("groups")
-            .order_by("-date_joined")[:3]
-        )
-        context["cobranzas_pendientes"] = (
-            Cobranza.objects.filter(estado=EstadoCobranza.REGISTRADO)
-            .order_by("-id")[:3]
-        )
-        context["importaciones"] = ImportacionRemitos.objects.all().order_by("-id")[:3]
-
         return context
-
-
-def error_404(request, exception):
-    return render(request, "errores/404.html", status=404)
-
-
-def error_500(request):
-    return render(request, "errores/500.html", status=500)
-
-
-def error_403(request, exception):
-    return render(request, "errores/403.html", status=403)

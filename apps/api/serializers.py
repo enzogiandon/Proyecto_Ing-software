@@ -14,7 +14,7 @@ from apps.itinerarios.models import (
     RutaGuardada,
     TipoProblema,
 )
-from apps.remitos.models import Comercio, Remito
+from apps.remitos.models import Comercio, EstadoRemito, Remito
 
 User = get_user_model()
 
@@ -203,4 +203,71 @@ class RegistrarProblemaInputSerializer(serializers.Serializer):
             )
 
         attrs["descripcion"] = descripcion
+        return attrs
+
+
+class RegistrarRemitosInputSerializer(serializers.Serializer):
+    remitos = serializers.ListField(
+        child=serializers.CharField(trim_whitespace=True),
+        allow_empty=False,
+        help_text="Lista de números de remito a asociar a la parada.",
+    )
+
+    def validate_remitos(self, value):
+        remitos = []
+        for item in value:
+            if not item or not str(item).strip():
+                raise serializers.ValidationError("No puede haber remitos vacíos.")
+
+            item_str = str(item).strip()
+            try:
+                remito = Remito.objects.get(pk=int(item_str))
+            except (TypeError, ValueError, Remito.DoesNotExist):
+                remito = Remito.objects.filter(numero=item_str).first()
+                if remito is None:
+                    raise serializers.ValidationError(
+                        f"El remito '{item_str}' no existe o no pertenece a la operación."
+                    )
+
+            remitos.append(remito)
+
+        if not remitos:
+            raise serializers.ValidationError("Debe enviar al menos un remito.")
+
+        return remitos
+
+    def validate(self, attrs):
+        remitos = attrs.get("remitos", [])
+        parada = self.context.get("parada")
+        if parada is None:
+            return attrs
+
+        for remito in remitos:
+            if remito.eliminado:
+                raise serializers.ValidationError(
+                    {"remitos": f"El remito '{remito.numero}' fue eliminado y no puede registrarse."}
+                )
+            if remito.comercio_id != parada.comercio_id:
+                raise serializers.ValidationError(
+                    {"remitos": f"El remito '{remito.numero}' no pertenece a esta parada."}
+                )
+            if remito.parada_id and remito.parada_id != parada.pk:
+                raise serializers.ValidationError(
+                    {"remitos": f"El remito '{remito.numero}' ya está asociado a otra entrega."}
+                )
+            if remito.estado not in [EstadoRemito.PENDIENTE, EstadoRemito.ASIGNADO]:
+                raise serializers.ValidationError(
+                    {"remitos": f"El remito '{remito.numero}' no puede registrarse porque su estado no es válido."}
+                )
+
+        seen = set()
+        remitos_validos = []
+        for remito in remitos:
+            key = (remito.pk, remito.numero)
+            if key in seen:
+                continue
+            seen.add(key)
+            remitos_validos.append(remito)
+
+        attrs["remitos"] = remitos_validos
         return attrs

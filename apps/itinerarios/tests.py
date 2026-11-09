@@ -1,12 +1,14 @@
 from datetime import date
+from io import StringIO
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group
+from django.core.management import call_command
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
-from apps.core.models import Roles, Transportista, Vehiculo
+from apps.core.models import Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
     EstadoItinerario,
@@ -21,31 +23,26 @@ from apps.remitos.models import Comercio, EstadoRemito, Marca, Remito
 
 class ItinerarioViewsTests(TestCase):
     def setUp(self):
+        call_command("crear_grupos", stdout=StringIO())
+        self.grupo_planificacion = Group.objects.get(
+            name=Grupos.ADMIN_PLANIFICACION
+        )
+        self.grupo_transportista = Group.objects.get(name=Grupos.TRANSPORTISTA)
+
         user_model = get_user_model()
         self.administrativo = user_model.objects.create_user(
             username="11111111",
             password="Testing-Password-123!",
-            rol=Roles.ADMINISTRATIVO,
         )
-        permissions = Permission.objects.filter(
-            content_type__app_label__in=["itinerarios", "remitos"],
-            codename__in=[
-                "view_itinerario",
-                "view_parada",
-                "add_itinerario",
-                "add_parada",
-                "change_remito",
-            ],
-        )
-        self.administrativo.user_permissions.add(*permissions)
+        self.administrativo.groups.add(self.grupo_planificacion)
         self.client.force_login(self.administrativo)
 
         self.vehiculo = Vehiculo.objects.create(patente="AB123CD")
         self.transportista_user = user_model.objects.create_user(
             username="22222222",
             password="Driver-Password-123!",
-            rol=Roles.TRANSPORTISTA,
         )
+        self.transportista_user.groups.add(self.grupo_transportista)
         self.transportista = Transportista.objects.create(
             usuario=self.transportista_user,
             vehiculo=self.vehiculo,
@@ -72,8 +69,8 @@ class ItinerarioViewsTests(TestCase):
         second_user = get_user_model().objects.create_user(
             username="33333333",
             password="Driver-Password-123!",
-            rol=Roles.TRANSPORTISTA,
         )
+        second_user.groups.add(self.grupo_transportista)
         second_transportista = Transportista.objects.create(
             usuario=second_user,
             vehiculo=second_vehiculo,
@@ -245,7 +242,7 @@ class ItinerarioViewsTests(TestCase):
         response = self.client.get(reverse("itinerarios:itinerario_lista"))
 
         self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
+        content = response.content.decode().split("Entregas y paradas", 1)[1]
         positions = [
             content.index(f">{parada.comercio.razon_social}<")
             for parada in [paradas[1], paradas[0], paradas[2], paradas[3]]

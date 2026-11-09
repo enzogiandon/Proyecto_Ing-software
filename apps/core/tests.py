@@ -1,29 +1,31 @@
-﻿from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from io import StringIO
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.forms import EmpleadoCreateForm
-from apps.core.models import EstadoVehiculo, Roles, Transportista, Vehiculo
+from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 
 
 class EmpleadoViewsTests(TestCase):
     def setUp(self):
+        call_command("crear_grupos", stdout=StringIO())
+        self.gestion_personal = Group.objects.get(name=Grupos.GESTION_PERSONAL)
+        self.grupo_transportista = Group.objects.get(name=Grupos.TRANSPORTISTA)
+
         user_model = get_user_model()
         self.user = user_model.objects.create_user(
             username="11111111",
-            password="Testing-Password-123!",
-            rol=Roles.ADMINISTRATIVO,
+            password="Admin-Password-42!",
         )
-        permissions = Permission.objects.filter(
-            content_type__app_label="core",
-            codename__in=["view_usuario", "add_usuario", "change_usuario"],
-        )
-        self.user.user_permissions.add(*permissions)
+        self.user.groups.add(self.gestion_personal)
         self.client.force_login(self.user)
 
-    def test_create_administrative_employee_without_permissions(self):
+    def test_create_employee_assigns_selected_group_without_direct_permissions(self):
         response = self.client.post(
             reverse("core:empleado_crear"),
             {
@@ -32,7 +34,7 @@ class EmpleadoViewsTests(TestCase):
                 "first_name": "Ana",
                 "last_name": "Pérez",
                 "telefono": "1112345678",
-                "rol": Roles.ADMINISTRATIVO,
+                "grupos": [self.gestion_personal.pk],
                 "password": "Another-Secure-Password-42!",
                 "password_confirm": "Another-Secure-Password-42!",
             },
@@ -45,14 +47,14 @@ class EmpleadoViewsTests(TestCase):
         )
         employee = get_user_model().objects.get(username="23456789")
         self.assertTrue(employee.check_password("Another-Secure-Password-42!"))
+        self.assertQuerySetEqual(employee.groups.all(), [self.gestion_personal])
         self.assertFalse(employee.user_permissions.exists())
-        self.assertFalse(employee.groups.exists())
         self.assertEqual(
             [message.message for message in get_messages(response.wsgi_request)],
             ["Empleado registrado correctamente"],
         )
 
-    def test_create_transportista_creates_profile(self):
+    def test_create_transportista_assigns_group_and_creates_profile(self):
         response = self.client.post(
             reverse("core:empleado_crear"),
             {
@@ -61,7 +63,7 @@ class EmpleadoViewsTests(TestCase):
                 "first_name": "Luis",
                 "last_name": "Gómez",
                 "telefono": "1112345678",
-                "rol": Roles.TRANSPORTISTA,
+                "grupos": [self.grupo_transportista.pk],
                 "password": "Transport-Password-42!",
                 "password_confirm": "Transport-Password-42!",
             },
@@ -74,12 +76,12 @@ class EmpleadoViewsTests(TestCase):
         )
         employee = get_user_model().objects.get(username="34567890")
         self.assertTrue(Transportista.objects.filter(usuario=employee).exists())
+        self.assertQuerySetEqual(employee.groups.all(), [self.grupo_transportista])
 
     def test_duplicate_employee_dni_is_rejected(self):
         get_user_model().objects.create_user(
             username="45678901",
-            password="Existing-Password-42!",
-            rol=Roles.TRANSPORTISTA,
+            password="Original-Password-42!",
         )
 
         form = EmpleadoCreateForm(
@@ -89,7 +91,7 @@ class EmpleadoViewsTests(TestCase):
                 "first_name": "Otro",
                 "last_name": "Empleado",
                 "telefono": "",
-                "rol": Roles.ADMINISTRATIVO,
+                "grupos": [self.gestion_personal.pk],
                 "password": "Another-Secure-Password-42!",
                 "password_confirm": "Another-Secure-Password-42!",
             }
@@ -104,22 +106,27 @@ class EmpleadoViewsTests(TestCase):
             get_user_model().objects.filter(username="45678901").count(), 1
         )
 
-    def test_update_employee_changes_profile_and_keeps_password(self):
+    def test_update_employee_changes_group_and_keeps_password(self):
         employee = get_user_model().objects.create_user(
             username="56789012",
             password="Original-Password-42!",
-            rol=Roles.TRANSPORTISTA,
+            first_name="Nombre",
+            last_name="Anterior",
         )
+        employee.groups.add(self.grupo_transportista)
+        Transportista.objects.create(usuario=employee)
 
         response = self.client.post(
             reverse("core:empleado_editar", args=[employee.pk]),
             {
                 "username": "56789013",
                 "email": "actualizado@example.com",
-                "first_name": "Nombre",
-                "last_name": "Actualizado",
+                "first_name": "Nombre actualizado",
+                "last_name": "Apellido actualizado",
                 "telefono": "1112345678",
-                "rol": Roles.TRANSPORTISTA,
+                "grupos": [self.gestion_personal.pk],
+                "password": "",
+                "password_confirm": "",
             },
         )
 
@@ -129,15 +136,17 @@ class EmpleadoViewsTests(TestCase):
             fetch_redirect_response=False,
         )
         employee.refresh_from_db()
+        self.assertEqual(employee.email, "actualizado@example.com")
+        self.assertEqual(employee.username, "56789012")
         self.assertEqual(employee.first_name, "Nombre")
-        self.assertEqual(employee.username, "56789013")
         self.assertTrue(employee.check_password("Original-Password-42!"))
+        self.assertQuerySetEqual(employee.groups.all(), [self.gestion_personal])
+        self.assertFalse(Transportista.objects.filter(usuario=employee).exists())
 
     def test_suspend_employee_disables_account_without_deleting_it(self):
         employee = get_user_model().objects.create_user(
             username="67890123",
-            password="Employee-Password-42!",
-            rol=Roles.TRANSPORTISTA,
+            password="Original-Password-42!",
         )
 
         response = self.client.post(
@@ -151,14 +160,12 @@ class EmpleadoViewsTests(TestCase):
         )
         employee.refresh_from_db()
         self.assertFalse(employee.is_active)
-        self.assertTrue(
-            get_user_model().objects.filter(pk=employee.pk).exists()
-        )
+        self.assertTrue(get_user_model().objects.filter(pk=employee.pk).exists())
         self.client.logout()
         self.assertFalse(
             self.client.login(
                 username="67890123",
-                password="Employee-Password-42!",
+                password="Original-Password-42!",
             )
         )
         self.assertEqual(
@@ -169,8 +176,7 @@ class EmpleadoViewsTests(TestCase):
     def test_suspend_employee_does_not_change_account_on_get(self):
         employee = get_user_model().objects.create_user(
             username="78901234",
-            password="Employee-Password-42!",
-            rol=Roles.TRANSPORTISTA,
+            password="Original-Password-42!",
         )
 
         response = self.client.get(
@@ -184,9 +190,7 @@ class EmpleadoViewsTests(TestCase):
     def test_reset_employee_credentials_reactivates_account_and_changes_password(self):
         employee = get_user_model().objects.create_user(
             username="89012345",
-            password="Admin-Password-42!",
-
-            rol=Roles.TRANSPORTISTA,
+            password="Original-Password-42!",
         )
         employee.is_active = False
         employee.save(update_fields=["is_active"])
@@ -212,26 +216,17 @@ class EmpleadoViewsTests(TestCase):
             ["Credenciales restablecidas correctamente."],
         )
 
+
 class VehiculoViewsTests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.user = user_model.objects.create_user(
+        call_command("crear_grupos", stdout=StringIO())
+        self.gestion_personal = Group.objects.get(name=Grupos.GESTION_PERSONAL)
+
+        self.user = get_user_model().objects.create_user(
             username="12345678",
-            password="test-password",
-            rol="administrativo",
+            password="Vehiculo-Password-42!",
         )
-        self.add_permission = Permission.objects.get(
-            content_type__app_label="core", codename="add_vehiculo"
-        )
-        self.change_permission = Permission.objects.get(
-            content_type__app_label="core", codename="change_vehiculo"
-        )
-        self.view_permission = Permission.objects.get(
-            content_type__app_label="core", codename="view_vehiculo"
-        )
-        self.user.user_permissions.add(
-            self.add_permission, self.change_permission, self.view_permission
-        )
+        self.user.groups.add(self.gestion_personal)
         self.client.force_login(self.user)
 
     def test_create_vehicle_redirects_to_list_and_shows_success(self):
@@ -246,7 +241,9 @@ class VehiculoViewsTests(TestCase):
         )
 
         self.assertRedirects(
-            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
+            response,
+            reverse("core:vehiculo_lista"),
+            fetch_redirect_response=False,
         )
         self.assertTrue(
             Vehiculo.objects.filter(
@@ -272,7 +269,9 @@ class VehiculoViewsTests(TestCase):
         )
 
         self.assertRedirects(
-            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
+            response,
+            reverse("core:vehiculo_lista"),
+            fetch_redirect_response=False,
         )
         self.assertEqual(Vehiculo.objects.count(), 1)
         self.assertEqual(
@@ -294,7 +293,9 @@ class VehiculoViewsTests(TestCase):
         )
 
         self.assertRedirects(
-            response, reverse("core:vehiculo_lista"), fetch_redirect_response=False
+            response,
+            reverse("core:vehiculo_lista"),
+            fetch_redirect_response=False,
         )
         vehiculo.refresh_from_db()
         self.assertEqual(vehiculo.modelo, "Camión actualizado")
@@ -314,4 +315,3 @@ class VehiculoViewsTests(TestCase):
             f"{reverse('core:login')}?next={reverse('core:vehiculo_crear')}",
             fetch_redirect_response=False,
         )
-

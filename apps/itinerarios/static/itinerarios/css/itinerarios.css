@@ -486,3 +486,148 @@
   }
 }
 
+/* ---------- Acciones en Grilla de Itinerarios ---------- */
+.itinerarios-acciones-grupo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.btn-accion-tabla {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 11px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text, #1b1b1f);
+  font: 500 12.5px/normal var(--font-family);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-accion-tabla:hover {
+  background: var(--color-bg, #fff6ec);
+  border-color: var(--color-primary, #123c6b);
+  color: var(--color-primary, #123c6b);
+}
+
+.btn-accion-tabla--primary {
+  border-color: var(--color-accent, #f4661b);
+  color: var(--color-accent, #f4661b);
+}
+
+.btn-accion-tabla--primary:hover {
+  background: var(--color-accent, #f4661b);
+  border-color: var(--color-accent, #f4661b);
+  color: #ffffff;
+}
+
+/* ---------- Tarjeta Resumen de Itinerario (Figma) ---------- */
+.itin-card-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-16, 16px);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  padding: 16px 20px;
+}
+
+.itin-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itin-summary-item label {
+  font: 500 12px/normal var(--font-family);
+  color: var(--color-text-secondary, #545457);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.itin-summary-item .itin-summary-value {
+  font: 600 14px/normal var(--font-family);
+  color: var(--color-text, #1b1b1f);
+}
+
+/* ---------- Elementos de Tabla de Reordenar y Editar ---------- */
+.badge-orden-numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: #f0f0f2;
+  color: var(--color-text, #1b1b1f);
+  border-radius: 6px;
+  font: 600 13px/normal var(--font-family);
+}
+
+.btn-mover-parada {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: 6px;
+  color: var(--color-text, #1b1b1f);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 11px;
+}
+
+.btn-mover-parada:hover:not(:disabled) {
+  background: var(--color-bg, #fff6ec);
+  border-color: var(--color-accent, #f4661b);
+  color: var(--color-accent, #f4661b);
+}
+
+.btn-mover-parada:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: #f7f7f8;
+  border-color: #e5e5e7;
+}
+
+.btn-quitar-parada {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-text-muted, #6b6b6d);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+}
+
+.btn-quitar-parada:hover {
+  background: var(--color-error-tint, #fee2e2);
+  color: var(--color-error, #b91c1c);
+  border-color: #fca5a5;
+}
+
+.itin-tabla-resumen-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border, #d1cac3);
+}
+
+

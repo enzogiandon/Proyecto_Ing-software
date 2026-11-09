@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar itinerario - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="itinerarios-page">
+    <!-- Botón Volver -->
+    <div>
+        <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver a itinerarios</span>
+        </a>
+    </div>
+
+    <!-- Encabezado -->
+    <header class="itinerarios-header">
+        <div class="itinerarios-header-info">
+            <h1 class="text-title mb-1">Editar itinerario</h1>
+            <p class="text-body text-c-secondary mb-0">
+                Revisá los datos del itinerario, gestioná sus paradas y guardá los cambios.
+            </p>
+        </div>
+    </header>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulario Principal de Edición -->
+    <form method="post" id="formEditarItinerario">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="guardar_cambios">
+
+        <div class="itinerarios-card mb-4">
+            <!-- Fila de Campos de Cabecera (Figma) -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="itin-field">
+                        <label class="itin-field-label">Identificación del itinerario</label>
+                        <input type="text" class="form-control" value="IT-{{ itinerario.fecha|date:'Y' }}-{{ itinerario.id|stringformat:'05d' }}" readonly>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="itin-field">
+                        <label class="itin-field-label" for="id_fecha">Fecha del itinerario</label>
+                        <input type="date" name="fecha" id="id_fecha" class="form-control" value="{{ itinerario.fecha|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="itin-field">
+                        <label class="itin-field-label" for="id_transportista">Transportista</label>
+                        <select name="transportista" id="id_transportista" class="form-select">
+                            <option value="">Sin asignar</option>
+                            {% for t in transportistas %}
+                                <option value="{{ t.pk }}" {% if itinerario.transportista and itinerario.transportista.pk == t.pk %}selected{% endif %} data-vehiculo-id="{{ t.vehiculo_id|default:'' }}">
+                                    {{ t.usuario.get_full_name|default:t.usuario.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="itin-field">
+                        <label class="itin-field-label" for="id_vehiculo">Vehículo asignado</label>
+                        <select name="vehiculo" id="id_vehiculo" class="form-select">
+                            <option value="">Sin vehículo</option>
+                            {% for v in vehiculos %}
+                                <option value="{{ v.pk }}" {% if itinerario.vehiculo and itinerario.vehiculo.pk == v.pk %}selected{% endif %}>
+                                    {{ v.patente }}{% if v.modelo %} &middot; {{ v.modelo }}{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Paradas (Figma) -->
+            <div class="d-flex justify-content-between align-items-center mb-3 pt-3 border-top">
+                <div>
+                    <h2 class="text-section mb-1">Paradas ({{ paradas_lista|length }})</h2>
+                    <p class="text-help text-c-muted mb-0">Paradas asignadas al recorrido del repartidor.</p>
+                </div>
+                <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}" class="btn-itinerario-outline">
+                    <i class="fas fa-plus"></i>
+                    <span>Agregar paradas</span>
+                </a>
+            </div>
+
+            <!-- Tabla de Paradas -->
+            <div class="table-responsive">
+                <table class="itinerarios-tabla">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">Orden</th>
+                            <th>Destinatario / Domicilio</th>
+                            <th>Remitos asociados</th>
+                            <th class="text-center">Productos</th>
+                            <th class="text-end">Monto a cobrar</th>
+                            <th class="text-center" style="width: 80px;">Quitar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for parada in paradas_lista %}
+                            <tr>
+                                <td>
+                                    <span class="badge-orden-numero">{{ forloop.counter }}</span>
+                                </td>
+                                <td>
+                                    <div class="cell-main">{{ parada.comercio.razon_social }}</div>
+                                    <div class="cell-sub">
+                                        <i class="fas fa-map-marker-alt me-1 text-muted"></i>{{ parada.comercio.domicilio }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="cell-main cell-main--medium">
+                                        {{ parada.total_remitos_count }} remito{{ parada.total_remitos_count|pluralize }}
+                                    </div>
+                                    <div class="cell-sub">
+                                        {% for remito in parada.remitos_asociados %}
+                                            <div>{{ remito.numero }}{% if remito.marca %} &middot; {{ remito.marca.nombre }}{% endif %}</div>
+                                        {% empty %}
+                                            <span class="text-muted">Sin remitos</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-semibold">{{ parada.total_productos_count }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold">$ {{ parada.monto_total|default:0|floatformat:2 }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn-quitar-parada" onclick="confirmarQuitarParada('{{ parada.id }}', '{{ parada.comercio.razon_social|escapejs }}')" title="Quitar parada del itinerario">
+                                        <i class="far fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Este itinerario no tiene paradas registradas aún.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pie de tabla con totales (Figma) -->
+            <div class="itin-tabla-resumen-footer">
+                <div class="text-c-secondary fw-medium">
+                    {{ paradas_lista|length }} parada{{ paradas_lista|length|pluralize }} &middot; {{ total_remitos }} remito{{ total_remitos|pluralize }} &middot; {{ total_productos }} producto{{ total_productos|pluralize }}
+                </div>
+                <div class="text-c-text fw-bold fs-6">
+                    Total a cobrar: <span class="text-c-brand">$ {{ total_monto|default:0|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="itin-form-actions mt-4">
+            <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+                Cancelar
+            </a>
+            <button type="submit" class="btn-itinerario-primary">
+                Guardar cambios
+            </button>
+        </div>
+    </form>
+
+    <!-- Formulario Oculto para Quitar Parada -->
+    <form method="post" id="formQuitarParada" style="display: none;">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="quitar_parada">
+        <input type="hidden" name="parada_id" id="inputQuitarParadaId" value="">
+    </form>
+</div>
+
+<script>
+    function confirmarQuitarParada(paradaId, razonSocial) {
+        if (confirm(`¿Estás seguro de quitar la parada de «${razonSocial}» del itinerario? Sus remitos volverán al estado pendiente.`)) {
+            document.getElementById("inputQuitarParadaId").value = paradaId;
+            document.getElementById("formQuitarParada").submit();
+        }
+    }
+
+    // Auto-seleccionar vehículo al cambiar transportista si tiene vehículo asignado
+    document.addEventListener("DOMContentLoaded", function () {
+        const selectTransportista = document.getElementById("id_transportista");
+        const selectVehiculo = document.getElementById("id_vehiculo");
+
+        if (selectTransportista && selectVehiculo) {
+            selectTransportista.addEventListener("change", function () {
+                const opt = selectTransportista.options[selectTransportista.selectedIndex];
+                const vehiculoId = opt.getAttribute("data-vehiculo-id");
+                if (vehiculoId && vehiculoId !== "") {
+                    selectVehiculo.value = vehiculoId;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -75,6 +75,7 @@
   --color-primary-active: #081c32;
   --color-primary-focus-ring: rgba(18, 60, 107, 0.25);
   --color-accent-hover: #ea580b;
+  --color-accent-disabled: #f9b08a;
   --color-accent-active: #e5570b;
   --color-accent-focus-ring: rgba(244, 102, 27, 0.35);
 }

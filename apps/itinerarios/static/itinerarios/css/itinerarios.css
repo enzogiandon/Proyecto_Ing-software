@@ -170,6 +170,10 @@
   font-weight: 500;
 }
 
+.cell-main--high {
+  font-weight: 700;
+}
+
 .cell-sub {
   color: var(--color-text-muted, #6b6b6d);
   font-size: 12.5px;

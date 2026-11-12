@@ -1,41 +1,43 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle Cobranza #{{ cobranza.id }}</title>
-    <!-- Bootstrap 5 CSS e Íconos -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body class="bg-light py-4">
+{% extends 'base.html' %}
+{% load static %}
 
-<div class="container" style="max-width: 950px;">
+{% block title %}Cobranza - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'cobranza/css/cobranza_detalles.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="itinerarios-page">
 
     <!-- Encabezado y Navegación -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-receipt text-primary me-2"></i>Cobranza #{{ cobranza.id }}
-            </h3>
-            <span class="text-muted small">
+    <div>
+        <a href="{% url 'cobranza:cobranza_lista' %}" class="home-btn home-btn--compacto">
+            <i class="fas fa-arrow-left"></i> Volver a cobranzas
+        </a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+        <header>
+            <h1 class="text-title mb-0">
+                Cobranza #{{ cobranza.id }}
+            </h1>
+            <span class="text-body text-c-secondary mb-0">
                 Registrada el {{ cobranza.fecha|date:"d/m/Y H:i" }} hs
             </span>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'cobranza:cobranza_lista' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Volver al listado
-            </a>
+        </header>
+        <div class="d-flex align-items-end gap-2">
 
             <!-- Botón Ajustar (habilitado para cobranzas con diferencia o registradas) -->
             {% if cobranza.estado == "difiere" or cobranza.estado == "registrado" %}
-                <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" class="btn btn-warning btn-sm text-dark shadow-sm">
-                    <i class="bi bi-pencil-square me-1"></i> Ajustar
+                <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" class="btn-itinerario-outline">
+                    <i class="fas fa-pen-to-square"></i> Ajustar
                 </a>
             {% endif %}
 
-            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" class="btn btn-success btn-sm shadow-sm">
-                <i class="bi bi-check2-circle me-1"></i> Ir a Validar
+            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" class="btn-itinerario-primary">
+                <i class="fas fa-circle-check"></i> Ir a Validar
             </a>
         </div>
     </div>
@@ -51,97 +53,97 @@
     {% endif %}
 
     <!-- Fila Superior: Datos de Parada / Comercio y Estado -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3">
         <!-- Card Comercio / Parada -->
         <div class="col-md-7">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="card-title mb-0 fw-bold text-dark">
-                        <i class="bi bi-shop me-2 text-secondary"></i>Comercio y Parada
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <span class="text-muted small d-block">Razón Social:</span>
-                        <strong class="fs-6 text-dark">
+            <section class="itinerarios-card">
+                <h2 class="text-section text-c-brand mb-3">
+                    Comercio y Parada
+                </h2>
+                <div class="cobranzas-kv-grid">
+                    <div class="cobranza-kv-item">
+                        <span class="cobranza-kv-label">Razón Social:</span>
+                        <span class="cobranza-kv-value">
                             {{ cobranza.parada.comercio.razon_social|default:"Sin comercio registrado" }}
-                        </strong>
+                        </span>
                     </div>
-                    <div class="row g-2 small">
-                        <div class="col-sm-6">
-                            <span class="text-muted d-block">CUIT:</span>
-                            <span class="text-secondary">{{ cobranza.parada.comercio.cuit|default:"-" }}</span>
+                        <div class="cobranza-kv-item">
+                            <span class="cobranza-kv-label">CUIT:</span>
+                            <span class="cobranza-kv-value">{{ cobranza.parada.comercio.cuit|default:"-" }}</span>
                         </div>
-                        <div class="col-sm-6">
-                            <span class="text-muted d-block">Teléfono:</span>
-                            <span class="text-secondary">{{ cobranza.parada.comercio.telefono|default:"-" }}</span>
+                        <div class="cobranza-kv-item">
+                            <span class="cobranza-kv-label">Teléfono:</span>
+                            <span class="cobranza-kv-value">{{ cobranza.parada.comercio.telefono|default:"-" }}</span>
                         </div>
-                        <div class="col-12 mt-2">
-                            <span class="text-muted d-block">Domicilio:</span>
-                            <span class="text-secondary">{{ cobranza.parada.comercio.domicilio|default:"-" }}</span>
+                        <div class="cobranza-kv-item">
+                            <span class="cobranza-kv-label">Domicilio:</span>
+                            <span class="cobranza-kv-value">{{ cobranza.parada.comercio.domicilio|default:"-" }}</span>
                         </div>
                     </div>
                     <hr class="my-2">
                     <div class="d-flex justify-content-between small text-muted">
-                        <span>Parada ID: <strong>#{{ cobranza.parada.id }}</strong> (Orden {{ cobranza.parada.orden|default:"-" }})</span>
-                        <span>Itinerario: <strong>#{{ cobranza.parada.itinerario_id }}</strong></span>
+                        <div>
+                            <span class="cobranza-kv-label">Parada ID: </span>
+                            <span class="cobranza-kv-value">#{{ cobranza.parada.id }} (Orden {{ cobranza.parada.orden|default:"-" }})</span>
+                        </div>
+                        <div>
+                            <span class="cobranza-kv-label">Itinerario: </span>
+                            <span class="cobranza-kv-value"><strong>#{{ cobranza.parada.itinerario_id }}</strong></span>
+                        </div>
                     </div>
-                </div>
-            </div>
+            </section>
         </div>
 
         <!-- Card Estado y Ajuste -->
         <div class="col-md-5">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="card-title mb-0 fw-bold text-dark">
-                        <i class="bi bi-shield-check me-2 text-secondary"></i>Auditoría y Estado
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <span class="text-muted small d-block mb-1">Estado de la cobranza:</span>
+            <section class="itinerarios-card">
+                <h2 class="text-section text-c-brand mb-3">
+                    Auditoría y Estado
+                </h2>
+                <div class="cobranzas-kv-flex">
+                    <div class="cobranza-kv-item">
+                        <span class="cobranza-kv-label">Estado de la cobranza:</span>
                         {% if cobranza.estado == "aprobado" %}
-                            <span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i> Aprobado</span>
+                            <span class="itin-badge badge-cobranza itin-badge--entregado"><i class="fas fa-check-circle me-1"></i> Aprobado</span>
                         {% elif cobranza.estado == "registrado" %}
-                            <span class="badge bg-primary fs-6"><i class="bi bi-clock me-1"></i> Registrado</span>
+                            <span class="itin-badge badge-cobranza itin-badge--asignado"><i class="fas fa-clock me-1"></i> Registrado</span>
                         {% elif cobranza.estado == "difiere" %}
-                            <span class="badge bg-warning text-dark fs-6"><i class="bi bi-exclamation-triangle me-1"></i> Difiere</span>
+                            <span class="itin-badge badge-cobranza itin-badge--pendiente"><i class="fas fa-exclamation-triangle me-1"></i> Difiere</span>
                         {% else %}
-                            <span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i> No encontrado</span>
+                            <span class="itin-badge badge-cobranza itin-badge--errror"><i class="fas fa-x-circle me-1"></i> No encontrado</span>
                         {% endif %}
                     </div>
 
-                    <div>
-                        <span class="text-muted small d-block mb-1">Observación de ajuste:</span>
+                    <div class="cobranza-kv-item">
+                        <span class="cobranza-kv-label">Observación de ajuste:</span>
                         {% if cobranza.observacion_ajuste %}
                             <div class="alert alert-warning py-2 px-3 small mb-0">
-                                <i class="bi bi-info-circle me-1"></i>{{ cobranza.observacion_ajuste }}
+                                <i class="fas fa-circle-info me-1"></i>{{ cobranza.observacion_ajuste }}
                             </div>
                         {% else %}
-                            <p class="text-muted small fst-italic mb-0">Sin observaciones ni discrepancias informadas.</p>
+                            <span class="cobranza-kv-value">Sin observaciones ni discrepancias informadas.</span>
                         {% endif %}
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
     <!-- Tabla de Pagos Declarados vs Verificados -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h6 class="card-title mb-0 fw-bold text-dark">
-                <i class="bi bi-cash-coin me-2 text-success"></i>Detalle de Medios de Pago (DetallePago)
-            </h6>
-            <span class="badge bg-light text-secondary border">
+    <div class="itinerarios-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="text-section text-c-brand mb-3">
+                Detalle de Medios de Pago (DetallePago)
+            </h2>
+            <span class="itin-badge itin-badge--asignado mb-3">
                 {{ cobranza.detalles.count }} pago(s)
             </span>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light small">
+            <table class="itinerarios-tabla">
+                <thead>
                     <tr>
-                        <th class="ps-3">#</th>
+                        <th>#</th>
                         <th>Medio</th>
                         <th>Monto Declarado</th>
                         <th>Monto Verificado</th>
@@ -151,9 +153,9 @@
                 <tbody>
                     {% for det in cobranza.detalles.all %}
                     <tr>
-                        <td class="ps-3 text-secondary small">{{ forloop.counter }}</td>
+                        <td class="text-muted">{{ forloop.counter }}</td>
                         <td>
-                            <span class="badge {% if det.medio == 'efectivo' %}bg-success{% elif det.medio == 'transferencia' %}bg-info text-dark{% else %}bg-primary{% endif %}">
+                            <span class="itin-badge {% if det.medio == 'efectivo' %}itin-badge--entregado{% elif det.medio == 'transferencia' %}itin-badge--asignado text-dark{% else %}itin-badge--ruta{% endif %}">
                                 {{ det.get_medio_display }}
                             </span>
                         </td>
@@ -190,18 +192,18 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot class="table-light fw-bold">
+                <tfoot class="table-light fw-bold cobranza-foot-table">
                     <tr>
                         <td colspan="2" class="ps-3 text-end">TOTALES:</td>
                         <td class="text-dark">${{ total_declarado }}</td>
                         <td class="text-success">${{ total_verificado }}</td>
                         <td>
                             {% if diferencia != 0 %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <span class="itin-badge itin-badge--pendiente">
                                     Diferencia: ${{ diferencia }}
                                 </span>
                             {% else %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <span class="itin-badge itin-badge--entregado">
                                     Conciliado
                                 </span>
                             {% endif %}
@@ -215,11 +217,9 @@
     <!-- Historial de Ajustes Administrativos (Criterio Escenario 3) -->
     {% if cobranza.ajustes.exists %}
       <div class="card shadow-sm border-0 mb-4">
-          <div class="card-header bg-white py-3 border-bottom">
-              <h6 class="card-title mb-0 fw-bold text-dark">
-                  <i class="bi bi-clock-history me-2 text-warning"></i>Historial de Ajustes por Medio de Pago
-              </h6>
-          </div>
+            <h2 class="text-section text-c-brand mb-3">
+                Historial de Ajustes por Medio de Pago
+            </h2>
           <div class="table-responsive">
               <table class="table table-sm table-hover align-middle mb-0">
                   <thead class="table-light small">
@@ -258,14 +258,12 @@
     {% endif %}
 
     <!-- Remitos asociados a la Parada -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3 border-bottom">
-            <h6 class="card-title mb-0 fw-bold text-dark">
-                <i class="bi bi-file-earmark-ruled me-2 text-secondary"></i>Remitos Cobrados en esta Parada
-            </h6>
-        </div>
+    <div class="itinerarios-card">
+        <h2 class="text-section text-c-brand mb-3">
+            Remitos Cobrados en esta Parada
+        </h2>
         <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle mb-0">
+            <table class="itinerarios-tabla">
                 <thead class="table-light small">
                     <tr>
                         <th class="ps-3">Número</th>
@@ -283,7 +281,7 @@
                             ${{ remito.total|default:remito.total }}
                         </td>
                         <td>
-                            <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                            <span class="itin-badge itin-badge--{{ remito.estado|lower }}">
                                 {{ remito.get_estado_display|default:remito.estado }}
                             </span>
                         </td>
@@ -301,8 +299,4 @@
     </div>
 
 </div>
-
-<!-- Bootstrap 5 JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}

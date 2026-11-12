@@ -97,7 +97,7 @@
                             </small>
                         </td>
                         <td>
-                            <span class="itin-badge {% if det.medio == 'efectivo' %}itin-badge--entregado{% elif det.medio == 'transferencia' %}itin-badge--asignado text-dark{% else %}itin-badge--ruta{% endif %}">
+                            <span class="itin-badge {% if det.medio == 'efectivo' %}itin-badge--entregado{% elif det.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
                                 {{ ajuste.detalle_pago.get_medio_display }}
                             </span>
                             {% if ajuste.detalle_pago.mp_payment_id %}

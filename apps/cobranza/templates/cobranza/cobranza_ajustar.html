@@ -56,7 +56,7 @@
                         {% for detalle, subform in detalles_forms %}
                         <tr>
                             <td class="ps-3">
-                                <span class="itin-badge {% if detalle.medio == 'efectivo' %}itin-badge--entregado{% elif detalle.medio == 'transferencia' %}itin-badge--asignado text-dark{% else %}itin-badge--ruta{% endif %}">
+                                <span class="itin-badge {% if detalle.medio == 'efectivo' %}itin-badge--entregado{% elif detalle.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
                                     {{ detalle.get_medio_display }}
                                 </span>
                                 {% if detalle.mp_payment_id %}

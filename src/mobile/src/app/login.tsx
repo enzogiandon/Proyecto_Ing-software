@@ -14,7 +14,7 @@
  * Incorpora el logo oficial repartoya-isotipo-header.png tal como lo utilizó Aylén.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { loginTransportista, setUsuarioActual } from '../services/authService';
@@ -38,6 +38,26 @@ import { contactarSoporteWhatsApp } from '../services/soporteService';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ sesionCerrada?: string }>();
+
+  // Notificación flotante de sesión cerrada exitosamente (HU-156)
+  const [toastSesionCerrada, setToastSesionCerrada] = useState(false);
+
+  useEffect(() => {
+    if (params?.sesionCerrada === 'true' || params?.sesionCerrada === '1') {
+      setDni('');
+      setClave('');
+      setErrorDni('');
+      setErrorClave('');
+      setToastSesionCerrada(true);
+
+      const timer = setTimeout(() => {
+        setToastSesionCerrada(false);
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [params?.sesionCerrada]);
 
   // Insets dinámicos para no pisar la cámara ni la barra de estado en Android / iOS
   const insets = useSafeAreaInsets();
@@ -388,6 +408,16 @@ export default function LoginScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ================= NOTIFICACIÓN TOAST: SESIÓN CERRADA CON ÉXITO (HU-156) ================= */}
+      {toastSesionCerrada && (
+        <View style={styles.toastContainer}>
+          <View style={styles.toastCirculo}>
+            <Text style={styles.toastIconoCheck}>✓</Text>
+          </View>
+          <Text style={styles.toastTexto}>Sesión cerrada con éxito</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -699,6 +729,46 @@ const styles = StyleSheet.create({
   },
   modalBotonSecundarioTexto: {
     color: RepartoYA.grisTexto,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  // Núcleo Sprint 2 (HU-156): Toast de confirmación de sesión cerrada según Figma
+  toastContainer: {
+    position: 'absolute',
+    bottom: 24,
+    alignSelf: 'center',
+    backgroundColor: '#1E1E1E',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
+    zIndex: 9999,
+  },
+  toastCirculo: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  toastIconoCheck: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+    lineHeight: 13,
+  },
+  toastTexto: {
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },

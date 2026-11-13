@@ -184,7 +184,7 @@ class EmpleadoUpdateForm(forms.ModelForm):
         ]
         widgets = {
             "username": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Nombre de usuario"}
+                attrs={"class": "form-control", "placeholder": "Numero de DNI"}
             ),
             "email": forms.EmailInput(
                 attrs={"class": "form-control", "placeholder": "Email"}

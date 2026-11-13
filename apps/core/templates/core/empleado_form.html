@@ -62,7 +62,7 @@
             {# Identidad: usuario, nombre y apellido #}
             <div class="fila-campos fila-campos--3">
                 <div class="campo-form{% if form.username.errors %} campo-form--error{% endif %}">
-                    <label for="{{ form.username.id_for_label }}" class="campo-form__etiqueta">Nombre de usuario</label>
+                    <label for="{{ form.username.id_for_label }}" class="campo-form__etiqueta">DNI</label>
                     {{ form.username }}
                     {% for error in form.username.errors %}
                         <p class="campo-form__error" role="alert">{{ error }}</p>

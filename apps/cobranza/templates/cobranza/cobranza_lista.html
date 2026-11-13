@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Itinerarios - RepartosYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="itinerarios-page">
+
+    <!-- Encabezado -->
+    <header class="itinerarios-header">
+        <div class="itinerarios-header-info">
+            <h1 class="text-title mb-0">Gestión de Cobranzas</h1>
+            <p class="text-body text-c-secondary mb-0">Control general de cobros efectuados y acceso a validación administrativa.</p>
+        </div>
+        <div>
+            <a href="{% url 'cobranza:ajuste_lista' %}" class="btn-itinerario-primary">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Ver Historial de Ajustes</span>
+            </a>
+        </div>
+    </header>
+    <!-- Filtros de Búsqueda -->
+    <form method="get" class="itinerarios-filtros">
+        <!-- Filtro comercio -->
+        <div class="itinerarios-filtro-item">
+            <label class="itinerarios-filtro-label">Comercio / Razón Social</label>
+            <input type="text" name="comercio" value="{{ filtro_comercio }}" class="form-control" placeholder="Buscar por comercio o razón social">
+        </div>
+
+        <!-- Filtro Estado -->
+        <div class="itinerarios-filtro-item">
+            <label class="itinerarios-filtro-label">Estado</label>
+            <select name="estado" class="form-select">
+                <option value="">-- Todos los estados --</option>
+                    {% for valor, etiqueta in estados %}
+                        <option value="{{ valor }}" {% if filtro_estado == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                    {% endfor %}
+            </select>
+        </div>
+
+        <!-- Filtro Fecha -->
+        <div class="itinerarios-filtro-item">
+            <label class="itinerarios-filtro-label">Fecha</label>
+            <input type="date" name="fecha" value="{{ filtro_fecha }}" class="form-control">
+        </div>
+
+        <!-- Botones Filtrar / Limpiar -->
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-itinerario-outline">
+                Filtrar
+            </button>
+            {% if filtro_comercio or filtro_estado or filtro_fecha %}
+                <a href="{% url 'cobranza:cobranza_lista' %}" class="btn-itinerario-outline text-muted">
+                    Limpiar
+                </a>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- Tabla de Cobranzas -->
+    <div class="itinerarios-card p-3 overflow-hidden">
+            <div class="table-responsive">
+                <table class="itinerarios-tabla">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Fecha</th>
+                            <th>Comercio</th>
+                            <th>Parada / Itinerario</th>
+                            <th>Estado</th>
+                            <th>Observaciones</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cobranza in cobranzas %}
+                            <tr>
+                                <td>#{{ cobranza.id }}</td>
+                                <td>
+                                    <div class="cell-main cell-main--medium">
+                                        {{ cobranza.fecha|date:"d/m/Y" }}
+                                    </div>
+                                    <div class="cell-sub">
+                                        {{ cobranza.fecha|date:"H:i" }} hs
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="cell-main cell-main--medium">
+                                        {{ cobranza.parada.comercio.razon_social|default:"Sin comercio" }}
+                                    </div>
+                                    <div class="cell-sub">
+                                        {{ cobranza.parada.comercio.domicilio|default:"-" }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="itin-badge itin-badge--asignado">
+                                        Parada #{{ cobranza.parada.orden|default:cobranza.parada.id }}
+                                    </span>
+                                    <div class="cell-sub">
+                                        Itinerario #{{ cobranza.parada.itinerario_id }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if cobranza.estado == "aprobado" %}
+                                        <span class="itin-badge itin-badge--entregado">
+                                            Aprobado
+                                        </span>
+                                    {% elif cobranza.estado == "registrado" %}
+                                        <span class="itin-badge itin-badge--asignado">
+                                            Registrado
+                                        </span>
+                                    {% elif cobranza.estado == "difiere" %}
+                                        <span class="itin-badge itin-badge--pendiente">
+                                            Difiere
+                                        </span>
+                                    {% else %}
+                                        <span class="itin-badge itin-badge--error">
+                                            No encontrado
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if cobranza.observacion_ajuste %}
+                                        <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cobranza.observacion_ajuste }}">
+                                            <i class="fas fa-circle-info"></i> {{ cobranza.observacion_ajuste }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex align-items-center gap-2" role="group">
+                                        <!-- Botón Ver Detalle -->
+                                        <a href="{% url 'cobranza:cobranza_detalle' cobranza.pk %}" 
+                                        class="btn-ver-detalle btn-sm py-1 px-2" 
+                                        title="Ver comprobantes y pagos">
+                                            <i class="fas fa-eye"></i> Detalle
+                                        </a>
+
+                                        <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
+                                        {% if cob.estado == "difiere" or cob.estado == "registrado" %}
+                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
+                                            class="btn-ver-detalle" 
+                                            title="Ajustar importe por diferencia">
+                                             <i class="fas fa-pen-to-square"></i> Ajustar
+                                            </a>
+                                     {% endif %}
+
+                                        <!-- Botón Validar -->
+                                        <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
+                                        class="btn {% if cob.estado == 'aprobado' %}btn-itinerario-outline{% else %}btn-itinerario-primary{% endif %}" 
+                                        title="Arqueo y validación de importes">
+                                            <i class="fas fa-circle-check"></i> Validar
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fas fa-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                    No se encontraron cobranzas registradas con los filtros seleccionados.
+                                </td>
+                            </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="itinerarios-tabla-footer">
+                Se muestran {{ itinerarios|length }} itinerarios. Ajustá los filtros para acotar la búsqueda.
+            </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center py-3">
+        <span class="text-muted small">
+            Mostrando página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} (Total: {{ paginator.count }} registros)
+        </span>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
+                        Anterior
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filtro_comercio %}&comercio={{ filtro_comercio }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
+                        Siguiente
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

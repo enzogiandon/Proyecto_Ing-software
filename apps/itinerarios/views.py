@@ -1,7 +1,10 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Case, Count, IntegerField, Prefetch, Sum, When
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView
 
@@ -56,9 +59,9 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["estados"] = EstadoItinerario.choices
-        context["transportistas"] = Transportista.objects.select_related("usuario", "vehiculo").order_by(
-            "usuario__last_name", "usuario__first_name"
-        )
+        context["transportistas"] = Transportista.objects.select_related(
+            "usuario", "vehiculo"
+        ).order_by("usuario__last_name", "usuario__first_name")
         context["filtro_fecha"] = self.request.GET.get("fecha", "")
         context["filtro_transportista"] = self.request.GET.get("transportista", "")
         context["filtro_estado"] = self.request.GET.get("estado", "")
@@ -89,23 +92,18 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     permission_required = "itinerarios.view_parada"
 
     def get_queryset(self):
-        return (
-            Parada.objects.select_related(
-                "comercio",
-                "itinerario__transportista__usuario",
-                "itinerario__vehiculo",
-            )
-            .prefetch_related(
-                Prefetch(
-                    "remitos",
-                    queryset=Remito.objects.filter(eliminado=False).select_related(
-                        "marca"
-                    ),
-                    to_attr="remitos_vigentes",
-                ),
-                Prefetch("evidencias", queryset=EvidenciaParada.objects.order_by("fecha")),
-                Prefetch("problemas", queryset=ProblemaParada.objects.order_by("-fecha")),
-            )
+        return Parada.objects.select_related(
+            "comercio",
+            "itinerario__transportista__usuario",
+            "itinerario__vehiculo",
+        ).prefetch_related(
+            Prefetch(
+                "remitos",
+                queryset=Remito.objects.filter(eliminado=False).select_related("marca"),
+                to_attr="remitos_vigentes",
+            ),
+            Prefetch("evidencias", queryset=EvidenciaParada.objects.order_by("fecha")),
+            Prefetch("problemas", queryset=ProblemaParada.objects.order_by("-fecha")),
         )
 
 
@@ -149,3 +147,54 @@ class CrearParadas(
             form.add_error(None, error)
             return self.form_invalid(form)
         return super().form_valid(form)
+
+
+class ReordenarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = Itinerario
+    template_name = "itinerarios/itinerario_reordenar.html"
+    context_object_name = "itinerario"
+    permission_required = "itinerarios.change_parada"
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .select_related("transportista__usuario", "vehiculo")
+            .prefetch_related("paradas__comercio")
+        )
+
+    def post(self, request, *args, **kwargs):
+        itinerario = self.get_object()
+        parada_ids = request.POST.getlist("paradas_ordenadas")
+
+        if not parada_ids:
+            messages.error(request, "No se recibieron paradas para reordenar.")
+            return redirect("itinerarios:itinerario_reordenar", pk=itinerario.pk)
+
+        paradas_actuales = {p.id: p for p in itinerario.paradas.all().order_by("orden")}
+
+        try:
+            ids_enteros = [int(p_id) for p_id in parada_ids]
+        except ValueError:
+            messages.error(request, "Los identificadores de paradas son inválidos.")
+            return redirect("itinerarios:itinerario_reordenar", pk=itinerario.pk)
+
+        if set(ids_enteros) != set(paradas_actuales.keys()):
+            messages.error(
+                request, "La lista no coincide con las paradas de este itinerario."
+            )
+            return redirect("itinerarios:itinerario_reordenar", pk=itinerario.pk)
+
+        paradas_a_guardar = []
+        for nuevo_orden, p_id in enumerate(ids_enteros, start=1):
+            parada = paradas_actuales[p_id]
+            parada.orden = nuevo_orden
+            paradas_a_guardar.append(parada)
+
+        with transaction.atomic():
+            Parada.objects.bulk_update(paradas_a_guardar, fields=["orden"])
+
+        messages.success(
+            request, f"Recorrido del Itinerario #{itinerario.id} reordenado con éxito."
+        )
+        return redirect("itinerarios:itinerario_lista")

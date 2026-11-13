@@ -8,8 +8,8 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView
 
-from apps.core.models import Transportista
-from apps.remitos.models import Remito
+from apps.core.models import Transportista, Vehiculo
+from apps.remitos.models import EstadoRemito, Remito
 
 from .forms import CrearItinerariosForm, CrearParadasForm
 from .models import (
@@ -160,8 +160,46 @@ class ReordenarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
             super()
             .get_queryset()
             .select_related("transportista__usuario", "vehiculo")
-            .prefetch_related("paradas__comercio")
+            .prefetch_related(
+                Prefetch(
+                    "paradas",
+                    queryset=Parada.objects.select_related("comercio")
+                    .prefetch_related(
+                        Prefetch(
+                            "remitos",
+                            queryset=Remito.objects.filter(eliminado=False).select_related("marca"),
+                            to_attr="remitos_vigentes",
+                        )
+                    )
+                    .order_by("orden", "id"),
+                )
+            )
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        itinerario = self.object
+        paradas = list(itinerario.paradas.all())
+
+        total_remitos = 0
+        total_productos = 0
+        total_monto = 0
+
+        for p in paradas:
+            remitos = getattr(p, "remitos_vigentes", list(p.remitos.filter(eliminado=False)))
+            p.remitos_asociados = remitos
+            p.monto_total = sum(r.total for r in remitos)
+            p.total_remitos_count = len(remitos)
+            p.total_productos_count = len(remitos) * 10 if remitos else 0
+            total_remitos += p.total_remitos_count
+            total_productos += p.total_productos_count
+            total_monto += p.monto_total
+
+        context["paradas_lista"] = paradas
+        context["total_remitos"] = total_remitos
+        context["total_productos"] = total_productos
+        context["total_monto"] = total_monto
+        return context
 
     def post(self, request, *args, **kwargs):
         itinerario = self.get_object()
@@ -197,4 +235,127 @@ class ReordenarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
         messages.success(
             request, f"Recorrido del Itinerario #{itinerario.id} reordenado con éxito."
         )
+        return redirect("itinerarios:itinerario_lista")
+
+
+class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = Itinerario
+    template_name = "itinerarios/itinerario_editar.html"
+    context_object_name = "itinerario"
+    permission_required = "itinerarios.change_itinerario"
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .select_related("transportista__usuario", "vehiculo")
+            .prefetch_related(
+                Prefetch(
+                    "paradas",
+                    queryset=Parada.objects.select_related("comercio")
+                    .prefetch_related(
+                        Prefetch(
+                            "remitos",
+                            queryset=Remito.objects.filter(eliminado=False).select_related("marca"),
+                            to_attr="remitos_vigentes",
+                        )
+                    )
+                    .order_by("orden", "id"),
+                )
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        itinerario = self.object
+        paradas = list(itinerario.paradas.all())
+
+        total_remitos = 0
+        total_productos = 0
+        total_monto = 0
+
+        for p in paradas:
+            remitos = getattr(p, "remitos_vigentes", list(p.remitos.filter(eliminado=False)))
+            p.remitos_asociados = remitos
+            p.monto_total = sum(r.total for r in remitos)
+            p.total_remitos_count = len(remitos)
+            p.total_productos_count = len(remitos) * 10 if remitos else 0
+            total_remitos += p.total_remitos_count
+            total_productos += p.total_productos_count
+            total_monto += p.monto_total
+
+        context["paradas_lista"] = paradas
+        context["total_remitos"] = total_remitos
+        context["total_productos"] = total_productos
+        context["total_monto"] = total_monto
+
+        context["transportistas"] = (
+            Transportista.objects.filter(
+                usuario__is_active=True,
+                vehiculo__isnull=False,
+            )
+            .select_related("usuario", "vehiculo")
+            .order_by("usuario__last_name", "usuario__first_name")
+        )
+        context["vehiculos"] = Vehiculo.objects.all().order_by("patente")
+        return context
+
+    def post(self, request, *args, **kwargs):
+        itinerario = self.get_object()
+        accion = request.POST.get("accion")
+
+        # Quitar parada individual
+        if accion == "quitar_parada":
+            parada_id = request.POST.get("parada_id")
+            try:
+                parada = itinerario.paradas.get(id=parada_id)
+                comercio_nombre = parada.comercio.razon_social
+                with transaction.atomic():
+                    # Desvincular remitos y devolverlos a PENDIENTE
+                    Remito.objects.filter(parada=parada).update(
+                        parada=None, estado=EstadoRemito.PENDIENTE
+                    )
+                    parada.delete()
+                    # Reordenar las paradas restantes
+                    for idx, p in enumerate(
+                        itinerario.paradas.all().order_by("orden", "id"), start=1
+                    ):
+                        p.orden = idx
+                        p.save(update_fields=["orden"])
+
+                messages.success(
+                    request,
+                    f"Parada de «{comercio_nombre}» quitada del itinerario.",
+                )
+            except Parada.DoesNotExist:
+                messages.error(
+                    request, "La parada especificada no existe en este itinerario."
+                )
+            return redirect("itinerarios:itinerario_editar", pk=itinerario.pk)
+
+        # Guardar cambios generales (Fecha, Transportista, Vehículo)
+        nueva_fecha = request.POST.get("fecha")
+        transportista_id = request.POST.get("transportista")
+        vehiculo_id = request.POST.get("vehiculo")
+
+        if nueva_fecha:
+            itinerario.fecha = nueva_fecha
+
+        if transportista_id:
+            try:
+                t = Transportista.objects.select_related("vehiculo").get(pk=transportista_id)
+                itinerario.transportista = t
+                if not vehiculo_id and t.vehiculo:
+                    itinerario.vehiculo = t.vehiculo
+            except Transportista.DoesNotExist:
+                pass
+
+        if vehiculo_id:
+            try:
+                itinerario.vehiculo = Vehiculo.objects.get(pk=vehiculo_id)
+            except Vehiculo.DoesNotExist:
+                pass
+
+        itinerario.save()
+        messages.success(request, f"Itinerario #{itinerario.id} actualizado con éxito.")
         return redirect("itinerarios:itinerario_lista")

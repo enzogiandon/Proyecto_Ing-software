@@ -5,6 +5,7 @@ import mercadopago
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import parsers, status, viewsets
 from rest_framework.decorators import action
@@ -22,6 +23,7 @@ from apps.api.serializers import (
     ProblemaParadaSerializer,
     RegistrarPagoInputSerializer,
     RegistrarProblemaInputSerializer,
+    RegistrarRemitosInputSerializer,
     RutaGuardadaSerializer,
 )
 from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
@@ -36,7 +38,7 @@ from apps.itinerarios.models import (
     RutaGuardada,
 )
 from apps.itinerarios.services import ordenar_itinerario_segun_ruta
-from apps.remitos.models import EstadoRemito
+from apps.remitos.models import EstadoRemito, Remito
 
 from .serializers import (
     CrearRutaGuardadaSerializer,
@@ -478,6 +480,51 @@ class ParadaViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=True, methods=["post"], url_path="registrar-remitos")
+    def registrar_remitos(self, request, pk=None):
+        """
+        POST /api/paradas/{id}/registrar-remitos/
+        Body: {"remitos": ["R-001", "R-002"]}
+        """
+        parada = self.get_object()
+
+        if not hasattr(request.user, "perfil_transportista"):
+            raise ValidationError(
+                {"detail": "El usuario autenticado no tiene asignado un perfil de transportista."}
+            )
+
+        if parada.itinerario.transportista_id != request.user.perfil_transportista_id:
+            raise ValidationError(
+                {"detail": "La parada no pertenece a tu itinerario activo."}
+            )
+
+        serializer = RegistrarRemitosInputSerializer(
+            data=request.data,
+            context={"parada": parada},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        remitos = serializer.validated_data["remitos"]
+
+        with transaction.atomic():
+            for remito in remitos:
+                remito.parada = parada
+                remito.estado = EstadoRemito.ASIGNADO
+            Remito.objects.bulk_update(remitos, fields=["parada", "estado"])
+
+        return Response(
+            {
+                "mensaje": "Remitos registrados correctamente.",
+                "cantidad": len(remitos),
+                "parada_id": parada.id,
+                "remitos": [
+                    {"id": remito.id, "numero": remito.numero, "estado": remito.estado}
+                    for remito in remitos
+                ],
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
     @action(detail=True, methods=["post"], url_path="registrar-cobranza")
     def registrar_cobranza(self, request, pk=None):
         """
@@ -499,6 +546,21 @@ class ParadaViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         pagos_validados = serializer.validated_data
+        total_pagado = sum((pago["monto"] for pago in pagos_validados), Decimal("0.00"))
+        total_remitos = (
+            parada.remitos.filter(eliminado=False).aggregate(total=Sum("total"))["total"]
+            or Decimal("0.00")
+        )
+
+        if total_pagado != total_remitos:
+            raise ValidationError(
+                {
+                    "detail": (
+                        "La visita no puede cerrarse porque el cobro no cubre el 100% del total de la parada. "
+                        f"Monto cobrado: ${total_pagado}. Monto total: ${total_remitos}."
+                    )
+                }
+            )
 
         with transaction.atomic():
             cobranza, _ = Cobranza.objects.get_or_create(

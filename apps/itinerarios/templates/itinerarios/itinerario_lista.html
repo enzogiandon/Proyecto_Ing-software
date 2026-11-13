@@ -126,18 +126,22 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
+                                    <div class="itinerarios-acciones-grupo">
+                                        <a href="{% url 'itinerarios:itinerario_editar' itinerario.pk %}" class="btn-accion-tabla" title="Editar itinerario">
+                                            Editar
+                                        </a>
                                         {% with primera_parada=itinerario.paradas.first %}
                                             {% if primera_parada %}
-                                                <!-- Botón para Reordenar Recorrido -->
-                                                <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn-ver-detalle btn-sm py-1 px-2" title="Reordenar secuencia de paradas">
-                                                    <i class="fas fa-arrows-alt-v"></i>
-                                                    <span>Reordenar</span>
+                                                <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn-accion-tabla" title="Reordenar secuencia de paradas">
+                                                    Reordenar
+                                                </a>
+                                                <a href="{% url 'itinerarios:parada_detalle' primera_parada.pk %}" class="btn-accion-tabla" title="Ver detalle del recorrido">
+                                                    Ver detalle
                                                 </a>
                                             {% else %}
-                                                <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}" class="btn-ver-detalle">
+                                                <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}" class="btn-accion-tabla btn-accion-tabla--primary" title="Asignar paradas">
                                                     <i class="fas fa-plus"></i>
-                                                    <span>Agregar paradas</span>
+                                                    <span>Paradas</span>
                                                 </a>
                                             {% endif %}
                                         {% endwith %}

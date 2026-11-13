@@ -62,7 +62,7 @@
             {# Identidad: usuario, nombre y apellido #}
             <div class="fila-campos fila-campos--3">
                 <div class="campo-form{% if form.username.errors %} campo-form--error{% endif %}">
-                    <label for="{{ form.username.id_for_label }}" class="campo-form__etiqueta">DNI</label>
+                    <label for="{{ form.username.id_for_label }}" class="campo-form__etiqueta">Nombre de usuario</label>
                     {{ form.username }}
                     {% for error in form.username.errors %}
                         <p class="campo-form__error" role="alert">{{ error }}</p>
@@ -234,6 +234,12 @@
             <p class="text-help acciones-form__nota">Los cambios se aplicarán al guardar.</p>
             <div class="acciones-form__botones">
                 <a href="{% url 'core:empleado_lista' %}" class="home-btn">Cancelar</a>
+                {% if object.pk %}
+                    <a href="{% url 'core:empleado_restablecer_credenciales' object.pk %}" class="btn btn-outline-warning d-inline-flex align-items-center gap-2">
+                        <i class="fas fa-key" aria-hidden="true"></i>
+                        <span>Restablecer credenciales</span>
+                    </a>
+                {% endif %}
                 <button type="submit" class="home-btn home-btn--primary">Guardar</button>
             </div>
         </div>

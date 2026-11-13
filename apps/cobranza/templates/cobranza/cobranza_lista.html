@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Itinerarios - RepartosYA{% endblock %}
+{% block title %}Cobranzas - RepartoYA{% endblock %}
 
 {% block extra_css %}
 <link href="{% static 'core/css/home.css' %}" rel="stylesheet">
@@ -135,27 +135,27 @@
                                         <span class="text-muted small">-</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-end pe-3">
+                                <td class="text-center pe-3">
                                     <div class="d-flex align-items-center gap-2" role="group">
                                         <!-- Botón Ver Detalle -->
                                         <a href="{% url 'cobranza:cobranza_detalle' cobranza.pk %}" 
                                         class="btn-ver-detalle btn-sm py-1 px-2" 
                                         title="Ver comprobantes y pagos">
-                                            <i class="fas fa-eye"></i> Detalle
+                                            <i class="fas fa-eye"></i>
                                         </a>
 
                                         <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
-                                        {% if cob.estado == "difiere" or cob.estado == "registrado" %}
+                                        {% if cobranza.estado == "difiere" or cobranza.estado == "registrado" %}
                                             <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
                                             class="btn-ver-detalle" 
                                             title="Ajustar importe por diferencia">
-                                             <i class="fas fa-pen-to-square"></i> Ajustar
+                                             <i class="fas fa-pen-to-square"></i>
                                             </a>
                                      {% endif %}
 
                                         <!-- Botón Validar -->
                                         <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
-                                        class="btn {% if cob.estado == 'aprobado' %}btn-itinerario-outline{% else %}btn-itinerario-primary{% endif %}" 
+                                        class="btn {% if cobranza.estado == 'aprobado' %}btn-ver-detalle-primary-outline{% else %}btn-ver-detalle-primary{% endif %}" 
                                         title="Arqueo y validación de importes">
                                             <i class="fas fa-circle-check"></i> Validar
                                         </a>

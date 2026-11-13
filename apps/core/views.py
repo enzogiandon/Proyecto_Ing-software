@@ -18,7 +18,13 @@ from apps.remitos.models import (
 from apps.itinerarios.models import Parada, EstadoParada, EstadoItinerario, Itinerario
 from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
 
-from .forms import EmpleadoCreateForm, EmpleadoUpdateForm, LoginForm, VehiculoForm
+from .forms import (
+    EmpleadoCreateForm,
+    EmpleadoUpdateForm,
+    LoginForm,
+    RestablecerCredencialesForm,
+    VehiculoForm,
+)
 from .models import EstadoVehiculo, Usuario, Vehiculo
 
 # Create your views here.
@@ -143,6 +149,37 @@ class SuspenderEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
             empleado.save(update_fields=["is_active"])
             messages.success(request, "Cuenta del empleado habilitada.")
 
+        return redirect("core:empleado_lista")
+
+
+class RestablecerCredencialesEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "core.change_usuario"
+
+    def get(self, request, pk):
+        empleado = get_object_or_404(Usuario, pk=pk)
+        form = RestablecerCredencialesForm(user=empleado)
+        return render(
+            request,
+            "core/empleado_reset_password.html",
+            {"empleado": empleado, "form": form},
+        )
+
+    def post(self, request, pk):
+        empleado = get_object_or_404(Usuario, pk=pk)
+        form = RestablecerCredencialesForm(request.POST, user=empleado)
+
+        if not form.is_valid():
+            return render(
+                request,
+                "core/empleado_reset_password.html",
+                {"empleado": empleado, "form": form},
+            )
+
+        empleado.set_password(form.cleaned_data["password"])
+        empleado.is_active = True
+        empleado.save(update_fields=["password", "is_active"])
+
+        messages.success(request, "Credenciales restablecidas correctamente.")
         return redirect("core:empleado_lista")
 
 

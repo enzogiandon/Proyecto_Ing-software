@@ -54,10 +54,14 @@
                         <div role="cell">
                             {{ emp.groups.all|join:", "|default:'Sin grupo' }}
                         </div>
-                        <div role="cell">
+                        <div role="cell" class="d-flex align-items-center gap-2">
                             <a href="{% url 'core:empleado_editar' emp.pk %}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2" aria-label="Editar a {{ nombre }}">
                                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
                                 <span>Editar</span>
+                            </a>
+                            <a href="{% url 'core:empleado_restablecer_credenciales' emp.pk %}" class="btn btn-outline-warning btn-sm d-inline-flex align-items-center gap-1" aria-label="Restablecer credenciales">
+                                <i class="fas fa-key" aria-hidden="true"></i>
+                                <span>Restablecer</span>
                             </a>
                         </div>
                     </div>

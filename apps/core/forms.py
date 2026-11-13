@@ -310,6 +310,38 @@ class EmpleadoUpdateForm(forms.ModelForm):
                         perfil.delete()
 
         return user
+
+
+class RestablecerCredencialesForm(forms.Form):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+        label="Nueva contraseña",
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+        label="Confirmar nueva contraseña",
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+    def clean_password(self):
+        password = self.cleaned_data["password"]
+        validate_password(password, user=self.user)
+        return password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirm = cleaned_data.get("password_confirm")
+
+        if password and password_confirm and password != password_confirm:
+            self.add_error("password_confirm", "Las contraseñas no coinciden.")
+
+        return cleaned_data
+
+
 class VehiculoForm(forms.ModelForm):
     class Meta:
         model = Vehiculo

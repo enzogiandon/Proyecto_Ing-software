@@ -10,6 +10,7 @@ from .views import (
     Inicio,
     ListaEmpleados,
     ListaVehiculos,
+    RestablecerCredencialesEmpleado,
     SuspenderEmpleado,
 )
 
@@ -34,6 +35,11 @@ urlpatterns = [
         "empleados/<int:pk>/suspender/",
         SuspenderEmpleado.as_view(),
         name="empleado_suspender",
+    ),
+    path(
+        "empleados/<int:pk>/restablecer-credenciales/",
+        RestablecerCredencialesEmpleado.as_view(),
+        name="empleado_restablecer_credenciales",
     ),
 
     path("vehiculos/", ListaVehiculos.as_view(), name="vehiculo_lista"),

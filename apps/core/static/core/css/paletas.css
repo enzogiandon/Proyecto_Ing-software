@@ -75,6 +75,7 @@
   --color-primary-active: #081c32;
   --color-primary-focus-ring: rgba(18, 60, 107, 0.25);
   --color-accent-hover: #ea580b;
+  --color-accent-disabled: #f9b08a;
   --color-accent-active: #e5570b;
   --color-accent-focus-ring: rgba(244, 102, 27, 0.35);
 }
@@ -142,7 +143,7 @@
   --bs-body-font-size: 0.875rem; /* 14px = "Texto/Cuerpo" */
   --bs-body-color: var(--color-text);
   --bs-body-color-rgb: 27, 27, 31;
-  --bs-body-bg: var(--color-bg);
+  --bs-body-bg: var(--color-surface);
   --bs-body-bg-rgb: 255, 246, 236;
   --bs-emphasis-color: var(--color-text);
   --bs-secondary-color: var(--color-text-secondary);

@@ -28,13 +28,14 @@ import {
   Alert,
   Platform,
   BackHandler,
+  Modal,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import { obtenerItinerarioJornada } from '../services/itinerarioService';
-import { getUsuarioActual, estaAutenticado } from '../services/authService';
+import { getUsuarioActual, estaAutenticado, cerrarSesion } from '../services/authService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 import { seleccionarParadaItem } from '../services/paradaService';
 // Núcleo del cambio: Servicio para abrir chat de WhatsApp con soporte de Base Logística
@@ -50,6 +51,8 @@ export default function ItinerarioScreen() {
   // Estado del itinerario y control de carga
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
+  // Estado para el modal de confirmación de cierre de sesión (HU-156)
+  const [modalLogoutVisible, setModalLogoutVisible] = useState<boolean>(false);
 
   // Chofer que inició sesión (se obtiene de authService o del itinerario asignado)
   const usuarioLogueado = getUsuarioActual();
@@ -99,6 +102,33 @@ export default function ItinerarioScreen() {
       return () => subscription.remove();
     }, [])
   );
+
+  // Núcleo Sprint 2 (HU-156): Lógica para confirmación y cierre de sesión
+  const handleSolicitarCerrarSesion = () => {
+    setModalLogoutVisible(true);
+  };
+
+  const handleCancelarLogout = () => {
+    setModalLogoutVisible(false);
+  };
+
+  const handleConfirmarLogout = () => {
+    setModalLogoutVisible(false);
+    cerrarSesion();
+    router.replace({
+      pathname: '/login',
+      params: { sesionCerrada: 'true' },
+    } as any);
+  };
+
+  // Núcleo Sprint 2 (HU-24): Botón de acceso a reordenar paradas
+  const handleReordenarParadas = () => {
+    Alert.alert(
+      'Reordenar paradas',
+      'El módulo de reordenamiento interactivo de paradas se habilitará próximamente.',
+      [{ text: 'Entendido' }]
+    );
+  };
 
   // Acciones de los botones según el diagrama de navegación de la cátedra
   const handleRutasGuardadas = () => {
@@ -193,6 +223,21 @@ export default function ItinerarioScreen() {
                 {inicialesChofer}
               </Text>
             </View>
+
+            {/* Núcleo del cambio Sprint 2 (HU-156): Botón de cerrar sesión al lado del avatar */}
+            <TouchableOpacity
+              style={styles.botonCerrarSesion}
+              onPress={handleSolicitarCerrarSesion}
+              activeOpacity={0.7}
+              accessibilityLabel="Cerrar sesión"
+            >
+              <Image
+                source={require('../../assets/icons/icono-logout.png')}
+                style={styles.iconoLogout}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+
             <View>
               <Text style={styles.driverNombre}>
                 {nombreChofer}
@@ -234,7 +279,7 @@ export default function ItinerarioScreen() {
               style={styles.iconoRutasGuardadas}
               resizeMode="contain"
             />
-            <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
+            <Text style={styles.textoRutasGuardadas}>Recorridos guardados</Text>
           </TouchableOpacity>
 
           {/* Tarjeta central ilustrativa del boceto sin asignar */}
@@ -316,7 +361,7 @@ export default function ItinerarioScreen() {
             </View>
           </View>
 
-          {/* Núcleo del cambio: Botón con ícono minimalista oficial de rutas guardadas */}
+          {/* Botón con ícono minimalista oficial de recorridos guardados */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
             onPress={handleRutasGuardadas}
@@ -327,7 +372,21 @@ export default function ItinerarioScreen() {
               style={styles.iconoRutasGuardadas}
               resizeMode="contain"
             />
-            <Text style={styles.textoRutasGuardadas}>Rutas Guardadas</Text>
+            <Text style={styles.textoRutasGuardadas}>Recorridos guardados</Text>
+          </TouchableOpacity>
+
+          {/* Núcleo del cambio Sprint 2 (HU-24): Botón Reordenar paradas según Figma */}
+          <TouchableOpacity
+            style={styles.botonReordenarParadas}
+            onPress={handleReordenarParadas}
+            activeOpacity={0.8}
+          >
+            <Image
+              source={require('../../assets/icons/icono-ruta.png')}
+              style={styles.iconoReordenarParadas}
+              resizeMode="contain"
+            />
+            <Text style={styles.textoReordenarParadas}>Reordenar paradas</Text>
           </TouchableOpacity>
 
           {/* Encabezado de la lista: Próximas paradas */}
@@ -499,6 +558,52 @@ export default function ItinerarioScreen() {
           </View>
         </ScrollView>
       )}
+      {/* ================= MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN (HU-156) ================= */}
+      <Modal
+        visible={modalLogoutVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelarLogout}
+      >
+        <View style={styles.modalLogoutOverlay}>
+          <View style={styles.modalLogoutCard}>
+            {/* Ícono de alerta en círculo naranja suave según Figma */}
+            <View style={styles.modalLogoutIconoWrap}>
+              <Image
+                source={require('../../assets/icons/icono-alerta.png')}
+                style={styles.modalLogoutIcono}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* Título de la alerta */}
+            <Text style={styles.modalLogoutTitulo}>¿Cerrar sesión?</Text>
+
+            {/* Mensaje descriptivo */}
+            <Text style={styles.modalLogoutMensaje}>
+              ¿Deseas cerrar tu sesión actual? Deberás ingresar DNI y clave nuevamente
+            </Text>
+
+            {/* Botón Aceptar (Naranja YA) */}
+            <TouchableOpacity
+              style={styles.modalBotonAceptarLogout}
+              onPress={handleConfirmarLogout}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.modalTextoBotonAceptar}>Aceptar</Text>
+            </TouchableOpacity>
+
+            {/* Botón Cancelar (Gris suave) */}
+            <TouchableOpacity
+              style={styles.modalBotonCancelarLogout}
+              onPress={handleCancelarLogout}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.modalTextoBotonCancelar}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -680,7 +785,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   // Núcleo del cambio: Estilo para el ícono oficial de rutas guardadas
   iconoRutasGuardadas: {
@@ -1035,5 +1140,116 @@ const styles = StyleSheet.create({
     color: RepartoYA.carbon,
     fontSize: 14,
     fontWeight: '600',
+  },
+
+  // Núcleo Sprint 2 (HU-156): Botón de acceso a cerrar sesión en el header
+  botonCerrarSesion: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconoLogout: {
+    width: 22,
+    height: 22,
+  },
+
+  // Núcleo Sprint 2 (HU-24): Botón reordenar paradas según Figma
+  botonReordenarParadas: {
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.azulRuta,
+    borderRadius: 12,
+    height: 48,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  iconoReordenarParadas: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  textoReordenarParadas: {
+    color: RepartoYA.azulRuta,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  // Núcleo Sprint 2 (HU-156): Estilos del modal de confirmación de cierre de sesión
+  modalLogoutOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 28,
+  },
+  modalLogoutCard: {
+    width: '100%',
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  modalLogoutIconoWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFF4EC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalLogoutIcono: {
+    width: 26,
+    height: 26,
+  },
+  modalLogoutTitulo: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: RepartoYA.azulRuta,
+    marginBottom: 8,
+  },
+  modalLogoutMensaje: {
+    fontSize: 15,
+    color: '#4B5563',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  modalBotonAceptarLogout: {
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    marginBottom: 10,
+  },
+  modalTextoBotonAceptar: {
+    color: '#1A202C',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  modalBotonCancelarLogout: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  modalTextoBotonCancelar: {
+    color: '#4B5563',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

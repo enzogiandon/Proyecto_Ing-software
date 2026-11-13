@@ -136,16 +136,14 @@ export async function getDetalleParada(paradaId: number): Promise<Parada> {
  * Lista las plantillas de recorridos guardados del transportista.
  */
 export async function getRutasGuardadas(): Promise<RutaGuardadaItem[]> {
-  try {
-    const response = await api.get<RutaGuardadaItem[]>('itinerarios/rutas-guardadas/');
-    return response.data;
-  } catch (error: any) {
-    console.warn('[Itinerarios] Usando rutas guardadas de prueba:', error?.message);
-    return [
-      { id: 1, nombre: 'Recorrido Centro Comercial', total_comercios: 5 },
-      { id: 2, nombre: 'Ruta Rápida Los Hornos', total_comercios: 4 },
-    ];
+  const { data } = await api.get<RutaGuardadaItem[]>('itinerarios/rutas-guardadas/');
+  if (!Array.isArray(data) || data.some((ruta) =>
+    !ruta || !Number.isSafeInteger(ruta.id) || ruta.id <= 0 ||
+    typeof ruta.nombre !== 'string' || !ruta.nombre.trim()
+  )) {
+    throw new Error('Django devolvió un listado de recorridos inválido.');
   }
+  return data;
 }
 
 /**

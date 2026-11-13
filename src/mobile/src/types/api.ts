@@ -38,7 +38,6 @@ export interface Parada {
 export interface RutaGuardadaItem {
   id: number;
   nombre: string;
-  total_comercios?: number;
 }
 
 export interface RutaGuardadaResponse {

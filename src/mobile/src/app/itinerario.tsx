@@ -31,6 +31,7 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import type { Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
@@ -132,11 +133,8 @@ export default function ItinerarioScreen() {
 
   // Acciones de los botones según el diagrama de navegación de la cátedra
   const handleRutasGuardadas = () => {
-    Alert.alert(
-      'Rutas Guardadas',
-      'Accediendo al módulo de gestión y reordenamiento de recorridos guardados.',
-      [{ text: 'Aceptar' }]
-    );
+    // Expo genera los tipos de rutas al iniciar y puede tener una copia anterior.
+    router.push('/recorridos-guardados' as Href);
   };
 
   // Redirección hacia la pantalla de detalle de la parada (HU-67)

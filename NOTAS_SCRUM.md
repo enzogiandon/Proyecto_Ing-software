@@ -14,7 +14,7 @@
 
 ## ⚙️ Backend
 
-- [ ] **Comando `poblar --limpiar`:**
+- [x] **Comando `poblar --limpiar`:**
   - Que el comando habilite los usuarios bloqueados al limpiar y repoblar datos de prueba.
 
 ---

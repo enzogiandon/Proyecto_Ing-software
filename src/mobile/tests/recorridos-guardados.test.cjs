@@ -259,7 +259,7 @@ test('sin itinerario asignado, la carga queda deshabilitada y se explica el moti
 async function eliminacionPreparada(recorridos = [{ id: 17, nombre: 'Norte' }]) {
   const escenario = { posts: [], consultasItinerario: 0, actualizaciones: [] };
   const app = pantalla({
-    async get() { return { data: recorridos }; },
+    async get() { return escenario.listar ? escenario.listar() : { data: recorridos }; },
     async post(url, body) {
       escenario.posts.push([url, body.ruta_id, Object.keys(body)]);
       return escenario.enviar ? escenario.enviar() : { data: { id: 17, mensaje: 'Ruta eliminada' } };
@@ -331,4 +331,35 @@ test('al eliminar el último recorrido vuelve al estado vacío de la HU 63', asy
   for (const texto of ['0 recorridos guardados', 'No hay recorridos guardados', '+ Guardar orden actual']) {
     assert.ok(textos(app.render()).includes(texto));
   }
+});
+
+test('actualizar el listado refleja si el recorrido sigue guardado sin confirmar la eliminación ni repetir el POST', async () => {
+  for (const sigueGuardado of [true, false]) {
+    const { app, escenario } = await eliminacionPreparada();
+    escenario.enviar = () => { throw new Error('Respuesta perdida'); };
+    await boton(app, 'Confirmar eliminación del recorrido').onPress();
+    escenario.listar = () => ({ data: sigueGuardado ? [{ id: 17, nombre: 'Norte' }] : [] });
+    await boton(app, 'Actualizar listado').onPress();
+    const contenido = textos(app.render());
+    assert.equal(contenido.includes('Norte'), sigueGuardado);
+    assert.equal(contenido.includes('No hay recorridos guardados'), !sigueGuardado);
+    assert.ok(!contenido.includes('Recorrido eliminado'));
+    assert.equal(escenario.posts.length, 1);
+  }
+});
+
+test('si actualizar el listado sigue fallando, cancelar conserva la tarjeta sin repetir el POST', async () => {
+  const { app, escenario } = await eliminacionPreparada();
+  escenario.enviar = () => { throw new Error('Respuesta perdida'); };
+  await boton(app, 'Confirmar eliminación del recorrido').onPress();
+  let consultas = 0;
+  escenario.listar = () => { consultas++; throw new Error('Sin conexión'); };
+  await boton(app, 'Actualizar listado').onPress();
+  await boton(app, 'Actualizar listado').onPress();
+  assert.equal(consultas, 2);
+  assert.ok(textos(app.render()).some((texto) => texto.includes('sigue sin verificarse')));
+  boton(app, 'Cancelar').onPress();
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.ok(textos(app.render()).includes('1 recorrido guardado'));
+  assert.equal(escenario.posts.length, 1);
 });

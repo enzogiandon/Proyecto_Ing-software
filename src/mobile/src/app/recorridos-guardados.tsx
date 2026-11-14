@@ -17,7 +17,7 @@ type Carga =
   | { estado: 'actualizando' | 'error-actualizacion' | 'listo'; recorrido: RutaGuardadaItem; orden: number[] };
 
 type Eliminacion = {
-  estado: 'confirmar' | 'eliminando' | 'error' | 'listo';
+  estado: 'confirmar' | 'eliminando' | 'error' | 'listo' | 'consultando' | 'error-consulta';
   recorrido: RutaGuardadaItem;
 };
 
@@ -135,6 +135,22 @@ export default function RecorridosGuardadosScreen() {
     }
   };
 
+  const actualizarListado = async (recorrido: RutaGuardadaItem) => {
+    if (operacionEnCurso.current) return;
+    operacionEnCurso.current = true;
+    setEliminacion({ estado: 'consultando', recorrido });
+    try {
+      const recorridos = await getRutasGuardadas();
+      setListado({ estado: 'listo', recorridos });
+      // El GET refleja el estado actual, pero no confirma quién eliminó la plantilla.
+      setEliminacion(null);
+    } catch {
+      setEliminacion({ estado: 'error-consulta', recorrido });
+    } finally {
+      operacionEnCurso.current = false;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.pantalla} edges={['top', 'bottom']}>
       <View style={styles.encabezado}>
@@ -227,10 +243,12 @@ export default function RecorridosGuardadosScreen() {
                 {eliminacion.estado === 'listo' ? 'Recorrido eliminado' : '¿Estás seguro de que querés eliminar este recorrido?'}
               </Text>
               <Text style={styles.texto}>{eliminacion.recorrido.nombre}</Text>
-              {eliminacion.estado === 'eliminando' ? (
+              {eliminacion.estado === 'eliminando' || eliminacion.estado === 'consultando' ? (
                 <>
                   <ActivityIndicator color={RepartoYA.error} />
-                  <Text style={styles.texto} accessibilityLiveRegion="polite">Eliminando recorrido…</Text>
+                  <Text style={styles.texto} accessibilityLiveRegion="polite">
+                    {eliminacion.estado === 'eliminando' ? 'Eliminando recorrido…' : 'Actualizando listado…'}
+                  </Text>
                 </>
               ) : eliminacion.estado === 'listo' ? (
                 <Pressable accessibilityRole="button" style={styles.modalBoton} onPress={cerrarEliminacion}>
@@ -238,16 +256,24 @@ export default function RecorridosGuardadosScreen() {
                 </Pressable>
               ) : (
                 <>
-                  {eliminacion.estado === 'error' && (
-                    <Text style={styles.texto} accessibilityLiveRegion="polite">
-                      No se pudo confirmar la eliminación del recorrido. Revisá tu conexión e intentá nuevamente.
-                    </Text>
+                  {(eliminacion.estado === 'error' || eliminacion.estado === 'error-consulta') && (
+                    <>
+                      <Text style={styles.texto} accessibilityLiveRegion="polite">
+                        {eliminacion.estado === 'error-consulta'
+                          ? 'No se pudo actualizar el listado. El estado del recorrido sigue sin verificarse.'
+                          : 'No se pudo confirmar la eliminación. Podés actualizar el listado para verificar si el recorrido sigue guardado.'}
+                      </Text>
+                      <Pressable accessibilityRole="button" style={styles.modalBoton}
+                        onPress={() => actualizarListado(eliminacion.recorrido)}>
+                        <Text style={styles.botonTexto}>Actualizar listado</Text>
+                      </Pressable>
+                    </>
                   )}
                   <Pressable accessibilityRole="button" style={styles.modalEliminar}
                     accessibilityLabel={eliminacion.estado === 'confirmar' ? 'Confirmar eliminación del recorrido' : undefined}
                     onPress={() => eliminar(eliminacion.recorrido)}>
                     <Text style={styles.textoModalEliminar}>
-                      {eliminacion.estado === 'error' ? 'Reintentar eliminación' : 'Eliminar recorrido'}
+                      {eliminacion.estado === 'confirmar' ? 'Eliminar recorrido' : 'Reintentar eliminación'}
                     </Text>
                   </Pressable>
                   <Pressable accessibilityRole="button" style={styles.botonPendiente} onPress={cerrarEliminacion}>

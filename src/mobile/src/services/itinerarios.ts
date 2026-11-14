@@ -162,6 +162,19 @@ export async function ordenarPorRuta(rutaId: number): Promise<number[]> {
   return data;
 }
 
+export async function eliminarRutaGuardada(rutaId: number): Promise<void> {
+  if (!Number.isSafeInteger(rutaId) || rutaId <= 0) {
+    throw new Error('El recorrido seleccionado no es válido.');
+  }
+  const { data } = await api.post<{ id: number; mensaje: string }>(
+    'itinerarios/eliminar-ruta/',
+    { ruta_id: rutaId },
+  );
+  if (data?.id !== rutaId || typeof data.mensaje !== 'string' || !data.mensaje.trim()) {
+    throw new Error('Django no confirmó la eliminación del recorrido seleccionado.');
+  }
+}
+
 /**
  * POST /api/paradas/{id}/registrar-cobranza/
  * Asienta la cobranza de la parada y la liquida si el cobro es íntegro (100%).

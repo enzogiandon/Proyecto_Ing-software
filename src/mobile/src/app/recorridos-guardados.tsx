@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Tex
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
-import { getRutasGuardadas, ordenarPorRuta } from '../services/itinerarios';
+import { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta } from '../services/itinerarios';
 import { entregarItinerarioActualizado, obtenerItinerarioJornada } from '../services/itinerarioService';
 import type { RutaGuardadaItem } from '../types/api';
 
@@ -16,6 +16,11 @@ type Carga =
   | { estado: 'confirmar' | 'enviando' | 'error-envio'; recorrido: RutaGuardadaItem }
   | { estado: 'actualizando' | 'error-actualizacion' | 'listo'; recorrido: RutaGuardadaItem; orden: number[] };
 
+type Eliminacion = {
+  estado: 'confirmar' | 'eliminando' | 'error' | 'listo';
+  recorrido: RutaGuardadaItem;
+};
+
 export default function RecorridosGuardadosScreen() {
   const router = useRouter();
   const [listado, setListado] = useState<Listado>({ estado: 'cargando' });
@@ -24,6 +29,7 @@ export default function RecorridosGuardadosScreen() {
   const [asignacion, setAsignacion] = useState<Asignacion>('consultando');
   const [carga, setCarga] = useState<Carga | null>(null);
   const operacionEnCurso = useRef(false);
+  const [eliminacion, setEliminacion] = useState<Eliminacion | null>(null);
   const [avisoCarga, setAvisoCarga] = useState('');
 
   useFocusEffect(useCallback(() => {
@@ -108,6 +114,27 @@ export default function RecorridosGuardadosScreen() {
 
   const cargandoRecorrido = carga?.estado === 'enviando' || carga?.estado === 'actualizando';
 
+  const cerrarEliminacion = () => {
+    if (!operacionEnCurso.current) setEliminacion(null);
+  };
+
+  const eliminar = async (recorrido: RutaGuardadaItem) => {
+    if (operacionEnCurso.current) return;
+    operacionEnCurso.current = true;
+    setEliminacion({ estado: 'eliminando', recorrido });
+    try {
+      await eliminarRutaGuardada(recorrido.id);
+      setListado((actual) => actual.estado === 'listo'
+        ? { estado: 'listo', recorridos: actual.recorridos.filter(({ id }) => id !== recorrido.id) }
+        : actual);
+      setEliminacion({ estado: 'listo', recorrido });
+    } catch {
+      setEliminacion({ estado: 'error', recorrido });
+    } finally {
+      operacionEnCurso.current = false;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.pantalla} edges={['top', 'bottom']}>
       <View style={styles.encabezado}>
@@ -168,24 +195,70 @@ export default function RecorridosGuardadosScreen() {
                     onPress={() => setCarga({ estado: 'confirmar', recorrido })}>
                     <Text style={styles.botonTexto}>Cargar</Text>
                   </Pressable>
-                  <AccionPendiente texto="Eliminar recorrido" etiqueta={`Eliminar recorrido ${recorrido.nombre}`} eliminar />
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Eliminar recorrido ${recorrido.nombre}`}
+                    style={[styles.botonPendiente, styles.botonEliminar]}
+                    onPress={() => setEliminacion({ estado: 'confirmar', recorrido })}>
+                    <Image source={require('../../assets/icons/icono-eliminar.png')} style={styles.icono} resizeMode="contain" />
+                    <Text style={[styles.botonTexto, styles.textoEliminar]}>Eliminar recorrido</Text>
+                  </Pressable>
                 </View>
               </View>
             ))}
-            {listado.recorridos.length === 0 ? (
+            {listado.recorridos.length === 0 && (
               <View style={styles.tarjeta}>
                 <Image source={require('../../assets/icons/icono-rutas-guardadas.png')} style={styles.iconoVacio} resizeMode="contain" />
                 <Text style={styles.nombre}>No hay recorridos guardados</Text>
                 {/* HU 26 debe definir el destino del botón y crear la plantilla en Django. */}
-                <AccionPendiente texto="+ Guardar orden actual" />
+                <Pressable disabled accessibilityRole="button" accessibilityState={{ disabled: true }} style={styles.botonPendiente}>
+                  <Text style={styles.botonTexto}>+ Guardar orden actual</Text>
+                </Pressable>
                 <Text style={styles.texto}>Guardar recorridos estará disponible próximamente.</Text>
               </View>
-            ) : (
-              <Text style={styles.texto}>La eliminación de recorridos estará disponible próximamente.</Text>
             )}
           </>
         )}
       </ScrollView>
+      {eliminacion && (
+        <Modal transparent animationType="fade" onRequestClose={cerrarEliminacion}>
+          <View style={styles.modalFondo}>
+            <View style={styles.modalTarjeta} accessibilityViewIsModal>
+              <Image source={require('../../assets/icons/icono-eliminar.png')} style={styles.iconoVacio} resizeMode="contain" />
+              <Text style={styles.nombre} accessibilityRole="header" accessibilityLiveRegion="polite">
+                {eliminacion.estado === 'listo' ? 'Recorrido eliminado' : '¿Estás seguro de que querés eliminar este recorrido?'}
+              </Text>
+              <Text style={styles.texto}>{eliminacion.recorrido.nombre}</Text>
+              {eliminacion.estado === 'eliminando' ? (
+                <>
+                  <ActivityIndicator color={RepartoYA.error} />
+                  <Text style={styles.texto} accessibilityLiveRegion="polite">Eliminando recorrido…</Text>
+                </>
+              ) : eliminacion.estado === 'listo' ? (
+                <Pressable accessibilityRole="button" style={styles.modalBoton} onPress={cerrarEliminacion}>
+                  <Text style={styles.botonTexto}>Aceptar</Text>
+                </Pressable>
+              ) : (
+                <>
+                  {eliminacion.estado === 'error' && (
+                    <Text style={styles.texto} accessibilityLiveRegion="polite">
+                      No se pudo confirmar la eliminación del recorrido. Revisá tu conexión e intentá nuevamente.
+                    </Text>
+                  )}
+                  <Pressable accessibilityRole="button" style={styles.modalEliminar}
+                    accessibilityLabel={eliminacion.estado === 'confirmar' ? 'Confirmar eliminación del recorrido' : undefined}
+                    onPress={() => eliminar(eliminacion.recorrido)}>
+                    <Text style={styles.textoModalEliminar}>
+                      {eliminacion.estado === 'error' ? 'Reintentar eliminación' : 'Eliminar recorrido'}
+                    </Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" style={styles.botonPendiente} onPress={cerrarEliminacion}>
+                    <Text style={styles.botonTexto}>Cancelar</Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+      )}
       {carga && (
         <Modal transparent animationType="fade" onRequestClose={cerrarModal}>
           <View style={styles.modalFondo}>
@@ -241,16 +314,6 @@ export default function RecorridosGuardadosScreen() {
   );
 }
 
-function AccionPendiente({ texto, etiqueta, eliminar }: { texto: string; etiqueta?: string; eliminar?: boolean }) {
-  return (
-    <Pressable disabled accessibilityRole="button" accessibilityLabel={etiqueta ?? texto}
-      accessibilityState={{ disabled: true }} style={styles.botonPendiente}>
-      {eliminar && <Image source={require('../../assets/icons/icono-eliminar.png')} style={styles.icono} resizeMode="contain" />}
-      <Text style={styles.botonTexto}>{texto}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   pantalla: { flex: 1, backgroundColor: RepartoYA.azulRuta },
   encabezado: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12 },
@@ -273,8 +336,12 @@ const styles = StyleSheet.create({
   },
   reintentar: { alignSelf: 'flex-start', backgroundColor: RepartoYA.naranjaYA, padding: 12, borderRadius: 12 },
   botonCargar: { backgroundColor: RepartoYA.blanco, borderColor: RepartoYA.azulRuta },
+  botonEliminar: { backgroundColor: RepartoYA.errorFondo, borderColor: RepartoYA.error },
+  textoEliminar: { color: RepartoYA.error },
   modalFondo: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingHorizontal: 28 },
   modalTarjeta: { backgroundColor: RepartoYA.blanco, borderRadius: 16, padding: 24, gap: 12 },
   modalBoton: { backgroundColor: RepartoYA.naranjaYA, borderRadius: 10, padding: 14, alignItems: 'center' },
+  modalEliminar: { backgroundColor: RepartoYA.error, borderRadius: 10, padding: 14, alignItems: 'center' },
+  textoModalEliminar: { color: RepartoYA.blanco, fontSize: 14, fontWeight: '700' },
   botonTexto: { color: RepartoYA.carbon, fontSize: 14, fontWeight: '700' },
 });

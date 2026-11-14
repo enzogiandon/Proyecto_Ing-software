@@ -23,7 +23,7 @@ function load(file, modules) {
 }
 
 function pantalla(api, itinerarioService = {}, router = {}) {
-  const { getRutasGuardadas, ordenarPorRuta } = load('services/itinerarios.ts', {
+  const { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta } = load('services/itinerarios.ts', {
     './api': api, 'react-native': {}, '../utils/importes': {}, './paradaService': {},
     '../data/mockParada': {}, '../data/mockItinerario': {},
   });
@@ -52,7 +52,7 @@ function pantalla(api, itinerarioService = {}, router = {}) {
     'expo-router': { useRouter: () => router, useFocusEffect: (fn) => { efectos.push(fn); } },
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     '../constants/theme': { RepartoYA: {} },
-    '../services/itinerarios': { getRutasGuardadas, ordenarPorRuta },
+    '../services/itinerarios': { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta },
     '../services/itinerarioService': {
       obtenerItinerarioJornada: async () => ({ itinerario: null }),
       ...itinerarioService,
@@ -115,7 +115,7 @@ test('muestra los nombres de Django y calcula el contador sin metadatos', async 
   for (const texto of ['2 recorridos guardados', 'Centro', 'Norte', 'Cargar', 'Eliminar recorrido']) {
     assert.ok(textos(vista).includes(texto));
   }
-  assert.equal(nodos(vista).filter((nodo) => nodo.props?.disabled).length, 4);
+  assert.equal(nodos(vista).filter((nodo) => nodo.props?.disabled).length, 2);
 });
 
 test('muestra estado vacío y el acceso previsto a HU 26', async () => {
@@ -254,4 +254,81 @@ test('sin itinerario asignado, la carga queda deshabilitada y se explica el moti
   await asentar();
   assert.equal(boton(app, 'Cargar Norte').disabled, true);
   assert.ok(textos(app.render()).includes('Necesitás un itinerario asignado para cargar un recorrido.'));
+});
+
+async function eliminacionPreparada(recorridos = [{ id: 17, nombre: 'Norte' }]) {
+  const escenario = { posts: [], consultasItinerario: 0, actualizaciones: [] };
+  const app = pantalla({
+    async get() { return { data: recorridos }; },
+    async post(url, body) {
+      escenario.posts.push([url, body.ruta_id, Object.keys(body)]);
+      return escenario.enviar ? escenario.enviar() : { data: { id: 17, mensaje: 'Ruta eliminada' } };
+    },
+  }, {
+    async obtenerItinerarioJornada() {
+      escenario.consultasItinerario++;
+      return { itinerario: null };
+    },
+    entregarItinerarioActualizado: (valor) => escenario.actualizaciones.push(valor),
+  });
+  await asentar();
+  boton(app, 'Eliminar recorrido Norte').onPress();
+  return { app, escenario };
+}
+
+test('el modal identifica el recorrido y cancelar conserva la lista sin enviar un POST', async () => {
+  const { app, escenario } = await eliminacionPreparada();
+  const modal = nodos(app.render()).find((nodo) => nodo.tipo === 'Modal');
+  assert.ok(textos(modal).includes('Norte'));
+  assert.ok(textos(modal).includes('¿Estás seguro de que querés eliminar este recorrido?'));
+  boton(app, 'Cancelar').onPress();
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.deepEqual(escenario.posts, []);
+  assert.ok(textos(app.render()).includes('1 recorrido guardado'));
+});
+
+test('espera la confirmación, bloquea duplicados y quita solo el recorrido elegido', async () => {
+  const { app, escenario } = await eliminacionPreparada([{ id: 17, nombre: 'Norte' }, { id: 21, nombre: 'Sur' }]);
+  let resolver;
+  escenario.enviar = () => new Promise((resolve) => { resolver = resolve; });
+  const confirmar = boton(app, 'Confirmar eliminación del recorrido').onPress;
+  const primera = confirmar();
+  await confirmar();
+  assert.deepEqual(escenario.posts, [['itinerarios/eliminar-ruta/', 17, ['ruta_id']]]);
+  assert.ok(textos(app.render()).includes('Eliminando recorrido…'));
+  assert.ok(textos(app.render()).includes('2 recorridos guardados'));
+  assert.ok(!textos(app.render()).includes('Recorrido eliminado'));
+  resolver({ data: { id: 17, mensaje: 'Ruta eliminada' } });
+  await primera;
+  assert.ok(textos(app.render()).includes('Recorrido eliminado'));
+  boton(app, 'Aceptar').onPress();
+  assert.ok(textos(app.render()).includes('1 recorrido guardado'));
+  assert.ok(textos(app.render()).includes('Sur'));
+  assert.ok(!textos(app.render()).includes('Norte'));
+  assert.equal(escenario.consultasItinerario, 1);
+  assert.deepEqual(escenario.actualizaciones, []);
+});
+
+test('conserva el recorrido si falla Django o devuelve otro ID y permite reintentar', async () => {
+  const { app, escenario } = await eliminacionPreparada();
+  escenario.enviar = () => { throw new Error('Sin conexión'); };
+  await boton(app, 'Confirmar eliminación del recorrido').onPress();
+  assert.ok(textos(app.render()).some((texto) => texto.includes('No se pudo confirmar la eliminación')));
+  escenario.enviar = () => ({ data: { id: 25, mensaje: 'Ruta eliminada' } });
+  await boton(app, 'Reintentar eliminación').onPress();
+  assert.ok(textos(app.render()).includes('1 recorrido guardado'));
+  assert.ok(!textos(app.render()).includes('Recorrido eliminado'));
+  escenario.enviar = undefined;
+  await boton(app, 'Reintentar eliminación').onPress();
+  assert.equal(escenario.posts.length, 3);
+  assert.ok(textos(app.render()).includes('Recorrido eliminado'));
+});
+
+test('al eliminar el último recorrido vuelve al estado vacío de la HU 63', async () => {
+  const { app } = await eliminacionPreparada();
+  await boton(app, 'Confirmar eliminación del recorrido').onPress();
+  boton(app, 'Aceptar').onPress();
+  for (const texto of ['0 recorridos guardados', 'No hay recorridos guardados', '+ Guardar orden actual']) {
+    assert.ok(textos(app.render()).includes(texto));
+  }
 });

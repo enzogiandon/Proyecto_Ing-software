@@ -24,6 +24,7 @@ export default function RecorridosGuardadosScreen() {
   const [asignacion, setAsignacion] = useState<Asignacion>('consultando');
   const [carga, setCarga] = useState<Carga | null>(null);
   const operacionEnCurso = useRef(false);
+  const [avisoCarga, setAvisoCarga] = useState('');
 
   useFocusEffect(useCallback(() => {
     let vigente = true;
@@ -57,7 +58,9 @@ export default function RecorridosGuardadosScreen() {
 
   const cerrarModal = () => {
     if (operacionEnCurso.current) return;
-    if (carga?.estado === 'error-actualizacion') return;
+    if (carga?.estado === 'error-actualizacion') {
+      setAvisoCarga(`Django aplicó el recorrido ${carga.recorrido.nombre}, pero la pantalla de Itinerario no pudo actualizarse.`);
+    }
     if (carga?.estado === 'listo') volver();
     setCarga(null);
   };
@@ -93,6 +96,7 @@ export default function RecorridosGuardadosScreen() {
           throw new Error('El itinerario todavía no refleja el orden confirmado.');
         }
         entregarItinerarioActualizado(itinerario);
+        setAvisoCarga('');
         setCarga({ estado: 'listo', recorrido, orden });
       } catch {
         setCarga({ estado: 'error-actualizacion', recorrido, orden });
@@ -115,6 +119,11 @@ export default function RecorridosGuardadosScreen() {
       </View>
 
       <ScrollView style={styles.contenido} contentContainerStyle={styles.espaciado}>
+        {!!avisoCarga && (
+          <View style={styles.tarjeta} accessibilityLiveRegion="polite">
+            <Text style={styles.texto}>{avisoCarga}</Text>
+          </View>
+        )}
         {listado.estado === 'cargando' && (
           <View style={styles.tarjeta} accessibilityLiveRegion="polite">
             <ActivityIndicator color={RepartoYA.azulRuta} />
@@ -217,9 +226,9 @@ export default function RecorridosGuardadosScreen() {
                         carga.estado === 'error-actualizacion' ? 'Reconsultar itinerario' : 'Reintentar carga'}
                     </Text>
                   </Pressable>
-                  {(carga.estado === 'confirmar' || carga.estado === 'error-envio') && (
+                  {carga.estado !== 'listo' && (
                     <Pressable accessibilityRole="button" style={styles.botonPendiente} onPress={cerrarModal}>
-                      <Text style={styles.botonTexto}>Cancelar</Text>
+                      <Text style={styles.botonTexto}>{carga.estado === 'error-actualizacion' ? 'Cerrar' : 'Cancelar'}</Text>
                     </Pressable>
                   )}
                 </>

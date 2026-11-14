@@ -234,6 +234,21 @@ test('si falla la actualización visual, reconsulta sin repetir el POST', async 
   assert.deepEqual(escenario.actualizaciones, [actualizado]);
 });
 
+test('si la reconsulta sigue fallando, permite cerrar y deja visible el aviso sin repetir el POST', async () => {
+  const { app, escenario } = await cargaPreparada();
+  escenario.consultar = () => { throw new Error('Sin conexión'); };
+  await boton(app, 'Cargar recorrido Norte').onPress();
+  await boton(app, 'Reconsultar itinerario').onPress();
+  assert.equal(escenario.consultas, 3);
+  boton(app, 'Cerrar').onPress();
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.ok(textos(app.render()).includes(
+    'Django aplicó el recorrido Norte, pero la pantalla de Itinerario no pudo actualizarse.',
+  ));
+  assert.equal(escenario.posts.length, 1);
+  assert.deepEqual(escenario.actualizaciones, []);
+});
+
 test('sin itinerario asignado, la carga queda deshabilitada y se explica el motivo', async () => {
   const app = pantalla({ async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; } });
   await asentar();

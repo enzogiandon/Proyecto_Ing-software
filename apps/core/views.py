@@ -225,15 +225,13 @@ class Inicio(LoginRequiredMixin, TemplateView):
             estado=EstadoCobranza.REGISTRADO
         ).count()
 
-        # Mismo caso: pagos con diferencia y no encontrados en una sola query
+        # Mismo caso: pagos con diferencia en una sola query
         pagos_stats = Cobranza.objects.aggregate(
             para_validar=Count("id", filter=Q(estado=EstadoCobranza.REGISTRADO)),
             con_diferencia=Count("id", filter=Q(estado=EstadoCobranza.DIFIERE)),
-            no_encontrados=Count("id", filter=Q(estado=EstadoCobranza.NO_ENCONTRADO)),
         )
         context["cobranzas_para_validar"] = pagos_stats["para_validar"]
         context["cobranza_con_diferencia"] = pagos_stats["con_diferencia"]
-        context["cobranza_no_encontrados"] = pagos_stats["no_encontrados"]
 
         context["ultimos_empleados"] = (
             Usuario.objects.filter(is_active=True)

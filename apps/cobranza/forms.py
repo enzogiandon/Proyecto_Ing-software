@@ -3,15 +3,15 @@ from decimal import Decimal
 from django import forms
 from django.forms import BaseInlineFormSet, formset_factory, inlineformset_factory
 
-from .models import Cobranza, DetallePago, EstadoCobranza
+from .models import AjusteCobranza, Cobranza, DetallePago, EstadoCobranza
 
 
 class ValidarCobranzaForm(forms.ModelForm):
     class Meta:
         model = Cobranza
-        fields = ["observacion_ajuste"]
+        fields = ["observacion"]
         widgets = {
-            "observacion_ajuste": forms.Textarea(
+            "observacion": forms.Textarea(
                 attrs={
                     "class": "form-control",
                     "rows": 3,
@@ -38,8 +38,20 @@ class DetallePagoValidarForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Permitir que venga vacío (None) para detectar pagos "no encontrados"
+        # Permitir que el campo venga vacío en el POST para transformarlo en 0
         self.fields["monto_verificado"].required = False
+
+    def has_changed(self):
+        # Si la instancia no tenía monto_verificado (None) o se limpió a 0.00, forzamos que guarde
+        if self.instance and self.instance.pk and self.instance.monto_verificado is None:
+            return True
+        return super().has_changed()
+
+    def clean_monto_verificado(self):
+        monto = self.cleaned_data.get("monto_verificado")
+        if monto is None or monto == "":
+            return Decimal("0.00")
+        return monto
 
 
 class BaseDetallePagoFormSet(BaseInlineFormSet):
@@ -54,7 +66,6 @@ class BaseDetallePagoFormSet(BaseInlineFormSet):
 
         total_declarado = Decimal("0.00")
         total_verificado = Decimal("0.00")
-        hay_pago_no_encontrado = False
 
         for form in self.forms:
             if self.can_delete and self._should_delete_form(form):
@@ -66,18 +77,11 @@ class BaseDetallePagoFormSet(BaseInlineFormSet):
             monto_decl = form.instance.monto_declarado or Decimal("0.00")
             total_declarado += monto_decl
 
-            monto_verif = form.cleaned_data.get("monto_verificado")
-
-            # Regla de prioridad 1: Falta verificar algún pago
-            if monto_verif is None:
-                hay_pago_no_encontrado = True
-            else:
-                total_verificado += monto_verif
+            monto_verif = form.cleaned_data.get("monto_verificado") or Decimal("0.00")
+            total_verificado += monto_verif
 
         # Determinación de estado según prioridades
-        if hay_pago_no_encontrado:
-            self.estado_calculado = EstadoCobranza.NO_ENCONTRADO
-        elif total_declarado != total_verificado:
+        if total_declarado != total_verificado:
             self.estado_calculado = EstadoCobranza.DIFIERE
         else:
             self.estado_calculado = EstadoCobranza.APROBADO
@@ -93,31 +97,40 @@ DetallePagoFormSet = inlineformset_factory(
 )
 
 
-class AjusteItemForm(forms.Form):
-    detalle_id = forms.IntegerField(widget=forms.HiddenInput())
-    importe_nuevo = forms.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        min_value=Decimal("0.00"),
-        widget=forms.NumberInput(
-            attrs={"class": "form-control form-control-sm text-end input-nuevo", "step": "0.01"}
-        ),
-    )
-    motivo = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control form-control-sm input-motivo",
-                "placeholder": "Motivo del ajuste para este medio de pago...",
-            }
-        ),
-        required=True,
-    )
+class AjusteCobranzaForm(forms.ModelForm):
+    class Meta:
+        model = AjusteCobranza
+        fields = ["medio", "monto", "motivo"]
+        widgets = {
+            "medio": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+            "monto": forms.NumberInput(
+                attrs={
+                    "class": "form-control text-end",
+                    "step": "0.01",
+                    "placeholder": "0.00 (puede ser positivo o negativo)",
+                }
+            ),
+            "motivo": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Justificación del ajuste o corrección...",
+                }
+            ),
+        }
+
+    def clean_monto(self):
+        monto = self.cleaned_data.get("monto")
+        if monto is None or monto == Decimal("0.00"):
+            raise forms.ValidationError("El monto del ajuste no puede ser 0.")
+        return monto
 
     def clean_motivo(self):
         motivo = self.cleaned_data.get("motivo", "").strip()
         if not motivo:
             raise forms.ValidationError("Debe indicar obligatoriamente el motivo del ajuste.")
         return motivo
-
-
-AjusteItemFormSet = formset_factory(AjusteItemForm, extra=0)

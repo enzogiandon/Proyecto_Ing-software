@@ -37,6 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="login" />
         <Stack.Screen name="itinerario" />
+        <Stack.Screen name="recorridos-guardados" />
         <Stack.Screen name="parada" />
         <Stack.Screen name="validar-cobro" />
         <Stack.Screen name="adjuntar-documento" />

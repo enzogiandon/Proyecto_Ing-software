@@ -1,5 +1,7 @@
 # cobranza/models.py
 
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 
@@ -14,7 +16,6 @@ class EstadoCobranza(models.TextChoices):
     REGISTRADO = "registrado", "Registrado"
     APROBADO = "aprobado", "Aprobado"
     DIFIERE = "difiere", "Difiere"
-    NO_ENCONTRADO = "no_encontrado", "No encontrado"
 
 
 class Cobranza(models.Model):
@@ -30,7 +31,7 @@ class Cobranza(models.Model):
         default=EstadoCobranza.REGISTRADO,
         help_text="Estado de validación despues de hacer el arqueo y revisión de movimientos",
     )
-    observacion_ajuste = models.TextField(
+    observacion = models.TextField(
         blank=True,
         null=True,
         help_text="Motivo documentado por el administrativo para no aprobar la cobranza",
@@ -41,6 +42,29 @@ class Cobranza(models.Model):
         return (
             f"Cobranza Parada #{self.parada.id} - {self.parada.comercio.razon_social}"
         )
+
+    def actualizar_tras_ajuste(self):
+        """
+        Recalcula el estado de la cobranza tras registrar un ajuste.
+        No sobreescribe la observación inicial de validación/rechazo.
+        """
+        detalles = self.detalles.all()
+        ajustes = self.ajustes.all()
+        remitos = self.parada.remitos.all()
+
+        total_declarado = sum(r.total for r in remitos)
+        total_verificado_detalles = sum(
+            d.monto_verificado for d in detalles if d.monto_verificado is not None
+        )
+        total_ajustes = sum(a.monto for a in ajustes)
+        total_verificado = total_verificado_detalles + total_ajustes
+
+        if total_declarado == total_verificado:
+            self.estado = EstadoCobranza.APROBADO
+        else:
+            self.estado = EstadoCobranza.DIFIERE
+
+        self.save(update_fields=["estado"])
 
 
 class DetallePago(models.Model):
@@ -58,6 +82,7 @@ class DetallePago(models.Model):
         decimal_places=2,
         blank=True,
         null=True,
+        default=Decimal("0.00"),
         help_text="Importe verificado por el administrativo",
     )
 
@@ -74,26 +99,27 @@ class DetallePago(models.Model):
 
 
 class AjusteCobranza(models.Model):
-    detalle_pago = models.ForeignKey(
-        DetallePago,
+    cobranza = models.ForeignKey(
+        Cobranza,
         on_delete=models.CASCADE,
         related_name="ajustes",
-        help_text="Detalle de pago puntual sobre el cual se aplica la corrección",
+        help_text="Cobranza sobre la cual se aplica el ajuste",
     )
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         help_text="Administrativo que autorizó el ajuste",
     )
-    importe_anterior = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        help_text="Monto verificado antes de aplicar el ajuste (o declarado si estaba sin verificar)",
+    medio = models.CharField(
+        max_length=20,
+        choices=MedioPago.choices,
+        help_text="Medio de pago afectado por el ajuste",
     )
-    importe_nuevo = models.DecimalField(
+    monto = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        help_text="Monto corregido final determinado por el administrativo",
+        default=Decimal("0.00"),
+        help_text="Monto del ajuste (positivo o negativo) se va a sumar al total de la cobranza",
     )
     motivo = models.TextField(
         help_text="Justificación obligatoria del ajuste",
@@ -109,4 +135,4 @@ class AjusteCobranza(models.Model):
         ordering = ["-fecha"]
 
     def __str__(self):
-        return f"Ajuste {self.detalle_pago.get_medio_display()} (#{self.detalle_pago.id}): ${self.importe_anterior} -> ${self.importe_nuevo}"
+        return f"Ajuste - {self.get_medio_display()}: ${self.monto}"

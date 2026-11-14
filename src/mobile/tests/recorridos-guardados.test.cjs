@@ -22,18 +22,19 @@ function load(file, modules) {
   return exports;
 }
 
-function pantalla(api) {
-  const { getRutasGuardadas } = load('services/itinerarios.ts', {
+function pantalla(api, itinerarioService = {}, router = {}) {
+  const { getRutasGuardadas, ordenarPorRuta } = load('services/itinerarios.ts', {
     './api': api, 'react-native': {}, '../utils/importes': {}, './paradaService': {},
     '../data/mockParada': {}, '../data/mockItinerario': {},
   });
   const estados = [];
   let cursor = 0;
-  let efecto;
+  let efectos = [];
   const React = {
     Fragment: 'Fragment',
     createElement: (tipo, props, ...hijos) => ({ tipo, props, hijos }),
     useCallback: (fn) => fn,
+    useRef: (current) => React.useState({ current })[0],
     useState(inicial) {
       const i = cursor++;
       if (!(i in estados)) estados[i] = inicial;
@@ -45,21 +46,26 @@ function pantalla(api) {
   const Screen = load('app/recorridos-guardados.tsx', {
     react: React,
     'react-native': {
-      ActivityIndicator: 'ActivityIndicator', Image: 'Image', Pressable: 'Pressable',
+      ActivityIndicator: 'ActivityIndicator', Image: 'Image', Modal: 'Modal', Pressable: 'Pressable',
       ScrollView: 'ScrollView', Text: 'Text', View: 'View', StyleSheet: { create: (styles) => styles },
     },
-    'expo-router': { useRouter: () => ({}), useFocusEffect: (fn) => { efecto = fn; } },
+    'expo-router': { useRouter: () => router, useFocusEffect: (fn) => { efectos.push(fn); } },
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     '../constants/theme': { RepartoYA: {} },
-    '../services/itinerarios': { getRutasGuardadas },
+    '../services/itinerarios': { getRutasGuardadas, ordenarPorRuta },
+    '../services/itinerarioService': {
+      obtenerItinerarioJornada: async () => ({ itinerario: null }),
+      ...itinerarioService,
+    },
   }).default;
 
   function render() {
     cursor = 0;
+    efectos = [];
     return Screen();
   }
   render();
-  let limpiar = efecto();
+  let [limpiar] = efectos.map((efecto) => efecto());
   return {
     render,
     async reintentar() {
@@ -68,7 +74,7 @@ function pantalla(api) {
       boton.props.onPress();
       limpiar();
       render();
-      limpiar = efecto();
+      limpiar = efectos[0]();
       await asentar();
     },
   };
@@ -140,4 +146,97 @@ test('trata una respuesta inválida como error', async () => {
   const app = pantalla({ async get() { return { data: [{ id: 4 }] }; } });
   await asentar();
   assert.ok(textos(app.render()).includes('No se pudieron cargar los recorridos'));
+});
+
+function boton(app, texto) {
+  const encontrado = nodos(app.render()).find((nodo) =>
+    nodo.tipo === 'Pressable' && (nodo.props?.accessibilityLabel === texto || textos(nodo).includes(texto)));
+  assert.ok(encontrado, texto);
+  return encontrado.props;
+}
+
+async function cargaPreparada() {
+  const escenario = { posts: [], consultas: 0, actualizaciones: [], atras: 0 };
+  const actualizado = { paradas: [{ id: 31 }, { id: 12 }] };
+  const app = pantalla({
+    async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; },
+    async post(url, body) {
+      escenario.posts.push([url, body.ruta_id]);
+      return escenario.enviar ? escenario.enviar() : { data: [31, 12] };
+    },
+  }, {
+    async obtenerItinerarioJornada(opciones) {
+      assert.equal(opciones.soloDjango, true);
+      if (++escenario.consultas === 1) return { itinerario: { paradas: [{ id: 12 }, { id: 31 }] } };
+      return escenario.consultar ? escenario.consultar() : { itinerario: actualizado };
+    },
+    entregarItinerarioActualizado: (valor) => escenario.actualizaciones.push(valor),
+  }, {
+    canGoBack: () => true,
+    back: () => { escenario.atras++; },
+  });
+  await asentar();
+  boton(app, 'Cargar Norte').onPress();
+  return { app, escenario, actualizado };
+}
+
+test('el modal advierte del reemplazo y cancelar conserva el itinerario', async () => {
+  const { app, escenario } = await cargaPreparada();
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.ok(textos(app.render()).some((texto) => texto.includes('Se reemplazará el orden actual')));
+  boton(app, 'Cancelar').onPress();
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.deepEqual(escenario.posts, []);
+  assert.deepEqual(escenario.actualizaciones, []);
+});
+
+test('confirma una sola vez, actualiza las paradas y vuelve al itinerario', async () => {
+  const { app, escenario, actualizado } = await cargaPreparada();
+  let resolver;
+  escenario.enviar = () => new Promise((resolve) => { resolver = resolve; });
+  const confirmar = boton(app, 'Cargar recorrido Norte').onPress;
+  confirmar();
+  confirmar();
+  assert.ok(textos(app.render()).includes('Cargando recorrido…'));
+  assert.ok(!textos(app.render()).includes('Recorrido Norte cargado'));
+  resolver({ data: [31, 12] });
+  await asentar();
+  assert.deepEqual(escenario.posts, [['itinerarios/ordenar-por-ruta/', 17]]);
+  assert.deepEqual(escenario.actualizaciones, [actualizado]);
+  assert.ok(textos(app.render()).includes('Recorrido Norte cargado'));
+  boton(app, 'Ver itinerario').onPress();
+  assert.equal(escenario.atras, 1);
+});
+
+test('un POST fallido o inválido permite reintentar sin mostrar éxito prematuro', async () => {
+  const { app, escenario } = await cargaPreparada();
+  escenario.enviar = () => { throw new Error('Sin conexión'); };
+  await boton(app, 'Cargar recorrido Norte').onPress();
+  assert.equal(escenario.consultas, 1);
+  escenario.enviar = () => ({ data: [31, 31] });
+  await boton(app, 'Reintentar carga').onPress();
+  assert.equal(escenario.consultas, 1);
+  assert.ok(!textos(app.render()).includes('Recorrido Norte cargado'));
+  escenario.enviar = undefined;
+  await boton(app, 'Reintentar carga').onPress();
+  assert.ok(textos(app.render()).includes('Recorrido Norte cargado'));
+});
+
+test('si falla la actualización visual, reconsulta sin repetir el POST', async () => {
+  const { app, escenario, actualizado } = await cargaPreparada();
+  escenario.consultar = () => ({ itinerario: { paradas: [{ id: 12 }, { id: 31 }] } });
+  await boton(app, 'Cargar recorrido Norte').onPress();
+  assert.deepEqual(escenario.actualizaciones, []);
+  assert.ok(textos(app.render()).some((texto) => texto.includes('Django confirmó la carga')));
+  escenario.consultar = undefined;
+  await boton(app, 'Reconsultar itinerario').onPress();
+  assert.equal(escenario.posts.length, 1);
+  assert.deepEqual(escenario.actualizaciones, [actualizado]);
+});
+
+test('sin itinerario asignado, la carga queda deshabilitada y se explica el motivo', async () => {
+  const app = pantalla({ async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; } });
+  await asentar();
+  assert.equal(boton(app, 'Cargar Norte').disabled, true);
+  assert.ok(textos(app.render()).includes('Necesitás un itinerario asignado para cargar un recorrido.'));
 });

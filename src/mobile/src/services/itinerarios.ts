@@ -151,15 +151,15 @@ export async function getRutasGuardadas(): Promise<RutaGuardadaItem[]> {
  * Aplica una plantilla de recorrido guardada al itinerario activo.
  */
 export async function ordenarPorRuta(rutaId: number): Promise<number[]> {
-  try {
-    const response = await api.post<number[]>('itinerarios/ordenar-por-ruta/', {
-      ruta_id: rutaId,
-    });
-    return response.data;
-  } catch (error: any) {
-    console.warn('[Itinerarios] Fallback ordenar por ruta:', error?.message);
-    return [1, 2, 3, 4, 5];
+  if (!Number.isSafeInteger(rutaId) || rutaId <= 0) {
+    throw new Error('El recorrido seleccionado no es válido.');
   }
+  const { data } = await api.post<number[]>('itinerarios/ordenar-por-ruta/', { ruta_id: rutaId });
+  if (!Array.isArray(data) || data.some((id) => !Number.isSafeInteger(id) || id <= 0) ||
+    new Set(data).size !== data.length) {
+    throw new Error('Django devolvió un orden de paradas inválido.');
+  }
+  return data;
 }
 
 /**

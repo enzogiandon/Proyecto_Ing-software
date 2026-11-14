@@ -43,8 +43,8 @@ El **Sprint 1** marca el arranque formal del desarrollo del producto mínimo via
 ## 📊 4. Métricas de Backlog y Compromiso
 
 - **Total de Historias de Usuario Estimadas (Planning Poker):** 51 HUs (148 puntos de historia).
-- **Historias Comprometidas en Sprint 1:** **28 HUs** (**71 puntos de historia**, 48% del esfuerzo total).
-- **Historias Remanentes para Sprint 2:** 23 HUs (77 puntos de historia, 52% del esfuerzo total).
+- **Historias Comprometidas en Sprint 1:** **28 HUs** (**73 puntos de historia**, 49% del esfuerzo total).
+- **Historias Remanentes para Sprint 2:** 23 HUs (75 puntos de historia, 51% del esfuerzo total).
 - **Planilla Integral de Estimación:** [Consultar tabla en Google Sheets](https://docs.google.com/spreadsheets/d/1XJ9v3v1gFjtmCFSVoAJ0DIv9F_JfRK5rYsCCYx7bvo8/edit?usp=drive_link).
 
 ---
@@ -53,7 +53,7 @@ El **Sprint 1** marca el arranque formal del desarrollo del producto mínimo via
 
 | Documento | Fecha | Tipo de Sesión | Objetivo Central |
 | :--- | :--- | :--- | :--- |
-| **[sprint-planning-01.md](sprint-planning-01.md)** | 09/10/2026 | Sprint Planning 1 | Definición de subgrupos, stack preliminar, estimación Planning Poker y selección de 28 HUs (71 pts). |
+| **[sprint-planning-01.md](sprint-planning-01.md)** | 09/10/2026 | Sprint Planning 1 | Definición de subgrupos, stack preliminar, estimación Planning Poker y selección de 28 HUs (73 pts). |
 | **[daily-scrum-01.md](daily-scrum-01.md)** | 19/10/2026 (10:00 hs) | Scrum #1 (con Cliente) | Validación de maquetas Figma con Martín Rodríguez; 5 definiciones operativas de negocio (estados `pendiente` / `terminada`, vista conjunta flota/choferes, etc.). |
 | **[daily-scrum-02.md](daily-scrum-02.md)** | 19/10/2026 (14:46 hs) | Scrum #2 (Técnico Interno) | Sincronización entre frentes y backend; detección de dependencia circular (IMP-01, IMP-02, IMP-03); plan de acción (DTOs, esquemas y mock server). |
 | **[daily-scrum-03.md](daily-scrum-03.md)** | 26/10/2026 (11:00 hs) | Scrum #3 (Técnico Interno) | Avance en código, consolidación a 5 apps Django, bajas lógicas, soporte documental de fotos en remitos y adopción de Guía de Estilo de Martín Rodríguez. |

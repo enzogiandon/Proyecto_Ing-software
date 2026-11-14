@@ -44,37 +44,37 @@ Todas las historias de usuario redactadas en este documento siguen los lineamien
 > 
 > Para el **Sprint 1**, el equipo seleccionó **28 Historias de Usuario** que totalizan **73 puntos de historia** (49% del esfuerzo global del backlog), cubriendo el flujo operativo prioritario: ingesta de planillas, gestión de flota/personal, control de acceso, y consulta móvil de itinerarios.
 
-| Ref | ID | Historia de Usuario | Épica Asociada | Puntos (Poker) | Estado de Planificación |
-| :---: | :---: | :--- | :--- | :---: | :---: |
-| 2 | HU-2 | Importar planilla de remitos | EP-01 (#1) | 5 pts | Compromiso Sprint 1 |
-| 4 | HU-4 | Agregar un remito | EP-01 (#1) | 3 pts | Compromiso Sprint 1 |
-| 5 | HU-5 | Consultar remitos registrados | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
-| 7 | HU-7 | Agregar personal | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
-| 8 | HU-8 | Asignar permisos administrativos | EP-02 (#6) | 3 pts | Compromiso Sprint 1 |
-| 9 | HU-9 | Agregar vehículo | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
-| 13 | HU-13 | Agregar itinerario | EP-03 (#12) | 5 pts | Compromiso Sprint 1 |
-| 17 | HU-17 | Consultar entregas con problemas | EP-04 (#16) | 2 pts | Compromiso Sprint 1 |
-| 18 | HU-18 | Consultar detalle de entrega | EP-04 (#16) | 2 pts | Compromiso Sprint 1 |
-| 23 | HU-23 | Iniciar sesión | EP-06 (#22) | 2 pts | Compromiso Sprint 1 |
-| 25 | HU-25 | Visualizar los remitos agrupados por parada | EP-06 (#22) | 3 pts | Compromiso Sprint 1 |
-| 31 | HU-31 | Registrar cobranza | EP-07 (#29) | 5 pts | Compromiso Sprint 1 |
-| 32 | HU-32 | Validar cobro íntegro | EP-07 (#29) | 3 pts | Compromiso Sprint 1 |
-| 37 | HU-37 | Consultar importaciones | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
-| 38 | HU-38 | Ver detalle de una importación | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
-| 39 | HU-39 | Consultar detalle de un remito | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
-| 40 | HU-40 | Eliminar una importación | EP-01 (#1) | 5 pts | Compromiso Sprint 1 |
-| 41 | HU-41 | Editar remito | EP-01 (#1) | 3 pts | Compromiso Sprint 1 |
-| 42 | HU-42 | Eliminar remito | EP-01 (#1) | 2 pts | Compromiso Sprint 1 |
-| 43 | HU-43 | Modificar personal | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
-| 45 | HU-45 | Modificar vehículo | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
-| 52 | HU-52 | Iniciar sesión como administrativo | EP-05 (#51) | 2 pts | Compromiso Sprint 1 |
-| 54 | HU-54 | Cerrar sesión como administrativo | EP-05 (#51) | 2 pts | Compromiso Sprint 1 |
-| 55 | HU-55 | Adjuntar un documento | EP-07 (#29) | 2 pts | Compromiso Sprint 1 |
-| 56 | HU-56 | Registrar inconvenientes con la entrega | EP-07 (#29) | 1 pt | Compromiso Sprint 1 |
-| 62 | HU-62 | Consultar itinerario | EP-06 (#22) | 2 pts | Compromiso Sprint 1 |
-| 66 | HU-66 | Suspender o deshabilitar personal | EP-02 (#6) | 2 pts | Compromiso Sprint 1 |
-| 67 | HU-67 | Visualizar detalle de parada y monto a cobrar | EP-06 (#22) | 3 pts | Compromiso Sprint 1 |
-| **TOTAL** | | **28 Historias de Usuario asignadas** | | **73 pts** | |
+| Ref | ID | Historia de Usuario | Épica Asociada | Puntos (Poker) | Estado Taiga | Estado de Planificación |
+| :---: | :---: | :--- | :--- | :---: | :---: | :---: |
+| 2 | HU-2 | Importar planilla de remitos | EP-01 (#1) | 5 pts | New | Compromiso Sprint 1 |
+| 4 | HU-4 | Agregar un remito | EP-01 (#1) | 3 pts | New | Compromiso Sprint 1 |
+| 5 | HU-5 | Consultar remitos registrados | EP-01 (#1) | 2 pts | New | Compromiso Sprint 1 |
+| 7 | HU-7 | Agregar personal | EP-02 (#6) | 2 pts | New | Compromiso Sprint 1 |
+| 8 | HU-8 | Asignar permisos administrativos | EP-02 (#6) | 3 pts | New | Compromiso Sprint 1 |
+| 9 | HU-9 | Agregar vehículo | EP-02 (#6) | 2 pts | New | Compromiso Sprint 1 |
+| 13 | HU-13 | Agregar itinerario | EP-03 (#12) | 5 pts | New | Compromiso Sprint 1 |
+| 17 | HU-17 | Consultar entregas con problemas | EP-04 (#16) | 2 pts | In progress | Compromiso Sprint 1 |
+| 18 | HU-18 | Consultar detalle de entrega | EP-04 (#16) | 2 pts | New | Compromiso Sprint 1 |
+| 23 | HU-23 | Iniciar sesión | EP-06 (#22) | 2 pts | Ready for test | Compromiso Sprint 1 |
+| 25 | HU-25 | Visualizar los remitos agrupados por parada | EP-06 (#22) | 3 pts | Ready for test | Compromiso Sprint 1 |
+| 31 | HU-31 | Registrar cobranza | EP-07 (#29) | 5 pts | Ready for test | Compromiso Sprint 1 |
+| 32 | HU-32 | Validar cobro íntegro | EP-07 (#29) | 3 pts | Ready for test | Compromiso Sprint 1 |
+| 37 | HU-37 | Consultar importaciones | EP-01 (#1) | 2 pts | New | Compromiso Sprint 1 |
+| 38 | HU-38 | Ver detalle de una importación | EP-01 (#1) | 2 pts | New | Compromiso Sprint 1 |
+| 39 | HU-39 | Consultar detalle de un remito | EP-01 (#1) | 2 pts | New | Compromiso Sprint 1 |
+| 40 | HU-40 | Eliminar una importación | EP-01 (#1) | 5 pts | New | Compromiso Sprint 1 |
+| 41 | HU-41 | Editar remito | EP-01 (#1) | 3 pts | New | Compromiso Sprint 1 |
+| 42 | HU-42 | Eliminar remito | EP-01 (#1) | 2 pts | New | Compromiso Sprint 1 |
+| 43 | HU-43 | Modificar personal | EP-02 (#6) | 2 pts | New | Compromiso Sprint 1 |
+| 45 | HU-45 | Modificar vehículo | EP-02 (#6) | 2 pts | New | Compromiso Sprint 1 |
+| 52 | HU-52 | Iniciar sesión como administrativo | EP-05 (#51) | 2 pts | New | Compromiso Sprint 1 |
+| 54 | HU-54 | Cerrar sesión como administrativo | EP-05 (#51) | 2 pts | New | Compromiso Sprint 1 |
+| 55 | HU-55 | Adjuntar un documento | EP-07 (#29) | 2 pts | Ready for test | Compromiso Sprint 1 |
+| 56 | HU-56 | Registrar inconvenientes con la entrega | EP-07 (#29) | 1 pt | New | Compromiso Sprint 1 |
+| 62 | HU-62 | Consultar itinerario | EP-06 (#22) | 2 pts | New | Compromiso Sprint 1 |
+| 66 | HU-66 | Suspender o deshabilitar personal | EP-02 (#6) | 2 pts | New | Compromiso Sprint 1 |
+| 67 | HU-67 | Visualizar detalle de parada y monto a cobrar | EP-06 (#22) | 3 pts | Ready for test | Compromiso Sprint 1 |
+| **TOTAL** | | **28 Historias de Usuario asignadas** | | **73 pts** | | |
 
 ---
 

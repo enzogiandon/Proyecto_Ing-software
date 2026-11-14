@@ -59,27 +59,27 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** CARGAR Y PROCESAR AUTOMÁTICAMENTE LA INFORMACIÓN EN EL SISTEMA.
 
 **Reglas a considerar:**
-- Las planillas son provistas por las marcas proveedoras bajo una estructura tabular preestablecida.
-- Cada fila del archivo representa un remito individual.
-- La importación y el procesamiento del lote se ejecutan de manera atómica e integral: si una o más filas contienen datos vacíos o inconsistencias de negocio, se rechaza la totalidad del archivo y no se registra ningún remito.
+- Las planillas son proporcionadas por las marcas proveedoras con una estructura de datos preestablecida.
+- Cada fila de la planilla representa un remito individual.
+- La importación y el procesamiento se ejecutan de manera integral y atómica. Si una o más filas contienen datos vacíos o inconsistencias de negocio, no se registra ningún remito del archivo.
 
 **Criterios de Aceptación:**
 
 - **ESCENARIO 1: Importación y procesamiento exitoso del lote**  
-  En la vista 'Importaciones masivas', el administrativo presiona 'Nueva importación' y selecciona una planilla de cálculo con formato y estructura válidos. El sistema procesa todos los remitos del lote, permanece en la vista y muestra la notificación "Lote importado y procesado exitosamente".
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' y adjunta una planilla con formato y datos válidos. El sistema procesa todos los remitos del archivo, permanece en la misma vista y muestra la notificación "Lote importado y procesado exitosamente".
 
-- **ESCENARIO 2: Carga fallida por tipo de archivo no admitido**  
-  En la vista 'Importaciones masivas', el administrativo presiona 'Nueva importación' y selecciona un archivo en formato no soportado (ej. PDF o imagen). El sistema bloquea la carga, permanece en la vista y muestra la notificación de error "Formato de archivo inválido: solo se admiten planillas de cálculo".
+- **ESCENARIO 2: Importación fallida por tipo de archivo incorrecto**  
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' e intenta adjuntar un archivo con formato no admitido (ej. PDF o imagen). El sistema bloquea la carga, permanece en la misma vista y muestra la notificación de error "Formato de archivo inválido: solo se admiten planillas de cálculo".
 
-- **ESCENARIO 3: Carga fallida por estructura de columnas errónea**  
-  En la vista 'Importaciones masivas', el administrativo presiona 'Nueva importación' y carga una planilla cuyas cabeceras no coinciden con la estructura requerida. El sistema rechaza el archivo, permanece en la vista y muestra la notificación de error "Importación fallida: la estructura del archivo seleccionado es inválida".
+- **ESCENARIO 3: Importación fallida por estructura de columnas errónea**  
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' y carga una planilla cuyas columnas o cabeceras no coinciden con la estructura requerida. El sistema rechaza el archivo, permanece en la misma vista y muestra la notificación de error "Importación fallida: la estructura del archivo seleccionado es inválida".
 
-- **ESCENARIO 4: Lote rechazado por filas con inconsistencias**  
-  En la vista 'Importaciones masivas', el administrativo presiona 'Nueva importación' y adjunta una planilla con filas incompletas o datos inconsistentes. El sistema rechaza la totalidad del lote sin persistir registros, permanece en la vista y emite la notificación de error "Importación rechazada: se detectaron errores en las filas observadas. Corrija el archivo e intente nuevamente".
+- **ESCENARIO 4: Importación fallida por filas con datos vacíos o inconsistentes**  
+  En la vista 'Importaciones masivas', el administrativo selecciona la opción 'Nueva importación' y carga una planilla que contiene filas con celdas vacías o datos inválidos. El sistema rechaza la totalidad del lote sin guardar ningún registro, permanece en la misma vista y muestra la notificación de error "Importación rechazada: se detectaron errores en las filas observadas. Corrija el archivo e intente nuevamente".
 
 ---
 
-#### HU-4: AGREGAR UN REMITO DE FORMA INDIVIDUAL
+#### HU-4: AGREGAR UN REMITO
 
 **Título:**
 - **Como** PERSONAL ADMINISTRATIVO
@@ -88,16 +88,16 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 
 **Reglas a considerar:**
 - El número de remito debe ser único en el sistema.
-- El remito debe registrar un importe a cobrar mayor a cero.
-- Un remito ingresado individualmente se inicializa en estado 'Pendiente' de asignación a un itinerario.
+- El remito debe registrar un monto a cobrar mayor a cero.
+- Un remito agregado individualmente queda en estado pendiente de asignación a un itinerario.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Alta manual exitosa de remito**  
-  En la vista 'Listado de remitos', el administrativo presiona 'Agregar un remito'. En el formulario presentado ingresa los datos requeridos y presiona 'Guardar'. El sistema registra el remito en estado pendiente, retorna a la vista 'Listado de remitos' y muestra la notificación "El remito fue registrado correctamente".
+- **ESCENARIO 1: Alta exitosa de remito**  
+  En la vista 'Listado de remitos', el administrativo presiona el botón 'Agregar un remito'. El sistema presenta el formulario de carga donde completa los datos requeridos y presiona 'Guardar'. El sistema registra el remito, regresa a la vista 'Listado de remitos' y muestra la notificación "El remito fue registrado correctamente".
 
-- **ESCENARIO 2: Bloqueo de registro por número de remito duplicado**  
-  En el formulario de alta de remito, el administrativo ingresa un número de remito ya existente en el sistema y presiona 'Guardar'. El sistema bloquea el alta, permanece en el formulario preservando los datos ingresados y emite la notificación de error "El número de remito ya existe".
+- **ESCENARIO 2: Intento de registro con número de remito duplicado**  
+  En el formulario de alta de remito, el administrativo ingresa un número de remito ya existente en el sistema y presiona el botón 'Guardar'. El sistema bloquea el registro, permanece en el formulario preservando los datos ingresados y muestra la notificación de error "El número de remito ya existe".
 
 ---
 
@@ -109,19 +109,19 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** MONITOREAR LA DOCUMENTACIÓN DISPONIBLE Y CONOCER EL ESTADO OPERATIVO DE CADA REMITO.
 
 **Reglas a considerar:**
-- El listado permite ordenar los registros de forma ascendente o descendente según las columnas visibles (fecha, número de remito, marca, estado, importe).
-- Los filtros de búsqueda permiten combinar marca proveedora, estado del remito y rango de fechas.
+- El listado permite ordenar los registros según las columnas/parámetros visibles (fecha, número de remito, marca, estado, monto).
+- Los filtros permiten acotar la búsqueda combinando marca proveedora, estado del remito y rango de fechas.
 
 **Criterios de Aceptación:**
 
 - **ESCENARIO 1: Consulta general y ordenamiento de remitos**  
-  En la vista 'Listado de remitos', el administrativo visualiza la grilla con los remitos y sus datos clave (número, estado, marca proveedora, importe a cobrar, bultos, destinatario y fecha). Al presionar el encabezado de una columna, el sistema reordena los registros según dicho parámetro.
+  En la vista 'Listado de remitos', el administrativo visualiza la tabla de remitos con sus datos clave (número de remito, estado, marca proveedora, monto a cobrar, cantidad de bultos/productos, destinatario y fecha). Al hacer clic en el encabezado de una columna, el sistema reordena los registros según dicho parámetro.
 
-- **ESCENARIO 2: Filtrado por criterios combinados**  
-  En la vista 'Listado de remitos', el administrativo selecciona uno o más criterios de búsqueda (ej. marca proveedora y estado) y presiona 'Filtrar'. El sistema actualiza la grilla exhibiendo únicamente los remitos que satisfacen las condiciones aplicadas.
+- **ESCENARIO 2: Consulta filtrada por parámetros**  
+  En la vista 'Listado de remitos', el administrativo selecciona uno o más criterios de filtro (ej. marca proveedora y estado) y presiona 'Filtrar'. El sistema actualiza la tabla mostrando únicamente los remitos que cumplen las condiciones seleccionadas.
 
 - **ESCENARIO 3: Búsqueda sin coincidencias**  
-  En la vista 'Listado de remitos', el administrativo aplica criterios para los cuales no existen remitos coincidentes en el sistema. El sistema presenta la grilla vacía junto con el mensaje "No se encontraron remitos para los criterios seleccionados".
+  En la vista 'Listado de remitos', el administrativo aplica filtros para los cuales no existen remitos coincidentes (o no hay remitos en el sistema). El sistema muestra la tabla vacía con el mensaje "No se encontraron remitos para los criterios seleccionados".
 
 ---
 
@@ -217,18 +217,18 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** SUBSANAR ERRORES DE CARGA O ACTUALIZAR INFORMACIÓN DE DESTINO ANTES DE QUE EL CAMIÓN SEA DESPACHADO A RUTA.
 
 **Reglas a considerar:**
-- Se permite editar remitos en estado 'Pendiente' o asignados a un itinerario que aún no haya sido despachado a la calle (en preparación de acopio).
-- Una vez que el itinerario pasa a estado 'En ruta' o el remito registra estado 'Entregado', se bloquea la edición directa para garantizar consistencia con el documento físico legal.
-- El número de remito y la marca proveedora son identificadores inmutables de solo lectura.
-- El importe a cobrar actualizado debe ser mayor a cero.
+- Se permite editar remitos que se encuentren en estado pendiente o asignados a un itinerario antes de que la unidad sea despachada a la calle (mientras permanezca en centro de acopio).
+- Una vez que el itinerario pasa a estado 'En ruta' (con los remitos físicos viajando en el camión) o el remito registra estado 'Entregado', se bloquea la edición directa para garantizar la coincidencia estricta con el documento físico legal. Cualquier cambio en calle debe gestionarse como contingencia.
+- El número de remito y la marca proveedora son identificadores inmutables (solo lectura).
+- El monto a cobrar actualizado debe ser mayor a cero.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Edición exitosa previa al despacho**  
-  En la vista 'Listado de remitos', el administrativo presiona 'Editar' en un remito aún no despachado. El sistema abre el formulario preservando inmutable el número de remito. El usuario modifica los datos pertinentes (ej. domicilio o importe) y presiona 'Guardar'. El sistema actualiza el remito, retorna al listado y muestra la notificación "El remito fue actualizado exitosamente".
+- **ESCENARIO 1: Edición exitosa de remito previo al despacho**  
+  En la vista 'Listado de remitos', el administrativo presiona el botón 'Editar' en la fila de un remito que aún no ha sido despachado a ruta (en estado pendiente o asignado a un itinerario en preparación). El sistema presenta el formulario de edición con los datos actuales y el número de remito bloqueado para modificación. El administrativo modifica los datos requeridos (ej. domicilio de destino o monto a cobrar) y presiona 'Guardar'. El sistema guarda las modificaciones (actualizando la información en el itinerario si correspondiera), regresa a la vista 'Listado de remitos' y muestra la notificación "El remito fue actualizado exitosamente".
 
 - **ESCENARIO 2: Bloqueo de edición para remito en ruta o entregado**  
-  En la vista 'Listado de remitos', ante un remito asignado a un itinerario despachado a ruta o con entrega registrada, el sistema mantiene inhabilitada la opción de edición o emite la notificación de error "Operación no permitida: no se pueden editar remitos correspondientes a itinerarios en ruta o ya entregados".
+  En la vista 'Listado de remitos', ante un remito asignado a un itinerario despachado a ruta o que ya registra estado entregado, la opción de editar se muestra deshabilitada, o al intentar acceder el sistema bloquea la acción y emite la notificación de error "Operación no permitida: no se pueden editar remitos correspondientes a itinerarios en ruta o ya entregados".
 
 ---
 
@@ -240,17 +240,18 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** DAR DE BAJA DOCUMENTOS ERRÓNEOS O PEDIDOS CANCELADOS ANTES DEL DESPACHO DE LA UNIDAD.
 
 **Reglas a considerar:**
-- Se permite eliminar remitos en estado 'Pendiente' o asignados a itinerarios no despachados.
-- Si el remito estaba asignado a un itinerario en preparación, el sistema lo desvincula automáticamente de la hoja de ruta para su retiro físico.
-- Un remito en una unidad 'En ruta' o con entrega registrada no puede eliminarse del sistema.
+- Se permite eliminar remitos en estado pendiente o asignados a un itinerario antes de que el camión sea despachado a reparto.
+- Si el remito eliminado se encontraba asignado a un itinerario no despachado, el sistema lo desvincula automáticamente de la hoja de ruta correspondiente para retirar el documento físico del taco de remitos.
+- Una vez que la unidad es despachada 'En ruta', el remito físico viaja en la unidad y no puede eliminarse del sistema. Las cancelaciones en destino se tramitan mediante el módulo de contingencias.
+- Los remitos con entrega registrada son inmutables y no pueden eliminarse.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Eliminación exitosa previa al despacho**  
-  En la vista 'Listado de remitos', el administrativo presiona 'Eliminar' en un remito en preparación. El sistema solicita confirmación advirtiendo la desvinculación del itinerario. Al confirmar, el sistema elimina el remito, actualiza el itinerario y muestra la notificación "El remito fue eliminado exitosamente".
+- **ESCENARIO 1: Eliminación exitosa de remito previo al despacho**  
+  En la vista 'Listado de remitos', el administrativo presiona el botón 'Eliminar' en la fila de un remito previo a su despacho a ruta (pendiente o asignado a un itinerario en preparación). El sistema muestra un mensaje de confirmación advirtiendo que la acción es definitiva y que se desvinculará del itinerario. Al confirmar, el sistema elimina el remito, actualiza el itinerario, permanece en la misma vista y muestra la notificación "El remito fue eliminado exitosamente".
 
-- **ESCENARIO 2: Bloqueo de eliminación en ruta o entregado**  
-  En la vista 'Listado de remitos', ante un remito despachado a ruta o entregado, el sistema bloquea la acción y emite la notificación de error "Operación no permitida: no se puede eliminar un remito correspondiente a un itinerario en ruta o ya entregado".
+- **ESCENARIO 2: Bloqueo de eliminación para remito despachado a ruta o entregado**  
+  En la vista 'Listado de remitos', ante un remito asignado a un itinerario en ruta o que ya registra estado entregado, la opción de eliminar se muestra deshabilitada, o al intentar ejecutarla el sistema bloquea la acción y emite la notificación de error "Operación no permitida: no se puede eliminar un remito correspondiente a un itinerario en ruta o ya entregado".
 
 ---
 
@@ -268,20 +269,20 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** MANTENER ACTUALIZADA LA INFORMACIÓN DE LOS TRANSPORTISTAS Y ADMINISTRATIVOS QUE INTERACTÚAN CON EL SISTEMA.
 
 **Reglas a considerar:**
-- Cada empleado debe contar con una cuenta de usuario individual e intransferible.
-- El documento de identidad (DNI/CUIT) del empleado debe ser único en el sistema.
-- Las cuentas de personal administrativo se inicializan sin permisos asignados.
+- Cada empleado debe disponer de una cuenta individual.
+- Los transportistas realizan las mismas funciones operativas.
+- Los administrativos se crean sin permisos
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Alta exitosa de empleado**  
-  En la vista 'Listado de empleados', el administrativo presiona 'Agregar personal'. Completa el formulario con los datos personales y de rol y presiona 'Guardar'. El sistema registra el nuevo empleado, regresa al listado y muestra la notificación "Empleado registrado correctamente".
+- **ESCENARIO 1: Registro exitoso**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ que lo redirigirá a una vista con un formulario, el cual será completado con la información personal de la persona. Una vez completo, el formulario deberá presionar el botón ‘Guardar’. El sistema lo devuelve al listado y envía una notificación de éxito “Empleado registrado correctamente”.
 
-- **ESCENARIO 2: Cancelación del registro**  
-  En la vista 'Listado de empleados', el administrativo ingresa al formulario de alta y presiona 'Descartar'. El sistema solicita confirmación y, tras ser aceptada, descarta los cambios y retorna al listado sin crear registros.
+- **ESCENARIO 2: Descartar cambios**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ que lo redirigirá a una vista con un formulario, el cual será completado con la información personal la persona. Posteriormente deberá presionar el botón ‘Descartar’. El sistema pide confirmación de la acción, una vez aceptada lo devuelve al listado de transportistas.
 
-- **ESCENARIO 3: Bloqueo por documento duplicado**  
-  En el formulario de alta de empleado, el usuario ingresa un documento ya registrado en el sistema y presiona 'Guardar'. El sistema bloquea el registro e informa que el empleado ya se encuentra registrado.
+- **ESCENARIO 3: Registro de empleado ya existente**  
+  En la vista ‘Listado de empleados’, deberá presionar el botón ‘Agregar personal’ y completar el formulario con los datos de una persona que ya posee una cuenta registrada en el sistema. Al presionar el botón ‘Guardar’, el sistema deberá impedir el registro de una cuenta duplicada e informar que el empleado ya se encuentra registrado.
 
 ---
 
@@ -317,16 +318,15 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** MANTENER ACTUALIZADA LA FLOTA UTILIZADA EN EL REPARTO.
 
 **Reglas a considerar:**
-- La patente/dominio del vehículo debe ser única en el sistema.
-- El vehículo se registra con estado inicial disponible.
+- La patente del vehículo debe ser única en el sistema.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Registro exitoso de vehículo**  
-  En la vista 'Flota', el usuario presiona 'Agregar vehículo', completa los datos de la unidad en el formulario y presiona 'Guardar'. El sistema da de alta el vehículo, retorna a la grilla y emite la notificación "Vehículo registrado exitosamente".
+- **ESCENARIO 1: Registro de vehículo exitoso**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de éxito “Vehículo registrado exitosamente”
 
-- **ESCENARIO 2: Bloqueo de vehículo por patente duplicada**  
-  En el formulario de alta, el usuario ingresa una patente ya registrada y presiona 'Guardar'. El sistema bloquea el alta, permanece en el formulario y muestra la notificación de error "Vehículo repetido".
+- **ESCENARIO 2: Registro de vehículo repetido**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Agregar vehículo’ que lo redirigirá a un formulario donde que deberá completarse con la información relevante, colocando una patente ya registrada. Una vez completo el formulario deberá presionar el botón ‘Guardar’, el sistema lo redirige al listado y envía una notificación de error “Vehículo repetido”
 
 ---
 
@@ -399,16 +399,16 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** MANTENER ACTUALIZADA LA FLOTA UTILIZADA EN EL REPARTO.
 
 **Reglas a considerar:**
-- El vehículo debe encontrarse previamente registrado.
-- La modificación de disponibilidad (disponible / fuera de servicio) determina si la unidad puede ser seleccionada para diagramar itinerarios.
+- El vehículo debe encontrarse registrado en el sistema.
+- El estado de disponibilidad del vehículo podrá modificarse y deberá quedar registrado para determinar si puede ser asignado a un transportista.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Modificación de datos y disponibilidad de unidad**  
-  En la vista 'Flota', el usuario presiona 'Editar' sobre un vehículo. Modifica su estado de disponibilidad u otros atributos y presiona 'Guardar'. El sistema persiste los cambios, regresa a la grilla y muestra la notificación "Vehículo modificado exitosamente".
+- **ESCENARIO 1: Edición de vehículo exitosa**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos, incluido su estado de disponibilidad. Una vez modificado deberá presionar el botón ‘Guardar’, el cual lo redirige nuevamente al listado de vehículos y muestra una notificación de éxito “Vehículo modificado exitosamente”
 
-- **ESCENARIO 2: Cancelación de cambios en vehículo**  
-  En el formulario de edición de vehículo, el usuario presiona 'Descartar'. El sistema solicita confirmación y vuelve a la vista de flota sin modificar la unidad.
+- **ESCENARIO 2: Descartar cambios**  
+  En la vista ‘Flota’ deberá presionar el botón ‘Editar’ del vehículo deseado, el sistema lo redirigirá a una vista con un formulario cargado con la información que tiene el vehículo actualmente, permitiendo modificar los campos. Luego deberá presionar el botón 'Descartar’, el sistema pide confirmación, una vez aceptada lo redirige nuevamente al listado de vehículos.
 
 ---
 
@@ -420,16 +420,16 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** IMPEDIR SU ACCESO AL SISTEMA CUANDO CORRESPONDA.
 
 **Reglas a considerar:**
-- El empleado debe tener una cuenta registrada en el sistema.
-- La suspensión o deshabilitación bloquea el acceso de sesión pero no elimina el historial del empleado del sistema.
+- El empleado debe tener una cuenta registrada.
+- La suspensión o deshabilitación no debe eliminar el registro del empleado del sistema.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Suspensión de cuenta exitosa**  
-  En la vista 'Listado de empleados', el administrativo selecciona a un empleado y ejecuta la opción de suspender/deshabilitar. El sistema asienta el cambio de estado, bloquea las credenciales para nuevos accesos y confirma la inhabilitación de la cuenta.
+- **ESCENARIO 1: Suspensión o deshabilitación exitosa**  
+  En la vista 'Listado de empleados', el administrativo deberá seleccionar un empleado registrado y elegir la opción para suspender o deshabilitar su cuenta. El sistema deberá registrar el cambio de estado e impedir el acceso de esa cuenta al sistema.
 
-- **ESCENARIO 2: Descarte de cambio de estado**  
-  Durante la modificación del estado de una cuenta, el administrativo presiona 'Descartar'. El sistema confirma la cancelación y conserva el estado previo del empleado.
+- **ESCENARIO 2: Descartar cambios**  
+  El administrativo deberá iniciar la modificación del estado de una cuenta y seleccionar la opción 'Descartar'. El sistema deberá solicitar confirmación y, una vez aceptada, conservar el estado anterior de la cuenta.
 
 ---
 
@@ -608,47 +608,48 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 #### HU-17: CONSULTAR ENTREGAS CON PROBLEMAS
 
 **Título:**
-- **Como** PERSONAL ADMINISTRATIVO
-- **quiero** CONSULTAR LAS PARADAS DE LOS ITINERARIOS, PRIORIZANDO LAS QUE REGISTRAN ESTADO ERROR
-- **para** DAR SEGUIMIENTO PRIORITARIO A LAS ENTREGAS QUE REQUIEREN ATENCIÓN OPERATIVA.
+- **Como** ADMINISTRATIVO
+- **quiero** CONSULTAR LAS PARADAS DE LOS ITINERARIOS, PRIORIZANDO LAS QUE ESTÁN EN ESTADO ERROR
+- **para** DAR SEGUIMIENTO A LAS ENTREGAS QUE REQUIEREN ATENCIÓN.
 
 **Reglas a considerar:**
-- El estado de cada parada debe reflejar en tiempo real la situación operativa registrada en calle.
-- Las paradas en estado Error deben presentarse de forma prioritaria al inicio del listado.
-- Las paradas en los demás estados se listan posteriormente sin orden preferencial.
-- Desde una parada se debe acceder a la consulta detallada de sus remitos, evidencias respaldatorias y contingencias.
+- El estado de cada parada debe reflejar la situación registrada durante la operación.
+- Las paradas en estado Error deben aparecer primero en el listado.
+- Las paradas en los demás estados se muestran después, sin prioridad especial entre ellas.
+- Desde una parada se puede consultar el detalle de la entrega y sus remitos, evidencias y contingencias.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Consulta con paradas en estado Error**  
-  En la vista 'Entregas', el sistema exhibe el listado de paradas registradas ordenando en primer lugar aquellas que se encuentran en estado Error. El administrativo puede seleccionar cualquier parada y consultar su detalle.
+- **ESCENARIO 1: Hay paradas con estado Error**  
+  En la vista “Entregas”, el sistema muestra las paradas registradas y coloca primero las que están en estado Error. El administrativo puede seleccionar una parada y consultar su detalle.
 
-- **ESCENARIO 2: Consulta sin paradas en estado Error**  
-  En la vista 'Entregas', al no registrarse paradas con error, el sistema muestra la totalidad de las paradas con su respectivo estado operativo y habilita el acceso a su información detallada.
+- **ESCENARIO 2: No hay paradas con estado Error**  
+  El sistema muestra las paradas registradas con su estado y permite acceder al detalle de cada una.
 
-- **ESCENARIO 3: Acceso al detalle de una parada con incidencias**  
-  Al seleccionar una parada en estado Error, el sistema presenta los remitos involucrados, las constancias adjuntas y las contingencias reportadas.
+- **ESCENARIO 3: Consultar el detalle de una parada con error**  
+  Al seleccionar una parada, el sistema muestra los remitos asociados, las evidencias y las contingencias registradas.
 
 ---
 
 #### HU-18: CONSULTAR DETALLE DE ENTREGA
 
 **Título:**
-- **Como** PERSONAL ADMINISTRATIVO
+- **Como** ADMINISTRATIVO
 - **quiero** CONSULTAR EL DETALLE DE UNA ENTREGA Y SUS REMITOS ASOCIADOS
 - **para** CONTROLAR LA OPERACIÓN REALIZADA EN EL COMERCIO.
 
 **Reglas a considerar:**
-- Una entrega puede agrupar múltiples remitos de diferentes marcas proveedoras.
-- La información de la entrega debe exhibir los comprobantes respaldatorios y las contingencias que hayan sido registradas por el chofer.
+- Una visita puede contener varios remitos.
+- Los remitos deben estar asociados a la entrega correspondiente.
+- La información de la entrega debe incluir las evidencias y contingencias registradas.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Consulta de detalle con evidencias digitales**  
-  Desde la vista 'Entregas', el usuario selecciona una visita finalizada. El sistema presenta el desglose de remitos asociados, las fotografías de los remitos firmados y las notas de contingencia registradas.
+- **ESCENARIO 1: Existe una entrega registrada**  
+  Desde la vista “Entregas”, el administrativo deberá seleccionar una entrega. El sistema deberá mostrar el detalle de los remitos asociados, permitiendo acceder al detalle individual de cada remito, junto con las evidencias y contingencias registradas para la operación.
 
-- **ESCENARIO 2: Entrega multirremito**  
-  El administrativo selecciona una entrega compuesta por varios remitos. El sistema lista íntegramente todos los remitos asociados y sus importes individuales.
+- **ESCENARIO 2: Entrega con varios remitos**  
+  El administrativo deberá seleccionar una entrega que contenga varios remitos. El sistema deberá mostrar todos los remitos asociados a esa entrega.
 
 ---
 
@@ -805,19 +806,18 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** ACCEDER A LAS FUNCIONALIDADES Y MÓDULOS DE GESTIÓN SEGÚN MIS PERMISOS.
 
 **Reglas a considerar:**
-- La cuenta administrativa debe encontrarse habilitada y activa.
-- El acceso se autentica mediante nombre de usuario y contraseña personal.
+- No se aplican restricciones de negocio adicionales.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Autenticación exitosa en plataforma web**  
-  En el formulario de acceso web, el usuario ingresa sus credenciales válidas y presiona 'Iniciar sesión'. El sistema valida la identidad y lo redirige al panel principal del sistema.
+- **ESCENARIO 1: Ingreso exitoso**  
+  En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario ya existente en el sistema y la contraseña correspondiente a ese usuario. Al presionar “Iniciar sesión”, el sistema lo redirigirá al home del sitio web
 
-- **ESCENARIO 2: Bloqueo por usuario inexistente**  
-  En el formulario de acceso, se ingresa un nombre de usuario no registrado. El sistema deniega la autenticación, permanece en la vista y notifica "El nombre de usuario no existe".
+- **ESCENARIO 2: Ingreso fallido por usuario inexistente**  
+  En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario inexistente en el sistema y una contraseña. Al presionar “Iniciar sesión”, el sistema debe permanecer en la misma vista y enviar una notificación de error “El nombre de usuario no existe”
 
-- **ESCENARIO 3: Bloqueo por contraseña incorrecta**  
-  El usuario ingresa un nombre válido pero una contraseña incorrecta. El sistema deniega el acceso y muestra la notificación "La contraseña no es valida. Intente nuevamente".
+- **ESCENARIO 3: Ingreso fallido por contraseña invalida**  
+  En el formulario de inicio de sesión, se deberá ingresar con un nombre de usuario valido en el sistema y una contraseña que no sea la asociada a ese usuario. Al presionar “Iniciar sesión”, el sistema debe permanecer en la misma vista y enviar una notificación de error “La contraseña no es valida. Intente nuevamente”
 
 ---
 
@@ -829,12 +829,12 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** FINALIZAR LA ACTIVIDAD OPERATIVA Y RESGUARDAR LA SEGURIDAD DE LA CUENTA.
 
 **Reglas a considerar:**
-- El cierre de sesión invalida de inmediato la sesión activa en el navegador.
+- No se aplican restricciones de negocio adicionales.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Cierre de sesión voluntario**  
-  En cualquier vista del entorno web, el usuario presiona la opción 'Cerrar sesión'. El sistema finaliza la sesión activa y lo redirige a la pantalla de ingreso.
+- **ESCENARIO 1: Sesión cerrada exitosamente**  
+  En cualquier vista deberá presionar el botón cerrar sesión. El sistema lo redirigirá al login sin mostrar ningún mensaje
 
 ---
 
@@ -844,35 +844,35 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 > 
 > **Actor Principal:** Transportista | **Plataforma:** Móvil (Smartphone)
 
-#### HU-23: INICIAR SESIÓN EN LA APLICACIÓN MÓVIL
+#### HU-23: INICIAR SESIÓN
 
 **Título:**
 - **Como** TRANSPORTISTA
 - **quiero** INICIAR SESIÓN Y CONSULTAR EL ITINERARIO ASIGNADO
-- **para** ACCEDER A LA APLICACIÓN Y REALIZAR MIS OPERACIONES EN CALLE.
+- **para** ACCEDER A LA APLICACIÓN Y REALIZAR MIS OPERACIONES
 
 **Reglas a considerar:**
-- Cada transportista cuenta con una cuenta móvil individual e intransferible.
-- Solo pueden acceder cuentas de transportistas en estado habilitado.
-- El transportista solo visualiza la hoja de ruta que tiene asignada para su unidad en la fecha en curso.
+- Cada transportista utiliza una cuenta individual.
+- Solo las cuentas habilitadas pueden acceder.
+- El transportista solo debe visualizar el itinerario que le corresponde.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Ingreso exitoso a la jornada móvil**  
-  El transportista con cuenta habilitada ingresa sus credenciales en la app. El sistema autentica la cuenta y presenta la pantalla principal con el itinerario de la fecha.
+- **ESCENARIO 1: Acceso exitoso**  
+  El transportista con cuenta habilitada deberá ingresar credenciales válidas. El sistema deberá permitir el acceso.
 
-- **ESCENARIO 2: Bloqueo de cuenta inhabilitada**  
-  Un transportista con cuenta inhabilitada ingresa credenciales válidas. El sistema rechaza el ingreso, bloquea la acción y emite la alerta "Cuenta inhabilitada".
+- **ESCENARIO 2: Cuenta no habilitada**  
+  El transportista con cuenta inhabilitada deberá ingresar credenciales válidas. El sistema deberá impedir el acceso y mostrar la alerta de “Cuenta inhabilitada”.
 
-- **ESCENARIO 3: Credenciales erróneas**  
-  El usuario ingresa credenciales inválidas. El sistema impide el acceso y muestra la notificación "El DNI o la clave ingresada son incorrectos".
+- **ESCENARIO 3: Credenciales inválidas**  
+  El transportista con cuenta habilitada o inhabilitada deberá ingresar credenciales inválidas. El sistema deberá impedir el acceso y mostrar el mensaje “El DNI o la clave ingresada son incorrectos”.
 
-- **ESCENARIO 4: Bloqueo preventivo tras múltiples intentos fallidos**  
-  El transportista con cuenta habilitada ingresa credenciales de identificación válidas pero contraseña incorrecta en 5 ocasiones consecutivas. El sistema bloquea preventivamente la cuenta e informa la alerta "Cuenta inhabilitada".
+- **ESCENARIO 4: Múltiples intentos fallidos**  
+  El transportista con cuenta habilitada deberá ingresar credenciales de identificación válidas pero de contraseña inválida en 5 ocasiones. El sistema deberá impedir el acceso, bloquear la cuenta del transportista y mostrar la alerta de “Cuenta inhabilitada”.
 
 ---
 
-#### HU-24: REORDENAR PARADAS EN RUTA
+#### HU-24: REORDENAR PARADAS
 
 **Título:**
 - **Como** TRANSPORTISTA
@@ -880,35 +880,35 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** ADAPTAR EL RECORRIDO A LAS CONDICIONES REALES DE LA JORNADA.
 
 **Reglas a considerar:**
-- La modificación de la secuencia de visitas queda a exclusivo criterio y autonomía del transportista en calle.
-- El sistema no impone un orden rígido ni penaliza la alteración de la secuencia sugerida.
+- El orden de las paradas queda a criterio del transportista.
+- El sistema no debe imponer un orden rígido.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Reordenamiento interactivo de visitas**  
-  En la pantalla del itinerario, el transportista mantiene presionada una parada pendiente y la arrastra hacia una nueva posición en la lista. Al soltarla en la ubicación deseada, el sistema actualiza de inmediato el orden del recorrido en la app.
+- **ESCENARIO 1: Reordenamiento exitoso**  
+  El transportista deslizará en la pantalla buscando la parada a modificar. Una vez la encuentre, mantendrá presionado la parada para mover su posición en la lista de paradas. Cuando este de acuerdo en su posición soltará la parada. El sistema deberá guardar el nuevo orden.
 
 ---
 
-#### HU-25: VISUALIZAR REMITOS AGRUPADOS POR PARADA
+#### HU-25: VISUALIZAR LOS REMITOS AGRUPADOS POR PARADA
 
 **Título:**
 - **Como** TRANSPORTISTA
 - **quiero** VISUALIZAR LOS REMITOS DE UN MISMO COMERCIO EN UNA SOLA VISTA
-- **para** REALIZAR LA OPERACIÓN DE FORMA ORDENADA EN EL DESTINO.
+- **para** REALIZAR LA OPERACIÓN DE FORMA ORDENADA.
 
 **Reglas a considerar:**
-- Un comercio destinatario puede recibir múltiples remitos correspondientes a distintas marcas proveedoras en la misma parada.
-- Todos los remitos dirigidos a un mismo domicilio permanecen consolidados bajo la misma parada.
+- Un comercio puede recibir varios remitos de distintas marcas.
+- Los remitos de un mismo comercio deben permanecer asociados a la misma parada.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Consulta de remitos consolidados por parada**  
-  En el itinerario, el transportista presiona el botón 'Ver remitos' de la parada en la que se encuentra. El sistema presenta en una vista unificada todos los remitos asociados al comercio, con sus números, marcas y montos individuales.
+- **ESCENARIO 1: Ver remitos**  
+  El transportista deberá tocar el botón “Ver remitos” de la parada deseada. El sistema deberá mostrar todos los remitos asociados en un sola vista.
 
 ---
 
-#### HU-26: GUARDAR RECORRIDO EFECTIVO
+#### HU-26: GUARDAR RECORRIDO
 
 **Título:**
 - **Como** TRANSPORTISTA
@@ -916,13 +916,14 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** USARLO DE REFERENCIA PARA FUTURAS JORNADAS.
 
 **Reglas a considerar:**
-- El recorrido guardado almacena la secuencia de paradas personalizada establecida por el transportista.
-- El sistema debe conservar en el dispositivo los recorridos registrados con un identificador o nombre elegido por el chofer.
+- El recorrido debe corresponder a la jornada realizada.
+- El sistema debe conservar los recorridos registrados.
+- El transportista mantiene la autonomía para modificar las rutas.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Almacenamiento de recorrido personalizado**  
-  Con la secuencia de paradas organizada, el chofer presiona 'Guardar recorrido'. La aplicación solicita un nombre identificatorio (ej. "Ruta Zona Norte Mañana"). El usuario ingresa el nombre y confirma; el sistema almacena la plantilla de recorrido para uso posterior.
+- **ESCENARIO 1: Registro de recorrido**  
+  El transportista, con el orden de paradas establecido, deberá tocar el botón “Guardar recorrido”. El sistema mostrará un campo para ingresar texto. El transportista deberá un ingresar un nombre para el recorrido. Luego presionará “Guardar”. El sistema deberá almacenar el recorrido realizado.
 
 ---
 
@@ -955,55 +956,55 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** EVALUAR EL RECORRIDO QUE MEJOR ME CONVIENE.
 
 **Reglas a considerar:**
-- La sección de recorridos guardados lista los esquemas de paradas almacenados previamente por el usuario.
+- El sistema conserva los recorridos guardados anteriormente con un nombre.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Listado de plantillas de recorridos**  
-  El chofer presiona el botón 'Recorridos guardados'. El sistema exhibe la lista con los nombres de las rutas previamente archivadas.
+- **ESCENARIO 1: Visualizar recorridos guardados**  
+  El transportista deberá tocar el botón “Recorridos guardados”. El sistema mostrará los nombre de los recorridos guardados.
 
-- **ESCENARIO 2: Sin recorridos registrados**  
-  Al presionar 'Recorridos guardados' sin contar con plantillas previas en el dispositivo, la aplicación muestra el mensaje "No hay recorridos guardados".
+- **ESCENARIO 2: No hay recorridos guardados**  
+  El transportista deberá tocar el botón “Recorridos guardados”. El sistema el mensaje “No hay recorridos guardados”.
 
 ---
 
-#### HU-64: CARGAR RECORRIDO GUARDADO
+#### HU-64: CARGAR RECORRIDO
 
 **Título:**
 - **Como** TRANSPORTISTA
-- **quiero** CARGAR UN RECORRIDO GUARDADO EN "RECORRIDOS GUARDADOS"
+- **quiero** CARGAR UN RECORRIDO GUARDADO EN “RECORRIDOS GUARDADOS”
 - **para** MODIFICAR EL ORDEN DE PARADAS ACTUAL.
 
 **Reglas a considerar:**
-- La plantilla seleccionada reordena las paradas coincidentes del itinerario en curso respetando la secuencia histórica elegida.
+- El sistema almacena los recorridos guardados con anterioridad.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Carga y aplicación de secuencia archivada**  
-  Dentro de 'Recorridos guardados', el transportista selecciona una plantilla disponible y presiona 'Cargar'. La app reordena automáticamente las paradas de la jornada y notifica "Recorrido cargado".
+- **ESCENARIO 1: Cargar recorrido**  
+  El transportista, dentro de la sección “Recorridos guardados” con recorridos disponibles, tocará el recorrido deseado. En la pantalla aparecerá un botón “Cargar”. El transportista presiona “Cargar”. El sistema muestra el mensaje “Recorrido cargado”.
 
-- **ESCENARIO 2: Sección vacía sin plantillas para cargar**  
-  Si el transportista ingresa sin tener plantillas creadas, la aplicación muestra "No hay recorridos guardados" e impide la acción de carga.
+- **ESCENARIO 2**  
+  El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles, verá el mensaje “No hay recorridos guardados”.
 
 ---
 
-#### HU-65: ELIMINAR RECORRIDO GUARDADO
+#### HU-65: ELIMINAR RECORRIDO
 
 **Título:**
 - **Como** TRANSPORTISTA
-- **quiero** ELIMINAR UN RECORRIDO DENTRO DE "RECORRIDOS GUARDADOS"
+- **quiero** ELIMINAR UN RECORRIDO DENTRO DE “RECORRIDOS GUARDADOS”
 - **para** DESCARTAR UN RECORRIDO NO DESEADO.
 
 **Reglas a considerar:**
-- La eliminación de una plantilla en el dispositivo es definitiva y no afecta el itinerario de la jornada en ejecución.
+- El sistema almacena los recorridos guardados con anterioridad
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Eliminación exitosa de plantilla de ruta**  
-  Dentro de 'Recorridos guardados', el chofer selecciona un registro y presiona 'Eliminar recorrido'. La app borra la plantilla del listado y notifica "Recorrido eliminado".
+- **ESCENARIO 1: Eliminar recorrido**  
+  El transportista, dentro de la sección “Recorridos guardados” con recorridos disponibles, tocará el recorrido deseado. En pantalla aparecerá un botón “Eliminar recorrido”. El transportista toca el botón “Eliminar recorrido”. En pantalla aparecerá el mensaje “Recorrido eliminado”.
 
-- **ESCENARIO 2: Sección sin registros para eliminar**  
-  Si no existen rutas archivadas en el listado, la app indica "No hay recorridos guardados".
+- **ESCENARIO 2: No hay recorridos guardados**  
+  El transportista, dentro de la sección “Recorridos guardados” sin recorridos disponibles. El sistema mostrará el mensaje “No hay recorridos guardados”.
 
 ---
 
@@ -1015,13 +1016,13 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** OBTENER INFORMACIÓN SOBRE EL COMERCIO.
 
 **Reglas a considerar:**
-- Cada parada debe exhibir con claridad los datos comerciales: nombre del comercio, domicilio exacto, identificador fiscal (CUIT), teléfono de contacto y el importe total a cobrar.
-- La vista de detalle de la parada debe incorporar las acciones operativas correspondientes: "Registrar cobro", "Ver remitos", "Adjuntar documento" y "Registrar Inconveniente".
+- El itinerario muestra las paradas con dirección, nombre del comercio, domicilio, identificador fiscal, contacto y monto a cobrar.
+- El detalle de la parada muestra botones “Registrar cobro”, “Ver remitos”, “Adjuntar documento” y “Registrar Inconveniente”.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Vista detallada de parada y cobranza exigible**  
-  En el itinerario, el chofer localiza la parada deseada y presiona 'Ir a la parada'. La aplicación presenta la información comercial completa (nombre del comercio, domicilio, identificador fiscal, contacto) y el monto monetario total a percibir en destino de forma clara.
+- **ESCENARIO 1: Visualizar detalles de parada**  
+  El transportista deberá buscar la parada deseada. Luego tocará el botón “Ir a la parada”. En pantalla aparecerá la información del nombre del comercio, domicilio, identificador fiscal, contacto y el monto a cobrar de forma clara.
 
 ---
 
@@ -1060,22 +1061,23 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** DEJAR CONSTANCIA DEL IMPORTE RECAUDADO EN DESTINO.
 
 **Reglas a considerar:**
-- Se admiten tres medios de pago: efectivo, transferencia bancaria y cobro por QR estático.
-- Se permiten pagos combinados (fraccionamiento entre múltiples medios para una misma entrega).
+- Se admiten efectivo, transferencia y QR estático.
+- Se permiten pagos combinados.
+- El importe registrado debe corresponder al cobro realizado.
 
 **Criterios de Aceptación:**
 
 - **ESCENARIO 1: Cobro en efectivo**  
-  El transportista ingresa el importe percibido en dinero en efectivo. El sistema lo asocia a la entrega.
+  El transportista deberá registrar el importe recibido en efectivo. El sistema deberá asociarlo a la operación.
 
-- **ESCENARIO 2: Cobro por transferencia bancaria**  
-  El transportista ingresa el importe abonado mediante transferencia electrónica. El sistema registra el medio y el valor.
+- **ESCENARIO 2: Cobro mediante transferencia**  
+  El transportista deberá registrar el importe pagado mediante transferencia. El sistema deberá asociarlo a la operación.
 
-- **ESCENARIO 3: Cobro por QR estático**  
-  El transportista registra el importe saldado por el comercio a través del código QR estático provisto. El sistema asocia el registro a la entrega.
+- **ESCENARIO 3: Cobro mediante QR**  
+  El transportista deberá registrar el importe pagado mediante QR estático. El sistema deberá asociarlo a la operación.
 
-- **ESCENARIO 4: Cobro multimétodo combinado**  
-  El chofer registra un cobro mixto declarando montos parciales en efectivo y en transferencia. El sistema registra cada importe en su modalidad correspondiente.
+- **ESCENARIO 4: Pago combinado**  
+  El transportista deberá registrar una cobranza utilizando dos o más medios de pago. El sistema deberá registrar los importes correspondientes.
 
 ---
 
@@ -1087,20 +1089,20 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** DETERMINAR SI LA OPERACIÓN PUEDE CONTINUAR.
 
 **Reglas a considerar:**
-- La suma algebraica de los cobros ingresados debe ser exactamente igual al monto liquidado de los remitos de la visita.
-- No se admiten saldos parciales pendientes (no se entrega fiado).
-- No se admiten saldos a favor (no se registran anticipos).
+- La suma de los pagos debe ser igual al importe total.
+- No se permiten saldos pendientes.
+- No se permiten saldos a favor.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Cobro íntegro validado**  
-  El chofer declara pagos cuya suma iguala con exactitud el total a cobrar. El sistema reconoce la cobranza como completa (100 %) y habilita la descarga.
+- **ESCENARIO 1: Cobro íntegro**  
+  El transportista deberá registrar pagos cuya suma sea igual al total. El sistema deberá reconocer la cobranza como completa.
 
-- **ESCENARIO 2: Cobro insuficiente detectado**  
-  El chofer declara importes cuya sumatoria es inferior al total exigible. El sistema indica que la cobranza está incompleta y bloquea el cierre.
+- **ESCENARIO 2: Cobro insuficiente**  
+  El transportista deberá registrar pagos cuya suma sea inferior al total. El sistema deberá indicar que la cobranza no está completa.
 
-- **ESCENARIO 3: Cobro superior al importe exigible**  
-  El chofer intenta declarar pagos que superan el monto adeudado. El sistema rechaza el exceso y no permite generar créditos a favor.
+- **ESCENARIO 3: Cobro superior al importe**  
+  El transportista deberá intentar registrar pagos superiores al total. El sistema no deberá generar un saldo a favor.
 
 ---
 
@@ -1149,7 +1151,7 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 
 ---
 
-#### HU-55: ADJUNTAR UN DOCUMENTO RESPALDATORIO
+#### HU-55: ADJUNTAR UN DOCUMENTO
 
 **Título:**
 - **Como** TRANSPORTISTA
@@ -1157,16 +1159,17 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** DEJAR CONSTANCIA DE LA DOCUMENTACIÓN RESPALDATORIA DE LA OPERACIÓN.
 
 **Reglas a considerar:**
-- El archivo o fotografía del remito firmado debe asociarse de forma indisoluble a la visita correspondiente.
-- La evidencia digital capturada en calle debe conservarse junto a la entrega y quedar disponible para auditoría en el centro de distribución.
+- El documento debe quedar asociado a la visita correspondiente.
+- El adjunto debe corresponder a la entrega registrada.
+- La documentación adjunta debe conservarse junto con la operación.
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Captura y adjunto de comprobante**  
-  Tras completar la entrega física, el transportista captura con la cámara del dispositivo la fotografía del remito firmado y sellado por el cliente. La app guarda y vincula la imagen a la entrega.
+- **ESCENARIO 1: Adjuntar documento correctamente**  
+  El transportista deberá adjuntar un documento correspondiente a una entrega. El sistema deberá guardar el archivo asociado a la operación.
 
-- **ESCENARIO 2: Verificación de evidencia adjunta**  
-  El transportista consulta la visita finalizada en su aplicación y verifica que la fotografía del documento permanece adjunta y lista para su posterior sincronización y auditoría administrativa.
+- **ESCENARIO 2: Verificación del documento adjunto**  
+  El transportista consulta la entrega realizada en su aplicación y verifica que el comprobante o fotografía permanece adjunto y disponible para la administración.
 
 ---
 
@@ -1178,16 +1181,17 @@ Este documento presenta una reescritura integral del backlog de **51 Historias d
 - **para** DEJAR CONSTANCIA DE LAS SITUACIONES QUE IMPIDAN O AFECTEN LA OPERACIÓN.
 
 **Reglas a considerar:**
-- El inconveniente o contingencia debe quedar registrado y asociado a la parada correspondiente.
-- El transportista debe tipificar la causa y describir brevemente la situación ocurrida en calle.
-- Si el inconveniente impide la descarga (ej. comercio cerrado o rechazo de mercadería), la entrega no se marca como finalizada exitosamente.
+- El inconveniente debe quedar asociado a la visita correspondiente.
+- El transportista debe poder describir la situación ocurrida.
+- Si el inconveniente impide completar la entrega, la operación no debe registrarse como finalizada
 
 **Criterios de Aceptación:**
 
-- **ESCENARIO 1: Registro de contingencia operativa**  
-  Al presentarse una anomalía en destino (ej. demora en descarga o daño menor), el chofer selecciona la opción 'Registrar inconveniente', ingresa la descripción y guarda. El sistema anota la incidencia en la visita.
+- **ESCENARIO 1: Registro de inconveniente.**  
+  El transportista deberá registrar un inconveniente ocurrido durante una visita. El sistema deberá guardar la información asociada a la operación.
 
-- **ESCENARIO 2: Contingencia que cancela la entrega**  
-  El comercio se encuentra cerrado o no recibe el pedido. El chofer asienta el inconveniente con causal de no entrega; el sistema marca la visita como no concretada y mantiene los remitos y bultos en retorno al centro de acopio.
+- **ESCENARIO 2: Inconveniente que impide completar la entrega**  
+  El transportista deberá registrar un inconveniente que impida realizar la entrega. El sistema deberá conservar la visita con su situación registrada.
 
 ---
+

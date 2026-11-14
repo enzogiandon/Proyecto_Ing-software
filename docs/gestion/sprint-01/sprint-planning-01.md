@@ -98,11 +98,11 @@ El equipo realizó la estimación integral del Backlog de Producto utilizando la
 Para el primer ciclo de desarrollo de 3 semanas (**09/10/2026 al 29/10/2026**), el equipo seleccionó y ubicó dentro del Sprint 1 un lote de historias estratégicas orientadas a conformar el **MVP Iteración 1**:
 
 * **Historias comprometidas:** **28 Historias de Usuario**.
-* **Puntos de historia en Sprint 1:** **71 puntos** (equivalente al 48% del esfuerzo total del backlog).
-* **Historias remanentes en Backlog (Sprint 2):** **23 Historias de Usuario** (**77 puntos**, 52% del esfuerzo total).
+* **Puntos de historia en Sprint 1:** **73 puntos** (equivalente al 49% del esfuerzo total del backlog).
+* **Historias remanentes en Backlog (Sprint 2):** **23 Historias de Usuario** (**75 puntos**, 51% del esfuerzo total).
 * **Distribución interna en el Sprint:** Las historias se incorporan **sin orden de prelación rígido** dentro del sprint, permitiendo que los subgrupos (Web, Mobile y Backend) avancen de forma autónoma y coordinada según disponibilidad técnica y dependencias lógicas.
 
-### 📋 Detalle de Historias de Usuario Comprometidas en el Sprint 1 (28 HUs — 71 pts)
+### 📋 Detalle de Historias de Usuario Comprometidas en el Sprint 1 (28 HUs — 73 pts)
 
 | Ref | ID | Historia de Usuario | Épica Asociada | Puntos (Poker) | Subgrupo Responsable |
 | :---: | :---: | :--- | :--- | :---: | :---: |
@@ -113,10 +113,11 @@ Para el primer ciclo de desarrollo de 3 semanas (**09/10/2026 al 29/10/2026**), 
 | 8 | HU-8 | Asignar permisos administrativos | EP-02: Gestión de personal (#6) | 3 pts | Front Administrativos / Backend |
 | 9 | HU-9 | Agregar vehículo | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
 | 13 | HU-13 | Agregar itinerario | EP-03: Diagramación itinerarios (#12) | 5 pts | Front Administrativos / Backend |
-| 17 | HU-17 | Consultar entregas | EP-04: Monitoreo y cobranzas (#16) | 2 pts | Front Administrativos |
+| 17 | HU-17 | Consultar entregas con problemas | EP-04: Monitoreo y cobranzas (#16) | 2 pts | Front Administrativos |
 | 18 | HU-18 | Consultar detalle de entrega | EP-04: Monitoreo y cobranzas (#16) | 2 pts | Front Administrativos |
 | 23 | HU-23 | Iniciar sesión | EP-06: Itinerarios en calle (#22) | 2 pts | Front Transportistas / Backend |
-| 26 | HU-26 | Guardar recorrido | EP-06: Itinerarios en calle (#22) | 5 pts | Front Transportistas |
+| 25 | HU-25 | Visualizar los remitos agrupados por parada | EP-06: Itinerarios en calle (#22) | 3 pts | Front Transportistas |
+| 31 | HU-31 | Registrar cobranza | EP-07: Entregas y cobranzas (#29) | 5 pts | Front Transportistas / Backend |
 | 32 | HU-32 | Validar cobro íntegro | EP-07: Entregas y cobranzas (#29) | 3 pts | Front Transportistas / Backend |
 | 37 | HU-37 | Consultar importaciones | EP-01: Importación masiva (#1) | 2 pts | Front Administrativos |
 | 38 | HU-38 | Ver detalle de una importación | EP-01: Importación masiva (#1) | 2 pts | Front Administrativos |
@@ -131,10 +132,9 @@ Para el primer ciclo de desarrollo de 3 semanas (**09/10/2026 al 29/10/2026**), 
 | 55 | HU-55 | Adjuntar un documento | EP-07: Entregas y cobranzas (#29) | 2 pts | Front Transportistas / Backend |
 | 56 | HU-56 | Registrar inconvenientes con la entrega | EP-07: Entregas y cobranzas (#29) | 1 pt | Front Transportistas |
 | 62 | HU-62 | Consultar itinerario | EP-06: Itinerarios en calle (#22) | 2 pts | Front Transportistas |
-| 63 | HU-63 | Mostrar recorridos guardados | EP-06: Itinerarios en calle (#22) | 3 pts | Front Transportistas |
-| 65 | HU-65 | Eliminar recorrido | EP-06: Itinerarios en calle (#22) | 1 pt | Front Transportistas |
 | 66 | HU-66 | Suspender o deshabilitar personal | EP-02: Gestión de personal (#6) | 2 pts | Front Administrativos / Backend |
-| **TOTAL** | | **28 Historias de Usuario Comprometidas** | | **71 pts** | |
+| 67 | HU-67 | Visualizar detalle de parada y monto a cobrar | EP-06: Itinerarios en calle (#22) | 3 pts | Front Transportistas |
+| **TOTAL** | | **28 Historias de Usuario Comprometidas** | | **73 pts** | |
 
 \* El número # indica el número de épica en el proyecto de Taiga.  
 \*\* El resto de las historias de usuario se puede consultar en el gestor Taiga o en esta [tabla de seguimiento de historias de usuario](https://docs.google.com/spreadsheets/d/1XJ9v3v1gFjtmCFSVoAJ0DIv9F_JfRK5rYsCCYx7bvo8/edit?usp=drive_link).

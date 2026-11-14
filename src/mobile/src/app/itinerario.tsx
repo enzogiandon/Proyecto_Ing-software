@@ -35,7 +35,7 @@ import type { Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
-import { obtenerItinerarioJornada } from '../services/itinerarioService';
+import { obtenerItinerarioJornada, tomarItinerarioActualizado } from '../services/itinerarioService';
 import { getUsuarioActual, estaAutenticado, cerrarSesion } from '../services/authService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 import { seleccionarParadaItem } from '../services/paradaService';
@@ -88,12 +88,20 @@ export default function ItinerarioScreen() {
       router.replace('/login' as any);
       return;
     }
+    const actualizado = tomarItinerarioActualizado();
+    if (actualizado) {
+      setItinerario(actualizado);
+      setCargando(false);
+      return;
+    }
     cargarDatos();
   }, []);
 
   // Bloquea el botón físico o gesto de retroceso del celular para no volver al login una vez autenticado
   useFocusEffect(
     useCallback(() => {
+      const actualizado = tomarItinerarioActualizado();
+      if (actualizado) setItinerario(actualizado);
       const onBackPress = () => {
         // En el itinerario no se debe volver al login bajo ninguna circunstancia
         return true;

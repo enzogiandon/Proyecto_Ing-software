@@ -1,19 +1,30 @@
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
-import { getRutasGuardadas } from '../services/itinerarios';
+import { getRutasGuardadas, ordenarPorRuta } from '../services/itinerarios';
+import { entregarItinerarioActualizado, obtenerItinerarioJornada } from '../services/itinerarioService';
 import type { RutaGuardadaItem } from '../types/api';
 
 type Listado =
   | { estado: 'cargando' | 'error' }
   | { estado: 'listo'; recorridos: RutaGuardadaItem[] };
 
+type Asignacion = 'consultando' | 'asignado' | 'sin-itinerario' | 'error';
+type Carga =
+  | { estado: 'confirmar' | 'enviando' | 'error-envio'; recorrido: RutaGuardadaItem }
+  | { estado: 'actualizando' | 'error-actualizacion' | 'listo'; recorrido: RutaGuardadaItem; orden: number[] };
+
 export default function RecorridosGuardadosScreen() {
   const router = useRouter();
   const [listado, setListado] = useState<Listado>({ estado: 'cargando' });
   const [intento, setIntento] = useState(0);
+  const [intentoAsignacion, setIntentoAsignacion] = useState(0);
+  const [asignacion, setAsignacion] = useState<Asignacion>('consultando');
+  const [carga, setCarga] = useState<Carga | null>(null);
+  const operacionEnCurso = useRef(false);
+  const [avisoCarga, setAvisoCarga] = useState('');
 
   useFocusEffect(useCallback(() => {
     let vigente = true;
@@ -25,6 +36,18 @@ export default function RecorridosGuardadosScreen() {
     return () => { vigente = false; };
   }, [intento]));
 
+  useFocusEffect(useCallback(() => {
+    let vigente = true;
+    setAsignacion('consultando');
+    obtenerItinerarioJornada({ soloDjango: true }).then(
+      ({ itinerario }) => {
+        if (vigente) setAsignacion(itinerario ? 'asignado' : 'sin-itinerario');
+      },
+      () => { if (vigente) setAsignacion('error'); },
+    );
+    return () => { vigente = false; };
+  }, [intentoAsignacion]));
+
   const volver = () => {
     if (router.canGoBack()) {
       router.back();
@@ -32,6 +55,58 @@ export default function RecorridosGuardadosScreen() {
       router.replace('/itinerario');
     }
   };
+
+  const cerrarModal = () => {
+    if (operacionEnCurso.current) return;
+    if (carga?.estado === 'error-actualizacion') {
+      setAvisoCarga(`Django aplicó el recorrido ${carga.recorrido.nombre}, pero la pantalla de Itinerario no pudo actualizarse.`);
+    }
+    if (carga?.estado === 'listo') volver();
+    setCarga(null);
+  };
+
+  const cargar = async (seleccion: Carga) => {
+    if (operacionEnCurso.current) return;
+    if (seleccion.estado !== 'confirmar' && seleccion.estado !== 'error-envio' &&
+      seleccion.estado !== 'error-actualizacion') return;
+    if (seleccion.estado !== 'error-actualizacion' && asignacion !== 'asignado') return;
+
+    const { recorrido } = seleccion;
+    operacionEnCurso.current = true;
+    try {
+      let orden: number[];
+      if (seleccion.estado === 'error-actualizacion') {
+        orden = seleccion.orden;
+      } else {
+        setCarga({ estado: 'enviando', recorrido });
+        try {
+          orden = await ordenarPorRuta(recorrido.id);
+        } catch {
+          setCarga({ estado: 'error-envio', recorrido });
+          return;
+        }
+      }
+
+      // Una vez confirmado el POST, el reintento solo vuelve a consultar las paradas.
+      setCarga({ estado: 'actualizando', recorrido, orden });
+      try {
+        const { itinerario } = await obtenerItinerarioJornada({ soloDjango: true });
+        if (!itinerario || itinerario.paradas.length !== orden.length ||
+          itinerario.paradas.some((parada, indice) => parada.id !== orden[indice])) {
+          throw new Error('El itinerario todavía no refleja el orden confirmado.');
+        }
+        entregarItinerarioActualizado(itinerario);
+        setAvisoCarga('');
+        setCarga({ estado: 'listo', recorrido, orden });
+      } catch {
+        setCarga({ estado: 'error-actualizacion', recorrido, orden });
+      }
+    } finally {
+      operacionEnCurso.current = false;
+    }
+  };
+
+  const cargandoRecorrido = carga?.estado === 'enviando' || carga?.estado === 'actualizando';
 
   return (
     <SafeAreaView style={styles.pantalla} edges={['top', 'bottom']}>
@@ -44,6 +119,11 @@ export default function RecorridosGuardadosScreen() {
       </View>
 
       <ScrollView style={styles.contenido} contentContainerStyle={styles.espaciado}>
+        {!!avisoCarga && (
+          <View style={styles.tarjeta} accessibilityLiveRegion="polite">
+            <Text style={styles.texto}>{avisoCarga}</Text>
+          </View>
+        )}
         {listado.estado === 'cargando' && (
           <View style={styles.tarjeta} accessibilityLiveRegion="polite">
             <ActivityIndicator color={RepartoYA.azulRuta} />
@@ -64,11 +144,30 @@ export default function RecorridosGuardadosScreen() {
             <Text style={styles.contador} accessibilityLiveRegion="polite">
               {listado.recorridos.length === 1 ? '1 recorrido guardado' : `${listado.recorridos.length} recorridos guardados`}
             </Text>
+            {listado.recorridos.length > 0 && asignacion !== 'asignado' && (
+              <View accessibilityLiveRegion="polite">
+                <Text style={styles.texto}>
+                  {asignacion === 'sin-itinerario' ? 'Necesitás un itinerario asignado para cargar un recorrido.' :
+                    asignacion === 'error' ? 'No se pudo verificar la asignación del itinerario.' :
+                    'Verificando la asignación del itinerario…'}
+                </Text>
+                {asignacion === 'error' && (
+                  <Pressable accessibilityRole="button" onPress={() => setIntentoAsignacion((actual) => actual + 1)}>
+                    <Text style={styles.contador}>Reintentar verificación</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
             {listado.recorridos.map((recorrido) => (
               <View key={recorrido.id} style={styles.tarjeta}>
                 <Text style={styles.nombre}>{recorrido.nombre}</Text>
                 <View style={styles.acciones}>
-                  <AccionPendiente texto="Cargar" etiqueta={`Cargar ${recorrido.nombre}`} />
+                  <Pressable disabled={asignacion !== 'asignado'} accessibilityRole="button"
+                    accessibilityLabel={`Cargar ${recorrido.nombre}`} accessibilityState={{ disabled: asignacion !== 'asignado' }}
+                    style={[styles.botonPendiente, asignacion === 'asignado' && styles.botonCargar]}
+                    onPress={() => setCarga({ estado: 'confirmar', recorrido })}>
+                    <Text style={styles.botonTexto}>Cargar</Text>
+                  </Pressable>
                   <AccionPendiente texto="Eliminar recorrido" etiqueta={`Eliminar recorrido ${recorrido.nombre}`} eliminar />
                 </View>
               </View>
@@ -82,11 +181,62 @@ export default function RecorridosGuardadosScreen() {
                 <Text style={styles.texto}>Guardar recorridos estará disponible próximamente.</Text>
               </View>
             ) : (
-              <Text style={styles.texto}>La carga y la eliminación de recorridos estarán disponibles próximamente.</Text>
+              <Text style={styles.texto}>La eliminación de recorridos estará disponible próximamente.</Text>
             )}
           </>
         )}
       </ScrollView>
+      {carga && (
+        <Modal transparent animationType="fade" onRequestClose={cerrarModal}>
+          <View style={styles.modalFondo}>
+            <View style={styles.modalTarjeta} accessibilityViewIsModal>
+              <Image style={styles.iconoVacio} resizeMode="contain"
+                source={carga.estado === 'listo' ? require('../../assets/icons/icono-ruta.png') : require('../../assets/icons/icono-alerta.png')} />
+              <Text style={styles.nombre} accessibilityRole="header">
+                {carga.estado === 'listo' ? `Recorrido ${carga.recorrido.nombre} cargado` : `Cargar recorrido ${carga.recorrido.nombre}`}
+              </Text>
+              {carga.estado === 'confirmar' && (
+                <Text style={styles.texto}>Se reemplazará el orden actual de la hoja de ruta. Podrías perder cambios sin guardar.</Text>
+              )}
+              {cargandoRecorrido && (
+                <>
+                  <ActivityIndicator color={RepartoYA.azulRuta} />
+                  <Text style={styles.texto} accessibilityLiveRegion="polite">
+                    {carga.estado === 'enviando' ? 'Cargando recorrido…' : 'Actualizando itinerario…'}
+                  </Text>
+                </>
+              )}
+              {carga.estado === 'error-envio' && (
+                <Text style={styles.texto} accessibilityLiveRegion="polite">
+                  No se pudo confirmar la carga del recorrido. Revisá la conexión y que tengas un itinerario asignado.
+                </Text>
+              )}
+              {carga.estado === 'error-actualizacion' && (
+                <Text style={styles.texto} accessibilityLiveRegion="polite">
+                  Django confirmó la carga, pero no pudimos actualizar el itinerario. Podés volver a consultarlo.
+                </Text>
+              )}
+              {!cargandoRecorrido && (
+                <>
+                  <Pressable accessibilityRole="button" style={styles.modalBoton}
+                    accessibilityLabel={carga.estado === 'confirmar' ? `Cargar recorrido ${carga.recorrido.nombre}` : undefined}
+                    onPress={carga.estado === 'listo' ? cerrarModal : () => cargar(carga)}>
+                    <Text style={styles.botonTexto}>
+                      {carga.estado === 'listo' ? 'Ver itinerario' : carga.estado === 'confirmar' ? 'Cargar' :
+                        carga.estado === 'error-actualizacion' ? 'Reconsultar itinerario' : 'Reintentar carga'}
+                    </Text>
+                  </Pressable>
+                  {carga.estado !== 'listo' && (
+                    <Pressable accessibilityRole="button" style={styles.botonPendiente} onPress={cerrarModal}>
+                      <Text style={styles.botonTexto}>{carga.estado === 'error-actualizacion' ? 'Cerrar' : 'Cancelar'}</Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -122,5 +272,9 @@ const styles = StyleSheet.create({
     backgroundColor: RepartoYA.grisFondo,
   },
   reintentar: { alignSelf: 'flex-start', backgroundColor: RepartoYA.naranjaYA, padding: 12, borderRadius: 12 },
+  botonCargar: { backgroundColor: RepartoYA.blanco, borderColor: RepartoYA.azulRuta },
+  modalFondo: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingHorizontal: 28 },
+  modalTarjeta: { backgroundColor: RepartoYA.blanco, borderRadius: 16, padding: 24, gap: 12 },
+  modalBoton: { backgroundColor: RepartoYA.naranjaYA, borderRadius: 10, padding: 14, alignItems: 'center' },
   botonTexto: { color: RepartoYA.carbon, fontSize: 14, fontWeight: '700' },
 });

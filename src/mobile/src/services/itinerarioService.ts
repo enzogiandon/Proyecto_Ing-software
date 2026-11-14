@@ -12,7 +12,7 @@ import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
  * Consulta el endpoint real de paradas del backend (/api/itinerarios/paradas/).
  * Si el backend no está disponible, utiliza el mock data adaptado al chofer autenticado.
  */
-export async function obtenerItinerarioJornada(): Promise<{
+export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Promise<{
   itinerario: ItinerarioJornada | null;
   error?: string;
 }> {
@@ -57,7 +57,7 @@ export async function obtenerItinerarioJornada(): Promise<{
 
       // Si devolvió el array de paradas ordenadas desde /api/itinerarios/paradas/
       if (Array.isArray(data)) {
-        if (data.length === 0) {
+        if (!soloDjango && data.length === 0) {
           return { itinerario: null };
         }
 
@@ -125,7 +125,7 @@ export async function obtenerItinerarioJornada(): Promise<{
       if (
         dataError?.detail?.includes('No posees ningún itinerario') ||
         dataError?.detail?.includes('no tiene asignado') ||
-        response.status === 404
+        (!soloDjango && response.status === 404)
       ) {
         return { itinerario: null };
       }
@@ -133,6 +133,7 @@ export async function obtenerItinerarioJornada(): Promise<{
 
     throw new Error(`HTTP ${response.status}`);
   } catch (error: any) {
+    if (soloDjango) throw error;
     console.warn('Backend de itinerario no disponible. Usando datos Mock de Figma:', error?.message);
     // Modo híbrido: retorna el itinerario correspondiente al usuario autenticado
     const usuarioActual = getUsuarioActual();
@@ -165,4 +166,17 @@ export async function obtenerItinerarioJornada(): Promise<{
       },
     };
   }
+}
+
+// Entrega a Itinerario la consulta real ya completada por el modal al volver.
+let itinerarioActualizado: ItinerarioJornada | undefined;
+
+export function entregarItinerarioActualizado(itinerario: ItinerarioJornada) {
+  itinerarioActualizado = itinerario;
+}
+
+export function tomarItinerarioActualizado() {
+  const itinerario = itinerarioActualizado;
+  itinerarioActualizado = undefined;
+  return itinerario;
 }

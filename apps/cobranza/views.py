@@ -135,14 +135,12 @@ class ValidarCobranza(UpdateView):
         context = self.get_context_data()
         detalles_formset = context["detalles_formset"]
 
-        # Validamos ambos formularios
         if not detalles_formset.is_valid():
             return self.render_to_response(self.get_context_data(form=form))
 
         nuevo_estado = detalles_formset.estado_calculado
         observacion = form.cleaned_data.get("observacion", "").strip()
 
-        # Validación cruzada: si no se aprueba, obligamos a escribir observación
         if (
             nuevo_estado == EstadoCobranza.DIFIERE
             and not observacion

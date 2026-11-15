@@ -7,17 +7,21 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.cobranza.models import Cobranza, DetallePago
+from apps.cobranza.models import AjusteCobranza, Cobranza, DetallePago
 from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
+    EvidenciaParada,
     Itinerario,
     Parada,
+    ProblemaParada,
     RutaGuardada,
 )
 from apps.remitos.models import (
     Comercio,
+    ErrorImportacion,
     EstadoRemito,
+    ImportacionRemitos,
     Marca,
     Remito,
 )
@@ -50,29 +54,37 @@ class Command(BaseCommand):
             if options["limpiar"]:
                 self.stdout.write("Limpiando datos existentes...")
 
-                # 1. Pagos y Cobranzas (evita ProtectedError en Cobranza.parada)
+                # 1. Cobranzas, Ajustes y Pagos (AjusteCobranza tiene FK a Usuario con PROTECT y FK a Cobranza; Cobranza tiene OneToOne PROTECT a Parada)
+                AjusteCobranza.objects.all().delete()
                 DetallePago.objects.all().delete()
                 Cobranza.objects.all().delete()
 
-                # 2. Tablas intermedias e hijas de rutas
+                # 2. Evidencias y problemas de paradas (hijas de Parada)
+                EvidenciaParada.objects.all().delete()
+                ProblemaParada.objects.all().delete()
+
+                # 3. Remitos e Importaciones (Remito tiene FK a Parada SET_NULL, FK a Comercio PROTECT, FK a Marca PROTECT)
+                Remito.objects.all().delete()
+                ErrorImportacion.objects.all().delete()
+                ImportacionRemitos.objects.all().delete()
+
+                # 4. Paradas e Itinerarios (Itinerario tiene FK PROTECT a Transportista y Vehiculo)
+                Parada.objects.all().delete()
+                Itinerario.objects.all().delete()
+
+                # 5. Tablas intermedias e hijas de rutas
                 DetalleRutaGuardada.objects.all().delete()
                 RutaGuardada.objects.all().delete()
 
-                # 3. Remitos y Paradas
-                Remito.objects.all().delete()
-                Parada.objects.all().delete()
-
-                # 4. Itinerarios (libera la referencia protegida a Transportista)
-                Itinerario.objects.all().delete()
-
-                # 5. Comercios y Marcas
+                # 6. Comercios y Marcas
                 Comercio.objects.all().delete()
                 Marca.objects.all().delete()
 
-                # 6. Perfiles y Vehículos
+                # 7. Perfiles Transportista y Vehículos
                 Transportista.objects.all().delete()
                 Vehiculo.objects.all().delete()
 
+                # 8. Usuarios no superusuarios
                 Usuario.objects.filter(is_superuser=False).delete()
 
             # ------------------------------------------------------------------
@@ -88,11 +100,13 @@ class Command(BaseCommand):
                     "is_staff": True,
                     "is_superuser": True,
                     "is_active": True,
+                    "intentos_fallidos": 0,
                 },
             )
             admin_user.is_staff = True
             admin_user.is_superuser = True
             admin_user.is_active = True
+            admin_user.intentos_fallidos = 0
             admin_user.set_password("123")
             admin_user.save()
 

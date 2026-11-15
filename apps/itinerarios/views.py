@@ -182,6 +182,13 @@ class CrearParadas(
     success_message = "Paradas asignadas correctamente"
     permission_required = ("itinerarios.add_parada", "remitos.change_remito")
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        itinerario_id = self.request.GET.get("itinerario")
+        if itinerario_id:
+            kwargs["itinerario_id"] = itinerario_id
+        return kwargs
+
     def form_valid(self, form):
         try:
             crear_paradas(

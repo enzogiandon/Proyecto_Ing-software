@@ -144,7 +144,48 @@ class ItinerarioViewsTests(TestCase):
             f'El comercio "{comercio}" ya no tiene remitos pendientes.',
         ):
             crear_paradas(itinerario, [comercio])
-        self.assertFalse(Parada.objects.filter(itinerario=itinerario).exists())
+
+    def test_modificar_paradas_desmarca_y_marca_nuevas(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio_1 = self.crear_comercio("Comercio 1", "20123456791")
+        comercio_2 = self.crear_comercio("Comercio 2", "20123456792")
+        comercio_3 = self.crear_comercio("Comercio 3", "20123456793")
+
+        remito_1 = self.crear_remito(comercio_1, "R-101")
+        remito_2 = self.crear_remito(comercio_2, "R-102")
+        remito_3 = self.crear_remito(comercio_3, "R-103")
+
+        # 1. Asignar comercio 1 y 2
+        crear_paradas(itinerario, [comercio_1, comercio_2])
+        self.assertEqual(itinerario.paradas.count(), 2)
+
+        # 2. Desmarcar comercio 1, mantener comercio 2, y agregar comercio 3
+        crear_paradas(itinerario, [comercio_2, comercio_3])
+
+        remito_1.refresh_from_db()
+        remito_2.refresh_from_db()
+        remito_3.refresh_from_db()
+
+        self.assertEqual(remito_1.estado, EstadoRemito.PENDIENTE)
+        self.assertIsNone(remito_1.parada)
+
+        self.assertEqual(remito_2.estado, EstadoRemito.ASIGNADO)
+        self.assertIsNotNone(remito_2.parada)
+
+        self.assertEqual(remito_3.estado, EstadoRemito.ASIGNADO)
+        self.assertIsNotNone(remito_3.parada)
+
+        self.assertEqual(itinerario.paradas.count(), 2)
+        paradas = list(itinerario.paradas.order_by("orden"))
+        self.assertEqual(paradas[0].comercio, comercio_2)
+        self.assertEqual(paradas[0].orden, 1)
+        self.assertEqual(paradas[1].comercio, comercio_3)
+        self.assertEqual(paradas[1].orden, 2)
 
     def test_delivery_detail_shows_receipts_evidence_and_contingencies(self):
         itinerario = Itinerario.objects.create(

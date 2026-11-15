@@ -164,7 +164,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         paradas_data = []
         for p in paradas:
             remitos_activos = p.remitos.filter(eliminado=False)
-            monto_parada = sum(float(r.monto_total) for r in remitos_activos)
+            monto_parada = sum(float(r.total) for r in remitos_activos)
             paradas_data.append(
                 {
                     "id": p.id,

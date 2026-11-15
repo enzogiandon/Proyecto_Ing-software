@@ -132,11 +132,7 @@ export default function ItinerarioScreen() {
 
   // Núcleo Sprint 2 (HU-24): Botón de acceso a reordenar paradas
   const handleReordenarParadas = () => {
-    Alert.alert(
-      'Reordenar paradas',
-      'El módulo de reordenamiento interactivo de paradas se habilitará próximamente.',
-      [{ text: 'Entendido' }]
-    );
+    router.push('/reordenar-paradas' as Href);
   };
 
   // Acciones de los botones según el diagrama de navegación de la cátedra

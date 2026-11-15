@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
@@ -14,10 +14,10 @@ type Listado =
 type Asignacion = 'consultando' | 'asignado' | 'sin-itinerario' | 'error';
 type Carga =
   | { estado: 'confirmar' | 'enviando' | 'error-envio'; recorrido: RutaGuardadaItem }
-  | { estado: 'actualizando' | 'error-actualizacion' | 'listo'; recorrido: RutaGuardadaItem; orden: number[] };
+  | { estado: 'actualizando' | 'error-actualizacion'; recorrido: RutaGuardadaItem; orden: number[] };
 
 type Eliminacion = {
-  estado: 'confirmar' | 'eliminando' | 'error' | 'listo' | 'consultando' | 'error-consulta';
+  estado: 'confirmar' | 'eliminando' | 'error' | 'consultando' | 'error-consulta';
   recorrido: RutaGuardadaItem;
 };
 
@@ -31,6 +31,15 @@ export default function RecorridosGuardadosScreen() {
   const operacionEnCurso = useRef(false);
   const [eliminacion, setEliminacion] = useState<Eliminacion | null>(null);
   const [avisoCarga, setAvisoCarga] = useState('');
+
+  // HU-64: Estado para marcar la tarjeta con tilde de verificación y mostrar toast
+  const [recorridoCargadoId, setRecorridoCargadoId] = useState<number | null>(null);
+  const [toastCarga, setToastCarga] = useState<{ nombre: string; paradas: number } | null>(null);
+  const toastTimerCarga = useRef<any>(null);
+
+  // HU-65: Estado para toast de recorrido eliminado
+  const [toastEliminacion, setToastEliminacion] = useState(false);
+  const toastTimerEliminacion = useRef<any>(null);
 
   useFocusEffect(useCallback(() => {
     let vigente = true;
@@ -67,7 +76,6 @@ export default function RecorridosGuardadosScreen() {
     if (carga?.estado === 'error-actualizacion') {
       setAvisoCarga(`Django aplicó el recorrido ${carga.recorrido.nombre}, pero la pantalla de Itinerario no pudo actualizarse.`);
     }
-    if (carga?.estado === 'listo') volver();
     setCarga(null);
   };
 
@@ -93,7 +101,6 @@ export default function RecorridosGuardadosScreen() {
         }
       }
 
-      // Una vez confirmado el POST, el reintento solo vuelve a consultar las paradas.
       setCarga({ estado: 'actualizando', recorrido, orden });
       try {
         const { itinerario } = await obtenerItinerarioJornada({ soloDjango: true });
@@ -103,7 +110,18 @@ export default function RecorridosGuardadosScreen() {
         }
         entregarItinerarioActualizado(itinerario);
         setAvisoCarga('');
-        setCarga({ estado: 'listo', recorrido, orden });
+        // HU-64: Carga confirmada: se cierra el modal, se marca la tarjeta con tilde y se muestra el toast
+        setCarga(null);
+        setRecorridoCargadoId(recorrido.id);
+        setToastCarga({ nombre: recorrido.nombre, paradas: orden.length });
+        if (typeof setTimeout !== 'undefined') {
+          if (toastTimerCarga.current && typeof clearTimeout !== 'undefined') {
+            clearTimeout(toastTimerCarga.current);
+          }
+          toastTimerCarga.current = setTimeout(() => {
+            setToastCarga(null);
+          }, 4000);
+        }
       } catch {
         setCarga({ estado: 'error-actualizacion', recorrido, orden });
       }
@@ -127,7 +145,17 @@ export default function RecorridosGuardadosScreen() {
       setListado((actual) => actual.estado === 'listo'
         ? { estado: 'listo', recorridos: actual.recorridos.filter(({ id }) => id !== recorrido.id) }
         : actual);
-      setEliminacion({ estado: 'listo', recorrido });
+      // HU-65: Eliminación confirmada: cierra modal y muestra toast inferior "Recorrido eliminado"
+      setEliminacion(null);
+      setToastEliminacion(true);
+      if (typeof setTimeout !== 'undefined') {
+        if (toastTimerEliminacion.current && typeof clearTimeout !== 'undefined') {
+          clearTimeout(toastTimerEliminacion.current);
+        }
+        toastTimerEliminacion.current = setTimeout(() => {
+          setToastEliminacion(false);
+        }, 4000);
+      }
     } catch {
       setEliminacion({ estado: 'error', recorrido });
     } finally {
@@ -142,7 +170,6 @@ export default function RecorridosGuardadosScreen() {
     try {
       const recorridos = await getRutasGuardadas();
       setListado({ estado: 'listo', recorridos });
-      // El GET refleja el estado actual, pero no confirma quién eliminó la plantilla.
       setEliminacion(null);
     } catch {
       setEliminacion({ estado: 'error-consulta', recorrido });
@@ -151,8 +178,17 @@ export default function RecorridosGuardadosScreen() {
     }
   };
 
+  const handleGuardarOrdenActual = () => {
+    Alert.alert(
+      'Guardar recorrido',
+      'El módulo para guardar una nueva plantilla de recorrido forma parte de la HU-26 y se habilitará a continuación.',
+      [{ text: 'Entendido' }]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.pantalla} edges={['top', 'bottom']}>
+      {/* ================= ENCABEZADO SUPERIOR ================= */}
       <View style={styles.encabezado}>
         <Pressable onPress={volver} accessibilityRole="button" accessibilityLabel="Volver a Itinerario" hitSlop={8}>
           <Text style={styles.volver}>‹</Text>
@@ -162,33 +198,58 @@ export default function RecorridosGuardadosScreen() {
       </View>
 
       <ScrollView style={styles.contenido} contentContainerStyle={styles.espaciado}>
+        {/* Subtítulo introductorio según Figma */}
+        <Text style={styles.subtituloHeader}>
+          {listado.estado === 'listo' && listado.recorridos.length === 0
+            ? 'Administrá tus recorridos y reutilizá el orden de paradas'
+            : 'Cargá un recorrido para aplicar su orden a tu hoja de ruta.'}
+        </Text>
+
+        {/* HU-63: Botón "+ Guardar orden actual" SIEMPRE VISIBLE según Figma */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Guardar orden actual"
+          style={styles.botonGuardarOrdenPrincipal}
+          onPress={handleGuardarOrdenActual}
+        >
+          <Text style={styles.textoBotonGuardarOrden}>+ Guardar orden actual</Text>
+        </Pressable>
+
         {!!avisoCarga && (
-          <View style={styles.tarjeta} accessibilityLiveRegion="polite">
+          <View style={styles.tarjetaAviso} accessibilityLiveRegion="polite">
             <Text style={styles.texto}>{avisoCarga}</Text>
           </View>
         )}
+
         {listado.estado === 'cargando' && (
           <View style={styles.tarjeta} accessibilityLiveRegion="polite">
             <ActivityIndicator color={RepartoYA.azulRuta} />
             <Text style={styles.texto}>Cargando recorridos…</Text>
           </View>
         )}
+
         {listado.estado === 'error' && (
           <View style={styles.tarjeta} accessibilityLiveRegion="polite">
             <Text style={styles.nombre}>No se pudieron cargar los recorridos</Text>
             <Text style={styles.texto}>Revisá tu conexión e intentá nuevamente.</Text>
             <Pressable accessibilityRole="button" style={styles.reintentar} onPress={() => setIntento((actual) => actual + 1)}>
-              <Text style={styles.botonTexto}>Reintentar</Text>
+              <Text style={styles.botonTextoReintentar}>Reintentar</Text>
             </Pressable>
           </View>
         )}
+
         {listado.estado === 'listo' && (
           <>
-            <Text style={styles.contador} accessibilityLiveRegion="polite">
-              {listado.recorridos.length === 1 ? '1 recorrido guardado' : `${listado.recorridos.length} recorridos guardados`}
-            </Text>
+            {/* Encabezado de la lista: "Tus recorridos" y contador a la derecha */}
+            <View style={styles.filaContador}>
+              <Text style={styles.seccionTitulo}>Tus recorridos</Text>
+              <Text style={styles.contador} accessibilityLiveRegion="polite">
+                {listado.recorridos.length === 1 ? '1 recorrido guardado' : `${listado.recorridos.length} recorridos guardados`}
+              </Text>
+            </View>
+
             {listado.recorridos.length > 0 && asignacion !== 'asignado' && (
-              <View accessibilityLiveRegion="polite">
+              <View style={styles.avisoAsignacion} accessibilityLiveRegion="polite">
                 <Text style={styles.texto}>
                   {asignacion === 'sin-itinerario' ? 'Necesitás un itinerario asignado para cargar un recorrido.' :
                     asignacion === 'error' ? 'No se pudo verificar la asignación del itinerario.' :
@@ -196,88 +257,184 @@ export default function RecorridosGuardadosScreen() {
                 </Text>
                 {asignacion === 'error' && (
                   <Pressable accessibilityRole="button" onPress={() => setIntentoAsignacion((actual) => actual + 1)}>
-                    <Text style={styles.contador}>Reintentar verificación</Text>
+                    <Text style={styles.linkReintentarAsignacion}>Reintentar verificación</Text>
                   </Pressable>
                 )}
               </View>
             )}
-            {listado.recorridos.map((recorrido) => (
-              <View key={recorrido.id} style={styles.tarjeta}>
-                <Text style={styles.nombre}>{recorrido.nombre}</Text>
-                <View style={styles.acciones}>
-                  <Pressable disabled={asignacion !== 'asignado'} accessibilityRole="button"
-                    accessibilityLabel={`Cargar ${recorrido.nombre}`} accessibilityState={{ disabled: asignacion !== 'asignado' }}
-                    style={[styles.botonPendiente, asignacion === 'asignado' && styles.botonCargar]}
-                    onPress={() => setCarga({ estado: 'confirmar', recorrido })}>
-                    <Text style={styles.botonTexto}>Cargar</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel={`Eliminar recorrido ${recorrido.nombre}`}
-                    style={[styles.botonPendiente, styles.botonEliminar]}
-                    onPress={() => setEliminacion({ estado: 'confirmar', recorrido })}>
-                    <Image source={require('../../assets/icons/icono-eliminar.png')} style={styles.icono} resizeMode="contain" />
-                    <Text style={[styles.botonTexto, styles.textoEliminar]}>Eliminar recorrido</Text>
-                  </Pressable>
+
+            {listado.recorridos.map((recorrido) => {
+              const estaCargado = recorridoCargadoId === recorrido.id;
+              return (
+                <View key={recorrido.id} style={[styles.tarjeta, estaCargado && styles.tarjetaCargada]}>
+                  <View style={styles.tarjetaEncabezadoRow}>
+                    {/* Ícono de la tarjeta: Tilde verde si se cargó, ícono de ruta habitual en otro caso */}
+                    <View style={[styles.cuadroIcono, estaCargado && styles.cuadroIconoCargado]}>
+                      {estaCargado ? (
+                        <Text style={styles.tildeVerde}>✓</Text>
+                      ) : (
+                        <Image
+                          source={require('../../assets/icons/icono-ruta.png')}
+                          style={styles.iconoTarjeta}
+                          resizeMode="contain"
+                        />
+                      )}
+                    </View>
+
+                    <View style={styles.infoRecorrido}>
+                      <Text style={styles.nombre}>{recorrido.nombre}</Text>
+                      <Text style={styles.metadatosTexto}>
+                        Orden guardado para tu hoja de ruta
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Acciones de la tarjeta alineadas según Figma */}
+                  <View style={styles.acciones}>
+                    {/* Botón Cargar (Naranja YA) */}
+                    <Pressable
+                      disabled={asignacion !== 'asignado'}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Cargar ${recorrido.nombre}`}
+                      accessibilityState={{ disabled: asignacion !== 'asignado' }}
+                      style={[
+                        styles.botonCargarAccion,
+                        asignacion !== 'asignado' && styles.botonDeshabilitado,
+                      ]}
+                      onPress={() => setCarga({ estado: 'confirmar', recorrido })}
+                    >
+                      <Text style={[styles.textoBotonCargar, asignacion !== 'asignado' && styles.textoDeshabilitado]}>
+                        Cargar
+                      </Text>
+                    </Pressable>
+
+                    {/* Botón Eliminar recorrido (Fondo blanco, borde y texto Azul Ruta) */}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Eliminar recorrido ${recorrido.nombre}`}
+                      style={styles.botonEliminarAccion}
+                      onPress={() => setEliminacion({ estado: 'confirmar', recorrido })}
+                    >
+                      <Text style={styles.textoBotonEliminar}>Eliminar recorrido</Text>
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
+
             {listado.recorridos.length === 0 && (
-              <View style={styles.tarjeta}>
-                <Image source={require('../../assets/icons/icono-rutas-guardadas.png')} style={styles.iconoVacio} resizeMode="contain" />
-                <Text style={styles.nombre}>No hay recorridos guardados</Text>
-                {/* HU 26 debe definir el destino del botón y crear la plantilla en Django. */}
-                <Pressable disabled accessibilityRole="button" accessibilityState={{ disabled: true }} style={styles.botonPendiente}>
-                  <Text style={styles.botonTexto}>+ Guardar orden actual</Text>
-                </Pressable>
-                <Text style={styles.texto}>Guardar recorridos estará disponible próximamente.</Text>
+              <View style={styles.tarjetaVacia}>
+                <Image
+                  source={require('../../assets/icons/icono-rutas-guardadas.png')}
+                  style={styles.iconoVacioGrande}
+                  resizeMode="contain"
+                />
+                <Text style={styles.nombreVacio}>No hay recorridos guardados</Text>
+                <Text style={styles.textoVacioAyuda}>
+                  Guardá el orden actual de tus paradas para volver a usarlo cuando lo necesites.
+                </Text>
               </View>
             )}
           </>
         )}
       </ScrollView>
+
+      {/* ================= TOAST INFERIOR: RECORRIDO CARGADO (HU-64) ================= */}
+      {toastCarga && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ver itinerario"
+          onPress={volver}
+          style={styles.toastCargaContainer}
+        >
+          <View style={styles.toastCargaCheckCirculo}>
+            <Text style={styles.toastCheckTexto}>✓</Text>
+          </View>
+          <View style={styles.toastCargaTextos}>
+            <Text style={styles.toastCargaTitulo}>Recorrido {toastCarga.nombre} cargado</Text>
+            <Text style={styles.toastCargaSubtitulo}>
+              Orden de las {toastCarga.paradas} paradas aplicado a tu hoja de ruta.
+            </Text>
+          </View>
+        </Pressable>
+      )}
+
+      {/* ================= TOAST INFERIOR: RECORRIDO ELIMINADO (HU-65) ================= */}
+      {toastEliminacion && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Aceptar"
+          onPress={() => setToastEliminacion(false)}
+          style={styles.toastEliminadoContainer}
+        >
+          <View style={styles.toastCheckCirculo}>
+            <Text style={styles.toastCheckTexto}>✓</Text>
+          </View>
+          <Text style={styles.toastEliminadoTexto}>Recorrido eliminado</Text>
+        </Pressable>
+      )}
+
+      {/* ================= MODAL: ELIMINAR RECORRIDO (HU-65) ================= */}
       {eliminacion && (
         <Modal transparent animationType="fade" onRequestClose={cerrarEliminacion}>
           <View style={styles.modalFondo}>
             <View style={styles.modalTarjeta} accessibilityViewIsModal>
-              <Image source={require('../../assets/icons/icono-eliminar.png')} style={styles.iconoVacio} resizeMode="contain" />
-              <Text style={styles.nombre} accessibilityRole="header" accessibilityLiveRegion="polite">
-                {eliminacion.estado === 'listo' ? 'Recorrido eliminado' : '¿Estás seguro de que querés eliminar este recorrido?'}
+              {/* Ícono de tacho en círculo crema pastel según Figma */}
+              <View style={styles.modalIconoCirculo}>
+                <Image source={require('../../assets/icons/icono-eliminar.png')} style={styles.modalIconoImagen} resizeMode="contain" />
+              </View>
+
+              <Text style={styles.modalTitulo} accessibilityRole="header">
+                Eliminar recorrido
               </Text>
-              <Text style={styles.texto}>{eliminacion.recorrido.nombre}</Text>
+
+              <Text style={styles.modalMensaje}>
+                ¿Estás seguro de que querés eliminar este recorrido?
+              </Text>
+
+              {/* Cajita destacada con el nombre del recorrido a eliminar */}
+              <View style={styles.modalCajaRecorrido}>
+                <Text style={styles.modalCajaRecorridoNombre}>{eliminacion.recorrido.nombre}</Text>
+              </View>
+
               {eliminacion.estado === 'eliminando' || eliminacion.estado === 'consultando' ? (
-                <>
-                  <ActivityIndicator color={RepartoYA.error} />
+                <View style={styles.modalCargandoRow}>
+                  <ActivityIndicator color={RepartoYA.naranjaYA} />
                   <Text style={styles.texto} accessibilityLiveRegion="polite">
                     {eliminacion.estado === 'eliminando' ? 'Eliminando recorrido…' : 'Actualizando listado…'}
                   </Text>
-                </>
-              ) : eliminacion.estado === 'listo' ? (
-                <Pressable accessibilityRole="button" style={styles.modalBoton} onPress={cerrarEliminacion}>
-                  <Text style={styles.botonTexto}>Aceptar</Text>
-                </Pressable>
+                </View>
               ) : (
                 <>
                   {(eliminacion.estado === 'error' || eliminacion.estado === 'error-consulta') && (
                     <>
-                      <Text style={styles.texto} accessibilityLiveRegion="polite">
+                      <Text style={styles.textoError} accessibilityLiveRegion="polite">
                         {eliminacion.estado === 'error-consulta'
                           ? 'No se pudo actualizar el listado. El estado del recorrido sigue sin verificarse.'
                           : 'No se pudo confirmar la eliminación. Podés actualizar el listado para verificar si el recorrido sigue guardado.'}
                       </Text>
-                      <Pressable accessibilityRole="button" style={styles.modalBoton}
+                      <Pressable accessibilityRole="button" style={styles.modalBotonActualizar}
                         onPress={() => actualizarListado(eliminacion.recorrido)}>
-                        <Text style={styles.botonTexto}>Actualizar listado</Text>
+                        <Text style={styles.textoBotonActualizar}>Actualizar listado</Text>
                       </Pressable>
                     </>
                   )}
-                  <Pressable accessibilityRole="button" style={styles.modalEliminar}
+
+                  {/* Botón de confirmación: Naranja YA */}
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.modalBotonConfirmarEliminar}
                     accessibilityLabel={eliminacion.estado === 'confirmar' ? 'Confirmar eliminación del recorrido' : undefined}
-                    onPress={() => eliminar(eliminacion.recorrido)}>
+                    onPress={() => eliminar(eliminacion.recorrido)}
+                  >
                     <Text style={styles.textoModalEliminar}>
                       {eliminacion.estado === 'confirmar' ? 'Eliminar recorrido' : 'Reintentar eliminación'}
                     </Text>
                   </Pressable>
-                  <Pressable accessibilityRole="button" style={styles.botonPendiente} onPress={cerrarEliminacion}>
-                    <Text style={styles.botonTexto}>Cancelar</Text>
+
+                  {/* Botón Cancelar: Blanco con borde Azul Ruta */}
+                  <Pressable accessibilityRole="button" style={styles.modalBotonCancelar} onPress={cerrarEliminacion}>
+                    <Text style={styles.textoModalCancelar}>Cancelar</Text>
                   </Pressable>
                 </>
               )}
@@ -285,51 +442,71 @@ export default function RecorridosGuardadosScreen() {
           </View>
         </Modal>
       )}
+
+      {/* ================= MODAL: CARGAR RECORRIDO (HU-64) ================= */}
       {carga && (
         <Modal transparent animationType="fade" onRequestClose={cerrarModal}>
           <View style={styles.modalFondo}>
             <View style={styles.modalTarjeta} accessibilityViewIsModal>
-              <Image style={styles.iconoVacio} resizeMode="contain"
-                source={carga.estado === 'listo' ? require('../../assets/icons/icono-ruta.png') : require('../../assets/icons/icono-alerta.png')} />
-              <Text style={styles.nombre} accessibilityRole="header">
-                {carga.estado === 'listo' ? `Recorrido ${carga.recorrido.nombre} cargado` : `Cargar recorrido ${carga.recorrido.nombre}`}
+              <View style={styles.modalIconoCirculo}>
+                <Image style={styles.modalIconoImagen} resizeMode="contain" source={require('../../assets/icons/icono-ruta.png')} />
+              </View>
+
+              <Text style={styles.modalTitulo} accessibilityRole="header">
+                ¿Cargar recorrido?
               </Text>
-              {carga.estado === 'confirmar' && (
-                <Text style={styles.texto}>Se reemplazará el orden actual de la hoja de ruta. Podrías perder cambios sin guardar.</Text>
-              )}
+
+              <Text style={styles.modalMensaje}>
+                Se reemplazará el orden actual de tu hoja de ruta. Podrías perder cambios sin guardar.
+              </Text>
+
+              {/* Cajita con el recorrido elegido */}
+              <View style={styles.modalCajaRecorrido}>
+                <Text style={styles.modalCajaRecorridoNombre}>{carga.recorrido.nombre}</Text>
+              </View>
+
               {cargandoRecorrido && (
-                <>
+                <View style={styles.modalCargandoRow}>
                   <ActivityIndicator color={RepartoYA.azulRuta} />
                   <Text style={styles.texto} accessibilityLiveRegion="polite">
                     {carga.estado === 'enviando' ? 'Cargando recorrido…' : 'Actualizando itinerario…'}
                   </Text>
-                </>
+                </View>
               )}
+
               {carga.estado === 'error-envio' && (
-                <Text style={styles.texto} accessibilityLiveRegion="polite">
+                <Text style={styles.textoError} accessibilityLiveRegion="polite">
                   No se pudo confirmar la carga del recorrido. Revisá la conexión y que tengas un itinerario asignado.
                 </Text>
               )}
+
               {carga.estado === 'error-actualizacion' && (
-                <Text style={styles.texto} accessibilityLiveRegion="polite">
+                <Text style={styles.textoError} accessibilityLiveRegion="polite">
                   Django confirmó la carga, pero no pudimos actualizar el itinerario. Podés volver a consultarlo.
                 </Text>
               )}
+
               {!cargandoRecorrido && (
                 <>
-                  <Pressable accessibilityRole="button" style={styles.modalBoton}
-                    accessibilityLabel={carga.estado === 'confirmar' ? `Cargar recorrido ${carga.recorrido.nombre}` : undefined}
-                    onPress={carga.estado === 'listo' ? cerrarModal : () => cargar(carga)}>
-                    <Text style={styles.botonTexto}>
-                      {carga.estado === 'listo' ? 'Ver itinerario' : carga.estado === 'confirmar' ? 'Cargar' :
+                  {/* Botón Cargar (Naranja YA) */}
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.modalBotonConfirmarCarga}
+                    accessibilityLabel={`Cargar recorrido ${carga.recorrido.nombre}`}
+                    onPress={() => cargar(carga)}
+                  >
+                    <Text style={styles.textoBotonConfirmarCarga}>
+                      {carga.estado === 'confirmar' ? 'Cargar' :
                         carga.estado === 'error-actualizacion' ? 'Reconsultar itinerario' : 'Reintentar carga'}
                     </Text>
                   </Pressable>
-                  {carga.estado !== 'listo' && (
-                    <Pressable accessibilityRole="button" style={styles.botonPendiente} onPress={cerrarModal}>
-                      <Text style={styles.botonTexto}>{carga.estado === 'error-actualizacion' ? 'Cerrar' : 'Cancelar'}</Text>
-                    </Pressable>
-                  )}
+
+                  {/* Botón Cancelar (Borde Azul Ruta) */}
+                  <Pressable accessibilityRole="button" style={styles.modalBotonCancelar} onPress={cerrarModal}>
+                    <Text style={styles.textoModalCancelar}>
+                      {carga.estado === 'error-actualizacion' ? 'Cerrar' : 'Cancelar'}
+                    </Text>
+                  </Pressable>
                 </>
               )}
             </View>
@@ -347,27 +524,396 @@ const styles = StyleSheet.create({
   logo: { width: 34, height: 34 },
   titulo: { flex: 1, color: RepartoYA.blanco, fontSize: 21, fontWeight: '800' },
   contenido: { flex: 1, backgroundColor: RepartoYA.cremaPan },
-  espaciado: { padding: 16, gap: 12 },
-  tarjeta: { backgroundColor: RepartoYA.blanco, borderRadius: 16, padding: 16, gap: 12 },
-  contador: { color: RepartoYA.azulRuta, fontSize: 15, fontWeight: '700' },
-  nombre: { color: RepartoYA.azulRuta, fontSize: 18, fontWeight: '800' },
-  texto: { color: RepartoYA.grisTexto, fontSize: 14 },
-  acciones: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  iconoVacio: { width: 32, height: 32 },
-  icono: { width: 18, height: 18 },
-  botonPendiente: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44,
-    paddingHorizontal: 12, borderWidth: 1, borderColor: RepartoYA.grisBorde, borderRadius: 12,
-    backgroundColor: RepartoYA.grisFondo,
+  espaciado: { padding: 16, gap: 12, paddingBottom: 40 },
+
+  subtituloHeader: {
+    color: '#2F537B',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    marginBottom: 4,
   },
-  reintentar: { alignSelf: 'flex-start', backgroundColor: RepartoYA.naranjaYA, padding: 12, borderRadius: 12 },
-  botonCargar: { backgroundColor: RepartoYA.blanco, borderColor: RepartoYA.azulRuta },
-  botonEliminar: { backgroundColor: RepartoYA.errorFondo, borderColor: RepartoYA.error },
-  textoEliminar: { color: RepartoYA.error },
-  modalFondo: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingHorizontal: 28 },
-  modalTarjeta: { backgroundColor: RepartoYA.blanco, borderRadius: 16, padding: 24, gap: 12 },
-  modalBoton: { backgroundColor: RepartoYA.naranjaYA, borderRadius: 10, padding: 14, alignItems: 'center' },
-  modalEliminar: { backgroundColor: RepartoYA.error, borderRadius: 10, padding: 14, alignItems: 'center' },
-  textoModalEliminar: { color: RepartoYA.blanco, fontSize: 14, fontWeight: '700' },
-  botonTexto: { color: RepartoYA.carbon, fontSize: 14, fontWeight: '700' },
+
+  botonGuardarOrdenPrincipal: {
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    shadowColor: RepartoYA.carbon,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  textoBotonGuardarOrden: {
+    color: RepartoYA.blanco,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+
+  tarjetaAviso: {
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 12,
+    padding: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: RepartoYA.azulRuta,
+  },
+
+  tarjeta: {
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#E8EDF2',
+  },
+  tarjetaCargada: {
+    borderColor: RepartoYA.exito,
+    backgroundColor: '#F7FDF9',
+  },
+
+  tarjetaEncabezadoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  cuadroIcono: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#EEF3F8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cuadroIconoCargado: {
+    backgroundColor: '#E8F8EE',
+  },
+  iconoTarjeta: {
+    width: 24,
+    height: 24,
+  },
+  tildeVerde: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: RepartoYA.exito,
+  },
+  infoRecorrido: {
+    flex: 1,
+    gap: 2,
+  },
+  nombre: {
+    color: RepartoYA.azulRuta,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  metadatosTexto: {
+    color: RepartoYA.grisTexto,
+    fontSize: 13,
+  },
+
+  filaContador: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  seccionTitulo: {
+    color: RepartoYA.azulRuta,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  contador: {
+    color: RepartoYA.azulRuta,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  avisoAsignacion: {
+    backgroundColor: '#F0F4F8',
+    borderRadius: 12,
+    padding: 12,
+    gap: 6,
+  },
+  linkReintentarAsignacion: {
+    color: RepartoYA.azulRuta,
+    fontSize: 13,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+
+  acciones: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  botonCargarAccion: {
+    flex: 1,
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoBotonCargar: {
+    color: RepartoYA.blanco,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  botonEliminarAccion: {
+    flex: 1,
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.azulRuta,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoBotonEliminar: {
+    color: RepartoYA.azulRuta,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  botonDeshabilitado: {
+    backgroundColor: RepartoYA.grisFondo,
+    borderWidth: 0,
+  },
+  textoDeshabilitado: {
+    color: RepartoYA.grisTexto,
+  },
+
+  tarjetaVacia: {
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  iconoVacioGrande: {
+    width: 56,
+    height: 56,
+    marginBottom: 6,
+  },
+  nombreVacio: {
+    color: RepartoYA.azulRuta,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  textoVacioAyuda: {
+    color: RepartoYA.grisTexto,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 8,
+  },
+
+  reintentar: {
+    alignSelf: 'flex-start',
+    backgroundColor: RepartoYA.naranjaYA,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  botonTextoReintentar: {
+    color: RepartoYA.blanco,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  texto: { color: RepartoYA.grisTexto, fontSize: 14 },
+  textoError: { color: RepartoYA.error, fontSize: 13, fontWeight: '600', lineHeight: 18 },
+
+  toastCargaContainer: {
+    position: 'absolute',
+    bottom: 24,
+    left: 16,
+    right: 16,
+    backgroundColor: '#1E40AF',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  toastCargaCheckCirculo: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  toastCargaTextos: {
+    flex: 1,
+    gap: 2,
+  },
+  toastCargaTitulo: {
+    color: RepartoYA.blanco,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  toastCargaSubtitulo: {
+    color: '#E0E7FF',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+  toastEliminadoContainer: {
+    position: 'absolute',
+    bottom: 24,
+    left: 20,
+    right: 20,
+    backgroundColor: '#123C6B',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  toastCheckCirculo: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: RepartoYA.blanco,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  toastCheckTexto: {
+    color: '#123C6B',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  toastEliminadoTexto: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  modalFondo: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 24,
+  },
+  modalTarjeta: {
+    width: '100%',
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalIconoCirculo: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFF2EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  modalIconoImagen: {
+    width: 28,
+    height: 28,
+  },
+  modalTitulo: {
+    color: RepartoYA.azulRuta,
+    fontSize: 20,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  modalMensaje: {
+    color: RepartoYA.grisTexto,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  modalCajaRecorrido: {
+    width: '100%',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+  },
+  modalCajaRecorridoNombre: {
+    color: RepartoYA.azulRuta,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modalCargandoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  modalBotonConfirmarEliminar: {
+    width: '100%',
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  textoModalEliminar: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  modalBotonConfirmarCarga: {
+    width: '100%',
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  textoBotonConfirmarCarga: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  modalBotonCancelar: {
+    width: '100%',
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.azulRuta,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  textoModalCancelar: {
+    color: RepartoYA.azulRuta,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modalBotonActualizar: {
+    backgroundColor: RepartoYA.azulRuta,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  textoBotonActualizar: {
+    color: RepartoYA.blanco,
+    fontSize: 13,
+    fontWeight: '700',
+  },
 });

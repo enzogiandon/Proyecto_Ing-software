@@ -110,6 +110,73 @@ class Command(BaseCommand):
             admin_user.set_password("123")
             admin_user.save()
 
+            grupo_conciliacion, _ = Group.objects.get_or_create(name=Grupos.ADMIN_CONCILIACION)
+            grupo_planificacion, _ = Group.objects.get_or_create(name=Grupos.ADMIN_PLANIFICACION)
+            grupo_personal, _ = Group.objects.get_or_create(name=Grupos.GESTION_PERSONAL)
+
+            conciliacion, _ = Usuario.objects.get_or_create(
+                username="22222222",
+                defaults={
+                    "first_name": "Conciliacion",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            conciliacion.is_staff = True
+            conciliacion.is_superuser = False
+            conciliacion.is_active = True
+            conciliacion.intentos_fallidos = 0
+            conciliacion.set_password("123")
+            conciliacion.groups.add(grupo_conciliacion)
+            conciliacion.save()
+
+            planificacion, _ = Usuario.objects.get_or_create(
+                username="33333333",
+                defaults={
+                    "first_name": "Planificacion",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            planificacion.is_staff = True
+            planificacion.is_superuser = False
+            planificacion.is_active = True
+            planificacion.intentos_fallidos = 0
+            planificacion.set_password("123")
+            planificacion.groups.add(grupo_planificacion)
+            planificacion.save()
+
+            personal, _ = Usuario.objects.get_or_create(
+                username="44444444",
+                defaults={
+                    "first_name": "Personal",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            personal.is_staff = True
+            personal.is_superuser = False
+            personal.is_active = True
+            personal.intentos_fallidos = 0
+            personal.set_password("123")
+            personal.groups.add(grupo_personal)
+            personal.save()
+
             # ------------------------------------------------------------------
             # 2. Vehículos
             # ------------------------------------------------------------------
@@ -658,6 +725,9 @@ class Command(BaseCommand):
             self.style.SUCCESS("✓ Datos maestros cargados exitosamente.")
         )
         self.stdout.write("  • Superusuario: 11111111 (clave: 123)")
+        self.stdout.write("  • Administrativo Conciliacion: 22222222 (clave: 123)")
+        self.stdout.write("  • Administrativo Planificacion: 33333333 (clave: 123)")
+        self.stdout.write("  • Administrativo Gestion Personal: 44444444 (clave: 123)")
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
         if options["con_remitos"]:

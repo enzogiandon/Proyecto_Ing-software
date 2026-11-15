@@ -9,14 +9,15 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
+
+from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
+from apps.itinerarios.models import EstadoItinerario, EstadoParada, Itinerario, Parada
 from apps.remitos.models import (
-    Remito,
-    ImportacionRemitos,
     EstadoImportacion,
     EstadoRemito,
+    ImportacionRemitos,
+    Remito,
 )
-from apps.itinerarios.models import Parada, EstadoParada, EstadoItinerario, Itinerario
-from apps.cobranza.models import Cobranza, DetallePago, EstadoCobranza
 
 from .forms import (
     EmpleadoCreateForm,
@@ -208,8 +209,8 @@ class Inicio(LoginRequiredMixin, TemplateView):
         # --------------------------------------------------
         # Planificación
         # --------------------------------------------------
-        context["remitos_asignados"] = Remito.objects.filter(
-            estado=EstadoRemito.ASIGNADO
+        context["remitos_pendientes"] = Remito.objects.filter(
+            estado=EstadoRemito.PENDIENTE
         ).count()
         context["itinerarios_asignados"] = Itinerario.objects.filter(
             estado=EstadoItinerario.ASIGNADO
@@ -221,16 +222,11 @@ class Inicio(LoginRequiredMixin, TemplateView):
         # --------------------------------------------------
         # Conciliación
         # --------------------------------------------------
-        context["cobranzas_para_validar"] = Cobranza.objects.filter(
-            estado=EstadoCobranza.REGISTRADO
-        ).count()
-
-        # Mismo caso: pagos con diferencia en una sola query
         pagos_stats = Cobranza.objects.aggregate(
             para_validar=Count("id", filter=Q(estado=EstadoCobranza.REGISTRADO)),
             con_diferencia=Count("id", filter=Q(estado=EstadoCobranza.DIFIERE)),
         )
-        context["cobranzas_para_validar"] = pagos_stats["para_validar"]
+        context["cobranza_para_validar"] = pagos_stats["para_validar"]
         context["cobranza_con_diferencia"] = pagos_stats["con_diferencia"]
 
         context["ultimos_empleados"] = (

@@ -230,11 +230,25 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Expo & React Native / Node
+# ==========================================
+# Node.js / Dependencias
+# ==========================================
 node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.pnpm-debug.log*
+
+# ==========================================
+# Expo / React Native
+# ==========================================
 .expo/
+dist/
 web-build/
+.env*.local
 expo-env.d.ts
+.metro-health-check*
+*.tsbuildinfo
 
 # Native builds & keystores
 .kotlin/
@@ -244,9 +258,3 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
-
-# Metro & logs
-.metro-health-check*
-npm-debug.*
-yarn-debug.*
-yarn-error.*

@@ -693,6 +693,15 @@ class Command(BaseCommand):
         self.stdout.write("   • Disponible: AE789GH (Ford Cargo 915) -> Caso de prueba: Asignación a nuevo chofer.")
 
         self.stdout.write(self.style.WARNING("\n4. Logística y Planificación de Itinerarios (Remitos Pendientes)"))
+        self.stdout.write("   • Caso Consolidación Multimarca (mismo comercio, varias marcas):")
+        self.stdout.write("     - Supermercado Los Hermanos : 2 remitos (Quilmes + Molinos)")
+        self.stdout.write("     - Almacén Don Tito          : 2 remitos (Quilmes + Arcor)")
+        self.stdout.write("     - Minimercado San Jorge     : 2 remitos (Molinos + Arcor)")
+        self.stdout.write("     -> Caso de prueba: Probar consolidación automática/manual de marcas en una misma parada.")
+        self.stdout.write("   • Caso Entregas Individuales:")
+        self.stdout.write("     - Autoservicio El Sol       : 1 remito (Molinos)")
+        self.stdout.write("     - Kiosco Open 25            : 1 remito (Arcor)")
+        self.stdout.write("     - Distribuidora Mitre SRL   : 1 remito (Quilmes)")
         if options["con_remitos"]:
             self.stdout.write(
                 f"   • Total: {len(remitos_definicion)} remitos PENDIENTES ({total_remitos} nuevos), {len(comercios_data)} comercios, {len(marcas_data)} marcas."

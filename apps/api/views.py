@@ -1,7 +1,11 @@
 import time
 from decimal import Decimal
 
-import mercadopago
+try:
+    import mercadopago
+except ImportError:
+    mercadopago = None
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -47,7 +51,13 @@ from .serializers import (
 )
 
 User = get_user_model()
-sdk = mercadopago.SDK(settings.MERCADO_PAGO_ACCESS_TOKEN)
+if mercadopago is not None:
+    try:
+        sdk = mercadopago.SDK(getattr(settings, "MERCADO_PAGO_ACCESS_TOKEN", ""))
+    except Exception:
+        sdk = None
+else:
+    sdk = None
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -395,6 +405,12 @@ class ParadaViewSet(viewsets.ModelViewSet):
         POST /api/paradas/{id}/crear-preferencia-mp/
         Body: {"monto": 5000.00}
         """
+        if not sdk:
+            return Response(
+                {"error": "Mercado Pago no está configurado o disponible en el servidor."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         parada = self.get_object()
         monto = request.data.get("monto")
 
@@ -448,6 +464,12 @@ class ParadaViewSet(viewsets.ModelViewSet):
         POST /api/paradas/{id}/verificar-cobro-mp/
         Body: {"cobro_ref": "cobro_1_1730592839123"}
         """
+        if not sdk:
+            return Response(
+                {"error": "Mercado Pago no está configurado o disponible en el servidor."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         cobro_ref = request.data.get("cobro_ref")
 
         if not cobro_ref:

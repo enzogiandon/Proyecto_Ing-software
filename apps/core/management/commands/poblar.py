@@ -1,9 +1,11 @@
 # apps/core/management/commands/poblar_db.py
 
 from decimal import Decimal
+from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -41,6 +43,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE("Iniciando la carga de datos de prueba..."))
 
+        # Asegurar que existan todos los grupos y permisos del sistema
+        call_command("crear_grupos", stdout=StringIO())
+
         with transaction.atomic():
             if options["limpiar"]:
                 self.stdout.write("Limpiando datos existentes...")
@@ -68,7 +73,8 @@ class Command(BaseCommand):
                 Transportista.objects.all().delete()
                 Vehiculo.objects.all().delete()
 
-                Usuario.objects.filter(is_superuser=False).delete()
+                # Desbloquear todos los usuarios (superusuario y regulares)
+                Usuario.objects.all().update(is_active=True, intentos_fallidos=0)
 
             # ------------------------------------------------------------------
             # 1. Superusuario Administrador
@@ -88,8 +94,13 @@ class Command(BaseCommand):
             admin_user.is_staff = True
             admin_user.is_superuser = True
             admin_user.is_active = True
+            admin_user.intentos_fallidos = 0
             admin_user.set_password("123")
             admin_user.save()
+
+            # Asignar todos los roles por defecto al superusuario
+            todos_los_grupos = Group.objects.filter(name__in=Grupos.values)
+            admin_user.groups.set(todos_los_grupos)
 
             # ------------------------------------------------------------------
             # 2. Vehículos
@@ -153,6 +164,8 @@ class Command(BaseCommand):
                         "is_active": True,
                     },
                 )
+                user.is_active = True
+                user.intentos_fallidos = 0
                 user.groups.add(grupo_transportista)
                 user.set_password("123")
                 user.save()
@@ -337,15 +350,51 @@ class Command(BaseCommand):
                 if creado:
                     total_remitos += 1
 
+        self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros y remitos cargados exitosamente.")
         )
-        self.stdout.write("  • Superusuario: 11111111 (clave: 11111111)")
-        self.stdout.write(f"  • Comercios: {len(comercios_data)}")
-        self.stdout.write(f"  • Marcas: {len(marcas_data)}")
         self.stdout.write(
-            f"  • Remitos PENDIENTES: {len(remitos_definicion)} ({total_remitos} nuevos)"
+            self.style.HTTP_INFO("\n" + "=" * 70)
         )
         self.stdout.write(
-            "  • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)"
+            self.style.HTTP_INFO("📋 CASOS DE PRUEBA Y CREDENCIALES DISPONIBLES")
+        )
+        self.stdout.write(
+            self.style.HTTP_INFO("=" * 70)
+        )
+
+        self.stdout.write(self.style.WARNING("\n1. Superusuario (Administrador con todos los roles)"))
+        self.stdout.write("   • DNI / Usuario : 11111111")
+        self.stdout.write("   • Contraseña    : 123")
+        self.stdout.write("   • Roles         : Todos (Planificación, Conciliación, Gestión de Personal, Transportista)")
+        self.stdout.write("   • Caso de prueba: Acceso completo a todos los módulos del panel administrativo web.")
+
+        self.stdout.write(self.style.WARNING("\n2. Transportistas (Choferes - App Móvil / Rutas)"))
+        self.stdout.write("   • Chofer 1: DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD (Mercedes-Benz Accelo 815)")
+        self.stdout.write("   • Chofer 2: DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF (Iveco Daily 70C17)")
+        self.stdout.write("   • Caso de prueba: Inicio de sesión en App Móvil, hojas de ruta asignadas, entregas y cobranzas.")
+
+        self.stdout.write(self.style.WARNING("\n3. Flota de Vehículos"))
+        self.stdout.write("   • Asignados : AF123CD, AG456EF (a choferes de prueba)")
+        self.stdout.write("   • Disponible: AE789GH (Ford Cargo 915) -> Caso de prueba: Asignación a nuevo chofer.")
+
+        self.stdout.write(self.style.WARNING("\n4. Logística y Planificación de Itinerarios (Remitos Pendientes)"))
+        self.stdout.write("   • Caso Consolidación Multimarca (mismo comercio, varias marcas):")
+        self.stdout.write("     - Supermercado Los Hermanos : 2 remitos (Quilmes + Molinos)")
+        self.stdout.write("     - Almacén Don Tito          : 2 remitos (Quilmes + Arcor)")
+        self.stdout.write("     - Minimercado San Jorge     : 2 remitos (Molinos + Arcor)")
+        self.stdout.write("     -> Caso de prueba: Probar consolidación automática/manual de marcas en una misma parada.")
+        self.stdout.write("   • Caso Entregas Individuales:")
+        self.stdout.write("     - Autoservicio El Sol       : 1 remito (Molinos)")
+        self.stdout.write("     - Kiosco Open 25            : 1 remito (Arcor)")
+        self.stdout.write("     - Distribuidora Mitre SRL   : 1 remito (Quilmes)")
+        self.stdout.write(
+            f"   • Total: {len(remitos_definicion)} remitos PENDIENTES ({total_remitos} nuevos), {len(comercios_data)} comercios, {len(marcas_data)} marcas."
+        )
+        self.stdout.write(
+            "   • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)."
+        )
+        self.stdout.write(
+            self.style.HTTP_INFO("=" * 70 + "\n")
         )

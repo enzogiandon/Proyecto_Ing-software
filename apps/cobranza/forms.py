@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django import forms
 from django.forms import BaseInlineFormSet, formset_factory, inlineformset_factory
+from django.utils.functional import cached_property
 
 from .models import AjusteCobranza, Cobranza, DetallePago, EstadoCobranza
 
@@ -42,10 +43,16 @@ class DetallePagoValidarForm(forms.ModelForm):
         self.fields["monto_verificado"].required = False
 
     def has_changed(self):
-        # Si la instancia no tenía monto_verificado (None) o se limpió a 0.00, forzamos que guarde
-        if self.instance and self.instance.pk and self.instance.monto_verificado is None:
-            return True
-        return super().has_changed()
+        return bool(self.changed_data)
+
+    @cached_property
+    def changed_data(self):
+        data = super().changed_data
+        if "monto_verificado" not in data:
+            initial_val = self.initial.get("monto_verificado")
+            if initial_val is None and self.is_bound:
+                data = list(data) + ["monto_verificado"]
+        return data
 
     def clean_monto_verificado(self):
         monto = self.cleaned_data.get("monto_verificado")

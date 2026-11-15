@@ -242,38 +242,63 @@ class ImportarRemitos(CreateView):
                     lotes_guardados += 1
 
                     if errores_filas:
-                        for f_num, mot in errores_filas:
-                            ErrorImportacion.objects.create(
+                        errores_objs = [
+                            ErrorImportacion(
                                 importacion=importacion,
                                 fila=f_num,
                                 motivo=mot,
                             )
+                            for f_num, mot in errores_filas
+                        ]
+                        ErrorImportacion.objects.bulk_create(errores_objs, batch_size=100)
                         errores.append(
                             f"El archivo {nombre_archivo} contiene {len(errores_filas)} errores y fue rechazado (Lote #{importacion.id})."
                         )
                     else:
-                        remitos_creados_lote = 0
-                        for d in datos_validados:
-                            comercio, _ = Comercio.objects.get_or_create(
-                                cuit=d["cuit_comercio"],
-                                defaults={
-                                    "razon_social": d["razon_social"],
-                                    "domicilio": d["domicilio"],
-                                    "activo": True,
-                                },
-                            )
+                        # 1. Obtener comercios existentes y crear los que falten en bloque
+                        cuits_en_archivo = {d["cuit_comercio"] for d in datos_validados}
+                        comercios_existentes = {
+                            c.cuit: c
+                            for c in Comercio.objects.filter(cuit__in=cuits_en_archivo)
+                        }
 
-                            Remito.objects.create(
+                        comercios_a_crear = []
+                        cuits_por_crear = set()
+                        for d in datos_validados:
+                            cuit = d["cuit_comercio"]
+                            if cuit not in comercios_existentes and cuit not in cuits_por_crear:
+                                cuits_por_crear.add(cuit)
+                                comercios_a_crear.append(
+                                    Comercio(
+                                        cuit=cuit,
+                                        razon_social=d["razon_social"],
+                                        domicilio=d["domicilio"],
+                                        activo=True,
+                                    )
+                                )
+
+                        if comercios_a_crear:
+                            Comercio.objects.bulk_create(comercios_a_crear, batch_size=1000)
+                            for c in Comercio.objects.filter(cuit__in=cuits_por_crear):
+                                comercios_existentes[c.cuit] = c
+
+                        # 2. Crear todos los remitos del lote en bloque
+                        remitos_a_crear = [
+                            Remito(
                                 numero=d["numero"],
                                 marca=marca,
-                                comercio=comercio,
+                                comercio=comercios_existentes[d["cuit_comercio"]],
                                 total=d["total"],
                                 estado=EstadoRemito.PENDIENTE,
                                 parada=None,
                                 importacion=importacion,
                                 eliminado=False,
                             )
-                            remitos_creados_lote += 1
+                            for d in datos_validados
+                        ]
+
+                        Remito.objects.bulk_create(remitos_a_crear, batch_size=1000)
+                        remitos_creados_lote = len(remitos_a_crear)
 
                         importacion.cantidad = remitos_creados_lote
                         importacion.estado = EstadoImportacion.EXITO

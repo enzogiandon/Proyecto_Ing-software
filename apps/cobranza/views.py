@@ -1,17 +1,15 @@
-from decimal import Decimal
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import (
     CreateView,
     DetailView,
     ListView,
     UpdateView,
-    View,
 )
 
 from .forms import (
@@ -22,11 +20,12 @@ from .forms import (
 from .models import AjusteCobranza, Cobranza, EstadoCobranza
 
 
-class ListaCobranza(ListView):
+class ListaCobranza(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Cobranza
     template_name = "cobranza/cobranza_lista.html"
     context_object_name = "cobranzas"
     paginate_by = 25
+    permission_required = "cobranza.view_cobranza"
 
     def get_queryset(self):
         qs = super().get_queryset().select_related("parada__comercio").order_by("-id")
@@ -56,10 +55,11 @@ class ListaCobranza(ListView):
         return context
 
 
-class DetalleCobranza(DetailView):
+class DetalleCobranza(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Cobranza
     template_name = "cobranza/cobranza_detalle.html"
     context_object_name = "cobranza"
+    permission_required = "cobranza.view_cobranza"
 
     def get_queryset(self):
         return (
@@ -91,11 +91,12 @@ class DetalleCobranza(DetailView):
         return context
 
 
-class ValidarCobranza(UpdateView):
+class ValidarCobranza(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Cobranza
     form_class = ValidarCobranzaForm
     template_name = "cobranza/cobranza_validar.html"
     context_object_name = "cobranza"
+    permission_required = ("cobranza.change_cobranza", "cobranza.change_detallepago")
 
     def dispatch(self, request, *args, **kwargs):
         cobranza = self.get_object()
@@ -166,11 +167,14 @@ class ValidarCobranza(UpdateView):
         )
 
 
-class AjustarCobranza(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class AjustarCobranza(
+    LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView
+):
     model = AjusteCobranza
     form_class = AjusteCobranzaForm
     template_name = "cobranza/cobranza_ajustar.html"
     success_message = "Ajuste registrado correctamente en la cobranza."
+    permission_required = "cobranza.add_ajustecobranza"
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -205,11 +209,12 @@ class AjustarCobranza(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return reverse("cobranza:cobranza_detalle", kwargs={"pk": self.cobranza.pk})
 
 
-class ListaAjustesCobranza(LoginRequiredMixin, ListView):
+class ListaAjustesCobranza(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = AjusteCobranza
     template_name = "cobranza/ajuste_lista.html"
     context_object_name = "ajustes"
     paginate_by = 25
+    permission_required = "cobranza.view_ajustecobranza"
 
     def get_queryset(self):
         qs = (

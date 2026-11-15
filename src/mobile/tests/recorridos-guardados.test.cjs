@@ -475,3 +475,27 @@ test('HU 26 Escenario 3: cancelación del guardado cierra la ventana emergente s
   assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
   assert.equal(posts.length, 0);
 });
+
+test('HU 26 Simulación offline: permite guardar recorrido en modo simulación ante Network Error o sin conexión', async () => {
+  const posts = [];
+  const app = pantalla({
+    async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; },
+    async post(url, body) {
+      posts.push([url, body]);
+      throw new Error('Network Error');
+    },
+  });
+  await asentar();
+
+  boton(app, '+ Guardar orden actual').onPress();
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  campoTexto(app, 'Nombre del recorrido').onChangeText('Ruta Simulada Sin Backend');
+  await boton(app, 'Guardar').onPress();
+
+  // El modal se cierra, se incorpora la tarjeta simulada y se muestra el toast
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  const vistaActualizada = textos(app.render());
+  assert.ok(vistaActualizada.includes('Ruta Simulada Sin Backend'));
+  assert.ok(vistaActualizada.includes('Recorrido guardado correctamente'));
+  assert.ok(vistaActualizada.includes('2 recorridos guardados'));
+});

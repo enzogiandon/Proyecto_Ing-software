@@ -45,16 +45,43 @@ class RemitoForm(forms.ModelForm):
         }
 
 
+class MultipleFileInput(forms.FileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault(
+            "widget",
+            MultipleFileInput(attrs={"class": "form-control", "accept": ".csv, .xlsx, .xls"}),
+        )
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = [single_file_clean(data, initial)]
+        return result
+
+
 class ImportacionRemitosForm(forms.ModelForm):
+    archivo = MultipleFileField(
+        label="Archivos",
+        help_text="Puede seleccionar uno o varios archivos.",
+    )
+
     class Meta:
         model = ImportacionRemitos
         fields = ["archivo", "marca"]
         widgets = {
             "marca": forms.Select(attrs={"class": "form-select"}),
-            "archivo": forms.FileInput(
-                attrs={"class": "form-control", "accept": ".csv, xlsx, xls"}
-            ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["marca"].required = False
 
 
 class ComercioForm(forms.ModelForm):

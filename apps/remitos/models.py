@@ -1,10 +1,10 @@
 # remitos/models.py
 
 import os
+import uuid
 
 from django.core.validators import RegexValidator
 from django.db import models
-from django.utils import timezone
 
 
 class EstadoImportacion(models.TextChoices):
@@ -51,9 +51,9 @@ class Comercio(models.Model):
 
 
 def ruta_lote(instance, filename):
-    _, extension = os.path.splitext(filename)
-    fecha_str = timezone.now().strftime("%Y-%m-%d_%H-%M-%S")
-    nuevo_nombre = f"lote_{fecha_str}{extension}"
+    nombre_base, extension = os.path.splitext(os.path.basename(filename))
+    hash_sufijo = uuid.uuid4().hex[:8]
+    nuevo_nombre = f"{nombre_base}_{hash_sufijo}{extension}"
 
     return os.path.join("importaciones", nuevo_nombre)
 

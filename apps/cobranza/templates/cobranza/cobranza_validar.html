@@ -135,8 +135,8 @@
                         <label for="{{ form.observacion_ajuste.id_for_label }}" class="itinerarios-filtro-label">
                             Observación de Ajuste / Justificación
                         </label>
-                        {{ form.observacion_ajuste }}
-                        {% if form.observacion_ajuste.errors %}
+                        {{ form.observacion}}
+                        {% if form.observacion.errors %}
                             <div class="text-danger small mt-1">
                                 {{ form.observacion_ajuste.errors.0 }}
                             </div>

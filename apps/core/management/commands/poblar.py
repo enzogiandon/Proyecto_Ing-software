@@ -9,10 +9,14 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
+from datetime import date
+
 from apps.cobranza.models import Cobranza, DetallePago
 from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
+    EstadoItinerario,
+    EstadoParada,
     Itinerario,
     Parada,
     RutaGuardada,
@@ -569,7 +573,7 @@ class Command(BaseCommand):
                     {
                         "numero": "0002-00023458",
                         "marca": marcas["30654321090"],
-                        "comercio": comercios["23200033191"],
+                        "comercio": comercios["23200034562"],
                         "total": Decimal("199477.06"),
                     },
                     {
@@ -582,13 +586,13 @@ class Command(BaseCommand):
                     {
                         "numero": "0002-00015378",
                         "marca": marcas["30709876542"],
-                        "comercio": comercios["23200000145"],
+                        "comercio": comercios["23200039289"],
                         "total": Decimal("475923.72"),
                     },
                     {
                         "numero": "0006-00025539",
                         "marca": marcas["30709876542"],
-                        "comercio": comercios["20200022190"],
+                        "comercio": comercios["23200042867"],
                         "total": Decimal("692074.74"),
                     },
                     {
@@ -601,7 +605,7 @@ class Command(BaseCommand):
                     {
                         "numero": "0004-00003901",
                         "marca": marcas["30712345671"],
-                        "comercio": comercios["23200000145"],
+                        "comercio": comercios["23200039289"],
                         "total": Decimal("733385.18"),
                     },
                     {
@@ -626,13 +630,13 @@ class Command(BaseCommand):
                     {
                         "numero": "0005-00010362",
                         "marca": marcas["33698712347"],
-                        "comercio": comercios["20200070268"],
+                        "comercio": comercios["23200058011"],
                         "total": Decimal("353247.34"),
                     },
                     {
                         "numero": "0006-00028378",
                         "marca": marcas["33698712347"],
-                        "comercio": comercios["23200008855"],
+                        "comercio": comercios["23200060768"],
                         "total": Decimal("609129.43"),
                     },
                 ]
@@ -653,6 +657,65 @@ class Command(BaseCommand):
                     if creado:
                         total_remitos += 1
 
+            # ------------------------------------------------------------------
+            # 7. Itinerario activo y ruta guardada (Chofer Martín Pérez - 12345678)
+            # ------------------------------------------------------------------
+            transportista_martin = Transportista.objects.filter(
+                usuario__username="12345678"
+            ).first()
+            itinerario_martin = None
+            total_paradas_creadas = 0
+
+            if transportista_martin:
+                itinerario_martin, _ = Itinerario.objects.get_or_create(
+                    fecha=date.today(),
+                    transportista=transportista_martin,
+                    defaults={
+                        "estado": EstadoItinerario.ASIGNADO,
+                        "vehiculo": transportista_martin.vehiculo,
+                    },
+                )
+                itinerario_martin.estado = EstadoItinerario.ASIGNADO
+                itinerario_martin.vehiculo = transportista_martin.vehiculo
+                itinerario_martin.save()
+
+                paradas_comercios = list(comercios.values())[:5]
+
+                for orden_idx, com in enumerate(paradas_comercios, start=1):
+                    if com:
+                        parada_obj, _ = Parada.objects.get_or_create(
+                            itinerario=itinerario_martin,
+                            comercio=com,
+                            defaults={
+                                "orden": orden_idx,
+                                "estado": EstadoParada.PENDIENTE,
+                            },
+                        )
+                        parada_obj.orden = orden_idx
+                        parada_obj.estado = EstadoParada.PENDIENTE
+                        parada_obj.save()
+                        total_paradas_creadas += 1
+
+                        # Si existen remitos para el comercio, vincularlos a la parada
+                        Remito.objects.filter(comercio=com, parada__isnull=True).update(
+                            parada=parada_obj,
+                            estado=EstadoRemito.ASIGNADO,
+                        )
+
+                # Ruta guardada de prueba para validar HU-63, HU-64 y HU-65
+                ruta_guardada, _ = RutaGuardada.objects.get_or_create(
+                    transportista=transportista_martin,
+                    nombre="Ruta Costera 12",
+                )
+                DetalleRutaGuardada.objects.filter(ruta_guardada=ruta_guardada).delete()
+                for p_idx, com in enumerate(paradas_comercios[:3], start=1):
+                    if com:
+                        DetalleRutaGuardada.objects.create(
+                            ruta_guardada=ruta_guardada,
+                            comercio=com,
+                            prioridad=p_idx,
+                        )
+
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros cargados exitosamente.")
@@ -662,10 +725,17 @@ class Command(BaseCommand):
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
         if options["con_remitos"]:
             self.stdout.write(
-                f"  • Remitos PENDIENTES: {len(remitos_definicion)} ({total_remitos} nuevos)"
+                f"  • Remitos cargados: {len(remitos_definicion)} ({total_remitos} nuevos)"
             )
         else:
-            self.stdout.write("  • Remitos PENDIENTES: 0 (use --con-remitos para cargarlos)")
+            self.stdout.write("  • Remitos cargados: 0 (use --con-remitos para cargarlos)")
+        if itinerario_martin:
+            self.stdout.write(
+                f"  • Itinerario activo: #{itinerario_martin.id} con {total_paradas_creadas} paradas para Chofer Martín Pérez"
+            )
+            self.stdout.write(
+                "  • Ruta guardada de prueba: 'Ruta Costera 12' (3 comercios)"
+            )
 
         self.stdout.write(
             self.style.HTTP_INFO("\n" + "=" * 70)
@@ -685,8 +755,10 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.WARNING("\n2. Transportistas (Choferes - App Móvil / Rutas)"))
         self.stdout.write("   • Chofer 1: DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD (Mercedes-Benz Accelo 815)")
+        self.stdout.write("     - Caso de prueba: Transportista sin itinerario asignado (estado vacío institucional).")
         self.stdout.write("   • Chofer 2: DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF (Iveco Daily 70C17)")
-        self.stdout.write("   • Caso de prueba: Inicio de sesión en App Móvil, hojas de ruta asignadas, entregas y cobranzas.")
+        self.stdout.write("     - Caso de prueba: Itinerario activo asignado con 5 paradas y ruta guardada 'Ruta Costera 12'.")
+        self.stdout.write("     - Flujo de prueba: Login -> /itinerario -> Reordenar paradas -> Guardar orden -> Rutas guardadas.")
 
         self.stdout.write(self.style.WARNING("\n3. Flota de Vehículos"))
         self.stdout.write("   • Asignados : AF123CD, AG456EF (a choferes de prueba)")
@@ -704,13 +776,14 @@ class Command(BaseCommand):
         self.stdout.write("     - Distribuidora Mitre SRL   : 1 remito (Quilmes)")
         if options["con_remitos"]:
             self.stdout.write(
-                f"   • Total: {len(remitos_definicion)} remitos PENDIENTES ({total_remitos} nuevos), {len(comercios_data)} comercios, {len(marcas_data)} marcas."
+                f"   • Total: {len(remitos_definicion)} remitos ({total_remitos} nuevos), {len(comercios_data)} comercios, {len(marcas_data)} marcas."
             )
         else:
             self.stdout.write("   • Remitos pendientes no generados (use el flag --con-remitos para cargarlos).")
-        self.stdout.write(
-            "   • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)."
-        )
+        if itinerario_martin:
+            self.stdout.write(
+                f"   • Itinerario activo de prueba: #{itinerario_martin.id} (5 paradas) asignado a Chofer Martín Pérez (12345678)."
+            )
         self.stdout.write(
             self.style.HTTP_INFO("=" * 70 + "\n")
         )

@@ -12,6 +12,7 @@ from apps.core.models import Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
     EstadoItinerario,
+    EstadoParada,
     EvidenciaParada,
     Itinerario,
     Parada,
@@ -205,6 +206,58 @@ class ItinerarioViewsTests(TestCase):
         )
         self.assertEqual(remito_response.status_code, 200)
         self.assertContains(remito_response, "$0,00")
+
+    def test_post_quitar_remito_from_parada(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Quitar", "20123456795")
+        parada = Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+            estado=EstadoParada.PENDIENTE,
+        )
+        remito_1 = self.crear_remito(comercio, "R-QUIT-001")
+        remito_1.parada = parada
+        remito_1.estado = EstadoRemito.ASIGNADO
+        remito_1.save()
+
+        remito_2 = self.crear_remito(comercio, "R-QUIT-002")
+        remito_2.parada = parada
+        remito_2.estado = EstadoRemito.ASIGNADO
+        remito_2.save()
+
+        response = self.client.post(
+            reverse("itinerarios:parada_detalle", args=[parada.pk]),
+            {"accion": "quitar_remito", "remito_id": remito_1.pk},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("itinerarios:parada_detalle", args=[parada.pk]),
+        )
+        remito_1.refresh_from_db()
+        self.assertIsNone(remito_1.parada)
+        self.assertEqual(remito_1.estado, EstadoRemito.PENDIENTE)
+        self.assertTrue(Parada.objects.filter(pk=parada.pk).exists())
+
+        # Al quitar el último remito, la parada debe eliminarse
+        response_last = self.client.post(
+            reverse("itinerarios:parada_detalle", args=[parada.pk]),
+            {"accion": "quitar_remito", "remito_id": remito_2.pk},
+        )
+        self.assertRedirects(
+            response_last,
+            reverse("itinerarios:itinerario_lista"),
+        )
+        remito_2.refresh_from_db()
+        self.assertIsNone(remito_2.parada)
+        self.assertEqual(remito_2.estado, EstadoRemito.PENDIENTE)
+        self.assertFalse(Parada.objects.filter(pk=parada.pk).exists())
 
     def test_delivery_list_shows_error_stops_before_other_statuses(self):
         itinerario = Itinerario.objects.create(

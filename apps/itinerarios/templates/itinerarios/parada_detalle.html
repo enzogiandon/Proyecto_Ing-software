@@ -18,12 +18,22 @@
         </a>
     </div>
 
+    <!-- Encabezado con Número y Estado -->
     <header class="d-flex align-items-center gap-3 flex-wrap">
         <h1 class="text-title mb-0">Detalle de entrega #{{ parada.pk }}</h1>
         <span class="itin-badge itin-badge--{{ parada.estado|lower }}">
             {{ parada.get_estado_display }}
         </span>
     </header>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
 
     <div class="remitos-detalle-layout">
         <!-- Columna Izquierda: Información de la Parada y Remitos Asociados -->
@@ -83,6 +93,9 @@
                                     <th>Marca</th>
                                     <th>Estado</th>
                                     <th>Monto</th>
+                                    {% if parada.estado == 'pendiente' %}
+                                        <th class="text-center" style="width: 80px;">Quitar</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -100,6 +113,13 @@
                                             </span>
                                         </td>
                                         <td class="fw-semibold">${{ remito.total|floatformat:2 }}</td>
+                                        {% if parada.estado == 'pendiente' %}
+                                            <td class="text-center">
+                                                <button type="button" class="btn-quitar-parada" onclick="confirmarQuitarRemito('{{ remito.id }}', '{{ remito.numero|escapejs }}')" title="Quitar remito de la entrega">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -150,4 +170,22 @@
         </div>
     </div>
 </div>
+
+{% if parada.estado == 'pendiente' %}
+    <!-- Formulario Oculto para Quitar Remito -->
+    <form method="post" id="formQuitarRemito" style="display: none;">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="quitar_remito">
+        <input type="hidden" name="remito_id" id="inputQuitarRemitoId" value="">
+    </form>
+
+    <script>
+    function confirmarQuitarRemito(remitoId, numeroRemito) {
+        if (confirm('¿Estás seguro de que querés desvincular el Remito #' + numeroRemito + ' de esta parada? Pasará a estado PENDIENTE.')) {
+            document.getElementById("inputQuitarRemitoId").value = remitoId;
+            document.getElementById("formQuitarRemito").submit();
+        }
+    }
+    </script>
+{% endif %}
 {% endblock %}

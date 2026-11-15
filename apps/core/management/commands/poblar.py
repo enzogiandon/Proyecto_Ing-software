@@ -6,11 +6,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from apps.cobranza.models import Cobranza, DetallePago
 from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
+    EstadoItinerario,
+    EstadoParada,
     Itinerario,
     Parada,
     RutaGuardada,
@@ -337,6 +340,62 @@ class Command(BaseCommand):
                 if creado:
                     total_remitos += 1
 
+            # ------------------------------------------------------------------
+            # 8. Itinerario asignado para pruebas del Transportista (HU-24 / HU-26)
+            # ------------------------------------------------------------------
+            transportista_demo = Transportista.objects.filter(
+                usuario__username="1234567"
+            ).first()
+            paradas_creadas = 0
+            if transportista_demo:
+                itinerario_demo, _ = Itinerario.objects.get_or_create(
+                    fecha=timezone.now().date(),
+                    transportista=transportista_demo,
+                    defaults={
+                        "estado": EstadoItinerario.ASIGNADO,
+                        "vehiculo": transportista_demo.vehiculo,
+                    },
+                )
+                if itinerario_demo.estado != EstadoItinerario.ASIGNADO:
+                    itinerario_demo.estado = EstadoItinerario.ASIGNADO
+                    itinerario_demo.save(update_fields=["estado"])
+
+                comercios_itinerario = [
+                    comercios["20283334445"],  # Almacén Don Mario
+                    comercios["27359998881"],  # Autoservicio El Sol
+                    comercios["20365554443"],  # Kiosco Open 25
+                    comercios["30718889991"],  # Distribuidora Mitre SRL
+                ]
+                for orden_num, com in enumerate(comercios_itinerario, start=1):
+                    parada_demo, _ = Parada.objects.get_or_create(
+                        itinerario=itinerario_demo,
+                        comercio=com,
+                        defaults={
+                            "orden": orden_num,
+                            "estado": EstadoParada.PENDIENTE,
+                            "hora_entrega": timezone.now().replace(
+                                hour=9 + orden_num, minute=30, second=0
+                            ),
+                        },
+                    )
+                    Remito.objects.filter(comercio=com, parada__isnull=True).update(
+                        parada=parada_demo
+                    )
+                    paradas_creadas += 1
+
+                # Plantilla inicial de recorrido guardado de prueba
+                ruta_demo, _ = RutaGuardada.objects.get_or_create(
+                    transportista=transportista_demo,
+                    nombre="Ruta Centro Inicial",
+                )
+                ruta_demo.detalles.all().delete()
+                for prio, com in enumerate(comercios_itinerario, start=1):
+                    DetalleRutaGuardada.objects.create(
+                        ruta_guardada=ruta_demo,
+                        comercio=com,
+                        prioridad=prio,
+                    )
+
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros y remitos cargados exitosamente.")
         )
@@ -347,5 +406,5 @@ class Command(BaseCommand):
             f"  • Remitos PENDIENTES: {len(remitos_definicion)} ({total_remitos} nuevos)"
         )
         self.stdout.write(
-            "  • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)"
+            f"  • Itinerario asignado para Lautaro Gómez: {paradas_creadas} paradas y plantilla 'Ruta Centro Inicial'"
         )

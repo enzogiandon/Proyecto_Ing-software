@@ -83,7 +83,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         itinerario = Itinerario.objects.filter(
             transportista=user.perfil_transportista,
             estado__in=[EstadoItinerario.ASIGNADO],
-        ).first()
+        ).order_by("-fecha", "-id").first()
 
         if not itinerario:
             raise ValidationError(
@@ -130,7 +130,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         itinerario = Itinerario.objects.filter(
             transportista=user.perfil_transportista,
             estado__in=[EstadoItinerario.ASIGNADO],
-        ).first()
+        ).order_by("-fecha", "-id").first()
 
         if not itinerario:
             return Response(None, status=status.HTTP_404_NOT_FOUND)
@@ -204,15 +204,18 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         parada_ids = serializer.validated_data["parada_ids"]
         paradas_actuales = {p.id: p for p in itinerario.paradas.all()}
 
-        if set(parada_ids) != set(paradas_actuales.keys()):
+        if not set(parada_ids).issubset(set(paradas_actuales.keys())):
             raise ValidationError(
                 {
-                    "detail": "La lista enviada no coincide exactamente con las paradas del itinerario."
+                    "detail": "Las paradas enviadas no pertenecen al itinerario activo."
                 }
             )
 
+        paradas_no_mencionadas = [p_id for p_id in paradas_actuales if p_id not in parada_ids]
+        orden_completo = list(parada_ids) + paradas_no_mencionadas
+
         paradas_para_actualizar = []
-        for index, p_id in enumerate(parada_ids, start=1):
+        for index, p_id in enumerate(orden_completo, start=1):
             parada = paradas_actuales[p_id]
             parada.orden = index
             paradas_para_actualizar.append(parada)
@@ -239,19 +242,18 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         nombre_ruta = serializer.validated_data["nombre"].strip()
-        parada_ids = serializer.validated_data["parada_ids"]
+        parada_ids = serializer.validated_data.get("parada_ids") or []
 
-        # Validar que las paradas pertenezcan al itinerario actual
+        # Validar que las paradas pertenezcan al itinerario actual.
+        # Si no se enviaron o ninguna coincide, tomamos el orden actual completo del itinerario activo.
         paradas_dict = {p.id: p for p in itinerario.paradas.select_related("comercio")}
-        if not set(parada_ids).issubset(set(paradas_dict.keys())):
-            raise ValidationError(
-                {
-                    "detail": (
-                        "Algunas de las paradas indicadas no pertenecen a tu"
-                        " itinerario activo."
-                    )
-                }
-            )
+        if not parada_ids:
+            parada_ids = list(itinerario.paradas.order_by("orden").values_list("id", flat=True))
+        else:
+            paradas_validas = [p_id for p_id in parada_ids if p_id in paradas_dict]
+            if not paradas_validas:
+                paradas_validas = list(itinerario.paradas.order_by("orden").values_list("id", flat=True))
+            parada_ids = paradas_validas
 
         transportista = request.user.perfil_transportista
 

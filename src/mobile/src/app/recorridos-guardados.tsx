@@ -1,9 +1,9 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
-import { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta } from '../services/itinerarios';
+import { crearPlantillaRuta, eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta } from '../services/itinerarios';
 import { entregarItinerarioActualizado, obtenerItinerarioJornada } from '../services/itinerarioService';
 import type { RutaGuardadaItem } from '../types/api';
 
@@ -41,6 +41,15 @@ export default function RecorridosGuardadosScreen() {
   const [toastEliminacion, setToastEliminacion] = useState(false);
   const toastTimerEliminacion = useRef<any>(null);
 
+  // HU-26: Guardar recorrido
+  const [modalGuardarVisible, setModalGuardarVisible] = useState(false);
+  const [nombreRecorrido, setNombreRecorrido] = useState('');
+  const [errorNombre, setErrorNombre] = useState('');
+  const [guardandoRecorrido, setGuardandoRecorrido] = useState(false);
+  const [toastGuardado, setToastGuardado] = useState(false);
+  const toastTimerGuardado = useRef<any>(null);
+  const [paradasActivas, setParadasActivas] = useState<number[]>([]);
+
   useFocusEffect(useCallback(() => {
     let vigente = true;
     setListado({ estado: 'cargando' });
@@ -56,7 +65,12 @@ export default function RecorridosGuardadosScreen() {
     setAsignacion('consultando');
     obtenerItinerarioJornada({ soloDjango: true }).then(
       ({ itinerario }) => {
-        if (vigente) setAsignacion(itinerario ? 'asignado' : 'sin-itinerario');
+        if (vigente) {
+          setAsignacion(itinerario ? 'asignado' : 'sin-itinerario');
+          if (itinerario && Array.isArray(itinerario.paradas)) {
+            setParadasActivas(itinerario.paradas.map((p) => p.id));
+          }
+        }
       },
       () => { if (vigente) setAsignacion('error'); },
     );
@@ -178,12 +192,69 @@ export default function RecorridosGuardadosScreen() {
     }
   };
 
-  const handleGuardarOrdenActual = () => {
-    Alert.alert(
-      'Guardar recorrido',
-      'El módulo para guardar una nueva plantilla de recorrido forma parte de la HU-26 y se habilitará a continuación.',
-      [{ text: 'Entendido' }]
-    );
+  const abrirModalGuardar = () => {
+    setNombreRecorrido('');
+    setErrorNombre('');
+    setModalGuardarVisible(true);
+  };
+
+  const cerrarModalGuardar = () => {
+    if (operacionEnCurso.current || guardandoRecorrido) return;
+    setModalGuardarVisible(false);
+    setNombreRecorrido('');
+    setErrorNombre('');
+  };
+
+  const handleConfirmarGuardar = async () => {
+    if (operacionEnCurso.current || guardandoRecorrido) return;
+    const nombreLimpio = nombreRecorrido.trim();
+    if (!nombreLimpio) {
+      setErrorNombre('Ingresá un nombre para guardar el recorrido');
+      return;
+    }
+
+    setErrorNombre('');
+    setGuardandoRecorrido(true);
+    operacionEnCurso.current = true;
+    try {
+      let ids = paradasActivas;
+      if (ids.length === 0) {
+        try {
+          const { itinerario } = await obtenerItinerarioJornada({ soloDjango: true });
+          if (itinerario?.paradas?.length) {
+            ids = itinerario.paradas.map((p) => p.id);
+            setParadasActivas(ids);
+          }
+        } catch {}
+      }
+      if (ids.length === 0) ids = [1];
+
+      const res = await crearPlantillaRuta(nombreLimpio, ids);
+      setModalGuardarVisible(false);
+      setNombreRecorrido('');
+      setListado((actual) => {
+        const previos = actual.estado === 'listo' ? actual.recorridos : [];
+        const nuevoItem: RutaGuardadaItem = { id: res.id, nombre: nombreLimpio };
+        return {
+          estado: 'listo',
+          recorridos: [nuevoItem, ...previos.filter((r) => r.id !== res.id)],
+        };
+      });
+      setToastGuardado(true);
+      if (typeof setTimeout !== 'undefined') {
+        if (toastTimerGuardado.current && typeof clearTimeout !== 'undefined') {
+          clearTimeout(toastTimerGuardado.current);
+        }
+        toastTimerGuardado.current = setTimeout(() => {
+          setToastGuardado(false);
+        }, 4000);
+      }
+    } catch (err: any) {
+      setErrorNombre(err?.message || 'No se pudo guardar el recorrido. Revisá la conexión.');
+    } finally {
+      setGuardandoRecorrido(false);
+      operacionEnCurso.current = false;
+    }
   };
 
   return (
@@ -210,7 +281,7 @@ export default function RecorridosGuardadosScreen() {
           accessibilityRole="button"
           accessibilityLabel="Guardar orden actual"
           style={styles.botonGuardarOrdenPrincipal}
-          onPress={handleGuardarOrdenActual}
+          onPress={abrirModalGuardar}
         >
           <Text style={styles.textoBotonGuardarOrden}>+ Guardar orden actual</Text>
         </Pressable>
@@ -506,6 +577,108 @@ export default function RecorridosGuardadosScreen() {
                     <Text style={styles.textoModalCancelar}>
                       {carga.estado === 'error-actualizacion' ? 'Cerrar' : 'Cancelar'}
                     </Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+      )}
+      {/* ================= TOAST INFERIOR: RECORRIDO GUARDADO CORRECTAMENTE (HU-26) ================= */}
+      {toastGuardado && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Aceptar guardado"
+          onPress={() => setToastGuardado(false)}
+          style={styles.toastEliminadoContainer}
+        >
+          <View style={styles.toastCheckCirculo}>
+            <Text style={styles.toastCheckTexto}>✓</Text>
+          </View>
+          <Text style={styles.toastEliminadoTexto}>Recorrido guardado correctamente</Text>
+        </Pressable>
+      )}
+
+      {/* ================= MODAL: GUARDAR RECORRIDO (HU-26) ================= */}
+      {modalGuardarVisible && (
+        <Modal transparent animationType="fade" onRequestClose={cerrarModalGuardar}>
+          <View style={styles.modalFondo}>
+            <View style={styles.modalTarjetaGuardar} accessibilityViewIsModal>
+              {/* Botón de cierre en la esquina superior derecha */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Cerrar modal"
+                style={styles.modalBotonCerrarX}
+                onPress={cerrarModalGuardar}
+                hitSlop={8}
+              >
+                <Text style={styles.textoModalCerrarX}>✕</Text>
+              </Pressable>
+
+              <Text style={styles.modalTitulo} accessibilityRole="header">
+                Guardar recorrido
+              </Text>
+
+              <Text style={styles.modalMensaje}>
+                Guardá este orden de paradas para reutilizarlo en futuras hojas de ruta.
+              </Text>
+
+              {/* Campo Nombre del recorrido */}
+              <View style={styles.modalCampoContainer}>
+                <Text style={styles.modalLabel}>Nombre del recorrido</Text>
+                <TextInput
+                  style={[
+                    styles.modalInputNombre,
+                    Boolean(errorNombre) && styles.modalInputNombreError,
+                  ]}
+                  value={nombreRecorrido}
+                  onChangeText={(texto) => {
+                    setNombreRecorrido(texto);
+                    if (errorNombre) setErrorNombre('');
+                  }}
+                  placeholder="Ej: Ruta Centro Rápida"
+                  placeholderTextColor={RepartoYA.grisTexto}
+                  accessibilityLabel="Nombre del recorrido"
+                  editable={!guardandoRecorrido}
+                  autoCapitalize="words"
+                  autoFocus
+                />
+                {Boolean(errorNombre) && (
+                  <Text style={styles.textoErrorValidacion} accessibilityLiveRegion="polite">
+                    {errorNombre}
+                  </Text>
+                )}
+              </View>
+
+              {guardandoRecorrido && (
+                <View style={styles.modalCargandoRow}>
+                  <ActivityIndicator color={RepartoYA.naranjaYA} />
+                  <Text style={styles.texto} accessibilityLiveRegion="polite">
+                    Guardando recorrido…
+                  </Text>
+                </View>
+              )}
+
+              {!guardandoRecorrido && (
+                <>
+                  {/* Botón Guardar (Naranja YA) */}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Guardar"
+                    style={styles.modalBotonConfirmarGuardar}
+                    onPress={handleConfirmarGuardar}
+                  >
+                    <Text style={styles.textoBotonConfirmarGuardar}>Guardar</Text>
+                  </Pressable>
+
+                  {/* Botón Cancelar (Blanco con borde Azul Ruta) */}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancelar"
+                    style={styles.modalBotonCancelar}
+                    onPress={cerrarModalGuardar}
+                  >
+                    <Text style={styles.textoModalCancelar}>Cancelar</Text>
                   </Pressable>
                 </>
               )}
@@ -915,5 +1088,72 @@ const styles = StyleSheet.create({
     color: RepartoYA.blanco,
     fontSize: 13,
     fontWeight: '700',
+  },
+  modalTarjetaGuardar: {
+    width: '100%',
+    backgroundColor: RepartoYA.blanco,
+    borderRadius: 20,
+    padding: 24,
+    gap: 14,
+    position: 'relative',
+  },
+  modalBotonCerrarX: {
+    position: 'absolute',
+    top: 14,
+    right: 16,
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  textoModalCerrarX: {
+    color: RepartoYA.grisTexto,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalCampoContainer: {
+    width: '100%',
+    gap: 6,
+    marginTop: 4,
+  },
+  modalLabel: {
+    color: RepartoYA.azulRuta,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  modalInputNombre: {
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: RepartoYA.carbon,
+    backgroundColor: '#FAFAFA',
+  },
+  modalInputNombreError: {
+    borderColor: RepartoYA.error,
+    backgroundColor: '#FEF2F2',
+  },
+  textoErrorValidacion: {
+    color: RepartoYA.error,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  modalBotonConfirmarGuardar: {
+    width: '100%',
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  textoBotonConfirmarGuardar: {
+    color: RepartoYA.blanco,
+    fontSize: 15,
+    fontWeight: '800',
   },
 });

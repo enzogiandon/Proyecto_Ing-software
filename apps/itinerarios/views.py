@@ -106,6 +106,51 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
             Prefetch("problemas", queryset=ProblemaParada.objects.order_by("-fecha")),
         )
 
+    def post(self, request, *args, **kwargs):
+        parada = self.get_object()
+        accion = request.POST.get("accion")
+
+        if accion == "quitar_remito":
+            remito_id = request.POST.get("remito_id")
+            try:
+                remito = parada.remitos.get(id=remito_id, eliminado=False)
+                with transaction.atomic():
+                    remito.parada = None
+                    remito.estado = EstadoRemito.PENDIENTE
+                    remito.save(update_fields=["parada", "estado"])
+
+                    # Si la parada no tiene más remitos vigentes, se elimina y se reordenan las paradas restantes
+                    remitos_restantes = parada.remitos.filter(eliminado=False).exists()
+                    if not remitos_restantes:
+                        itinerario = parada.itinerario
+                        parada_id = parada.id
+                        comercio_nombre = parada.comercio.razon_social
+                        parada.delete()
+
+                        for i, p in enumerate(
+                            itinerario.paradas.all().order_by("orden", "id"), start=1
+                        ):
+                            p.orden = i
+                            p.save(update_fields=["orden"])
+
+                        messages.success(
+                            request,
+                            f"Remito #{remito.numero} desvinculado. Al no quedar remitos, la parada #{parada_id} de «{comercio_nombre}» fue eliminada del itinerario.",
+                        )
+                        return redirect("itinerarios:itinerario_lista")
+
+                messages.success(
+                    request,
+                    f"Remito #{remito.numero} desvinculado de la parada y vuelto a estado PENDIENTE.",
+                )
+            except Remito.DoesNotExist:
+                messages.error(
+                    request, "El remito especificado no pertenece a esta parada."
+                )
+            return redirect("itinerarios:parada_detalle", pk=parada.pk)
+
+        return redirect("itinerarios:parada_detalle", pk=parada.pk)
+
 
 class CrearItinerarios(
     LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, FormView

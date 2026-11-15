@@ -30,34 +30,30 @@
 
     <section class="remitos-card mb-3">
         <h2 class="text-section text-c-brand mb-3">Datos del lote importado</h2>
-        <div class="remitos-detail-grid">
-            <div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">ID del lote:</span>
-                    <span class="remito-data-value fw-semibold text-c-primary">#{{ importacion.id }}</span>
+        <div class="remitos-detalle-layout">
+                <div class="remito-kv-item">
+                    <span class="remito-kv-label">ID del lote:</span>
+                    <span class="remito-kv-value fw-semibold text-c-primary">#{{ importacion.id }}</span>
                 </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Fecha de importación:</span>
-                    <span class="remito-data-value">{{ importacion.fecha|date:"d/m/Y H:i" }}</span>
+                <div class="remito-kv-item">
+                    <span class="remito-kv-label">Fecha de importación:</span>
+                    <span class="remito-kv-value">{{ importacion.fecha|date:"d/m/Y H:i" }}</span>
                 </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Marca:</span>
-                    <span class="remito-data-value">{{ importacion.marca }}</span>
+                <div class="remito-kv-item">
+                    <span class="remito-kv-label">Marca:</span>
+                    <span class="remito-kv-value">{{ importacion.marca }}</span>
                 </div>
-            </div>
-
-            <div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Archivo:</span>
-                    <span class="remito-data-value">{{ importacion.archivo }}</span>
+                <div class="remito-kv-item">
+                    <span class="remito-kv-label">Archivo:</span>
+                    <span class="remito-kv-value">{{ importacion.archivo }}</span>
                 </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Cantidad de remitos:</span>
-                    <span class="remito-data-value">{{ importacion.cantidad }} remitos</span>
+                <div class="remito-kv-item">
+                    <span class="remito-kv-label">Cantidad de remitos:</span>
+                    <span class="remito-kv-value">{{ importacion.cantidad }} remitos</span>
                 </div>
-                <div class="remito-data-row">
-                    <span class="remito-data-label">Estado:</span>
-                    <span class="remito-data-value">{{ importacion.get_estado_display|default:importacion.estado|capfirst }}</span>
+                <div class="remito-kv-item">
+                    <span class="remito-kv-label">Estado:</span>
+                    <span class="remito-kv-value">{{ importacion.get_estado_display|default:importacion.estado|capfirst }}</span>
                 </div>
             </div>
         </div>

@@ -92,6 +92,8 @@ export async function guardarOrdenRuta(paradaIds: number[]): Promise<Parada[]> {
   }
 }
 
+export let MOCK_RUTAS_GUARDADAS: RutaGuardadaItem[] = [];
+
 /**
  * POST /api/itinerarios/crear-ruta/
  * Guarda la secuencia actual como plantilla de recorrido.
@@ -100,19 +102,46 @@ export async function crearPlantillaRuta(
   nombre: string,
   paradaIds: number[]
 ): Promise<RutaGuardadaResponse> {
+  const nombreLimpio = nombre.trim();
+  if (!nombreLimpio) {
+    throw new Error('Ingresá un nombre para guardar el recorrido');
+  }
+
   try {
     const response = await api.post<RutaGuardadaResponse>('itinerarios/crear-ruta/', {
-      nombre,
+      nombre: nombreLimpio,
       parada_ids: paradaIds,
     });
-    return response.data;
+    if (response?.data && Number.isSafeInteger(response.data.id)) {
+      MOCK_RUTAS_GUARDADAS = [
+        { id: response.data.id, nombre: nombreLimpio },
+        ...MOCK_RUTAS_GUARDADAS.filter((r) => r.id !== response.data.id),
+      ];
+      return response.data;
+    }
+    throw new Error('Django no confirmó la creación de la plantilla.');
   } catch (error: any) {
-    console.warn('[Itinerarios] Fallback local para crear plantilla de ruta:', error?.message);
+    // Si Django respondió con un error HTTP de validación/negocio (400 con detail), lanzarlo
+    if (error?.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+    if (error?.response?.status) {
+      throw error;
+    }
+
+    // Modo simulación / Fallback cuando no hay conexión con Django (Network Error)
+    console.warn('[Itinerarios] Backend no disponible. Guardando plantilla en modo simulación local:', error?.message);
+    const mockId = Date.now();
+    const mockItem: RutaGuardadaItem = { id: mockId, nombre: nombreLimpio };
+    MOCK_RUTAS_GUARDADAS = [
+      mockItem,
+      ...MOCK_RUTAS_GUARDADAS.filter((r) => r.id !== mockId),
+    ];
     return {
-      id: Date.now(),
-      nombre,
+      id: mockId,
+      nombre: nombreLimpio,
       total_comercios: paradaIds.length,
-      mensaje: 'Ruta guardada localmente (Modo Mock)',
+      mensaje: 'Recorrido guardado localmente (Modo Simulación)',
     };
   }
 }

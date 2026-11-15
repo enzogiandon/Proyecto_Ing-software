@@ -155,7 +155,7 @@ class CrearRutaGuardadaSerializer(serializers.Serializer):
     nombre = serializers.CharField(max_length=50, required=True)
     # Lista de IDs de parada en el orden deseado para guardar la plantilla
     parada_ids = serializers.ListField(
-        child=serializers.IntegerField(), required=True, allow_empty=False
+        child=serializers.IntegerField(), required=False, allow_empty=True, default=list
     )
 
 

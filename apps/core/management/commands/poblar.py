@@ -715,7 +715,6 @@ class Command(BaseCommand):
                             "estado": EstadoRemito.PENDIENTE,
                             "parada": None,
                             "importacion": None,
-                            "eliminado": False,
                         },
                     )
                     if creado:

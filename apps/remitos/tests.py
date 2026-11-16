@@ -43,19 +43,17 @@ class RemitoTestCase(TestCase):
 
 
 class RemitoModelTests(RemitoTestCase):
-    def test_delete_is_soft_delete(self):
+    def test_delete_is_hard_delete(self):
         remito = Remito.objects.create(
             numero="R-001",
             marca=self.marca,
             comercio=self.comercio,
             total=Decimal("1250.50"),
         )
-
+        pk = remito.pk
         remito.delete()
 
-        remito.refresh_from_db()
-        self.assertTrue(remito.eliminado)
-        self.assertTrue(Remito.objects.filter(pk=remito.pk).exists())
+        self.assertFalse(Remito.objects.filter(pk=pk).exists())
 
     def test_string_representation_contains_number_and_commerce(self):
         remito = Remito.objects.create(
@@ -222,8 +220,7 @@ class RemitoViewsTests(RemitoTestCase):
             reverse("remitos:remito_lista"),
             fetch_redirect_response=False,
         )
-        remito.refresh_from_db()
-        self.assertTrue(remito.eliminado)
+        self.assertFalse(Remito.objects.filter(pk=remito.pk).exists())
         # La parada se quedó sin remitos activos, debe haberse eliminado
         self.assertFalse(Parada.objects.filter(pk=parada.pk).exists())
 
@@ -431,4 +428,27 @@ class ImportacionRemitosTestCase(TestCase):
         remito = Remito.objects.get(importacion=importacion)
         self.assertEqual(remito.comercio, comercio_existente)
         self.assertEqual(remito.comercio.razon_social, "Razón Social Original")
+        importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_con_numeros_duplicados_crea_error_importacion(self):
+        csv_con_duplicados = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112223,Monotributo,976-123456-1,Kiosco Central,\"Calle 1 123\",500.00,2026-10-21,0001,00007777\n"
+            "20301112223,Monotributo,976-123456-1,Kiosco Central,\"Calle 1 123\",600.00,2026-10-21,0001,00007777\n"
+        ).encode("utf-8")
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_con_duplicados)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get()
+        self.assertEqual(importacion.estado, EstadoImportacion.RECHAZADO)
+        errores = importacion.errores.all()
+        self.assertEqual(errores.count(), 1)
+        self.assertIn("duplicado", errores[0].motivo)
         importacion.archivo.delete(save=False)

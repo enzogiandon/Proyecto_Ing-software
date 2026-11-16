@@ -72,10 +72,7 @@ class DetalleCobranza(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
             .prefetch_related(
                 "detalles",
                 "ajustes__usuario",
-                Prefetch(
-                    "parada__remitos",
-                    queryset=Remito.objects.filter(eliminado=False),
-                ),
+                "parada__remitos",
             )
         )
 

@@ -54,7 +54,7 @@ def crear_paradas(
     # 2. Desasignar comercios desmarcados (solo paradas en estado PENDIENTE)
     for p in paradas_existentes:
         if p.comercio_id not in comercios_seleccionados_ids and p.estado == EstadoParada.PENDIENTE:
-            Remito.objects.filter(parada=p, eliminado=False).update(
+            Remito.objects.filter(parada=p).update(
                 parada=None,
                 estado=EstadoRemito.PENDIENTE,
             )
@@ -71,7 +71,6 @@ def crear_paradas(
             remitos_pendientes = Remito.objects.filter(
                 comercio=comercio,
                 estado=EstadoRemito.PENDIENTE,
-                eliminado=False,
             )
             if not remitos_pendientes.exists():
                 raise ValidationError(

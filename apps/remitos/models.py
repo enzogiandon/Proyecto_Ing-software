@@ -121,12 +121,6 @@ class Remito(models.Model):
         null=True,
         related_name="remitos",
     )
-    eliminado = models.BooleanField(default=False)
-
-    def delete(self, using=None, keep_parents=False):
-        self.eliminado = True
-        self.save(update_fields=["eliminado"])
-        return (1, {self._meta.label: 1})
 
     def __str__(self):
         return f"Remito #{self.numero} - {self.comercio.razon_social}"

@@ -58,7 +58,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 def calcular_monto_recaudar(parada) -> str:
-    total_remitos = parada.remitos.filter(eliminado=False).aggregate(
+    total_remitos = parada.remitos.aggregate(
         total=Sum("total")
     )["total"] or Decimal("0.00")
     total_pagado = Decimal("0.00")
@@ -243,10 +243,6 @@ class RegistrarRemitosInputSerializer(serializers.Serializer):
             return attrs
 
         for remito in remitos:
-            if remito.eliminado:
-                raise serializers.ValidationError(
-                    {"remitos": f"El remito '{remito.numero}' fue eliminado y no puede registrarse."}
-                )
             if remito.comercio_id != parada.comercio_id:
                 raise serializers.ValidationError(
                     {"remitos": f"El remito '{remito.numero}' no pertenece a esta parada."}

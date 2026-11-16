@@ -14,95 +14,133 @@
     <!-- Encabezado y Navegación -->
     <div>
         <a href="{% url 'cobranza:cobranza_detalle' cobranza.pk %}" class="home-btn home-btn--compacto">
-            <i class="fas fa-arrow-left"></i> Volver
+            <i class="fas fa-arrow-left"></i> Volver a la cobranza
         </a>
     </div>
     <header class="itinerarios-header">
-
         <div class="itinerarios-header-info">
-            <h1 class="text-title mb-0">Ajustar Medios de Pago — Cobranza #{{ cobranza.id }}</h1>
+            <h1 class="text-title mb-0">Registrar Ajuste — Cobranza #{{ cobranza.id }}</h1>
             <span class="text-body text-c-secondary mb-0">
                 Comercio: <strong>{{ cobranza.parada.comercio.razon_social }}</strong> | Parada #{{ cobranza.parada.id }}.
             </span>
         </div>
     </header>
 
-    {% if formset.non_form_errors %}
+    {% if form.non_field_errors %}
         <div class="alert alert-danger shadow-sm py-2">
-            {{ formset.non_form_errors }}
+            {{ form.non_field_errors }}
         </div>
     {% endif %}
 
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {{ formset.management_form }}
+    <div class="row g-3">
+        <!-- Resumen de Pagos Actuales de la Cobranza -->
+        <div class="col-lg-5">
+            <div class="itinerarios-card mb-4">
+                <h2 class="text-section text-c-brand mb-3">
+                    Resumen de Pagos de la Cobranza
+                </h2>
+                <div class="table-responsive">
+                    <table class="itinerarios-tabla mb-3">
+                        <thead class="table-light small">
+                            <tr>
+                                <th class="ps-3">Medio</th>
+                                <th class="text-end">Declarado</th>
+                                <th class="text-end pe-3">Verificado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for det in cobranza.detalles.all %}
+                            <tr>
+                                <td class="ps-3">
+                                    <span class="itin-badge {% if det.medio == 'efectivo' %}itin-badge--entregado{% elif det.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
+                                        {{ det.get_medio_display }}
+                                    </span>
+                                </td>
+                                <td class="text-end fw-semibold">${{ det.monto_declarado }}</td>
+                                <td class="text-end pe-3">
+                                    {% if det.monto_verificado is not None %}
+                                        <span class="fw-bold">${{ det.monto_verificado }}</span>
+                                    {% else %}
+                                        <span class="text-muted small fst-italic">Sin verificar</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-2 text-muted small">Sin detalles.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-        <div class="itinerarios-card mb-4">
-            <h2 class="text-section text-c-brand mb-3">
-                Detalles de Pago con Diferencias
-            </h2>
-            <div class="table-responsive">
-                <table class="itinerarios-tabla">
-                    <thead class="table-light small">
-                        <tr>
-                            <th class="ps-3">Medio</th>
-                            <th>Monto Declarado</th>
-                            <th>Monto Verificado Actual</th>
-                            <th style="width: 170px;">Nuevo Importe ($) *</th>
-                            <th style="min-width: 250px;">Motivo del Ajuste *</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for detalle, subform in detalles_forms %}
-                        <tr>
-                            <td class="ps-3">
-                                <span class="itin-badge {% if detalle.medio == 'efectivo' %}itin-badge--entregado{% elif detalle.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
-                                    {{ detalle.get_medio_display }}
-                                </span>
-                                {% if detalle.mp_payment_id %}
-                                    <small class="d-block text-muted">MP: {{ detalle.mp_payment_id }}</small>
-                                {% endif %}
-                            </td>
-                            <td class="fw-bold text-dark">
-                                ${{ detalle.monto_declarado }}
-                            </td>
-                            <td>
-                                {% if detalle.monto_verificado is not None %}
-                                    <span class="text-danger fw-semibold">${{ detalle.monto_verificado }}</span>
-                                {% else %}
-                                    <span class="text-muted fst-italic">Sin verificar</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {{ subform.detalle_id }}
-                                {{ subform.importe_nuevo }}
-                                {% if subform.importe_nuevo.errors %}
-                                    <div class="text-danger small mt-1">
-                                        {{ subform.importe_nuevo.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </td>
-                            <td class="pe-3">
-                                {{ subform.motivo }}
-                                {% if subform.motivo.errors %}
-                                    <div class="text-danger small mt-1">{{ subform.motivo.errors.0 }}</div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                {% if cobranza.observacion %}
+                    <div class="alert alert-warning py-2 px-3 small mb-0">
+                        <strong>Motivo de rechazo/observación:</strong>
+                        <div class="mt-1">{{ cobranza.observacion }}</div>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
-        <div class="itin-form-actions">
-            <a href="{% url 'cobranza:cobranza_detalle' cobranza.pk %}" class="btn-itinerario-outline">
-                Cancelar
-            </a>
-            <button type="submit" class="btn-itinerario-primary">
-                Guardar Ajustes
-            </button>
+        <!-- Formulario de Nuevo Ajuste -->
+        <div class="col-lg-7">
+            <div class="itinerarios-card mb-4">
+                <h2 class="text-section text-c-brand mb-3">
+                    Nuevo Ajuste Financiero
+                </h2>
+                <p class="text-muted small mb-3">
+                    Permite sumar importes extra o corregir diferencias con importes negativos. Al guardar, se recalculará el balance total de la cobranza.
+                </p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.medio.id_for_label }}" class="itinerarios-filtro-label">
+                            Medio de Pago Afectado *
+                        </label>
+                        {{ form.medio }}
+                        {% if form.medio.errors %}
+                            <div class="text-danger small mt-1">{{ form.medio.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.monto.id_for_label }}" class="itinerarios-filtro-label">
+                            Monto del Ajuste ($) *
+                        </label>
+                        {{ form.monto }}
+                        <div class="form-text small">
+                            Use valores negativos con el signo menos (ej: <code>-1500.00</code>) o positivos para adicionales (ej: <code>2000.00</code>).
+                        </div>
+                        {% if form.monto.errors %}
+                            <div class="text-danger small mt-1">{{ form.monto.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.motivo.id_for_label }}" class="itinerarios-filtro-label">
+                            Justificación Obligatoria del Ajuste *
+                        </label>
+                        {{ form.motivo }}
+                        {% if form.motivo.errors %}
+                            <div class="text-danger small mt-1">{{ form.motivo.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="itin-form-actions">
+                        <a href="{% url 'cobranza:cobranza_detalle' cobranza.pk %}" class="btn-itinerario-outline">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn-itinerario-primary">
+                            <i class="fas fa-save me-1"></i> Guardar Ajuste
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </form>
+    </div>
 </div>
 {% endblock %}
+

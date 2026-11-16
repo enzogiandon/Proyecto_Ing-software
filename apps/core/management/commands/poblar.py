@@ -12,7 +12,13 @@ from django.utils import timezone
 
 from datetime import date
 
-from apps.cobranza.models import Cobranza, DetallePago
+from apps.cobranza.models import (
+    AjusteCobranza,
+    Cobranza,
+    DetallePago,
+    EstadoCobranza,
+    MedioPago,
+)
 from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
@@ -61,6 +67,7 @@ class Command(BaseCommand):
                 self.stdout.write("Limpiando datos existentes...")
 
                 # 1. Pagos y Cobranzas (evita ProtectedError en Cobranza.parada)
+                AjusteCobranza.objects.all().delete()
                 DetallePago.objects.all().delete()
                 Cobranza.objects.all().delete()
 
@@ -681,27 +688,153 @@ class Command(BaseCommand):
                 itinerario_martin.save()
 
                 paradas_comercios = list(comercios.values())[:5]
+                marcas_list = list(marcas.values())
+                admin_user = Usuario.objects.filter(username="11111111").first()
+                total_cobranzas_creadas = 0
+
+                paradas_config = [
+                    {
+                        "orden": 1,
+                        "estado": EstadoParada.FINALIZADA,
+                        "hora_entrega": timezone.now().replace(hour=9, minute=30, second=0),
+                        "remito_total": Decimal("150000.00"),
+                        "remito_estado": EstadoRemito.ENTREGADO,
+                        "cobranza_estado": EstadoCobranza.REGISTRADO,
+                        "detalles": [
+                            {"medio": MedioPago.EFECTIVO, "declarado": Decimal("100000.00"), "verificado": Decimal("0.00")},
+                            {"medio": MedioPago.TRANSFERENCIA, "declarado": Decimal("50000.00"), "verificado": Decimal("0.00")},
+                        ],
+                        "observacion": None,
+                        "ajuste": None,
+                    },
+                    {
+                        "orden": 2,
+                        "estado": EstadoParada.FINALIZADA,
+                        "hora_entrega": timezone.now().replace(hour=10, minute=15, second=0),
+                        "remito_total": Decimal("220000.00"),
+                        "remito_estado": EstadoRemito.ENTREGADO,
+                        "cobranza_estado": EstadoCobranza.APROBADO,
+                        "detalles": [
+                            {
+                                "medio": MedioPago.QR,
+                                "declarado": Decimal("220000.00"),
+                                "verificado": Decimal("220000.00"),
+                                "mp_payment_id": "MP-8877665544",
+                            },
+                        ],
+                        "observacion": "Cobranza validada y conciliada contra liquidación MP.",
+                        "ajuste": None,
+                    },
+                    {
+                        "orden": 3,
+                        "estado": EstadoParada.FINALIZADA,
+                        "hora_entrega": timezone.now().replace(hour=11, minute=0, second=0),
+                        "remito_total": Decimal("310000.00"),
+                        "remito_estado": EstadoRemito.ENTREGADO,
+                        "cobranza_estado": EstadoCobranza.DIFIERE,
+                        "detalles": [
+                            {
+                                "medio": MedioPago.EFECTIVO,
+                                "declarado": Decimal("310000.00"),
+                                "verificado": Decimal("300000.00"),
+                            },
+                        ],
+                        "observacion": "Faltante de $10.000 en el sobre de rendición de efectivo.",
+                        "ajuste": {
+                            "medio": MedioPago.EFECTIVO,
+                            "monto": Decimal("10000.00"),
+                            "motivo": "Acreditación complementaria por ticket de transferencia bancaria de respaldo.",
+                        },
+                    },
+                    {
+                        "orden": 4,
+                        "estado": EstadoParada.PENDIENTE,
+                        "hora_entrega": None,
+                        "remito_total": Decimal("185000.00"),
+                        "remito_estado": EstadoRemito.ASIGNADO,
+                        "cobranza_estado": None,
+                    },
+                    {
+                        "orden": 5,
+                        "estado": EstadoParada.PENDIENTE,
+                        "hora_entrega": None,
+                        "remito_total": Decimal("92500.00"),
+                        "remito_estado": EstadoRemito.ASIGNADO,
+                        "cobranza_estado": None,
+                    },
+                ]
 
                 for orden_idx, com in enumerate(paradas_comercios, start=1):
-                    if com:
-                        parada_obj, _ = Parada.objects.get_or_create(
-                            itinerario=itinerario_martin,
-                            comercio=com,
-                            defaults={
-                                "orden": orden_idx,
-                                "estado": EstadoParada.PENDIENTE,
-                            },
-                        )
-                        parada_obj.orden = orden_idx
-                        parada_obj.estado = EstadoParada.PENDIENTE
-                        parada_obj.save()
-                        total_paradas_creadas += 1
+                    if not com:
+                        continue
+                    cfg = paradas_config[orden_idx - 1]
+                    parada_obj, _ = Parada.objects.get_or_create(
+                        itinerario=itinerario_martin,
+                        comercio=com,
+                        defaults={
+                            "orden": cfg["orden"],
+                            "estado": cfg["estado"],
+                            "hora_entrega": cfg["hora_entrega"],
+                        },
+                    )
+                    parada_obj.orden = cfg["orden"]
+                    parada_obj.estado = cfg["estado"]
+                    parada_obj.hora_entrega = cfg["hora_entrega"]
+                    parada_obj.save()
+                    total_paradas_creadas += 1
 
-                        # Si existen remitos para el comercio, vincularlos a la parada
-                        Remito.objects.filter(comercio=com, parada__isnull=True).update(
+                    # Asegurar remito asociado a la parada
+                    remito_existente = Remito.objects.filter(comercio=com, parada__isnull=True).first()
+                    if remito_existente:
+                        remito_existente.parada = parada_obj
+                        remito_existente.estado = cfg["remito_estado"]
+                        remito_existente.total = cfg["remito_total"]
+                        remito_existente.save(update_fields=["parada", "estado", "total"])
+                    else:
+                        remito_existente = Remito.objects.filter(comercio=com, parada=parada_obj).first()
+                        if not remito_existente:
+                            marca_asignada = marcas_list[(orden_idx - 1) % len(marcas_list)]
+                            Remito.objects.create(
+                                numero=f"0009-{str(orden_idx).zfill(8)}",
+                                marca=marca_asignada,
+                                comercio=com,
+                                total=cfg["remito_total"],
+                                estado=cfg["remito_estado"],
+                                parada=parada_obj,
+                            )
+                        else:
+                            remito_existente.estado = cfg["remito_estado"]
+                            remito_existente.total = cfg["remito_total"]
+                            remito_existente.save(update_fields=["estado", "total"])
+
+                    # Crear cobranza de ejemplo si corresponde a la configuración de la parada
+                    if cfg.get("cobranza_estado"):
+                        Cobranza.objects.filter(parada=parada_obj).delete()
+                        cobranza_obj = Cobranza.objects.create(
                             parada=parada_obj,
-                            estado=EstadoRemito.ASIGNADO,
+                            estado=cfg["cobranza_estado"],
+                            observacion=cfg.get("observacion"),
                         )
+                        total_cobranzas_creadas += 1
+
+                        for det in cfg["detalles"]:
+                            DetallePago.objects.create(
+                                cobranza=cobranza_obj,
+                                medio=det["medio"],
+                                monto_declarado=det["declarado"],
+                                monto_verificado=det.get("verificado", Decimal("0.00")),
+                                mp_payment_id=det.get("mp_payment_id"),
+                            )
+
+                        if cfg.get("ajuste") and admin_user:
+                            ajuste_data = cfg["ajuste"]
+                            AjusteCobranza.objects.create(
+                                cobranza=cobranza_obj,
+                                usuario=admin_user,
+                                medio=ajuste_data["medio"],
+                                monto=ajuste_data["monto"],
+                                motivo=ajuste_data["motivo"],
+                            )
 
                 # Ruta guardada de prueba para validar HU-63, HU-64 y HU-65
                 ruta_guardada, _ = RutaGuardada.objects.get_or_create(
@@ -737,6 +870,9 @@ class Command(BaseCommand):
             self.stdout.write(
                 "  • Ruta guardada de prueba: 'Ruta Costera 12' (3 comercios)"
             )
+            self.stdout.write(
+                f"  • Cobranzas de ejemplo: {total_cobranzas_creadas} cobranzas registradas (1 Registrada, 1 Aprobada, 1 Difiere con Ajuste)"
+            )
 
         self.stdout.write(
             self.style.HTTP_INFO("\n" + "=" * 70)
@@ -758,7 +894,7 @@ class Command(BaseCommand):
         self.stdout.write("   • Chofer 1: DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD (Mercedes-Benz Accelo 815)")
         self.stdout.write("     - Caso de prueba: Transportista sin itinerario asignado (estado vacío institucional).")
         self.stdout.write("   • Chofer 2: DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF (Iveco Daily 70C17)")
-        self.stdout.write("     - Caso de prueba: Itinerario activo asignado con 5 paradas y ruta guardada 'Ruta Costera 12'.")
+        self.stdout.write("     - Caso de prueba: Itinerario activo asignado con 5 paradas (3 completadas/cobradas, 2 pendientes) y ruta guardada 'Ruta Costera 12'.")
         self.stdout.write("     - Flujo de prueba: Login -> /itinerario -> Reordenar paradas -> Guardar orden -> Rutas guardadas.")
 
         self.stdout.write(self.style.WARNING("\n3. Flota de Vehículos"))
@@ -785,6 +921,11 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"   • Itinerario activo de prueba: #{itinerario_martin.id} (5 paradas) asignado a Chofer Martín Pérez (12345678)."
             )
+
+        self.stdout.write(self.style.WARNING("\n5. Módulo de Cobranzas y Conciliación (Panel Administrativo Web)"))
+        self.stdout.write("   • Cobranza Registrada (Pendiente)  : Parada #1 - Declarada por chofer ($150.000). Lista para arqueo y validación (botón 'Validar').")
+        self.stdout.write("   • Cobranza Aprobada (Conciliada)   : Parada #2 - Validada con QR de Mercado Pago ($220.000).")
+        self.stdout.write("   • Cobranza con Diferencia (Difiere): Parada #3 - Declarado $310.000, verificado $300.000 (faltante de $10.000) con Ajuste complementario registrado.")
         self.stdout.write(
             self.style.HTTP_INFO("=" * 70 + "\n")
         )

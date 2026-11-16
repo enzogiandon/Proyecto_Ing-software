@@ -73,9 +73,8 @@
                         <th>Fecha y Hora</th>
                         <th>Cobranza / Comercio</th>
                         <th>Medio de Pago</th>
-                        <th>Importe Anterior</th>
-                        <th>Nuevo Importe</th>
-                        <th>Administrativo</th>
+                        <th>Monto del Ajuste</th>
+                        <th>Administrativo (DNI)</th>
                         <th>Motivo del Ajuste</th>
                         <th class="text-end pe-3">Acción</th>
                     </tr>
@@ -90,38 +89,33 @@
                         </td>
                         <td>
                             <div class="cell-main cell-main--high">
-                                {{ ajuste.detalle_pago.cobranza.parada.comercio.razon_social|default:"Sin comercio" }}
+                                {{ ajuste.cobranza.parada.comercio.razon_social|default:"Sin comercio" }}
                             </div>
                             <small class="cell-sub">
-                                Cobranza #{{ ajuste.detalle_pago.cobranza_id }} (Parada #{{ ajuste.detalle_pago.cobranza.parada_id }})
+                                Cobranza #{{ ajuste.cobranza.id }} (Parada #{{ ajuste.cobranza.parada_id }})
                             </small>
                         </td>
                         <td>
-                            <span class="itin-badge {% if det.medio == 'efectivo' %}itin-badge--entregado{% elif det.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
-                                {{ ajuste.detalle_pago.get_medio_display }}
+                            <span class="itin-badge {% if ajuste.medio == 'efectivo' %}itin-badge--entregado{% elif ajuste.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
+                                {{ ajuste.get_medio_display }}
                             </span>
-                            {% if ajuste.detalle_pago.mp_payment_id %}
-                                <span class="cell-sub d-block">MP: {{ ajuste.detalle_pago.mp_payment_id }}</small>
-                            {% endif %}
                         </td>
-                        <td class="text-secondary fw-semibold">
-                            ${{ ajuste.importe_anterior }}
-                        </td>
-                        <td class="text-success fw-bold">
-                            ${{ ajuste.importe_nuevo }}
+                        <td class="{% if ajuste.monto < 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                            ${{ ajuste.monto }}
                         </td>
                         <td>
                             <span class="itin-badge itin-badge--asignado">
                                 {{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}
                             </span>
+                            <small class="cell-sub d-block">DNI: {{ ajuste.usuario.username }}</small>
                         </td>
-                        <td class="text-truncate" style="max-width: 50px;">
+                        <td class="text-truncate" style="max-width: 150px;">
                             <span class="cell-sub" title="{{ ajuste.motivo }}">
                                 {{ ajuste.motivo }}
                             </span>
                         </td>
                         <td class="text-end pe-3">
-                            <a href="{% url 'cobranza:cobranza_detalle' ajuste.detalle_pago.cobranza_id %}" 
+                            <a href="{% url 'cobranza:cobranza_detalle' ajuste.cobranza_id %}" 
                                class="btn btn-sm btn-outline-secondary" 
                                title="Ver cobranza completa">
                                 <i class="bi bi-eye"></i> Cobranza

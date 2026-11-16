@@ -27,16 +27,7 @@
             </p>
         </div>
     </header>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
+    
     <!-- Formulario Principal de Edición -->
     <form method="post" id="formEditarItinerario">
         {% csrf_token %}

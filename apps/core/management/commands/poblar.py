@@ -24,13 +24,17 @@ from apps.itinerarios.models import (
     DetalleRutaGuardada,
     EstadoItinerario,
     EstadoParada,
+    EvidenciaParada,
     Itinerario,
     Parada,
+    ProblemaParada,
     RutaGuardada,
 )
 from apps.remitos.models import (
     Comercio,
+    ErrorImportacion,
     EstadoRemito,
+    ImportacionRemitos,
     Marca,
     Remito,
 )
@@ -66,32 +70,39 @@ class Command(BaseCommand):
             if options["limpiar"]:
                 self.stdout.write("Limpiando datos existentes...")
 
-                # 1. Pagos y Cobranzas (evita ProtectedError en Cobranza.parada)
+                # 1. Cobranzas, Ajustes y Pagos (AjusteCobranza tiene FK a Usuario con PROTECT y FK a Cobranza; Cobranza tiene OneToOne PROTECT a Parada)
                 AjusteCobranza.objects.all().delete()
                 DetallePago.objects.all().delete()
                 Cobranza.objects.all().delete()
 
-                # 2. Tablas intermedias e hijas de rutas
+                # 2. Evidencias y problemas de paradas (hijas de Parada)
+                EvidenciaParada.objects.all().delete()
+                ProblemaParada.objects.all().delete()
+
+                # 3. Remitos e Importaciones (Remito tiene FK a Parada SET_NULL, FK a Comercio PROTECT, FK a Marca PROTECT)
+                Remito.objects.all().delete()
+                ErrorImportacion.objects.all().delete()
+                ImportacionRemitos.objects.all().delete()
+
+                # 4. Paradas e Itinerarios (Itinerario tiene FK PROTECT a Transportista y Vehiculo)
+                Parada.objects.all().delete()
+                Itinerario.objects.all().delete()
+
+                # 5. Tablas intermedias e hijas de rutas
                 DetalleRutaGuardada.objects.all().delete()
                 RutaGuardada.objects.all().delete()
 
-                # 3. Remitos y Paradas
-                Remito.objects.all().delete()
-                Parada.objects.all().delete()
-
-                # 4. Itinerarios (libera la referencia protegida a Transportista)
-                Itinerario.objects.all().delete()
-
-                # 5. Comercios y Marcas
+                # 6. Comercios y Marcas
                 Comercio.objects.all().delete()
                 Marca.objects.all().delete()
 
-                # 6. Perfiles y Vehículos
+                # 7. Perfiles Transportista y Vehículos
                 Transportista.objects.all().delete()
                 Vehiculo.objects.all().delete()
 
-                # Desbloquear todos los usuarios (superusuario y regulares)
-                Usuario.objects.all().update(is_active=True, intentos_fallidos=0)
+                # 8. Usuarios no superusuarios y reseteo de superusuarios
+                Usuario.objects.filter(is_superuser=False).delete()
+                Usuario.objects.filter(is_superuser=True).update(is_active=True, intentos_fallidos=0)
 
             # ------------------------------------------------------------------
             # 1. Superusuario Administrador
@@ -106,6 +117,7 @@ class Command(BaseCommand):
                     "is_staff": True,
                     "is_superuser": True,
                     "is_active": True,
+                    "intentos_fallidos": 0,
                 },
             )
             admin_user.is_staff = True
@@ -118,6 +130,74 @@ class Command(BaseCommand):
             # Asignar todos los roles por defecto al superusuario
             todos_los_grupos = Group.objects.filter(name__in=Grupos.values)
             admin_user.groups.set(todos_los_grupos)
+
+            # Usuarios específicos por rol para pruebas web (HU-35, HU-36, etc.)
+            grupo_conciliacion, _ = Group.objects.get_or_create(name=Grupos.ADMIN_CONCILIACION)
+            grupo_planificacion, _ = Group.objects.get_or_create(name=Grupos.ADMIN_PLANIFICACION)
+            grupo_personal, _ = Group.objects.get_or_create(name=Grupos.GESTION_PERSONAL)
+
+            conciliacion, _ = Usuario.objects.get_or_create(
+                username="22222222",
+                defaults={
+                    "first_name": "Conciliacion",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            conciliacion.is_staff = True
+            conciliacion.is_superuser = False
+            conciliacion.is_active = True
+            conciliacion.intentos_fallidos = 0
+            conciliacion.set_password("123")
+            conciliacion.groups.add(grupo_conciliacion)
+            conciliacion.save()
+
+            planificacion, _ = Usuario.objects.get_or_create(
+                username="33333333",
+                defaults={
+                    "first_name": "Planificacion",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            planificacion.is_staff = True
+            planificacion.is_superuser = False
+            planificacion.is_active = True
+            planificacion.intentos_fallidos = 0
+            planificacion.set_password("123")
+            planificacion.groups.add(grupo_planificacion)
+            planificacion.save()
+
+            personal, _ = Usuario.objects.get_or_create(
+                username="44444444",
+                defaults={
+                    "first_name": "Personal",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            personal.is_staff = True
+            personal.is_superuser = False
+            personal.is_active = True
+            personal.intentos_fallidos = 0
+            personal.set_password("123")
+            personal.groups.add(grupo_personal)
+            personal.save()
 
             # ------------------------------------------------------------------
             # 2. Vehículos
@@ -855,6 +935,9 @@ class Command(BaseCommand):
             self.style.SUCCESS("✓ Datos maestros cargados exitosamente.")
         )
         self.stdout.write("  • Superusuario: 11111111 (clave: 123)")
+        self.stdout.write("  • Administrativo Conciliacion: 22222222 (clave: 123)")
+        self.stdout.write("  • Administrativo Planificacion: 33333333 (clave: 123)")
+        self.stdout.write("  • Administrativo Gestion Personal: 44444444 (clave: 123)")
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
         if options["con_remitos"]:

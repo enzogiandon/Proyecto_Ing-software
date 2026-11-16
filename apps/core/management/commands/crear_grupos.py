@@ -67,6 +67,10 @@ class Command(BaseCommand):
                 "change_cobranza",
                 "view_detallepago",
                 "change_detallepago",
+                # Ajustes de Cobranza
+                "add_ajustecobranza",
+                "change_ajustecobranza",
+                "view_ajustecobranza",
                 # Lectura para auditar entregas y facturación
                 "view_remito",
                 "view_comercio",

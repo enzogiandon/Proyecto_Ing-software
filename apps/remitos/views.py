@@ -4,6 +4,7 @@ import os
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, transaction
@@ -37,14 +38,11 @@ from .models import (
 )
 
 
-class CrearRemito(CreateView):
+class CrearRemito(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     form_class = RemitoForm
     template_name = "remitos/remito_form.html"
-
     success_url = reverse_lazy("remitos:remito_lista")
-
-    permission_required = ""
-    raise_exception = True
+    permission_required = "remitos.add_remito"
 
     def form_valid(self, form):
         comercio = form.cleaned_data.get("comercio")
@@ -63,28 +61,27 @@ class CrearRemito(CreateView):
         return super().form_valid(form)
 
 
-class EditarRemito(UpdateView):
+class EditarRemito(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = RemitoForm
     model = Remito
     template_name = "remitos/remito_form.html"
-
     success_url = reverse_lazy("remitos:remito_lista")
-
-    permission_required = ""
-    raise_exception = True
+    permission_required = "remitos.change_remito"
 
 
-class DetalleRemito(DetailView):
+class DetalleRemito(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Remito
     template_name = "remitos/remito_detalle.html"
     context_object_name = "remito"
+    permission_required = "remitos.view_remito"
 
 
-class ListaRemito(ListView):
+class ListaRemito(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Remito
     template_name = "remitos/remito_lista.html"
     context_object_name = "remitos"
     paginate_by = 25
+    permission_required = "remitos.view_remito"
 
     def get_queryset(self):
         qs = super().get_queryset().select_related("comercio", "marca").order_by("-id")
@@ -115,10 +112,11 @@ class ListaRemito(ListView):
         return context
 
 
-class EliminarRemito(DeleteView):
+class EliminarRemito(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Remito
     template_name = "remitos/remito_eliminar.html"
     success_url = reverse_lazy("remitos:remito_lista")
+    permission_required = "remitos.delete_remito"
 
     def form_valid(self, form):
         remito = self.get_object()
@@ -141,11 +139,12 @@ class EliminarRemito(DeleteView):
         return resultado
 
 
-class ImportarRemitos(CreateView):
+class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     form_class = ImportacionRemitosForm
     model = ImportacionRemitos
     template_name = "remitos/importar_csv.html"
     success_url = reverse_lazy("core:inicio")
+    permission_required = "remitos.add_importacionremitos"
 
     def form_valid(self, form):
         archivos = self.request.FILES.getlist("archivo")
@@ -352,11 +351,12 @@ class ImportarRemitos(CreateView):
         return redirect(self.success_url)
 
 
-class ListaImportacion(ListView):
+class ListaImportacion(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_lista.html"
     context_object_name = "importaciones"
     paginate_by = 25
+    permission_required = "remitos.view_importacionremitos"
 
     def get_queryset(self):
         return (
@@ -366,19 +366,21 @@ class ListaImportacion(ListView):
         )
 
 
-class DetalleImportacion(DetailView):
+class DetalleImportacion(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_detalle.html"
     context_object_name = "importacion"
+    permission_required = "remitos.view_importacionremitos"
 
     def get_queryset(self):
         return super().get_queryset().prefetch_related("errores")
 
 
-class EliminarImportacion(DeleteView):
+class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_eliminar.html"
     success_url = reverse_lazy("remitos:importacion_lista")
+    permission_required = "remitos.delete_importacionremitos"
 
     def _tiene_remitos_no_pendientes(self, importacion):
         # Verifica si existe al menos un remito cuyo estado NO sea 'pendiente'
@@ -417,65 +419,73 @@ class EliminarImportacion(DeleteView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class CrearComercio(SuccessMessageMixin, CreateView):
+class CrearComercio(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     form_class = ComercioForm
     model = Comercio
     template_name = "remitos/comercio_crear.html"
     context_object_name = "comercios"
     success_url = reverse_lazy("remitos:comercio_lista")
     success_message = "Comercio agregado exitosamente"
+    permission_required = "remitos.add_comercio"
 
 
-class ListaComercio(ListView):
+class ListaComercio(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Comercio
     template_name = "remitos/comercio_lista.html"
     context_object_name = "comercios"
     paginate_by = 25
+    permission_required = "remitos.view_comercio"
 
     def get_queryset(self):
         return Comercio.objects.all().order_by("-activo", "-id")
 
 
-class EditarComercio(UpdateView):
+class EditarComercio(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = ComercioForm
     model = Comercio
     template_name = "remitos/comercio_form.html"
     success_url = reverse_lazy("remitos:comercio_lista")
+    permission_required = "remitos.change_comercio"
 
 
-class EliminarComercio(DeleteView):
+class EliminarComercio(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Comercio
     template_name = "remitos/comercio_eliminar.html"
     success_url = reverse_lazy("remitos:comercio_lista")
+    permission_required = "remitos.delete_comercio"
 
 
-class CrearMarca(SuccessMessageMixin, CreateView):
+class CrearMarca(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     form_class = MarcaForm
     model = Marca
     template_name = "remitos/marca_crear.html"
     context_object_name = "marcas"
     success_url = reverse_lazy("remitos:marca_lista")
     success_message = "Marca agregado exitosamente"
+    permission_required = "remitos.add_marca"
 
 
-class ListaMarca(ListView):
+class ListaMarca(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Marca
     template_name = "remitos/marca_lista.html"
     context_object_name = "marcas"
     paginate_by = 25
+    permission_required = "remitos.view_marca"
 
     def get_queryset(self):
         return Marca.objects.all().order_by("-activo", "-id")
 
 
-class EditarMarca(UpdateView):
+class EditarMarca(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = MarcaForm
     model = Marca
     template_name = "remitos/marca_form.html"
     success_url = reverse_lazy("remitos:marca_lista")
+    permission_required = "remitos.change_marca"
 
 
-class EliminarMarca(DeleteView):
+class EliminarMarca(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Marca
     template_name = "remitos/marca_eliminar.html"
     success_url = reverse_lazy("remitos:marca_lista")
+    permission_required = "remitos.delete_marca"

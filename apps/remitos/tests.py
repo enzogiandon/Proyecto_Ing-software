@@ -1,10 +1,15 @@
 import re
 from decimal import Decimal
+from io import StringIO
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.core.models import Grupos
 from apps.itinerarios.models import EstadoItinerario, EstadoParada, Itinerario, Parada
 from apps.remitos.forms import RemitoForm
 from apps.remitos.models import (
@@ -21,6 +26,18 @@ from apps.remitos.models import (
 
 class RemitoTestCase(TestCase):
     def setUp(self):
+        call_command("crear_grupos", stdout=StringIO())
+        self.grupo_planificacion = Group.objects.get(
+            name=Grupos.ADMIN_PLANIFICACION
+        )
+        user_model = get_user_model()
+        self.usuario = user_model.objects.create_user(
+            username="33333333",
+            password="Test-Password-123!",
+        )
+        self.usuario.groups.add(self.grupo_planificacion)
+        self.client.force_login(self.usuario)
+
         self.comercio = Comercio.objects.create(
             razon_social="Comercio de prueba",
             cuit="30112233445",
@@ -259,6 +276,18 @@ class RemitoViewsTests(RemitoTestCase):
 
 class ImportacionRemitosTestCase(TestCase):
     def setUp(self):
+        call_command("crear_grupos", stdout=StringIO())
+        self.grupo_planificacion = Group.objects.get(
+            name=Grupos.ADMIN_PLANIFICACION
+        )
+        user_model = get_user_model()
+        self.usuario = user_model.objects.create_user(
+            username="44444444",
+            password="Test-Password-123!",
+        )
+        self.usuario.groups.add(self.grupo_planificacion)
+        self.client.force_login(self.usuario)
+
         self.marca1 = Marca.objects.create(
             nombre="Marca Uno",
             cuit="30654321090",

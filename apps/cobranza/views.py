@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import (
@@ -11,6 +12,8 @@ from django.views.generic import (
     ListView,
     UpdateView,
 )
+
+from apps.remitos.models import Remito
 
 from .forms import (
     AjusteCobranzaForm,
@@ -66,7 +69,14 @@ class DetalleCobranza(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
             super()
             .get_queryset()
             .select_related("parada__comercio")
-            .prefetch_related("detalles", "ajustes__usuario", "parada__remitos")
+            .prefetch_related(
+                "detalles",
+                "ajustes__usuario",
+                Prefetch(
+                    "parada__remitos",
+                    queryset=Remito.objects.filter(eliminado=False),
+                ),
+            )
         )
 
     def get_context_data(self, **kwargs):

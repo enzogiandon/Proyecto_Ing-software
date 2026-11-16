@@ -72,11 +72,17 @@ class EditarRemito(UpdateView):
     permission_required = ""
     raise_exception = True
 
+    def get_queryset(self):
+        return super().get_queryset().filter(eliminado=False)
+
 
 class DetalleRemito(DetailView):
     model = Remito
     template_name = "remitos/remito_detalle.html"
     context_object_name = "remito"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(eliminado=False)
 
 
 class ListaRemito(ListView):
@@ -86,12 +92,11 @@ class ListaRemito(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related("comercio", "marca").order_by("-id")
+        qs = super().get_queryset().filter(eliminado=False).select_related("comercio", "marca").order_by("-id")
 
         comercio = self.request.GET.get("comercio", "").strip()
         estado = self.request.GET.get("estado", "").strip()
         marca = self.request.GET.get("marca", "").strip()
-        fecha = self.request.GET.get("fecha", "").strip()
 
         if comercio:
             qs = qs.filter(comercio__razon_social__icontains=comercio)
@@ -99,8 +104,6 @@ class ListaRemito(ListView):
             qs = qs.filter(estado=estado)
         if marca:
             qs = qs.filter(marca_id=marca)
-        if fecha:
-            qs = qs.filter(fecha_creacion__date=fecha)
 
         return qs
 
@@ -114,7 +117,6 @@ class ListaRemito(ListView):
         context["filtro_comercio"] = self.request.GET.get("comercio", "")
         context["filtro_estado"] = self.request.GET.get("estado", "")
         context["filtro_marca"] = self.request.GET.get("marca", "")
-        context["filtro_fecha"] = self.request.GET.get("fecha", "")
         return context
 
 
@@ -122,6 +124,9 @@ class EliminarRemito(DeleteView):
     model = Remito
     template_name = "remitos/remito_eliminar.html"
     success_url = reverse_lazy("remitos:remito_lista")
+
+    def get_queryset(self):
+        return super().get_queryset().filter(eliminado=False)
 
     def form_valid(self, form):
         remito = self.get_object()

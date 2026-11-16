@@ -6,11 +6,20 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
-from apps.cobranza.models import AjusteCobranza, Cobranza, DetallePago
+from apps.cobranza.models import (
+    AjusteCobranza,
+    Cobranza,
+    DetallePago,
+    EstadoCobranza,
+    MedioPago,
+)
 from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
+    EstadoItinerario,
+    EstadoParada,
     EvidenciaParada,
     Itinerario,
     Parada,
@@ -32,7 +41,7 @@ Usuario = get_user_model()
 class Command(BaseCommand):
     help = (
         "Carga datos maestros (Superusuario, Vehículos, Usuarios Chofer, Marcas, Comercios) "
-        "y opcionalmente Remitos PENDIENTES."
+        "y opcionalmente Remitos, Itinerarios y Cobranzas."
     )
 
     def add_arguments(self, parser):
@@ -45,6 +54,11 @@ class Command(BaseCommand):
             "--con-remitos",
             action="store_true",
             help="Carga un conjunto de remitos de prueba pendientes (por defecto no se cargan remitos).",
+        )
+        parser.add_argument(
+            "--completo",
+            action="store_true",
+            help="Carga el flujo completo: remitos, itinerario con paradas asignado al usuario 1234567 y cobranzas.",
         )
 
     def handle(self, *args, **options):
@@ -612,6 +626,41 @@ class Command(BaseCommand):
                     "telefono": "1142500040",
                     "activo": True,
                 },
+                {
+                    "razon_social": "AUTOSERVICIO LA RIBERA",
+                    "cuit": "23200033191",
+                    "domicilio": "Dorrego 3429, Sarandi",
+                    "telefono": "1142500000",
+                    "activo": True,
+                },
+                {
+                    "razon_social": "MINIMERCADO EL FARO",
+                    "cuit": "23200000145",
+                    "domicilio": "Av. Rivadavia 1928, Lanus",
+                    "telefono": "1142500000",
+                    "activo": True,
+                },
+                {
+                    "razon_social": "KIOSCO EL TREBOL S.A.S.",
+                    "cuit": "20200022190",
+                    "domicilio": "Av. Hipolito Yrigoyen 117, Wilde",
+                    "telefono": "1142500000",
+                    "activo": True,
+                },
+                {
+                    "razon_social": "DESPENSA SAN CAYETANO",
+                    "cuit": "20200070268",
+                    "domicilio": "Independencia 1802, Temperley",
+                    "telefono": "1142500000",
+                    "activo": True,
+                },
+                {
+                    "razon_social": "MINIMERCADO EL HORNERO S.A.S.",
+                    "cuit": "23200008855",
+                    "domicilio": "San Martin 2269, Lanus",
+                    "telefono": "1142500000",
+                    "activo": True,
+                },
             ]
 
             comercios = {}
@@ -622,10 +671,12 @@ class Command(BaseCommand):
                 comercios[c_data["cuit"]] = comercio
 
             # ------------------------------------------------------------------
-            # 6. Remitos PENDIENTES (opcional mediante --con-remitos)
+            # 6. Remitos (opcional mediante --con-remitos o --completo)
             # ------------------------------------------------------------------
             total_remitos = 0
-            if options["con_remitos"]:
+            cargar_remitos = options["con_remitos"] or options["completo"]
+            remitos_creados = {}
+            if cargar_remitos:
                 remitos_definicion = [
                     # Cerveceria La Diagonal S.A. (30654321090)
                     {
@@ -706,7 +757,7 @@ class Command(BaseCommand):
                 ]
 
                 for r_info in remitos_definicion:
-                    _, creado = Remito.objects.get_or_create(
+                    remito_obj, creado = Remito.objects.get_or_create(
                         numero=r_info["numero"],
                         defaults={
                             "marca": r_info["marca"],
@@ -717,8 +768,155 @@ class Command(BaseCommand):
                             "importacion": None,
                         },
                     )
+                    remitos_creados[r_info["numero"]] = remito_obj
                     if creado:
                         total_remitos += 1
+
+            # ------------------------------------------------------------------
+            # 7. Flujo Completo: Itinerario, Paradas y Cobranza para usuario 1234567
+            # ------------------------------------------------------------------
+            itinerario_creado = None
+            total_paradas_creadas = 0
+            total_cobranzas_creadas = 0
+
+            if options["completo"]:
+                chofer_user = Usuario.objects.filter(username="1234567").first()
+                if not chofer_user:
+                    self.stdout.write(
+                        self.style.ERROR("No se encontró el usuario 1234567.")
+                    )
+                else:
+                    transportista_1234567 = getattr(
+                        chofer_user, "perfil_transportista", None
+                    )
+                    vehiculo_1234567 = (
+                        transportista_1234567.vehiculo if transportista_1234567 else None
+                    )
+
+                    hoy = timezone.now().date()
+                    itinerario_creado = Itinerario.objects.create(
+                        fecha=hoy,
+                        estado=EstadoItinerario.ASIGNADO,
+                        transportista=transportista_1234567,
+                        vehiculo=vehiculo_1234567,
+                    )
+
+                    # Parada 1: Comercio "23200048148" (finalizada con cobranza registrada en 2 medios de pago)
+                    comercio_1 = comercios["23200048148"]
+                    parada_1 = Parada.objects.create(
+                        itinerario=itinerario_creado,
+                        comercio=comercio_1,
+                        orden=1,
+                        estado=EstadoParada.FINALIZADA,
+                        hora_entrega=timezone.now(),
+                    )
+                    total_paradas_creadas += 1
+
+                    remito_1 = remitos_creados.get("0005-00024715")
+                    if remito_1:
+                        remito_1.parada = parada_1
+                        remito_1.estado = EstadoRemito.ENTREGADO
+                        remito_1.save(update_fields=["parada", "estado"])
+
+                        cobranza_1 = Cobranza.objects.create(
+                            parada=parada_1,
+                            estado=EstadoCobranza.REGISTRADO,
+                        )
+                        # Pago con 2 medios (efectivo y transferencia)
+                        monto_efectivo = Decimal("150000.00")
+                        monto_transferencia = remito_1.total - monto_efectivo
+
+                        DetallePago.objects.create(
+                            cobranza=cobranza_1,
+                            medio=MedioPago.EFECTIVO,
+                            monto_declarado=monto_efectivo,
+                            monto_verificado=None,
+                        )
+                        DetallePago.objects.create(
+                            cobranza=cobranza_1,
+                            medio=MedioPago.TRANSFERENCIA,
+                            monto_declarado=monto_transferencia,
+                            monto_verificado=None,
+                        )
+                        total_cobranzas_creadas += 1
+
+                    # Parada 2: Comercio "23200000145" (finalizada con cobranza registrada / pendiente de validación)
+                    # Este comercio tiene dos remitos: 0002-00015378 ($475923.72) y 0004-00003901 ($733385.18)
+                    comercio_2 = comercios["23200000145"]
+                    parada_2 = Parada.objects.create(
+                        itinerario=itinerario_creado,
+                        comercio=comercio_2,
+                        orden=2,
+                        estado=EstadoParada.FINALIZADA,
+                        hora_entrega=timezone.now(),
+                    )
+                    total_paradas_creadas += 1
+
+                    remito_2a = remitos_creados.get("0002-00015378")
+                    remito_2b = remitos_creados.get("0004-00003901")
+                    total_monto_parada_2 = Decimal("0.00")
+
+                    if remito_2a:
+                        remito_2a.parada = parada_2
+                        remito_2a.estado = EstadoRemito.ENTREGADO
+                        remito_2a.save(update_fields=["parada", "estado"])
+                        total_monto_parada_2 += remito_2a.total
+
+                    if remito_2b:
+                        remito_2b.parada = parada_2
+                        remito_2b.estado = EstadoRemito.ENTREGADO
+                        remito_2b.save(update_fields=["parada", "estado"])
+                        total_monto_parada_2 += remito_2b.total
+
+                    if total_monto_parada_2 > Decimal("0.00"):
+                        cobranza_2 = Cobranza.objects.create(
+                            parada=parada_2,
+                            estado=EstadoCobranza.REGISTRADO,
+                        )
+                        DetallePago.objects.create(
+                            cobranza=cobranza_2,
+                            medio=MedioPago.TRANSFERENCIA,
+                            monto_declarado=total_monto_parada_2,
+                            monto_verificado=None,
+                        )
+                        total_cobranzas_creadas += 1
+
+                    # Parada 3: Comercio "23200033191" (pendiente de entrega)
+                    comercio_3 = comercios["23200033191"]
+                    parada_3 = Parada.objects.create(
+                        itinerario=itinerario_creado,
+                        comercio=comercio_3,
+                        orden=3,
+                        estado=EstadoParada.PENDIENTE,
+                    )
+                    total_paradas_creadas += 1
+
+                    remito_3 = remitos_creados.get("0002-00023458")
+                    if remito_3:
+                        remito_3.parada = parada_3
+                        remito_3.estado = EstadoRemito.ASIGNADO
+                        remito_3.save(update_fields=["parada", "estado"])
+
+                    # Parada 4: Comercio "23200056655" (pendiente de entrega, con 2 remitos)
+                    comercio_4 = comercios["23200056655"]
+                    parada_4 = Parada.objects.create(
+                        itinerario=itinerario_creado,
+                        comercio=comercio_4,
+                        orden=4,
+                        estado=EstadoParada.PENDIENTE,
+                    )
+                    total_paradas_creadas += 1
+
+                    remito_4a = remitos_creados.get("0002-00023496")
+                    remito_4b = remitos_creados.get("0005-00015345")
+                    if remito_4a:
+                        remito_4a.parada = parada_4
+                        remito_4a.estado = EstadoRemito.ASIGNADO
+                        remito_4a.save(update_fields=["parada", "estado"])
+                    if remito_4b:
+                        remito_4b.parada = parada_4
+                        remito_4b.estado = EstadoRemito.ASIGNADO
+                        remito_4b.save(update_fields=["parada", "estado"])
 
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros cargados exitosamente.")
@@ -729,12 +927,21 @@ class Command(BaseCommand):
         self.stdout.write("  • Administrativo Gestion Personal: 44444444 (clave: 123)")
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
-        if options["con_remitos"]:
+        if cargar_remitos:
             self.stdout.write(
-                f"  • Remitos PENDIENTES: {len(remitos_definicion)} ({total_remitos} nuevos)"
+                f"  • Remitos cargados: {len(remitos_definicion)} ({total_remitos} nuevos)"
             )
         else:
-            self.stdout.write("  • Remitos PENDIENTES: 0 (use --con-remitos para cargarlos)")
-        self.stdout.write(
-            "  • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)"
-        )
+            self.stdout.write("  • Remitos: 0 (use --con-remitos o --completo para cargarlos)")
+
+        if options["completo"]:
+            self.stdout.write(
+                f"  • Itinerario asignado a 1234567: ID #{itinerario_creado.id if itinerario_creado else 'N/A'} con {total_paradas_creadas} paradas."
+            )
+            self.stdout.write(
+                f"  • Cobranzas registradas: {total_cobranzas_creadas}."
+            )
+        else:
+            self.stdout.write(
+                "  • Itinerarios y Paradas: Ninguno creado (use --completo para generarlos)"
+            )

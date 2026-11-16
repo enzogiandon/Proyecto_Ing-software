@@ -93,4 +93,22 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const itinerarioSelect = document.getElementById("id_itinerario");
+        if (itinerarioSelect) {
+            itinerarioSelect.addEventListener("change", function () {
+                const itinerarioId = this.value;
+                const url = new URL(window.location.href);
+                if (itinerarioId) {
+                    url.searchParams.set("itinerario", itinerarioId);
+                } else {
+                    url.searchParams.delete("itinerario");
+                }
+                window.location.href = url.toString();
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -23,7 +23,7 @@ function load(file, modules) {
 }
 
 function pantalla(api, itinerarioService = {}, router = {}) {
-  const { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta } = load('services/itinerarios.ts', {
+  const { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta, crearPlantillaRuta } = load('services/itinerarios.ts', {
     './api': api, 'react-native': {}, '../utils/importes': {}, './paradaService': {},
     '../data/mockParada': {}, '../data/mockItinerario': {},
   });
@@ -47,12 +47,12 @@ function pantalla(api, itinerarioService = {}, router = {}) {
     react: React,
     'react-native': {
       ActivityIndicator: 'ActivityIndicator', Image: 'Image', Modal: 'Modal', Pressable: 'Pressable',
-      ScrollView: 'ScrollView', Text: 'Text', View: 'View', StyleSheet: { create: (styles) => styles },
+      ScrollView: 'ScrollView', Text: 'Text', TextInput: 'TextInput', View: 'View', StyleSheet: { create: (styles) => styles },
     },
     'expo-router': { useRouter: () => router, useFocusEffect: (fn) => { efectos.push(fn); } },
     'react-native-safe-area-context': { SafeAreaView: 'SafeAreaView' },
     '../constants/theme': { RepartoYA: {} },
-    '../services/itinerarios': { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta },
+    '../services/itinerarios': { eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta, crearPlantillaRuta },
     '../services/itinerarioService': {
       obtenerItinerarioJornada: async () => ({ itinerario: null }),
       ...itinerarioService,
@@ -152,6 +152,13 @@ function boton(app, texto) {
   const encontrado = nodos(app.render()).find((nodo) =>
     nodo.tipo === 'Pressable' && (nodo.props?.accessibilityLabel === texto || textos(nodo).includes(texto)));
   assert.ok(encontrado, texto);
+  return encontrado.props;
+}
+
+function campoTexto(app, label) {
+  const encontrado = nodos(app.render()).find((nodo) =>
+    nodo.tipo === 'TextInput' && (nodo.props?.accessibilityLabel === label || nodo.props?.placeholder?.includes(label)));
+  assert.ok(encontrado, label);
   return encontrado.props;
 }
 
@@ -362,4 +369,133 @@ test('si actualizar el listado sigue fallando, cancelar conserva la tarjeta sin 
   assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
   assert.ok(textos(app.render()).includes('1 recorrido guardado'));
   assert.equal(escenario.posts.length, 1);
+});
+
+// =========================================================================
+// HU-26: Guardar recorrido (Escenarios 1, 2 y 3)
+// =========================================================================
+
+test('HU 26 Escenario 1: registro exitoso de recorrido despliega modal, persiste en Django y muestra toast', async () => {
+  const posts = [];
+  const app = pantalla({
+    async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; },
+    async post(url, body) {
+      posts.push([url, body]);
+      return { data: { id: 88, nombre: body.nombre, total_comercios: 2, mensaje: 'Ruta guardada' } };
+    },
+  }, {
+    async obtenerItinerarioJornada() {
+      return { itinerario: { paradas: [{ id: 12 }, { id: 31 }] } };
+    },
+  });
+  await asentar();
+
+  // 1. Contador inicial: 1 recorrido guardado
+  assert.ok(textos(app.render()).includes('1 recorrido guardado'));
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+
+  // 2. Presionar botón "+ Guardar orden actual" abre el modal
+  boton(app, '+ Guardar orden actual').onPress();
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.ok(textos(app.render()).includes('Guardar recorrido'));
+
+  // 3. Ingresar denominación válida (ej. "Ruta Centro Rápida")
+  campoTexto(app, 'Nombre del recorrido').onChangeText('Ruta Centro Rápida');
+
+  // 4. Presionar "Guardar"
+  await boton(app, 'Guardar').onPress();
+
+  // 5. Verifica POST enviado a Django
+  assert.equal(posts.length, 1);
+  assert.equal(posts[0][0], 'itinerarios/crear-ruta/');
+  assert.equal(posts[0][1].nombre, 'Ruta Centro Rápida');
+  assert.deepEqual(posts[0][1].parada_ids, [12, 31]);
+
+  // 6. Modal se cierra, contador pasa a 2 y se muestra la nueva tarjeta y el toast
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  const vistaActualizada = textos(app.render());
+  assert.ok(vistaActualizada.includes('2 recorridos guardados'));
+  assert.ok(vistaActualizada.includes('Ruta Centro Rápida'));
+  assert.ok(vistaActualizada.includes('Recorrido guardado correctamente'));
+});
+
+test('HU 26 Escenario 2: validación de nombre obligatorio bloquea guardado y muestra mensaje de advertencia', async () => {
+  const posts = [];
+  const app = pantalla({
+    async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; },
+    async post(url, body) {
+      posts.push([url, body]);
+      return { data: {} };
+    },
+  });
+  await asentar();
+
+  boton(app, '+ Guardar orden actual').onPress();
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+
+  // Intento 1: campo vacío
+  await boton(app, 'Guardar').onPress();
+  assert.equal(posts.length, 0);
+  assert.ok(textos(app.render()).includes('Ingresá un nombre para guardar el recorrido'));
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+
+  // Intento 2: campo únicamente con espacios en blanco
+  campoTexto(app, 'Nombre del recorrido').onChangeText('     ');
+  await boton(app, 'Guardar').onPress();
+  assert.equal(posts.length, 0);
+  assert.ok(textos(app.render()).includes('Ingresá un nombre para guardar el recorrido'));
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+});
+
+test('HU 26 Escenario 3: cancelación del guardado cierra la ventana emergente sin persistir registros', async () => {
+  const posts = [];
+  const app = pantalla({
+    async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; },
+    async post(url, body) {
+      posts.push([url, body]);
+      return { data: {} };
+    },
+  });
+  await asentar();
+
+  // Caso 1: Cerrar con botón Cancelar
+  boton(app, '+ Guardar orden actual').onPress();
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  campoTexto(app, 'Nombre del recorrido').onChangeText('Ruta Cancelada');
+  boton(app, 'Cancelar').onPress();
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.equal(posts.length, 0);
+  assert.ok(textos(app.render()).includes('1 recorrido guardado'));
+  assert.ok(!textos(app.render()).includes('Ruta Cancelada'));
+
+  // Caso 2: Cerrar con ícono de cierre ✕
+  boton(app, '+ Guardar orden actual').onPress();
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  boton(app, 'Cerrar modal').onPress();
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  assert.equal(posts.length, 0);
+});
+
+test('HU 26 Simulación offline: permite guardar recorrido en modo simulación ante Network Error o sin conexión', async () => {
+  const posts = [];
+  const app = pantalla({
+    async get() { return { data: [{ id: 17, nombre: 'Norte' }] }; },
+    async post(url, body) {
+      posts.push([url, body]);
+      throw new Error('Network Error');
+    },
+  });
+  await asentar();
+
+  boton(app, '+ Guardar orden actual').onPress();
+  assert.ok(nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  campoTexto(app, 'Nombre del recorrido').onChangeText('Ruta Simulada Sin Backend');
+  await boton(app, 'Guardar').onPress();
+
+  // El modal se cierra, se incorpora la tarjeta simulada y se muestra el toast
+  assert.ok(!nodos(app.render()).some((nodo) => nodo.tipo === 'Modal'));
+  const vistaActualizada = textos(app.render());
+  assert.ok(vistaActualizada.includes('Ruta Simulada Sin Backend'));
+  assert.ok(vistaActualizada.includes('Recorrido guardado correctamente'));
+  assert.ok(vistaActualizada.includes('2 recorridos guardados'));
 });

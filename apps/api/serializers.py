@@ -147,16 +147,26 @@ class GuardarRutaSerializer(serializers.Serializer):
     parada_ids = serializers.ListField(
         child=serializers.IntegerField(),
         allow_empty=False,
-        help_text="Lista de IDs de paradas el el orden deseado",
+        help_text="Lista de IDs de paradas en el orden deseado",
     )
+
+    def validate_parada_ids(self, value):
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError("La lista de paradas contiene IDs duplicados.")
+        return value
 
 
 class CrearRutaGuardadaSerializer(serializers.Serializer):
     nombre = serializers.CharField(max_length=50, required=True)
     # Lista de IDs de parada en el orden deseado para guardar la plantilla
     parada_ids = serializers.ListField(
-        child=serializers.IntegerField(), required=True, allow_empty=False
+        child=serializers.IntegerField(), required=False, allow_empty=True, default=list
     )
+
+    def validate_parada_ids(self, value):
+        if value and len(value) != len(set(value)):
+            raise serializers.ValidationError("La lista de paradas contiene IDs duplicados.")
+        return value
 
 
 class RutaGuardadaSerializer(serializers.ModelSerializer):

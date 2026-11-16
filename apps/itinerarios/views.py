@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Case, Count, IntegerField, Prefetch, Sum, When
+from django.db.models import Case, Count, IntegerField, Prefetch, Q, Sum, When
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView
@@ -31,11 +31,24 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     def get_queryset(self):
         qs = (
             Itinerario.objects.select_related("transportista__usuario", "vehiculo")
-            .prefetch_related("paradas__comercio", "paradas__remitos")
+            .prefetch_related(
+                "paradas__comercio",
+                Prefetch(
+                    "paradas__remitos",
+                    queryset=Remito.objects.filter(eliminado=False),
+                ),
+            )
             .annotate(
                 total_paradas=Count("paradas", distinct=True),
-                total_remitos=Count("paradas__remitos", distinct=True),
-                monto_total=Sum("paradas__remitos__total"),
+                total_remitos=Count(
+                    "paradas__remitos",
+                    filter=Q(paradas__remitos__eliminado=False),
+                    distinct=True,
+                ),
+                monto_total=Sum(
+                    "paradas__remitos__total",
+                    filter=Q(paradas__remitos__eliminado=False),
+                ),
             )
             .order_by("-fecha", "id")
         )
@@ -181,6 +194,13 @@ class CrearParadas(
     success_url = reverse_lazy("itinerarios:itinerario_lista")
     success_message = "Paradas asignadas correctamente"
     permission_required = ("itinerarios.add_parada", "remitos.change_remito")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        itinerario_id = self.request.GET.get("itinerario")
+        if itinerario_id:
+            kwargs["itinerario_id"] = itinerario_id
+        return kwargs
 
     def form_valid(self, form):
         try:

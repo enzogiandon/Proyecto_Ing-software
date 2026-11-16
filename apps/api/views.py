@@ -103,7 +103,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         itinerario = Itinerario.objects.filter(
             transportista=user.perfil_transportista,
             estado__in=[EstadoItinerario.ASIGNADO],
-        ).first()
+        ).order_by("-fecha", "-id").first()
 
         if not itinerario:
             raise ValidationError(
@@ -150,7 +150,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         itinerario = Itinerario.objects.filter(
             transportista=user.perfil_transportista,
             estado__in=[EstadoItinerario.ASIGNADO],
-        ).first()
+        ).order_by("-fecha", "-id").first()
 
         if not itinerario:
             return Response(None, status=status.HTTP_404_NOT_FOUND)
@@ -164,7 +164,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         paradas_data = []
         for p in paradas:
             remitos_activos = p.remitos.filter(eliminado=False)
-            monto_parada = sum(float(r.monto_total) for r in remitos_activos)
+            monto_parada = sum(float(r.total) for r in remitos_activos)
             paradas_data.append(
                 {
                     "id": p.id,
@@ -222,25 +222,35 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         parada_ids = serializer.validated_data["parada_ids"]
-        paradas_actuales = {p.id: p for p in itinerario.paradas.all()}
+        paradas_actuales = {p.id: p for p in itinerario.paradas.order_by("orden", "id")}
 
-        if set(parada_ids) != set(paradas_actuales.keys()):
+        if not set(parada_ids).issubset(set(paradas_actuales.keys())):
             raise ValidationError(
                 {
-                    "detail": "La lista enviada no coincide exactamente con las paradas del itinerario."
+                    "detail": "Las paradas enviadas no pertenecen al itinerario activo."
                 }
             )
 
-        paradas_para_actualizar = []
-        for index, p_id in enumerate(parada_ids, start=1):
+        # Reordenamiento posicional respetando slots (HU-24):
+        # Las paradas presentes en parada_ids se reorganizan dentro de sus propios slots,
+        # preservando intactas las posiciones relativas de las paradas no mencionadas/finalizadas.
+        reemplazo_iter = iter(parada_ids)
+        ids_en_reordenamiento = set(parada_ids)
+        orden_completo = [
+            next(reemplazo_iter) if p_id in ids_en_reordenamiento else p_id
+            for p_id in paradas_actuales
+        ]
+
+        paradas_ordenadas = []
+        for index, p_id in enumerate(orden_completo, start=1):
             parada = paradas_actuales[p_id]
             parada.orden = index
-            paradas_para_actualizar.append(parada)
+            paradas_ordenadas.append(parada)
 
         with transaction.atomic():
-            Parada.objects.bulk_update(paradas_para_actualizar, fields=["orden"])
+            Parada.objects.bulk_update(paradas_ordenadas, fields=["orden"])
 
-        respuesta = ListaParadaSerializer(paradas_para_actualizar, many=True)
+        respuesta = ListaParadaSerializer(paradas_ordenadas, many=True)
         return Response(respuesta.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"], url_path="crear-ruta")
@@ -259,17 +269,24 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         nombre_ruta = serializer.validated_data["nombre"].strip()
-        parada_ids = serializer.validated_data["parada_ids"]
+        parada_ids = serializer.validated_data.get("parada_ids") or []
 
+        # Validar paradas según itinerario activo (HU-26).
+        # Si no se enviaron, tomamos todas las paradas del itinerario activo en su orden actual.
+        # Si se enviaron, todas deben pertenecer al itinerario activo.
         paradas_dict = {p.id: p for p in itinerario.paradas.select_related("comercio")}
-        if not set(parada_ids).issubset(set(paradas_dict.keys())):
-            raise ValidationError(
-                {
-                    "detail": (
-                        "Algunas de las paradas indicadas no pertenecen a tu itinerario activo."
-                    )
-                }
-            )
+        if not parada_ids:
+            parada_ids = list(itinerario.paradas.order_by("orden", "id").values_list("id", flat=True))
+        else:
+            if not set(parada_ids).issubset(set(paradas_dict.keys())):
+                raise ValidationError(
+                    {
+                        "detail": (
+                            "Algunas de las paradas indicadas no pertenecen a tu"
+                            " itinerario activo."
+                        )
+                    }
+                )
 
         transportista = request.user.perfil_transportista
 
@@ -282,14 +299,23 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
             if not creada:
                 ruta_guardada.detalles.all().delete()
 
-            detalles_para_crear = [
-                DetalleRutaGuardada(
-                    ruta_guardada=ruta_guardada,
-                    comercio=paradas_dict[p_id].comercio,
-                    prioridad=prioridad,
-                )
-                for prioridad, p_id in enumerate(parada_ids, start=1)
-            ]
+            # Deduplicar por comercio para respetar UniqueConstraint(ruta_guardada, comercio)
+            # conservando la prioridad de la primera aparición
+            detalles_para_crear = []
+            comercios_vistos = set()
+            prioridad = 1
+            for p_id in parada_ids:
+                comercio = paradas_dict[p_id].comercio
+                if comercio.id not in comercios_vistos:
+                    comercios_vistos.add(comercio.id)
+                    detalles_para_crear.append(
+                        DetalleRutaGuardada(
+                            ruta_guardada=ruta_guardada,
+                            comercio=comercio,
+                            prioridad=prioridad,
+                        )
+                    )
+                    prioridad += 1
 
             DetalleRutaGuardada.objects.bulk_create(detalles_para_crear)
             ordenar_itinerario_segun_ruta(itinerario, ruta_guardada)

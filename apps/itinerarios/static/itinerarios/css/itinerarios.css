@@ -124,6 +124,10 @@
   padding: var(--spacing-20, 20px);
 }
 
+.itinerarios-card--form {
+  max-width: 680px;
+}
+
 .itinerarios-tabla {
   width: 100%;
   border-collapse: separate;

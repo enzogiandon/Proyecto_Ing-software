@@ -259,3 +259,6 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+
+# Temporary scratch and QA artifacts
+scratch/

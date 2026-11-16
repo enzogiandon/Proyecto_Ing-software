@@ -2,12 +2,12 @@ from collections.abc import Iterable
 from datetime import date
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import models, transaction
 
 from apps.core.models import Transportista
 from apps.remitos.models import Comercio, EstadoRemito, Remito
 
-from .models import EstadoItinerario, Itinerario, Parada, RutaGuardada
+from .models import EstadoItinerario, EstadoParada, Itinerario, Parada, RutaGuardada
 
 
 @transaction.atomic
@@ -40,37 +40,65 @@ def crear_paradas(
     itinerario: Itinerario, comercios: Iterable[Comercio]
 ) -> list[Parada]:
     itinerario = Itinerario.objects.select_for_update().get(pk=itinerario.pk)
-    if itinerario.paradas.exists():
-        raise ValidationError("El itinerario seleccionado ya tiene paradas asignadas.")
 
-    comercios = list(comercios)
-    if not comercios:
+    comercios_seleccionados = list(comercios)
+    if not comercios_seleccionados:
         raise ValidationError("Seleccioná al menos un comercio.")
 
-    paradas = []
-    for comercio in comercios:
-        remitos_pendientes = Remito.objects.filter(
-            comercio=comercio,
-            estado=EstadoRemito.PENDIENTE,
-            eliminado=False,
-        )
-        if not remitos_pendientes.exists():
-            raise ValidationError(
-                f'El comercio "{comercio}" ya no tiene remitos pendientes.'
+    comercios_seleccionados_ids = {c.id for c in comercios_seleccionados}
+
+    # 1. Paradas existentes en este itinerario
+    paradas_existentes = list(itinerario.paradas.select_related("comercio").order_by("orden", "id"))
+    paradas_existentes_por_comercio = {p.comercio_id: p for p in paradas_existentes}
+
+    # 2. Desasignar comercios desmarcados (solo paradas en estado PENDIENTE)
+    for p in paradas_existentes:
+        if p.comercio_id not in comercios_seleccionados_ids and p.estado == EstadoParada.PENDIENTE:
+            Remito.objects.filter(parada=p, eliminado=False).update(
+                parada=None,
+                estado=EstadoRemito.PENDIENTE,
             )
+            p.delete()
+            paradas_existentes_por_comercio.pop(p.comercio_id, None)
 
-        parada = Parada.objects.create(
-            itinerario=itinerario,
-            comercio=comercio,
-            orden=len(paradas) + 1,
-        )
-        remitos_pendientes.update(
-            parada=parada,
-            estado=EstadoRemito.ASIGNADO,
-        )
-        paradas.append(parada)
+    # 3. Agregar comercios nuevos
+    max_orden = (
+        itinerario.paradas.aggregate(max_orden=models.Max("orden"))["max_orden"] or 0
+    )
 
-    return paradas
+    for comercio in comercios_seleccionados:
+        if comercio.id not in paradas_existentes_por_comercio:
+            remitos_pendientes = Remito.objects.filter(
+                comercio=comercio,
+                estado=EstadoRemito.PENDIENTE,
+                eliminado=False,
+            )
+            if not remitos_pendientes.exists():
+                raise ValidationError(
+                    f'El comercio "{comercio}" ya no tiene remitos pendientes.'
+                )
+
+            max_orden += 1
+            nueva_parada = Parada.objects.create(
+                itinerario=itinerario,
+                comercio=comercio,
+                orden=max_orden,
+                estado=EstadoParada.PENDIENTE,
+            )
+            remitos_pendientes.update(
+                parada=nueva_parada,
+                estado=EstadoRemito.ASIGNADO,
+            )
+            paradas_existentes_por_comercio[comercio.id] = nueva_parada
+
+    # 4. Reenumerar orden de paradas restantes
+    paradas_finales = list(itinerario.paradas.all().order_by("orden", "id"))
+    for idx, p in enumerate(paradas_finales, start=1):
+        if p.orden != idx:
+            p.orden = idx
+            p.save(update_fields=["orden"])
+
+    return paradas_finales
 
 
 def ordenar_itinerario_segun_ruta(

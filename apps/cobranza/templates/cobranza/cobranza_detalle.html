@@ -226,30 +226,31 @@
                       <tr>
                           <th class="ps-3">Fecha y Hora</th>
                           <th>Medio de Pago</th>
-                          <th>Administrativo</th>
-                          <th>Importe Anterior</th>
-                          <th>Importe Nuevo</th>
+                          <th>Administrativo (DNI)</th>
+                          <th>Monto del Ajuste</th>
                           <th>Motivo</th>
                       </tr>
                   </thead>
                   <tbody>
-                      {% for detalle in cobranza.detalles.all %}
-                          {% for ajuste in detalle.ajustes.all %}
-                          <tr>
-                              <td class="ps-3 small text-muted">{{ ajuste.fecha|date:"d/m/Y H:i" }} hs</td>
-                              <td>
-                                  <span class="badge bg-light text-dark border">{{ detalle.get_medio_display }}</span>
-                              </td>
-                              <td class="fw-semibold">{{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}</td>
-                              <td class="text-secondary">${{ ajuste.importe_anterior }}</td>
-                              <td class="text-success fw-bold">${{ ajuste.importe_nuevo }}</td>
-                              <td class="small">{{ ajuste.motivo }}</td>
-                          </tr>
-                          {% endfor %}
+                      {% for ajuste in cobranza.ajustes.all %}
+                      <tr>
+                          <td class="ps-3 small text-muted">{{ ajuste.fecha|date:"d/m/Y H:i" }} hs</td>
+                          <td>
+                              <span class="badge bg-light text-dark border">{{ ajuste.get_medio_display }}</span>
+                          </td>
+                          <td class="fw-semibold">
+                              {{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}
+                              <small class="text-muted">(DNI: {{ ajuste.usuario.username }})</small>
+                          </td>
+                          <td class="{% if ajuste.monto < 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                              ${{ ajuste.monto }}
+                          </td>
+                          <td class="small">{{ ajuste.motivo }}</td>
+                      </tr>
                       {% empty %}
-                          <tr>
-                              <td colspan="6" class="text-center py-3 text-muted small">Sin ajustes registrados.</td>
-                          </tr>
+                      <tr>
+                          <td colspan="5" class="text-center py-3 text-muted small">Sin ajustes registrados.</td>
+                      </tr>
                       {% endfor %}
                   </tbody>
               </table>
@@ -273,6 +274,7 @@
                 </thead>
                 <tbody>
                     {% for remito in cobranza.parada.remitos.all %}
+                    {% if not remito.eliminado %}
                     <tr>
                         <td class="ps-3 fw-semibold">
                             <i class="bi bi-file-earmark-text text-muted me-1"></i>{{ remito.numero }}
@@ -286,6 +288,7 @@
                             </span>
                         </td>
                     </tr>
+                    {% endif %}
                     {% empty %}
                     <tr>
                         <td colspan="3" class="text-center py-3 text-muted small">

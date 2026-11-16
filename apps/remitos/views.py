@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -71,11 +72,17 @@ class EditarRemito(UpdateView):
     permission_required = ""
     raise_exception = True
 
+    def get_queryset(self):
+        return super().get_queryset().filter(eliminado=False)
+
 
 class DetalleRemito(DetailView):
     model = Remito
     template_name = "remitos/remito_detalle.html"
     context_object_name = "remito"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(eliminado=False)
 
 
 class ListaRemito(ListView):
@@ -85,17 +92,11 @@ class ListaRemito(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = (
-            super()
-            .get_queryset()
-            .select_related("comercio", "marca")
-            .order_by("-id")
-        )
+        qs = super().get_queryset().filter(eliminado=False).select_related("comercio", "marca").order_by("-id")
 
         comercio = self.request.GET.get("comercio", "").strip()
         estado = self.request.GET.get("estado", "").strip()
         marca = self.request.GET.get("marca", "").strip()
-        fecha = self.request.GET.get("fecha", "").strip()
 
         if comercio:
             qs = qs.filter(comercio__razon_social__icontains=comercio)
@@ -103,8 +104,6 @@ class ListaRemito(ListView):
             qs = qs.filter(estado=estado)
         if marca:
             qs = qs.filter(marca_id=marca)
-        if fecha:
-            qs = qs.filter(fecha_creacion__date=fecha)
 
         return qs
 
@@ -118,7 +117,6 @@ class ListaRemito(ListView):
         context["filtro_comercio"] = self.request.GET.get("comercio", "")
         context["filtro_estado"] = self.request.GET.get("estado", "")
         context["filtro_marca"] = self.request.GET.get("marca", "")
-        context["filtro_fecha"] = self.request.GET.get("fecha", "")
         return context
 
 
@@ -127,12 +125,19 @@ class EliminarRemito(DeleteView):
     template_name = "remitos/remito_eliminar.html"
     success_url = reverse_lazy("remitos:remito_lista")
 
+    def get_queryset(self):
+        return super().get_queryset().filter(eliminado=False)
+
     def form_valid(self, form):
         remito = self.get_object()
         parada = remito.parada
         resultado = super().form_valid(form)
 
-        if parada and parada.estado == EstadoParada.PENDIENTE and not parada.remitos.filter(eliminado=False).exists():
+        if (
+            parada
+            and parada.estado == EstadoParada.PENDIENTE
+            and not parada.remitos.filter(eliminado=False).exists()
+        ):
             itinerario = parada.itinerario
             parada.delete()
             for i, p in enumerate(
@@ -194,8 +199,14 @@ class ImportarRemitos(CreateView):
                     num_factura = row.get("numero_factura", "").strip()
 
                     motivos = []
-                    if not cuit_comercio or not cuit_comercio.isdigit() or len(cuit_comercio) != 11:
-                        motivos.append("CUIT del comercio inválido (debe tener 11 dígitos numéricos)")
+                    if (
+                        not cuit_comercio
+                        or not cuit_comercio.isdigit()
+                        or len(cuit_comercio) != 11
+                    ):
+                        motivos.append(
+                            "CUIT del comercio inválido (debe tener 11 dígitos numéricos)"
+                        )
 
                     total_monto = None
                     try:
@@ -228,44 +239,71 @@ class ImportarRemitos(CreateView):
                     importacion = ImportacionRemitos.objects.create(
                         archivo=archivo,
                         marca=marca,
-                        estado=EstadoImportacion.RECHAZADO if errores_filas else EstadoImportacion.PENDIENTE,
+                        estado=EstadoImportacion.RECHAZADO
+                        if errores_filas
+                        else EstadoImportacion.PENDIENTE,
                         cantidad=0,
                     )
                     lotes_guardados += 1
 
                     if errores_filas:
-                        for f_num, mot in errores_filas:
-                            ErrorImportacion.objects.create(
+                        errores_objs = [
+                            ErrorImportacion(
                                 importacion=importacion,
                                 fila=f_num,
                                 motivo=mot,
                             )
+                            for f_num, mot in errores_filas
+                        ]
+                        ErrorImportacion.objects.bulk_create(errores_objs, batch_size=100)
                         errores.append(
                             f"El archivo {nombre_archivo} contiene {len(errores_filas)} errores y fue rechazado (Lote #{importacion.id})."
                         )
                     else:
-                        remitos_creados_lote = 0
-                        for d in datos_validados:
-                            comercio, _ = Comercio.objects.get_or_create(
-                                cuit=d["cuit_comercio"],
-                                defaults={
-                                    "razon_social": d["razon_social"],
-                                    "domicilio": d["domicilio"],
-                                    "activo": True,
-                                },
-                            )
+                        # 1. Obtener comercios existentes y crear los que falten en bloque
+                        cuits_en_archivo = {d["cuit_comercio"] for d in datos_validados}
+                        comercios_existentes = {
+                            c.cuit: c
+                            for c in Comercio.objects.filter(cuit__in=cuits_en_archivo)
+                        }
 
-                            Remito.objects.create(
+                        comercios_a_crear = []
+                        cuits_por_crear = set()
+                        for d in datos_validados:
+                            cuit = d["cuit_comercio"]
+                            if cuit not in comercios_existentes and cuit not in cuits_por_crear:
+                                cuits_por_crear.add(cuit)
+                                comercios_a_crear.append(
+                                    Comercio(
+                                        cuit=cuit,
+                                        razon_social=d["razon_social"],
+                                        domicilio=d["domicilio"],
+                                        activo=True,
+                                    )
+                                )
+
+                        if comercios_a_crear:
+                            Comercio.objects.bulk_create(comercios_a_crear, batch_size=1000)
+                            for c in Comercio.objects.filter(cuit__in=cuits_por_crear):
+                                comercios_existentes[c.cuit] = c
+
+                        # 2. Crear todos los remitos del lote en bloque
+                        remitos_a_crear = [
+                            Remito(
                                 numero=d["numero"],
                                 marca=marca,
-                                comercio=comercio,
+                                comercio=comercios_existentes[d["cuit_comercio"]],
                                 total=d["total"],
                                 estado=EstadoRemito.PENDIENTE,
                                 parada=None,
                                 importacion=importacion,
                                 eliminado=False,
                             )
-                            remitos_creados_lote += 1
+                            for d in datos_validados
+                        ]
+
+                        Remito.objects.bulk_create(remitos_a_crear, batch_size=1000)
+                        remitos_creados_lote = len(remitos_a_crear)
 
                         importacion.cantidad = remitos_creados_lote
                         importacion.estado = EstadoImportacion.EXITO
@@ -326,6 +364,44 @@ class EliminarImportacion(DeleteView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_eliminar.html"
     success_url = reverse_lazy("remitos:importacion_lista")
+
+    def _tiene_remitos_no_pendientes(self, importacion):
+        # Verifica si existe al menos un remito vigente cuyo estado NO sea 'pendiente'
+        return (
+            importacion.remitos.filter(eliminado=False)
+            .exclude(
+                estado=EstadoRemito.PENDIENTE  # o "pendiente"
+            )
+            .exists()
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Pasamos esta bandera al template para advertir al usuario y ocultar el botón de confirmar
+        context["puede_eliminar"] = not self._tiene_remitos_no_pendientes(self.object)
+        return context
+
+    def form_valid(self, form):
+        self.object = self.get_object()
+
+        # Validación de seguridad en el POST
+        if self._tiene_remitos_no_pendientes(self.object):
+            messages.error(
+                self.request,
+                "No se puede eliminar la importación porque contiene remitos que ya fueron asignados a un itinerario.",
+            )
+            return redirect(self.success_url)
+
+        with transaction.atomic():
+            # Eliminación lógica de todos los remitos de esta importación
+            self.object.remitos.filter(eliminado=False).update(eliminado=True)
+
+            self.object.delete()
+
+        messages.success(
+            self.request, "Importación y sus remitos eliminados correctamente."
+        )
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class CrearComercio(SuccessMessageMixin, CreateView):

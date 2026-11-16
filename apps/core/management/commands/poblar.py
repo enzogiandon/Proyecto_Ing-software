@@ -8,18 +8,34 @@ from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
-from apps.cobranza.models import Cobranza, DetallePago
+from datetime import date, timedelta
+
+from apps.cobranza.models import (
+    AjusteCobranza,
+    Cobranza,
+    DetallePago,
+    EstadoCobranza,
+    MedioPago,
+)
 from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
+    EstadoItinerario,
+    EstadoParada,
+    EvidenciaParada,
     Itinerario,
     Parada,
+    ProblemaParada,
     RutaGuardada,
+    TipoProblema,
 )
 from apps.remitos.models import (
     Comercio,
+    ErrorImportacion,
     EstadoRemito,
+    ImportacionRemitos,
     Marca,
     Remito,
 )
@@ -55,31 +71,39 @@ class Command(BaseCommand):
             if options["limpiar"]:
                 self.stdout.write("Limpiando datos existentes...")
 
-                # 1. Pagos y Cobranzas (evita ProtectedError en Cobranza.parada)
+                # 1. Cobranzas, Ajustes y Pagos (AjusteCobranza tiene FK a Usuario con PROTECT y FK a Cobranza; Cobranza tiene OneToOne PROTECT a Parada)
+                AjusteCobranza.objects.all().delete()
                 DetallePago.objects.all().delete()
                 Cobranza.objects.all().delete()
 
-                # 2. Tablas intermedias e hijas de rutas
+                # 2. Evidencias y problemas de paradas (hijas de Parada)
+                EvidenciaParada.objects.all().delete()
+                ProblemaParada.objects.all().delete()
+
+                # 3. Remitos e Importaciones (Remito tiene FK a Parada SET_NULL, FK a Comercio PROTECT, FK a Marca PROTECT)
+                Remito.objects.all().delete()
+                ErrorImportacion.objects.all().delete()
+                ImportacionRemitos.objects.all().delete()
+
+                # 4. Paradas e Itinerarios (Itinerario tiene FK PROTECT a Transportista y Vehiculo)
+                Parada.objects.all().delete()
+                Itinerario.objects.all().delete()
+
+                # 5. Tablas intermedias e hijas de rutas
                 DetalleRutaGuardada.objects.all().delete()
                 RutaGuardada.objects.all().delete()
 
-                # 3. Remitos y Paradas
-                Remito.objects.all().delete()
-                Parada.objects.all().delete()
-
-                # 4. Itinerarios (libera la referencia protegida a Transportista)
-                Itinerario.objects.all().delete()
-
-                # 5. Comercios y Marcas
+                # 6. Comercios y Marcas
                 Comercio.objects.all().delete()
                 Marca.objects.all().delete()
 
-                # 6. Perfiles y Vehículos
+                # 7. Perfiles Transportista y Vehículos
                 Transportista.objects.all().delete()
                 Vehiculo.objects.all().delete()
 
-                # Desbloquear todos los usuarios (superusuario y regulares)
-                Usuario.objects.all().update(is_active=True, intentos_fallidos=0)
+                # 8. Usuarios no superusuarios y reseteo de superusuarios
+                Usuario.objects.filter(is_superuser=False).delete()
+                Usuario.objects.filter(is_superuser=True).update(is_active=True, intentos_fallidos=0)
 
             # ------------------------------------------------------------------
             # 1. Superusuario Administrador
@@ -94,6 +118,7 @@ class Command(BaseCommand):
                     "is_staff": True,
                     "is_superuser": True,
                     "is_active": True,
+                    "intentos_fallidos": 0,
                 },
             )
             admin_user.is_staff = True
@@ -106,6 +131,74 @@ class Command(BaseCommand):
             # Asignar todos los roles por defecto al superusuario
             todos_los_grupos = Group.objects.filter(name__in=Grupos.values)
             admin_user.groups.set(todos_los_grupos)
+
+            # Usuarios específicos por rol para pruebas web (HU-35, HU-36, etc.)
+            grupo_conciliacion, _ = Group.objects.get_or_create(name=Grupos.ADMIN_CONCILIACION)
+            grupo_planificacion, _ = Group.objects.get_or_create(name=Grupos.ADMIN_PLANIFICACION)
+            grupo_personal, _ = Group.objects.get_or_create(name=Grupos.GESTION_PERSONAL)
+
+            conciliacion, _ = Usuario.objects.get_or_create(
+                username="22222222",
+                defaults={
+                    "first_name": "Conciliacion",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            conciliacion.is_staff = True
+            conciliacion.is_superuser = False
+            conciliacion.is_active = True
+            conciliacion.intentos_fallidos = 0
+            conciliacion.set_password("123")
+            conciliacion.groups.add(grupo_conciliacion)
+            conciliacion.save()
+
+            planificacion, _ = Usuario.objects.get_or_create(
+                username="33333333",
+                defaults={
+                    "first_name": "Planificacion",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            planificacion.is_staff = True
+            planificacion.is_superuser = False
+            planificacion.is_active = True
+            planificacion.intentos_fallidos = 0
+            planificacion.set_password("123")
+            planificacion.groups.add(grupo_planificacion)
+            planificacion.save()
+
+            personal, _ = Usuario.objects.get_or_create(
+                username="44444444",
+                defaults={
+                    "first_name": "Personal",
+                    "last_name": "Softech",
+                    "email": "admin@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+            )
+            personal.is_staff = True
+            personal.is_superuser = False
+            personal.is_active = True
+            personal.intentos_fallidos = 0
+            personal.set_password("123")
+            personal.groups.add(grupo_personal)
+            personal.save()
 
             # ------------------------------------------------------------------
             # 2. Vehículos
@@ -147,6 +240,8 @@ class Command(BaseCommand):
                     "last_name": "Gómez",
                     "telefono": "5491155554444",
                     "vehiculo": vehiculos["AF123CD"],
+                    "is_active": True,
+                    "intentos_fallidos": 0,
                 },
                 {
                     "username": "12345678",
@@ -154,23 +249,37 @@ class Command(BaseCommand):
                     "last_name": "Pérez",
                     "telefono": "5491155557777",
                     "vehiculo": vehiculos["AG456EF"],
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+                {
+                    "username": "12345679",
+                    "first_name": "Carlos",
+                    "last_name": "Bloqueado",
+                    "telefono": "5491155558888",
+                    "vehiculo": None,
+                    "is_active": False,
+                    "intentos_fallidos": 5,
                 },
             ]
 
             grupo_transportista, _ = Group.objects.get_or_create(name=Grupos.TRANSPORTISTA)
             for c_data in choferes_data:
                 v = c_data.pop("vehiculo")
+                is_active = c_data.pop("is_active", True)
+                intentos_fallidos = c_data.pop("intentos_fallidos", 0)
                 user, _ = Usuario.objects.get_or_create(
                     username=c_data["username"],
                     defaults={
                         "first_name": c_data["first_name"],
                         "last_name": c_data["last_name"],
                         "telefono": c_data["telefono"],
-                        "is_active": True,
+                        "is_active": is_active,
+                        "intentos_fallidos": intentos_fallidos,
                     },
                 )
-                user.is_active = True
-                user.intentos_fallidos = 0
+                user.is_active = is_active
+                user.intentos_fallidos = intentos_fallidos
                 user.groups.add(grupo_transportista)
                 user.set_password("123")
                 user.save()
@@ -569,7 +678,7 @@ class Command(BaseCommand):
                     {
                         "numero": "0002-00023458",
                         "marca": marcas["30654321090"],
-                        "comercio": comercios["23200033191"],
+                        "comercio": comercios["23200034562"],
                         "total": Decimal("199477.06"),
                     },
                     {
@@ -582,13 +691,13 @@ class Command(BaseCommand):
                     {
                         "numero": "0002-00015378",
                         "marca": marcas["30709876542"],
-                        "comercio": comercios["23200000145"],
+                        "comercio": comercios["23200039289"],
                         "total": Decimal("475923.72"),
                     },
                     {
                         "numero": "0006-00025539",
                         "marca": marcas["30709876542"],
-                        "comercio": comercios["20200022190"],
+                        "comercio": comercios["23200042867"],
                         "total": Decimal("692074.74"),
                     },
                     {
@@ -601,7 +710,7 @@ class Command(BaseCommand):
                     {
                         "numero": "0004-00003901",
                         "marca": marcas["30712345671"],
-                        "comercio": comercios["23200000145"],
+                        "comercio": comercios["23200039289"],
                         "total": Decimal("733385.18"),
                     },
                     {
@@ -626,13 +735,13 @@ class Command(BaseCommand):
                     {
                         "numero": "0005-00010362",
                         "marca": marcas["33698712347"],
-                        "comercio": comercios["20200070268"],
+                        "comercio": comercios["23200058011"],
                         "total": Decimal("353247.34"),
                     },
                     {
                         "numero": "0006-00028378",
                         "marca": marcas["33698712347"],
-                        "comercio": comercios["23200008855"],
+                        "comercio": comercios["23200060768"],
                         "total": Decimal("609129.43"),
                     },
                 ]
@@ -653,19 +762,313 @@ class Command(BaseCommand):
                     if creado:
                         total_remitos += 1
 
+            # ------------------------------------------------------------------
+            # 7. Itinerario activo y ruta guardada (Chofer Martín Pérez - 12345678)
+            # ------------------------------------------------------------------
+            transportista_martin = Transportista.objects.filter(
+                usuario__username="12345678"
+            ).first()
+            itinerario_martin = None
+            total_paradas_creadas = 0
+
+            if transportista_martin:
+                itinerario_martin, _ = Itinerario.objects.get_or_create(
+                    fecha=date.today(),
+                    transportista=transportista_martin,
+                    defaults={
+                        "estado": EstadoItinerario.ASIGNADO,
+                        "vehiculo": transportista_martin.vehiculo,
+                    },
+                )
+                itinerario_martin.estado = EstadoItinerario.ASIGNADO
+                itinerario_martin.vehiculo = transportista_martin.vehiculo
+                itinerario_martin.save()
+
+                paradas_comercios = list(comercios.values())[:5]
+                marcas_list = list(marcas.values())
+                admin_user = Usuario.objects.filter(username="11111111").first()
+                total_cobranzas_creadas = 0
+
+                paradas_config = [
+                    {
+                        "orden": 1,
+                        "estado": EstadoParada.FINALIZADA,
+                        "hora_entrega": timezone.now().replace(hour=9, minute=30, second=0),
+                        "remito_total": Decimal("150000.00"),
+                        "remito_estado": EstadoRemito.ENTREGADO,
+                        "cobranza_estado": EstadoCobranza.REGISTRADO,
+                        "detalles": [
+                            {"medio": MedioPago.EFECTIVO, "declarado": Decimal("100000.00"), "verificado": Decimal("0.00")},
+                            {"medio": MedioPago.TRANSFERENCIA, "declarado": Decimal("50000.00"), "verificado": Decimal("0.00")},
+                        ],
+                        "observacion": None,
+                        "ajuste": None,
+                    },
+                    {
+                        "orden": 2,
+                        "estado": EstadoParada.FINALIZADA,
+                        "hora_entrega": timezone.now().replace(hour=10, minute=15, second=0),
+                        "remito_total": Decimal("220000.00"),
+                        "remito_estado": EstadoRemito.ENTREGADO,
+                        "cobranza_estado": EstadoCobranza.APROBADO,
+                        "detalles": [
+                            {
+                                "medio": MedioPago.QR,
+                                "declarado": Decimal("220000.00"),
+                                "verificado": Decimal("220000.00"),
+                                "mp_payment_id": "MP-8877665544",
+                            },
+                        ],
+                        "observacion": "Cobranza validada y conciliada contra liquidación MP.",
+                        "ajuste": None,
+                    },
+                    {
+                        "orden": 3,
+                        "estado": EstadoParada.FINALIZADA,
+                        "hora_entrega": timezone.now().replace(hour=11, minute=0, second=0),
+                        "remito_total": Decimal("310000.00"),
+                        "remito_estado": EstadoRemito.ENTREGADO,
+                        "cobranza_estado": EstadoCobranza.DIFIERE,
+                        "detalles": [
+                            {
+                                "medio": MedioPago.EFECTIVO,
+                                "declarado": Decimal("310000.00"),
+                                "verificado": Decimal("300000.00"),
+                            },
+                        ],
+                        "observacion": "Faltante de $10.000 en el sobre de rendición de efectivo.",
+                        "ajuste": {
+                            "medio": MedioPago.EFECTIVO,
+                            "monto": Decimal("10000.00"),
+                            "motivo": "Acreditación complementaria por ticket de transferencia bancaria de respaldo.",
+                        },
+                    },
+                    {
+                        "orden": 4,
+                        "estado": EstadoParada.ERROR,
+                        "hora_entrega": None,
+                        "remito_total": Decimal("185000.00"),
+                        "remito_estado": EstadoRemito.ASIGNADO,
+                        "cobranza_estado": None,
+                        "problema": {
+                            "tipo": TipoProblema.LOCAL_CERRADO,
+                            "descripcion": "Local cerrado con persiana baja a las 11:45 hs. Sin respuesta al timbre.",
+                            "impide_entrega": True,
+                        },
+                    },
+                    {
+                        "orden": 5,
+                        "estado": EstadoParada.PENDIENTE,
+                        "hora_entrega": None,
+                        "cobranza_estado": None,
+                        "multimarca": [
+                            {"marca_idx": 0, "total": Decimal("75000.00"), "sufijo": "1"},
+                            {"marca_idx": 1, "total": Decimal("45000.00"), "sufijo": "2"},
+                        ],
+                    },
+                ]
+
+                for orden_idx, com in enumerate(paradas_comercios, start=1):
+                    if not com:
+                        continue
+                    cfg = paradas_config[orden_idx - 1]
+                    parada_obj, _ = Parada.objects.get_or_create(
+                        itinerario=itinerario_martin,
+                        comercio=com,
+                        defaults={
+                            "orden": cfg["orden"],
+                            "estado": cfg["estado"],
+                            "hora_entrega": cfg["hora_entrega"],
+                        },
+                    )
+                    parada_obj.orden = cfg["orden"]
+                    parada_obj.estado = cfg["estado"]
+                    parada_obj.hora_entrega = cfg["hora_entrega"]
+                    parada_obj.save()
+                    total_paradas_creadas += 1
+
+                    # Registrar problema/inconveniente operativo si corresponde (HU-56 / HU-18)
+                    if cfg.get("problema"):
+                        ProblemaParada.objects.filter(parada=parada_obj).delete()
+                        p_info = cfg["problema"]
+                        ProblemaParada.objects.create(
+                            parada=parada_obj,
+                            tipo=p_info["tipo"],
+                            descripcion=p_info["descripcion"],
+                            impide_entrega=p_info["impide_entrega"],
+                        )
+
+                    # Asegurar remitos asociados a la parada
+                    if cfg.get("multimarca"):
+                        # Parada multimarca con múltiples remitos de distintas marcas (HU-25 / HU-36)
+                        Remito.objects.filter(comercio=com).delete()
+                        for m_info in cfg["multimarca"]:
+                            marca_obj = marcas_list[m_info["marca_idx"] % len(marcas_list)]
+                            Remito.objects.create(
+                                numero=f"0009-0000005{m_info['sufijo']}",
+                                marca=marca_obj,
+                                comercio=com,
+                                total=m_info["total"],
+                                estado=EstadoRemito.ASIGNADO,
+                                parada=parada_obj,
+                            )
+                    else:
+                        remito_existente = Remito.objects.filter(comercio=com, parada__isnull=True).first()
+                        if remito_existente:
+                            remito_existente.parada = parada_obj
+                            remito_existente.estado = cfg["remito_estado"]
+                            remito_existente.total = cfg["remito_total"]
+                            remito_existente.save(update_fields=["parada", "estado", "total"])
+                        else:
+                            remito_existente = Remito.objects.filter(comercio=com, parada=parada_obj).first()
+                            if not remito_existente:
+                                marca_asignada = marcas_list[(orden_idx - 1) % len(marcas_list)]
+                                Remito.objects.create(
+                                    numero=f"0009-{str(orden_idx).zfill(8)}",
+                                    marca=marca_asignada,
+                                    comercio=com,
+                                    total=cfg["remito_total"],
+                                    estado=cfg["remito_estado"],
+                                    parada=parada_obj,
+                                )
+                            else:
+                                remito_existente.estado = cfg["remito_estado"]
+                                remito_existente.total = cfg["remito_total"]
+                                remito_existente.save(update_fields=["estado", "total"])
+
+                    # Crear cobranza de ejemplo si corresponde a la configuración de la parada
+                    if cfg.get("cobranza_estado"):
+                        Cobranza.objects.filter(parada=parada_obj).delete()
+                        cobranza_obj = Cobranza.objects.create(
+                            parada=parada_obj,
+                            estado=cfg["cobranza_estado"],
+                            observacion=cfg.get("observacion"),
+                        )
+                        total_cobranzas_creadas += 1
+
+                        for det in cfg["detalles"]:
+                            DetallePago.objects.create(
+                                cobranza=cobranza_obj,
+                                medio=det["medio"],
+                                monto_declarado=det["declarado"],
+                                monto_verificado=det.get("verificado", Decimal("0.00")),
+                                mp_payment_id=det.get("mp_payment_id"),
+                            )
+
+                        if cfg.get("ajuste") and admin_user:
+                            ajuste_data = cfg["ajuste"]
+                            AjusteCobranza.objects.create(
+                                cobranza=cobranza_obj,
+                                usuario=admin_user,
+                                medio=ajuste_data["medio"],
+                                monto=ajuste_data["monto"],
+                                motivo=ajuste_data["motivo"],
+                            )
+
+                # Ruta guardada de prueba para validar HU-63, HU-64 y HU-65
+                ruta_guardada, _ = RutaGuardada.objects.get_or_create(
+                    transportista=transportista_martin,
+                    nombre="Ruta Costera 12",
+                )
+                DetalleRutaGuardada.objects.filter(ruta_guardada=ruta_guardada).delete()
+                for p_idx, com in enumerate(paradas_comercios[:3], start=1):
+                    if com:
+                        DetalleRutaGuardada.objects.create(
+                            ruta_guardada=ruta_guardada,
+                            comercio=com,
+                            prioridad=p_idx,
+                        )
+
+            # ------------------------------------------------------------------
+            # 8. Itinerario histórico finalizado (Jornada anterior - HU-60 / HU-61)
+            # ------------------------------------------------------------------
+            itinerario_ayer = None
+            if transportista_martin:
+                fecha_ayer = date.today() - timedelta(days=1)
+                itinerario_ayer, _ = Itinerario.objects.get_or_create(
+                    fecha=fecha_ayer,
+                    transportista=transportista_martin,
+                    defaults={
+                        "estado": EstadoItinerario.FINALIZADO,
+                        "vehiculo": transportista_martin.vehiculo,
+                    },
+                )
+                itinerario_ayer.estado = EstadoItinerario.FINALIZADO
+                itinerario_ayer.vehiculo = transportista_martin.vehiculo
+                itinerario_ayer.save()
+
+                paradas_ayer_comercios = list(comercios.values())[5:8]
+                for p_ayer_idx, c_ayer in enumerate(paradas_ayer_comercios, start=1):
+                    p_ayer_obj, _ = Parada.objects.get_or_create(
+                        itinerario=itinerario_ayer,
+                        comercio=c_ayer,
+                        defaults={
+                            "orden": p_ayer_idx,
+                            "estado": EstadoParada.FINALIZADA,
+                            "hora_entrega": timezone.now().replace(hour=8 + p_ayer_idx, minute=45, second=0),
+                        },
+                    )
+                    p_ayer_obj.estado = EstadoParada.FINALIZADA
+                    p_ayer_obj.orden = p_ayer_idx
+                    p_ayer_obj.save()
+
+                    rem_ayer = Remito.objects.filter(comercio=c_ayer, parada=p_ayer_obj).first()
+                    if not rem_ayer:
+                        rem_ayer = Remito.objects.create(
+                            numero=f"0008-0000000{p_ayer_idx}",
+                            marca=marcas_list[p_ayer_idx % len(marcas_list)],
+                            comercio=c_ayer,
+                            total=Decimal("110000.00") * p_ayer_idx,
+                            estado=EstadoRemito.ENTREGADO,
+                            parada=p_ayer_obj,
+                        )
+                    else:
+                        rem_ayer.estado = EstadoRemito.ENTREGADO
+                        rem_ayer.save(update_fields=["estado"])
+
+                    Cobranza.objects.filter(parada=p_ayer_obj).delete()
+                    cob_ayer = Cobranza.objects.create(
+                        parada=p_ayer_obj,
+                        estado=EstadoCobranza.APROBADO,
+                        observacion="Cobranza histórica aprobada y conciliada.",
+                    )
+                    DetallePago.objects.create(
+                        cobranza=cob_ayer,
+                        medio=MedioPago.EFECTIVO,
+                        monto_declarado=rem_ayer.total,
+                        monto_verificado=rem_ayer.total,
+                    )
+
         self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros cargados exitosamente.")
         )
         self.stdout.write("  • Superusuario: 11111111 (clave: 123)")
+        self.stdout.write("  • Administrativo Conciliacion: 22222222 (clave: 123)")
+        self.stdout.write("  • Administrativo Planificacion: 33333333 (clave: 123)")
+        self.stdout.write("  • Administrativo Gestion Personal: 44444444 (clave: 123)")
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
         if options["con_remitos"]:
             self.stdout.write(
-                f"  • Remitos PENDIENTES: {len(remitos_definicion)} ({total_remitos} nuevos)"
+                f"  • Remitos cargados: {len(remitos_definicion)} ({total_remitos} nuevos)"
             )
         else:
-            self.stdout.write("  • Remitos PENDIENTES: 0 (use --con-remitos para cargarlos)")
+            self.stdout.write("  • Remitos cargados: 0 (use --con-remitos para cargarlos)")
+        if itinerario_martin:
+            self.stdout.write(
+                f"  • Itinerario activo (Hoy): #{itinerario_martin.id} con {total_paradas_creadas} paradas para Chofer Martín Pérez"
+            )
+            self.stdout.write(
+                "  • Ruta guardada de prueba: 'Ruta Costera 12' (3 comercios)"
+            )
+            self.stdout.write(
+                f"  • Cobranzas de ejemplo: {total_cobranzas_creadas} cobranzas registradas (1 Registrada, 1 Aprobada, 1 Difiere con Ajuste)"
+            )
+        if itinerario_ayer:
+            self.stdout.write(
+                f"  • Itinerario histórico (Ayer): #{itinerario_ayer.id} cerrado/finalizado con 3 paradas y cobranzas aprobadas"
+            )
 
         self.stdout.write(
             self.style.HTTP_INFO("\n" + "=" * 70)
@@ -685,32 +1088,26 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.WARNING("\n2. Transportistas (Choferes - App Móvil / Rutas)"))
         self.stdout.write("   • Chofer 1: DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD (Mercedes-Benz Accelo 815)")
+        self.stdout.write("     - Caso de prueba: Transportista sin itinerario asignado (estado vacío institucional HU-62).")
         self.stdout.write("   • Chofer 2: DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF (Iveco Daily 70C17)")
-        self.stdout.write("   • Caso de prueba: Inicio de sesión en App Móvil, hojas de ruta asignadas, entregas y cobranzas.")
+        self.stdout.write("     - Caso de prueba: Itinerario activo asignado con 5 paradas (3 cobradas, 1 con error/incidente, 1 pendiente multimarca).")
+        self.stdout.write("     - Flujo de prueba: Login -> /itinerario -> Reordenar paradas -> Guardar orden -> Rutas guardadas.")
+        self.stdout.write("   • Chofer 3: DNI 12345679 | Clave: 123 | Carlos Bloqueado | Cuenta Inhabilitada")
+        self.stdout.write("     - Caso de prueba: Login rechazado con alerta de cuenta inhabilitada/suspendida (HU-23 Escenario 4).")
 
         self.stdout.write(self.style.WARNING("\n3. Flota de Vehículos"))
         self.stdout.write("   • Asignados : AF123CD, AG456EF (a choferes de prueba)")
         self.stdout.write("   • Disponible: AE789GH (Ford Cargo 915) -> Caso de prueba: Asignación a nuevo chofer.")
 
-        self.stdout.write(self.style.WARNING("\n4. Logística y Planificación de Itinerarios (Remitos Pendientes)"))
-        self.stdout.write("   • Caso Consolidación Multimarca (mismo comercio, varias marcas):")
-        self.stdout.write("     - Supermercado Los Hermanos : 2 remitos (Quilmes + Molinos)")
-        self.stdout.write("     - Almacén Don Tito          : 2 remitos (Quilmes + Arcor)")
-        self.stdout.write("     - Minimercado San Jorge     : 2 remitos (Molinos + Arcor)")
-        self.stdout.write("     -> Caso de prueba: Probar consolidación automática/manual de marcas en una misma parada.")
-        self.stdout.write("   • Caso Entregas Individuales:")
-        self.stdout.write("     - Autoservicio El Sol       : 1 remito (Molinos)")
-        self.stdout.write("     - Kiosco Open 25            : 1 remito (Arcor)")
-        self.stdout.write("     - Distribuidora Mitre SRL   : 1 remito (Quilmes)")
-        if options["con_remitos"]:
-            self.stdout.write(
-                f"   • Total: {len(remitos_definicion)} remitos PENDIENTES ({total_remitos} nuevos), {len(comercios_data)} comercios, {len(marcas_data)} marcas."
-            )
-        else:
-            self.stdout.write("   • Remitos pendientes no generados (use el flag --con-remitos para cargarlos).")
-        self.stdout.write(
-            "   • Itinerarios y Paradas: Ninguno creado (quedan para generar en el flujo de asignación)."
-        )
+        self.stdout.write(self.style.WARNING("\n4. Itinerarios y Operación en Calle (App Móvil / Web)"))
+        self.stdout.write("   • Parada #4 (Incidente/Error)     : Local cerrado (HU-56 / HU-18) para monitoreo de contingencias.")
+        self.stdout.write("   • Parada #5 (Consolidada Multimarca): 2 remitos de 2 marcas distintas agrupados en la misma visita (HU-25 / HU-36).")
+        self.stdout.write("   • Itinerario Histórico de Ayer   : Estado 'Finalizado' para prueba de filtros y exportación PDF de hoja de ruta (HU-60 / HU-61).")
+
+        self.stdout.write(self.style.WARNING("\n5. Módulo de Cobranzas y Conciliación (Panel Administrativo Web)"))
+        self.stdout.write("   • Cobranza Registrada (Pendiente)  : Parada #1 - Declarada por chofer ($150.000). Lista para arqueo y validación (botón 'Validar').")
+        self.stdout.write("   • Cobranza Aprobada (Conciliada)   : Parada #2 - Validada con QR de Mercado Pago ($220.000).")
+        self.stdout.write("   • Cobranza con Diferencia (Difiere): Parada #3 - Declarado $310.000, verificado $300.000 (faltante de $10.000) con Ajuste complementario registrado.")
         self.stdout.write(
             self.style.HTTP_INFO("=" * 70 + "\n")
         )

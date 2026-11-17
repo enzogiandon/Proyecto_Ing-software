@@ -210,8 +210,7 @@ class Inicio(LoginRequiredMixin, TemplateView):
         # Planificación
         # --------------------------------------------------
         context["remitos_pendientes"] = Remito.objects.filter(
-            estado=EstadoRemito.PENDIENTE,
-            eliminado=False,
+            estado=EstadoRemito.PENDIENTE
         ).count()
         context["itinerarios_asignados"] = Itinerario.objects.filter(
             estado=EstadoItinerario.ASIGNADO

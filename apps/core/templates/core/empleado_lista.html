@@ -14,7 +14,7 @@
 <div class="itinerarios-page">
 
     <!-- Encabezado  -->
-     <header class="itinerarios-header">
+    <header class="itinerarios-header">
         <div class="itinerarios-header-info">
             <h1 class="text-title mb-0">Empleados</h1>
             <p class="text-body text-c-secondary mb-0">{{ fecha_hoy|capfirst }}</p>
@@ -88,7 +88,7 @@
                         {% empty %}
                             <tr>
                                 <td colspan="5" class="text-center py-5 text-muted">
-                                    No se encontraron empleados registrados con los filtros seleccionados.
+                                    No se encontraron empleados registrados.
                                 </td>
                             </tr>
                     {% endfor %}
@@ -99,6 +99,40 @@
                 Se muestran {{ empleados|length }} empleados.
             </div>
     </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center py-3">
+        <span class="text-muted small">
+            Mostrando página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} (Total: {{ paginator.count }} registros)
+        </span>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        Anterior
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        Siguiente
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}

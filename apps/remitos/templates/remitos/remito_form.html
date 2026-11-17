@@ -34,18 +34,6 @@
         </p>
     </header>
 
-    <!-- Errores generales -->
-    {% if form.non_field_errors %}
-        <div class="alert alert-danger alert-clean mb-0">
-            <i class="fas fa-triangle-exclamation me-2"></i>
-            <div>
-                {% for error in form.non_field_errors %}
-                    <div>{{ error }}</div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
-
     <form method="post" id="form-remito" novalidate>
         {% csrf_token %}
 

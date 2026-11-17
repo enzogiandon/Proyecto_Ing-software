@@ -163,7 +163,7 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
         paradas_data = []
         for p in paradas:
-            remitos_activos = p.remitos.filter(eliminado=False)
+            remitos_activos = p.remitos.all()
             monto_parada = sum(float(r.total) for r in remitos_activos)
             paradas_data.append(
                 {
@@ -596,7 +596,7 @@ class ParadaViewSet(viewsets.ModelViewSet):
         pagos_validados = serializer.validated_data
         total_pagado = sum((pago["monto"] for pago in pagos_validados), Decimal("0.00"))
         total_remitos = (
-            parada.remitos.filter(eliminado=False).aggregate(total=Sum("total"))["total"]
+            parada.remitos.aggregate(total=Sum("total"))["total"]
             or Decimal("0.00")
         )
 
@@ -630,7 +630,7 @@ class ParadaViewSet(viewsets.ModelViewSet):
 
             DetallePago.objects.bulk_create(detalles_a_crear)
 
-            parada.remitos.filter(eliminado=False).update(estado=EstadoRemito.ENTREGADO)
+            parada.remitos.all().update(estado=EstadoRemito.ENTREGADO)
 
             parada.hora_entrega = timezone.now()
             parada.estado = EstadoParada.FINALIZADA

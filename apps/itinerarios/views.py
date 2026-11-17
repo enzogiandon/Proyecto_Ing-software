@@ -33,22 +33,12 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
             Itinerario.objects.select_related("transportista__usuario", "vehiculo")
             .prefetch_related(
                 "paradas__comercio",
-                Prefetch(
-                    "paradas__remitos",
-                    queryset=Remito.objects.filter(eliminado=False),
-                ),
+                "paradas__remitos",
             )
             .annotate(
                 total_paradas=Count("paradas", distinct=True),
-                total_remitos=Count(
-                    "paradas__remitos",
-                    filter=Q(paradas__remitos__eliminado=False),
-                    distinct=True,
-                ),
-                monto_total=Sum(
-                    "paradas__remitos__total",
-                    filter=Q(paradas__remitos__eliminado=False),
-                ),
+                total_remitos=Count("paradas__remitos", distinct=True),
+                monto_total=Sum("paradas__remitos__total"),
             )
             .order_by("-fecha", "id")
         )
@@ -112,7 +102,7 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         ).prefetch_related(
             Prefetch(
                 "remitos",
-                queryset=Remito.objects.filter(eliminado=False).select_related("marca"),
+                queryset=Remito.objects.select_related("marca"),
                 to_attr="remitos_vigentes",
             ),
             Prefetch("evidencias", queryset=EvidenciaParada.objects.order_by("fecha")),
@@ -126,14 +116,14 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         if accion == "quitar_remito":
             remito_id = request.POST.get("remito_id")
             try:
-                remito = parada.remitos.get(id=remito_id, eliminado=False)
+                remito = parada.remitos.get(id=remito_id)
                 with transaction.atomic():
                     remito.parada = None
                     remito.estado = EstadoRemito.PENDIENTE
                     remito.save(update_fields=["parada", "estado"])
 
                     # Si la parada no tiene más remitos vigentes, se elimina y se reordenan las paradas restantes
-                    remitos_restantes = parada.remitos.filter(eliminado=False).exists()
+                    remitos_restantes = parada.remitos.exists()
                     if not remitos_restantes:
                         itinerario = parada.itinerario
                         parada_id = parada.id
@@ -232,7 +222,7 @@ class ReordenarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
                     .prefetch_related(
                         Prefetch(
                             "remitos",
-                            queryset=Remito.objects.filter(eliminado=False).select_related("marca"),
+                            queryset=Remito.objects.select_related("marca"),
                             to_attr="remitos_vigentes",
                         )
                     )
@@ -251,7 +241,7 @@ class ReordenarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
         total_monto = 0
 
         for p in paradas:
-            remitos = getattr(p, "remitos_vigentes", list(p.remitos.filter(eliminado=False)))
+            remitos = getattr(p, "remitos_vigentes", list(p.remitos.all()))
             p.remitos_asociados = remitos
             p.monto_total = sum(r.total for r in remitos)
             p.total_remitos_count = len(remitos)
@@ -321,7 +311,7 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                     .prefetch_related(
                         Prefetch(
                             "remitos",
-                            queryset=Remito.objects.filter(eliminado=False).select_related("marca"),
+                            queryset=Remito.objects.select_related("marca"),
                             to_attr="remitos_vigentes",
                         )
                     )
@@ -340,7 +330,7 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         total_monto = 0
 
         for p in paradas:
-            remitos = getattr(p, "remitos_vigentes", list(p.remitos.filter(eliminado=False)))
+            remitos = getattr(p, "remitos_vigentes", list(p.remitos.all()))
             p.remitos_asociados = remitos
             p.monto_total = sum(r.total for r in remitos)
             p.total_remitos_count = len(remitos)

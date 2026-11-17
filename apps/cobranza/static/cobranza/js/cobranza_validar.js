@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalVerificadoDisplay = document.getElementById("columnaTotalVerificado");
     const badgeEstado = document.getElementById("badgeEstadoPreview");
     const btnCopiar = document.getElementById("btnCopiarMontos");
-    const totalDeclaradoRef = parseFloat("{{ total_declarado|stringformat:'.2f' }}") || 0;
+    const totalDeclaradoRef = parseFloat(document.getElementById("columnaTotalDeclarado").getAttribute("data-monto")) || 0;
 
     function actualizarTodo() {
         let total = 0;

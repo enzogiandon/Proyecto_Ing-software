@@ -111,9 +111,12 @@
                             ${{ ajuste.importe_nuevo }}
                         </td>
                         <td>
-                            <span class="itin-badge itin-badge--asignado">
-                                {{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}
-                            </span>
+                            <div class="cell-main cell-main--medium">
+                                {{ ajuste.usuario.get_full_name }}
+                            </div>
+                            <div class="cell-sub">
+                                {{ ajuste.usuario.username }}
+                            </div>
                         </td>
                         <td class="text-truncate" style="max-width: 50px;">
                             <span class="cell-sub" title="{{ ajuste.motivo }}">

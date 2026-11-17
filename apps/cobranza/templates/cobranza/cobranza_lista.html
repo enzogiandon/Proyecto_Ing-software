@@ -145,13 +145,11 @@
                                         </a>
 
                                         <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
-                                        {% if cobranza.estado == "difiere" or cobranza.estado == "registrado" %}
-                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
-                                            class="btn-ver-detalle" 
+                                        <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
+                                            class="btn {% if cobranza.estado == 'difiere' or cobranza.estado == 'registrado' %}btn-ver-detalle{% else %}btn-ver-detalle-outline{% endif %}" 
                                             title="Ajustar importe por diferencia">
-                                             <i class="fas fa-pen-to-square"></i>
-                                            </a>
-                                     {% endif %}
+                                            <i class="fas fa-pen-to-square"></i>
+                                        </a>
 
                                         <!-- Botón Validar -->
                                         <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 

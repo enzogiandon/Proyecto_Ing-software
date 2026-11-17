@@ -79,7 +79,7 @@ body {
 }
 
 .text-repartos {
-  color: var(--text-primary, #1B365D);
+  color: var(--color-primary, #1B365D);
 }
 
 .text-ya {

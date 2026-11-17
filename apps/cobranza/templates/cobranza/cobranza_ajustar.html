@@ -27,71 +27,104 @@
         </div>
     </header>
 
-    {% if formset.non_form_errors %}
+    {% if form.non_field_errors %}
         <div class="alert alert-danger shadow-sm py-2">
-            {{ formset.non_form_errors }}
+            {{ form.non_field_errors }}
         </div>
     {% endif %}
 
+    <!-- Resumen de Pagos Actuales de la Cobranza -->
+    <div class="itinerarios-card mb-4">
+        <h2 class="text-section text-c-brand mb-3">
+            Estado Actual de Pagos
+        </h2>
+        <div class="table-responsive">
+            <table class="itinerarios-tabla">
+                <thead class="table-light small">
+                    <tr>
+                        <th class="ps-3">Medio</th>
+                        <th>Monto Declarado</th>
+                        <th>Monto Verificado</th>
+                        <th>Referencia / MP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in cobranza.detalles.all %}
+                    <tr>
+                        <td class="ps-3">
+                            <span class="itin-badge {% if detalle.medio == 'efectivo' %}itin-badge--entregado{% elif detalle.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
+                                {{ detalle.get_medio_display }}
+                            </span>
+                        </td>
+                        <td class="fw-bold text-dark">
+                            ${{ detalle.monto_declarado }}
+                        </td>
+                        <td>
+                            {% if detalle.monto_verificado is not None %}
+                                <span class="text-danger fw-semibold">${{ detalle.monto_verificado }}</span>
+                            {% else %}
+                                <span class="text-muted fst-italic">Sin verificar</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if detalle.mp_payment_id %}
+                                <small class="text-muted">MP: {{ detalle.mp_payment_id }}</small>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-3 text-muted small">No hay pagos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Formulario para Registrar Ajuste -->
     <form method="post" novalidate>
         {% csrf_token %}
-        {{ formset.management_form }}
 
         <div class="itinerarios-card mb-4">
             <h2 class="text-section text-c-brand mb-3">
-                Detalles de Pago con Diferencias
+                Registrar Nuevo Ajuste / Corrección Contable
             </h2>
-            <div class="table-responsive">
-                <table class="itinerarios-tabla">
-                    <thead class="table-light small">
-                        <tr>
-                            <th class="ps-3">Medio</th>
-                            <th>Monto Declarado</th>
-                            <th>Monto Verificado Actual</th>
-                            <th style="width: 170px;">Nuevo Importe ($) *</th>
-                            <th style="min-width: 250px;">Motivo del Ajuste *</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for detalle, subform in detalles_forms %}
-                        <tr>
-                            <td class="ps-3">
-                                <span class="itin-badge {% if detalle.medio == 'efectivo' %}itin-badge--entregado{% elif detalle.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
-                                    {{ detalle.get_medio_display }}
-                                </span>
-                                {% if detalle.mp_payment_id %}
-                                    <small class="d-block text-muted">MP: {{ detalle.mp_payment_id }}</small>
-                                {% endif %}
-                            </td>
-                            <td class="fw-bold text-dark">
-                                ${{ detalle.monto_declarado }}
-                            </td>
-                            <td>
-                                {% if detalle.monto_verificado is not None %}
-                                    <span class="text-danger fw-semibold">${{ detalle.monto_verificado }}</span>
-                                {% else %}
-                                    <span class="text-muted fst-italic">Sin verificar</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {{ subform.detalle_id }}
-                                {{ subform.importe_nuevo }}
-                                {% if subform.importe_nuevo.errors %}
-                                    <div class="text-danger small mt-1">
-                                        {{ subform.importe_nuevo.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </td>
-                            <td class="pe-3">
-                                {{ subform.motivo }}
-                                {% if subform.motivo.errors %}
-                                    <div class="text-danger small mt-1">{{ subform.motivo.errors.0 }}</div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="card-body p-0">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="{{ form.medio.id_for_label }}" class="itinerarios-filtro-label mb-2">
+                            Medio de Pago Afectado *
+                        </label>
+                        {{ form.medio }}
+                        {% if form.medio.errors %}
+                            <div class="text-danger small mt-1">{{ form.medio.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.monto.id_for_label }}" class="itinerarios-filtro-label mb-2">
+                            Monto del Ajuste ($) *
+                        </label>
+                        {{ form.monto }}
+                        {% if form.monto.errors %}
+                            <div class="text-danger small mt-1">{{ form.monto.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">
+                            Se sumará algebraicamente al total verificado (puede ser positivo o negativo).
+                        </small>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="{{ form.motivo.id_for_label }}" class="itinerarios-filtro-label mb-2">
+                            Motivo / Justificación Obligatoria *
+                        </label>
+                        {{ form.motivo }}
+                        {% if form.motivo.errors %}
+                            <div class="text-danger small mt-1">{{ form.motivo.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -100,7 +133,7 @@
                 Cancelar
             </a>
             <button type="submit" class="btn-itinerario-primary">
-                Guardar Ajustes
+                Guardar Ajuste
             </button>
         </div>
     </form>

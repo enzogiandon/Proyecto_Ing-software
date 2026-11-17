@@ -27,15 +27,6 @@
             </div>
         </header>
 
-        <!-- Mensajes del backend (éxito / error) -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} py-2">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
         <!-- FORMULARIO DIRECTO -->
         <form method="post" enctype="multipart/form-data" class="remitos-card remitos-card--form" novalidate>
             {% csrf_token %}

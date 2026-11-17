@@ -36,6 +36,7 @@
                             <th>Marca</th>
                             <th>Remitos</th>
                             <th>Estado</th>
+                            <th>Fecha</th>
                             <th class="text-end pe-3">Acciones</th>
                         </tr>
                     </thead>
@@ -47,7 +48,9 @@
                                     {% if importacion.archivo %}
                                         <a href="{{ importacion.archivo.url }}" class="text-decoration-none fw-medium" target="_blank">
                                             <i class="fas fa-file-csv me-1 text-success"></i>
-                                            {{ importacion.archivo.name }}
+                                            <span class="d-block">
+                                                {{ importacion.archivo.name }}
+                                            </span>
                                         </a>
                                     {% else %}
                                         <span class="text-muted">Sin archivo</span>
@@ -66,6 +69,14 @@
                                         </span>
                                     {% endif %}
                                 </td>
+                                <td>
+                                    <div class="fw-medium">
+                                        {{ importacion.fecha|date:"d/m/Y" }}
+                                    </div>
+                                    <small class="text-c-muted">
+                                        {{ importacion.fecha|date:"H:i" }}
+                                    </small>
+                                </td>
                                 <td class="text-end pe-2">
                                     <div class="remitos-acciones-btns justify-content-end">
                                         <a href="{% url 'remitos:importacion_detalle' importacion.pk %}" class="btn-accion-icon" title="Ver detalle">
@@ -80,6 +91,9 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+            <div class="remitos-tabla-footer">
+                Se muestran {{ importaciones|length }} importaciones.
             </div>
 
             <!-- Paginación -->

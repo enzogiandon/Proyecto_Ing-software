@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.cobranza.models import Cobranza, EstadoCobranza
 from apps.core.models import Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
@@ -361,6 +362,7 @@ class ItinerarioViewsTests(TestCase):
         remito.parada = parada
         remito.estado = EstadoRemito.ASIGNADO
         remito.save()
+        Cobranza.objects.create(parada=parada, estado=EstadoCobranza.REGISTRADO)
 
         response = self.client.post(
             reverse("itinerarios:itinerario_eliminar", args=[itinerario.pk])

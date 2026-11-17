@@ -8,6 +8,7 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView, View
 
+from apps.cobranza.models import AjusteCobranza, Cobranza, DetallePago
 from apps.core.models import Transportista, Vehiculo
 from apps.remitos.models import EstadoRemito, Remito
 
@@ -128,6 +129,9 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                         itinerario = parada.itinerario
                         parada_id = parada.id
                         comercio_nombre = parada.comercio.razon_social
+                        AjusteCobranza.objects.filter(cobranza__parada=parada).delete()
+                        DetallePago.objects.filter(cobranza__parada=parada).delete()
+                        Cobranza.objects.filter(parada=parada).delete()
                         parada.delete()
 
                         for i, p in enumerate(
@@ -374,6 +378,9 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                 parada = itinerario.paradas.get(id=parada_id)
                 comercio_nombre = parada.comercio.razon_social
                 with transaction.atomic():
+                    AjusteCobranza.objects.filter(cobranza__parada=parada).delete()
+                    DetallePago.objects.filter(cobranza__parada=parada).delete()
+                    Cobranza.objects.filter(parada=parada).delete()
                     Remito.objects.filter(parada=parada).update(
                         parada=None, estado=EstadoRemito.PENDIENTE
                     )
@@ -469,6 +476,13 @@ class EliminarItinerario(LoginRequiredMixin, PermissionRequiredMixin, View):
             return redirect("itinerarios:itinerario_lista")
 
         with transaction.atomic():
+            AjusteCobranza.objects.filter(
+                cobranza__parada__itinerario=itinerario
+            ).delete()
+            DetallePago.objects.filter(
+                cobranza__parada__itinerario=itinerario
+            ).delete()
+            Cobranza.objects.filter(parada__itinerario=itinerario).delete()
             Remito.objects.filter(parada__itinerario=itinerario).update(
                 parada=None,
                 estado=EstadoRemito.PENDIENTE,

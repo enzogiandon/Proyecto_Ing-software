@@ -10,7 +10,6 @@
 
 {% block content %}
 <div class="itinerarios-page">
-    <!-- Botón Volver -->
     <div>
         <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
             <i class="fas fa-arrow-left"></i>
@@ -18,7 +17,6 @@
         </a>
     </div>
 
-    <!-- Encabezado -->
     <header class="itinerarios-header">
         <div class="itinerarios-header-info">
             <h1 class="text-title mb-1">Editar itinerario</h1>
@@ -28,13 +26,11 @@
         </div>
     </header>
     
-    <!-- Formulario Principal de Edición -->
     <form method="post" id="formEditarItinerario">
         {% csrf_token %}
         <input type="hidden" name="accion" value="guardar_cambios">
 
         <div class="itinerarios-card mb-4">
-            <!-- Fila de Campos de Cabecera (Figma) -->
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <div class="itin-field">
@@ -76,7 +72,6 @@
                 </div>
             </div>
 
-            <!-- Sección de Paradas (Figma) -->
             <div class="d-flex justify-content-between align-items-center mb-3 pt-3 border-top">
                 <div>
                     <h2 class="text-section mb-1">Paradas ({{ paradas_lista|length }})</h2>
@@ -88,7 +83,6 @@
                 </a>
             </div>
 
-            <!-- Tabla de Paradas -->
             <div class="table-responsive">
                 <table class="itinerarios-tabla">
                     <thead>
@@ -148,7 +142,6 @@
                 </table>
             </div>
 
-            <!-- Pie de tabla con totales (Figma) -->
             <div class="itin-tabla-resumen-footer">
                 <div class="text-c-secondary fw-medium">
                     {{ paradas_lista|length }} parada{{ paradas_lista|length|pluralize }} &middot; {{ total_remitos }} remito{{ total_remitos|pluralize }} &middot; {{ total_productos }} producto{{ total_productos|pluralize }}
@@ -159,7 +152,6 @@
             </div>
         </div>
 
-        <!-- Botones de Acción -->
         <div class="itin-form-actions mt-4">
             <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
                 Cancelar
@@ -170,7 +162,6 @@
         </div>
     </form>
 
-    <!-- Formulario Oculto para Quitar Parada -->
     <form method="post" id="formQuitarParada" style="display: none;">
         {% csrf_token %}
         <input type="hidden" name="accion" value="quitar_parada">
@@ -186,13 +177,16 @@
         }
     }
 
-    // Auto-seleccionar vehículo al cambiar transportista si tiene vehículo asignado
     document.addEventListener("DOMContentLoaded", function () {
         const selectTransportista = document.getElementById("id_transportista");
         const selectVehiculo = document.getElementById("id_vehiculo");
 
         if (selectTransportista && selectVehiculo) {
             selectTransportista.addEventListener("change", function () {
+                if (!selectTransportista.value) {
+                    selectVehiculo.value = "";
+                    return;
+                }
                 const opt = selectTransportista.options[selectTransportista.selectedIndex];
                 const vehiculoId = opt.getAttribute("data-vehiculo-id");
                 if (vehiculoId && vehiculoId !== "") {

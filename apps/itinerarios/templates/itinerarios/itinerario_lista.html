@@ -132,9 +132,6 @@
                                         </a>
                                         {% with primera_parada=itinerario.paradas.first %}
                                             {% if primera_parada %}
-                                                <a href="{% url 'itinerarios:parada_detalle' primera_parada.pk %}" class="btn-accion-tabla" title="Ver detalle del recorrido">
-                                                    <i class="far fa-eye"></i>
-                                                </a>
                                                 <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn-accion-tabla" title="Reordenar secuencia de paradas">
                                                     <i class="fas fa-sort"></i>
                                                 </a>
@@ -145,6 +142,12 @@
                                                 </a>
                                             {% endif %}
                                         {% endwith %}
+                                        <button type="button"
+                                                class="btn-accion-tabla btn-accion-tabla--danger"
+                                                title="Eliminar itinerario"
+                                                {% if itinerario.estado == 'finalizado' %}disabled{% else %}onclick="confirmarEliminarItinerario('{% url 'itinerarios:itinerario_eliminar' itinerario.pk %}', 'IT-{{ itinerario.fecha|date:'Y' }}-{{ itinerario.id|stringformat:'05d' }}')"{% endif %}>
+                                            <i class="far fa-trash-alt"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -220,5 +223,19 @@
             </div>
         </div>
     {% endif %}
+
+    <form method="post" id="formEliminarItinerario" style="display: none;">
+        {% csrf_token %}
+    </form>
 </div>
+
+<script>
+    function confirmarEliminarItinerario(url, codigo) {
+        if (confirm(`¿Estás seguro de eliminar el itinerario ${codigo}? Esta acción es irreversible y todos sus remitos asociados volverán al estado Pendiente.`)) {
+            const form = document.getElementById("formEliminarItinerario");
+            form.action = url;
+            form.submit();
+        }
+    }
+</script>
 {% endblock %}

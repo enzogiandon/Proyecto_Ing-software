@@ -343,6 +343,109 @@ class ItinerarioViewsTests(TestCase):
         ]
         self.assertEqual(positions, sorted(positions))
 
+    def test_delete_itinerary_resets_remitos_to_pending(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Eliminar", "20123456799")
+        parada = Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+            estado=EstadoParada.PENDIENTE,
+        )
+        remito = self.crear_remito(comercio, "R-DEL-001")
+        remito.parada = parada
+        remito.estado = EstadoRemito.ASIGNADO
+        remito.save()
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_eliminar", args=[itinerario.pk])
+        )
+        self.assertRedirects(response, reverse("itinerarios:itinerario_lista"))
+        self.assertFalse(Itinerario.objects.filter(pk=itinerario.pk).exists())
+        remito.refresh_from_db()
+        self.assertIsNone(remito.parada)
+        self.assertEqual(remito.estado, EstadoRemito.PENDIENTE)
+
+    def test_delete_nonexistent_itinerary_shows_error(self):
+        response = self.client.post(
+            reverse("itinerarios:itinerario_eliminar", args=[99999]),
+            follow=True,
+        )
+        self.assertContains(response, "Itinerario no encontrado")
+
+    def test_edit_itinerary_transportista_scenarios(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response_unassign = self.client.post(
+            reverse("itinerarios:itinerario_editar", args=[itinerario.pk]),
+            {
+                "accion": "guardar_cambios",
+                "fecha": "2026-10-25",
+                "transportista": "",
+                "vehiculo": "",
+            },
+            follow=True,
+        )
+        itinerario.refresh_from_db()
+        self.assertIsNone(itinerario.transportista)
+        self.assertEqual(itinerario.estado, EstadoItinerario.PENDIENTE)
+        self.assertContains(response_unassign, "Transportista asignado con éxito")
+
+        response_assign = self.client.post(
+            reverse("itinerarios:itinerario_editar", args=[itinerario.pk]),
+            {
+                "accion": "guardar_cambios",
+                "fecha": "2026-10-25",
+                "transportista": str(self.transportista.pk),
+                "vehiculo": str(self.vehiculo.pk),
+            },
+            follow=True,
+        )
+        itinerario.refresh_from_db()
+        self.assertEqual(itinerario.transportista, self.transportista)
+        self.assertEqual(itinerario.estado, EstadoItinerario.ASIGNADO)
+        self.assertContains(response_assign, "Transportista asignado con éxito")
+
+        second_vehiculo = Vehiculo.objects.create(patente="ZZ999ZZ")
+        second_user = get_user_model().objects.create_user(
+            username="44444444",
+            password="Driver-Password-123!",
+        )
+        second_user.groups.add(self.grupo_transportista)
+        second_transportista = Transportista.objects.create(
+            usuario=second_user,
+            vehiculo=second_vehiculo,
+        )
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=second_transportista,
+            vehiculo=second_vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response_fail = self.client.post(
+            reverse("itinerarios:itinerario_editar", args=[itinerario.pk]),
+            {
+                "accion": "guardar_cambios",
+                "fecha": "2026-10-25",
+                "transportista": str(second_transportista.pk),
+            },
+            follow=True,
+        )
+        itinerario.refresh_from_db()
+        self.assertEqual(itinerario.transportista, self.transportista)
+        self.assertContains(response_fail, "Transportista no asignado")
+
 
 class ItinerariosModelTests(TestCase):
     def test_saved_route_details_keep_order_and_unique_commerce_constraint(self):

@@ -6,7 +6,7 @@ from django.db import transaction
 from django.db.models import Case, Count, IntegerField, Prefetch, Q, Sum, When
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, FormView, ListView
+from django.views.generic import DetailView, FormView, ListView, View
 
 from apps.core.models import Transportista, Vehiculo
 from apps.remitos.models import EstadoRemito, Remito
@@ -344,11 +344,20 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         context["total_productos"] = total_productos
         context["total_monto"] = total_monto
 
+        transportistas_ocupados = (
+            Itinerario.objects.filter(
+                fecha=itinerario.fecha,
+                transportista__isnull=False,
+            )
+            .exclude(pk=itinerario.pk)
+            .values_list("transportista_id", flat=True)
+        )
         context["transportistas"] = (
             Transportista.objects.filter(
                 usuario__is_active=True,
                 vehiculo__isnull=False,
             )
+            .exclude(pk__in=transportistas_ocupados)
             .select_related("usuario", "vehiculo")
             .order_by("usuario__last_name", "usuario__first_name")
         )
@@ -359,19 +368,16 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         itinerario = self.get_object()
         accion = request.POST.get("accion")
 
-        # Quitar parada individual
         if accion == "quitar_parada":
             parada_id = request.POST.get("parada_id")
             try:
                 parada = itinerario.paradas.get(id=parada_id)
                 comercio_nombre = parada.comercio.razon_social
                 with transaction.atomic():
-                    # Desvincular remitos y devolverlos a PENDIENTE
                     Remito.objects.filter(parada=parada).update(
                         parada=None, estado=EstadoRemito.PENDIENTE
                     )
                     parada.delete()
-                    # Reordenar las paradas restantes
                     for idx, p in enumerate(
                         itinerario.paradas.all().order_by("orden", "id"), start=1
                     ):
@@ -388,29 +394,89 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                 )
             return redirect("itinerarios:itinerario_editar", pk=itinerario.pk)
 
-        # Guardar cambios generales (Fecha, Transportista, Vehículo)
         nueva_fecha = request.POST.get("fecha")
-        transportista_id = request.POST.get("transportista")
-        vehiculo_id = request.POST.get("vehiculo")
+        transportista_id = (request.POST.get("transportista") or "").strip()
+        vehiculo_id = (request.POST.get("vehiculo") or "").strip()
 
         if nueva_fecha:
             itinerario.fecha = nueva_fecha
 
         if transportista_id:
             try:
-                t = Transportista.objects.select_related("vehiculo").get(pk=transportista_id)
-                itinerario.transportista = t
-                if not vehiculo_id and t.vehiculo:
-                    itinerario.vehiculo = t.vehiculo
+                t = Transportista.objects.select_related("usuario", "vehiculo").get(
+                    pk=transportista_id,
+                    usuario__is_active=True,
+                    vehiculo__isnull=False,
+                )
             except Transportista.DoesNotExist:
-                pass
+                messages.error(request, "Transportista no asignado")
+                return redirect("itinerarios:itinerario_editar", pk=itinerario.pk)
 
-        if vehiculo_id:
-            try:
-                itinerario.vehiculo = Vehiculo.objects.get(pk=vehiculo_id)
-            except Vehiculo.DoesNotExist:
-                pass
+            ocupado = (
+                Itinerario.objects.filter(
+                    fecha=itinerario.fecha,
+                    transportista=t,
+                )
+                .exclude(pk=itinerario.pk)
+                .exists()
+            )
+            if ocupado:
+                messages.error(request, "Transportista no asignado")
+                return redirect("itinerarios:itinerario_editar", pk=itinerario.pk)
+
+            itinerario.transportista = t
+            if vehiculo_id:
+                try:
+                    itinerario.vehiculo = Vehiculo.objects.get(pk=vehiculo_id)
+                except Vehiculo.DoesNotExist:
+                    itinerario.vehiculo = t.vehiculo
+            else:
+                itinerario.vehiculo = t.vehiculo
+
+            if itinerario.estado == EstadoItinerario.PENDIENTE:
+                itinerario.estado = EstadoItinerario.ASIGNADO
+        else:
+            itinerario.transportista = None
+            if vehiculo_id:
+                try:
+                    itinerario.vehiculo = Vehiculo.objects.get(pk=vehiculo_id)
+                except Vehiculo.DoesNotExist:
+                    itinerario.vehiculo = None
+            else:
+                itinerario.vehiculo = None
+
+            if itinerario.estado == EstadoItinerario.ASIGNADO:
+                itinerario.estado = EstadoItinerario.PENDIENTE
 
         itinerario.save()
-        messages.success(request, f"Itinerario #{itinerario.id} actualizado con éxito.")
+        messages.success(request, "Transportista asignado con éxito")
+        return redirect("itinerarios:itinerario_lista")
+
+
+class EliminarItinerario(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "itinerarios.delete_itinerario"
+
+    def post(self, request, pk, *args, **kwargs):
+        itinerario = Itinerario.objects.filter(pk=pk).first()
+        if not itinerario:
+            messages.error(request, "Itinerario no encontrado")
+            return redirect("itinerarios:itinerario_lista")
+
+        if itinerario.estado == EstadoItinerario.FINALIZADO:
+            messages.error(
+                request, "No se puede eliminar un itinerario finalizado."
+            )
+            return redirect("itinerarios:itinerario_lista")
+
+        with transaction.atomic():
+            Remito.objects.filter(parada__itinerario=itinerario).update(
+                parada=None,
+                estado=EstadoRemito.PENDIENTE,
+            )
+            itinerario.delete()
+
+        messages.success(request, "Itinerario eliminado exitosamente")
+        return redirect("itinerarios:itinerario_lista")
+
+    def get(self, request, pk, *args, **kwargs):
         return redirect("itinerarios:itinerario_lista")

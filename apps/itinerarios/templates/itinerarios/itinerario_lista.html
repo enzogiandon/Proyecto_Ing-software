@@ -132,9 +132,11 @@
                                         </a>
                                         {% with primera_parada=itinerario.paradas.first %}
                                             {% if primera_parada %}
+                                                <!--
                                                 <a href="{% url 'itinerarios:parada_detalle' primera_parada.pk %}" class="btn-accion-tabla" title="Ver detalle del recorrido">
                                                     <i class="far fa-eye"></i>
                                                 </a>
+                                                -->
                                                 <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn-accion-tabla" title="Reordenar secuencia de paradas">
                                                     <i class="fas fa-sort"></i>
                                                 </a>

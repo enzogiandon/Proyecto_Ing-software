@@ -19,6 +19,23 @@ class RemitoForm(forms.ModelForm):
             raise ValidationError("No está permitido modificar el número de remito una vez creado.")
         return numero
 
+    def clean(self):
+        cleaned_data = super().clean()
+        numero = cleaned_data.get("numero")
+        marca = cleaned_data.get("marca")
+
+        if numero and marca:
+            qs = Remito.objects.filter(numero=numero, marca=marca)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error(
+                    "numero",
+                    "El número de remito debe ser único por marca proveedora.",
+                )
+
+        return cleaned_data
+
 
     class Meta:
         model = Remito

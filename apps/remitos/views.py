@@ -258,10 +258,10 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                             }
                         )
 
-                # Si no hubo errores de formato, verificar duplicados contra la base de datos
                 if not errores_filas and datos_validados:
                     existentes = set(
                         Remito.objects.filter(
+                            marca=marca,
                             numero__in=numeros_en_archivo,
                         ).values_list("numero", flat=True)
                     )
@@ -269,7 +269,7 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         for idx, d in enumerate(datos_validados, start=2):
                             if d["numero"] in existentes:
                                 errores_filas.append(
-                                    (idx, f"El remito '{d['numero']}' ya existe en el sistema.")
+                                    (idx, "El número de remito debe ser único por marca proveedora.")
                                 )
 
                 archivo.seek(0)

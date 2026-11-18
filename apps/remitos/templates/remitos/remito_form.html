@@ -37,6 +37,14 @@
     <form method="post" id="form-remito" novalidate>
         {% csrf_token %}
 
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-3" role="alert">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <section class="remitos-card remitos-card--form">
             <div class="row g-3">
                 <!-- Número de remito -->

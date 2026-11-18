@@ -58,9 +58,23 @@
                                 </td>
                                 <td>
                                     {% for grupo in empleado.groups.all %}
-                                        <span class="d-block">
-                                            {{ grupo }}
-                                        </span>
+                                        {% if grupo|slugify == "administrativo-conciliacion" %}
+                                            <span class="d-block">
+                                                Conciliación
+                                            </span>
+                                        {% elif grupo|slugify == "administrativo-planificacion" %}
+                                            <span class="d-block">
+                                                Planificación
+                                            </span>
+                                        {% elif grupo|slugify == "gestion-personal" %}
+                                            <span class="d-block">
+                                                Gestión de personal
+                                            </span>
+                                        {% else %}
+                                            <span class="d-block">
+                                                {{ grupo|capfirst }}
+                                            </span>
+                                        {% endif %}
                                     {% empty %}
                                         <span>
                                             Sin grupo

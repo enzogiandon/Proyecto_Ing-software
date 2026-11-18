@@ -132,13 +132,13 @@
                         </small>
                     </div>
                     <div class="col-md-8">
-                        <label for="{{ form.observacion_ajuste.id_for_label }}" class="itinerarios-filtro-label">
+                        <label for="{{ form.observacion.id_for_label }}" class="itinerarios-filtro-label">
                             Observación de Ajuste / Justificación
                         </label>
-                        {{ form.observacion}}
+                        {{ form.observacion }}
                         {% if form.observacion.errors %}
                             <div class="text-danger small mt-1">
-                                {{ form.observacion_ajuste.errors.0 }}
+                                {{ form.observacion.errors.0 }}
                             </div>
                         {% endif %}
                         <div class="form-text">

@@ -106,9 +106,9 @@
 
                     <div class="cobranza-kv-item">
                         <span class="cobranza-kv-label">Observación de ajuste:</span>
-                        {% if cobranza.observacion_ajuste %}
+                        {% if cobranza.observacion %}
                             <div class="alert alert-warning py-2 px-3 small mb-0">
-                                <i class="fas fa-circle-info me-1"></i>{{ cobranza.observacion_ajuste }}
+                                <i class="fas fa-circle-info me-1"></i>{{ cobranza.observacion }}
                             </div>
                         {% else %}
                             <span class="cobranza-kv-value">Sin observaciones ni discrepancias informadas.</span>

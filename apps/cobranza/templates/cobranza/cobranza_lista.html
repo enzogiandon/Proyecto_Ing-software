@@ -127,9 +127,9 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if cobranza.observacion_ajuste %}
-                                        <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cobranza.observacion_ajuste }}">
-                                            <i class="fas fa-circle-info"></i> {{ cobranza.observacion_ajuste }}
+                                    {% if cobranza.observacion %}
+                                        <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cobranza.observacion }}">
+                                            <i class="fas fa-circle-info"></i> {{ cobranza.observacion }}
                                         </span>
                                     {% else %}
                                         <span class="text-muted small">-</span>

@@ -127,9 +127,9 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if cobranza.observacion_ajuste %}
-                                        <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cobranza.observacion_ajuste }}">
-                                            <i class="fas fa-circle-info"></i> {{ cobranza.observacion_ajuste }}
+                                    {% if cobranza.observacion %}
+                                        <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cobranza.observacion }}">
+                                            <i class="fas fa-circle-info"></i> {{ cobranza.observacion }}
                                         </span>
                                     {% else %}
                                         <span class="text-muted small">-</span>
@@ -145,12 +145,13 @@
                                         </a>
                                         
                                         {% if cobranza.estado == 'registrado' %}
-                                            <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
-                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
+                                            <!-- Botón Ajustar (deshabilitado hasta realizar arqueo) -->
+                                            <button type="button" 
                                                 class="btn btn-ver-detalle-outline" 
-                                                title="{% if cobranza.estado == 'registrado' %}Debe realizar el arqueo/validación antes de ajustar diferencias{% else %}Ajustar importe por diferencia{% endif %}">
+                                                disabled 
+                                                title="Debe realizar el arqueo/validación antes de ajustar diferencias">
                                                 <i class="fas fa-pen-to-square"></i>
-                                            </a>
+                                            </button>
 
                                             <!-- Botón Validar -->
                                             <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
@@ -158,34 +159,21 @@
                                             title="Arqueo y validación de importes">
                                                 <i class="fas fa-circle-check"></i> Validar
                                             </a>
-                                        {% elif cobranza.estado == 'difiere' or cobranza.estado == 'aprobado' %}
-                                            <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
+                                        {% else %}
+                                            <!-- Botón Ajustar (habilitado para cobranzas validadas) -->
                                             <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
                                                 class="btn btn-ver-detalle" 
                                                 title="Ajustar importe por diferencia">
                                                 <i class="fas fa-pen-to-square"></i>
                                             </a>
 
-                                            <!-- Botón Validar -->
-                                            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
+                                            <!-- Botón Validar (ya validada) -->
+                                            <button type="button" 
                                             class="btn btn-ver-detalle-primary-outline" 
-                                            title="Arqueo y validación de importes">
+                                            disabled 
+                                            title="Cobranza ya validada">
                                                 <i class="fas fa-circle-check"></i> Validada
-                                            </a>
-                                        {% else %}
-                                            <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
-                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
-                                                class="btn btn-ver-detalle-outline" 
-                                                title="Ajustar importe por diferencia">
-                                                <i class="fas fa-pen-to-square"></i>
-                                            </a>
-
-                                            <!-- Botón Validar -->
-                                            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
-                                            class="btn btn-ver-detalle-primary-outline" 
-                                            title="Arqueo y validación de importes">
-                                                <i class="fas fa-circle-check"></i> Validada
-                                            </a>
+                                            </button>
                                         {% endif %}
                                     </div>
                                 </td>

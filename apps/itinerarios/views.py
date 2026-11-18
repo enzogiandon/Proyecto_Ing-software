@@ -24,6 +24,7 @@ from apps.remitos.models import EstadoRemito, Remito
 from .forms import CrearItinerariosForm, CrearParadasForm
 from .models import (
     EstadoItinerario,
+    EstadoParada,
     EvidenciaParada,
     Itinerario,
     Parada,
@@ -485,9 +486,9 @@ class EliminarItinerario(LoginRequiredMixin, PermissionRequiredMixin, View):
             messages.error(request, "Itinerario no encontrado")
             return redirect("itinerarios:itinerario_lista")
 
-        if itinerario.estado == EstadoItinerario.FINALIZADO:
+        if itinerario.estado in [EstadoItinerario.FINALIZADO, EstadoItinerario.EN_CURSO]:
             messages.error(
-                request, "No se puede eliminar un itinerario finalizado."
+                request, f"No se puede eliminar un itinerario en estado '{itinerario.get_estado_display()}'."
             )
             return redirect("itinerarios:itinerario_lista")
 
@@ -498,9 +499,18 @@ class EliminarItinerario(LoginRequiredMixin, PermissionRequiredMixin, View):
             )
             return redirect("itinerarios:itinerario_lista")
 
+        if itinerario.paradas.filter(estado=EstadoParada.FINALIZADA).exists():
+            messages.error(
+                request,
+                "No se puede eliminar el itinerario porque contiene paradas que ya fueron finalizadas.",
+            )
+            return redirect("itinerarios:itinerario_lista")
+
         try:
             with transaction.atomic():
-                Remito.objects.filter(parada__itinerario=itinerario).update(
+                Remito.objects.filter(parada__itinerario=itinerario).exclude(
+                    estado=EstadoRemito.ENTREGADO
+                ).update(
                     parada=None,
                     estado=EstadoRemito.PENDIENTE,
                 )

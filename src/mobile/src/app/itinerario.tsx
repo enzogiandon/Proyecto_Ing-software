@@ -544,20 +544,7 @@ export default function ItinerarioScreen() {
             </View>
           ))}
 
-          {/* Pie de lista con las paradas restantes del recorrido */}
-          <View style={styles.footerParadasRestantes}>
-            <Image
-              source={require('../../assets/icons/icono-transferencia.png')}
-              style={styles.iconoRutaPunteadaCustom}
-              resizeMode="contain"
-            />
-            <View style={styles.footerParadasInfo}>
-              <Text style={styles.footerParadasTitulo}>Luego, paradas 7 y 8</Text>
-              <Text style={styles.footerParadasDetalle}>
-                Kiosco El Sol · Mercado San José
-              </Text>
-            </View>
-          </View>
+
         </ScrollView>
       )}
       {/* ================= MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN (HU-156) ================= */}

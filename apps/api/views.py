@@ -584,7 +584,7 @@ class ParadaViewSet(viewsets.ModelViewSet):
         """
         parada = self.get_object()
 
-        if parada.estado == EstadoParada.FINALIZADA:
+        if parada.estado == EstadoParada.FINALIZADA or (hasattr(parada, "cobranza") and parada.cobranza.detalles.exists()):
             raise ValidationError({
                 "detail": "La cobranza de esta parada ya fue registrada y la visita se encuentra finalizada."
             })
@@ -652,6 +652,9 @@ class ParadaViewSet(viewsets.ModelViewSet):
                 itinerario.estado = EstadoItinerario.FINALIZADO
                 itinerario.save(update_fields=["estado"])
                 itinerario_finalizado = True
+            elif itinerario.estado == EstadoItinerario.ASIGNADO:
+                itinerario.estado = EstadoItinerario.EN_CURSO
+                itinerario.save(update_fields=["estado"])
 
         return Response(
             {

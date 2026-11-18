@@ -66,6 +66,54 @@ class ItinerarioViewsTests(TestCase):
             total=0,
         )
 
+    def test_exportar_hoja_de_ruta_pdf(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio de prueba", "20123456789")
+        parada = Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+        )
+        remito = self.crear_remito(comercio, "R-001")
+        remito.total = 1250
+        remito.parada = parada
+        remito.save(update_fields=["total", "parada"])
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_exportar_pdf", args=[itinerario.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn(
+            'filename="Hoja_Ruta_IT-2026-00001.pdf"',
+            response["Content-Disposition"],
+        )
+        self.assertTrue(response.content.startswith(b"%PDF-"))
+
+    def test_exportar_hoja_de_ruta_sin_paradas_muestra_advertencia(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_exportar_pdf", args=[itinerario.pk]),
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("itinerarios:itinerario_lista"))
+        self.assertContains(
+            response, "El itinerario no contiene paradas para exportar"
+        )
+
     def test_create_itinerary_uses_transportista_vehicle(self):
         second_vehiculo = Vehiculo.objects.create(patente="CD456EF")
         second_user = get_user_model().objects.create_user(
@@ -362,7 +410,6 @@ class ItinerarioViewsTests(TestCase):
         remito.parada = parada
         remito.estado = EstadoRemito.ASIGNADO
         remito.save()
-        Cobranza.objects.create(parada=parada, estado=EstadoCobranza.REGISTRADO)
 
         response = self.client.post(
             reverse("itinerarios:itinerario_eliminar", args=[itinerario.pk])
@@ -372,6 +419,42 @@ class ItinerarioViewsTests(TestCase):
         remito.refresh_from_db()
         self.assertIsNone(remito.parada)
         self.assertEqual(remito.estado, EstadoRemito.PENDIENTE)
+
+    def test_delete_itinerary_with_cobranza_is_rejected(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 24),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = Comercio.objects.create(
+            cuit="20123456782",
+            razon_social="Comercio Con Cobranza",
+            domicilio="Av. Siempre Viva 742",
+        )
+        parada = Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+            estado=EstadoParada.PENDIENTE,
+        )
+        remito = self.crear_remito(comercio, "R-DEL-COB-01")
+        remito.parada = parada
+        remito.estado = EstadoRemito.ASIGNADO
+        remito.save()
+        Cobranza.objects.create(parada=parada, estado=EstadoCobranza.REGISTRADO)
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_eliminar", args=[itinerario.pk]),
+            follow=True,
+        )
+        self.assertRedirects(response, reverse("itinerarios:itinerario_lista"))
+        # El itinerario NO debe eliminarse para preservar la trazabilidad contable
+        self.assertTrue(Itinerario.objects.filter(pk=itinerario.pk).exists())
+        self.assertContains(
+            response,
+            "No se puede eliminar el itinerario porque posee cobranzas o rendiciones registradas.",
+        )
 
     def test_delete_nonexistent_itinerary_shows_error(self):
         response = self.client.post(

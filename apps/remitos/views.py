@@ -65,8 +65,19 @@ class EditarRemito(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = RemitoForm
     model = Remito
     template_name = "remitos/remito_form.html"
-    success_url = reverse_lazy("remitos:remito_lista")
     permission_required = "remitos.change_remito"
+
+    def get_success_url(self):
+        return reverse_lazy("remitos:remito_detalle", kwargs={"pk": self.object.pk})
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if self.object.estado != EstadoRemito.PENDIENTE:
+            messages.error(request, "Solo editable en estado pendiente")
+            return redirect("remitos:remito_detalle", pk=self.object.pk)
+            
+        return super().dispatch(request, *args, **kwargs)
 
 
 class DetalleRemito(LoginRequiredMixin, PermissionRequiredMixin, DetailView):

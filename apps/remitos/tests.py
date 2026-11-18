@@ -95,6 +95,38 @@ class RemitoFormTests(RemitoTestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("El monto total tiene que ser mayor a cero.", form.errors["total"])
 
+    def test_form_rejects_modifying_numero_on_existing_remito(self):
+        remito = Remito.objects.create(
+            numero="R-001",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+        )
+        form = RemitoForm(
+            data=self.datos_remito(numero="R-MODIFICADO"),
+            instance=remito,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "No está permitido modificar el número de remito una vez creado.",
+            form.errors["numero"],
+        )
+
+    def test_form_allows_same_numero_on_existing_remito(self):
+        remito = Remito.objects.create(
+            numero="R-001",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+        )
+        form = RemitoForm(
+            data=self.datos_remito(numero="R-001", total="1500.00"),
+            instance=remito,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
 
 class RemitoViewsTests(RemitoTestCase):
     def test_create_remito_persists_data_and_redirects(self):
@@ -202,11 +234,51 @@ class RemitoViewsTests(RemitoTestCase):
 
         self.assertRedirects(
             response,
-            reverse("remitos:remito_lista"),
+            reverse("remitos:remito_detalle", args=[remito.pk]),
             fetch_redirect_response=False,
         )
         remito.refresh_from_db()
         self.assertEqual(remito.total, Decimal("2400.00"))
+
+    def test_edit_remito_rejects_modifying_numero(self):
+        remito = Remito.objects.create(
+            numero="R-003",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+        )
+
+        response = self.client.post(
+            reverse("remitos:remito_editar", args=[remito.pk]),
+            self.datos_remito(numero="R-MODIFICADO", total="2400.00"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "No está permitido modificar el número de remito una vez creado.",
+        )
+        remito.refresh_from_db()
+        self.assertEqual(remito.numero, "R-003")
+
+    def test_edit_remito_only_allowed_in_pending_state(self):
+        remito = Remito.objects.create(
+            numero="R-003",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+            estado=EstadoRemito.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("remitos:remito_editar", args=[remito.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("remitos:remito_detalle", args=[remito.pk]),
+            fetch_redirect_response=False,
+        )
 
     def test_delete_remito_marks_it_deleted_and_redirects(self):
         itinerario = Itinerario.objects.create(

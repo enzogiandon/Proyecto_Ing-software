@@ -100,7 +100,7 @@
                         </td>
                         <td>
                             <span class="itin-badge {% if ajuste.medio == 'efectivo' %}itin-badge--entregado{% elif ajuste.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
-                                {{ ajuste.medio }}
+                                {{ ajuste.medio|capfirst }}
                             </span>
                             {% if ajuste.detalle_pago.mp_payment_id %}
                                 <span class="cell-sub d-block">MP: {{ ajuste.detalle_pago.mp_payment_id }}</small>

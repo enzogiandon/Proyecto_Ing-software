@@ -142,22 +142,6 @@ class EmpleadoCreateForm(forms.ModelForm):
         return user
 
 class EmpleadoUpdateForm(forms.ModelForm):
-    # Campos de contraseña opcionales para edición
-    password = forms.CharField(
-        widget=forms.PasswordInput(
-            attrs={"class": "form-control", "placeholder": "Dejar en blanco para no modificar"}
-        ),
-        label="Nueva contraseña",
-        required=False,
-    )
-    password_confirm = forms.CharField(
-        widget=forms.PasswordInput(
-            attrs={"class": "form-control", "placeholder": "Confirmar nueva contraseña"}
-        ),
-        label="Confirmar nueva contraseña",
-        required=False,
-    )
-
     grupos = GrupoMultipleChoiceField(
         queryset=Group.objects.filter(name__in=Grupos.values).order_by("name"),
         required=True,
@@ -245,32 +229,8 @@ class EmpleadoUpdateForm(forms.ModelForm):
             raise ValidationError("El empleado ya se encuentra registrado.")
         return username
 
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        password_confirm = cleaned_data.get("password_confirm")
-
-        # Solo validamos si el usuario ingresó algo en alguno de los dos campos
-        if password or password_confirm:
-            if not password:
-                self.add_error("password", "Debe ingresar una contraseña.")
-            elif not password_confirm:
-                self.add_error("password_confirm", "Debe confirmar la contraseña.")
-            elif password != password_confirm:
-                self.add_error("password_confirm", "Las contraseñas no coinciden.")
-            else:
-                # Si quitaste AUTH_PASSWORD_VALIDATORS = [] no dará errores de complejidad
-                validate_password(password, user=self.instance)
-
-        return cleaned_data
-
     def save(self, commit=True):
         user = super().save(commit=False)
-        password = self.cleaned_data.get("password")
-
-        # Actualiza el hash solo si se ingresó una nueva clave
-        if password:
-            user.set_password(password)
 
         if commit:
             with transaction.atomic():

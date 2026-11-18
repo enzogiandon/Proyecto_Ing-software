@@ -125,8 +125,8 @@ class EmpleadoViewsTests(TestCase):
                 "last_name": "Apellido actualizado",
                 "telefono": "1112345678",
                 "grupos": [self.gestion_personal.pk],
-                "password": "",
-                "password_confirm": "",
+                "password": "Intento-Cambio-Password-42!",
+                "password_confirm": "Intento-Cambio-Password-42!",
             },
         )
 
@@ -318,6 +318,70 @@ class VehiculoViewsTests(TestCase):
 
 
 class PoblarCommandTests(TestCase):
+    def test_poblar_creates_superuser_with_all_roles_by_default(self):
+        out = StringIO()
+        call_command("poblar", stdout=out)
+        output = out.getvalue()
+
+        user_model = get_user_model()
+        admin_user = user_model.objects.get(username="11111111")
+
+        self.assertTrue(admin_user.is_superuser)
+        self.assertTrue(admin_user.is_staff)
+        self.assertTrue(admin_user.is_active)
+        self.assertEqual(admin_user.intentos_fallidos, 0)
+
+        # Verificar que tenga todos los roles/grupos por defecto
+        nombres_grupos = set(admin_user.groups.values_list("name", flat=True))
+        for grupo_val in Grupos.values:
+            self.assertIn(grupo_val, nombres_grupos)
+        self.assertEqual(len(nombres_grupos), len(Grupos.values))
+
+        # Verificar credenciales de login
+        self.assertTrue(self.client.login(username="11111111", password="123"))
+
+        # Verificar salida en consola de casos de prueba
+        self.assertIn("CASOS DE PRUEBA Y CREDENCIALES DISPONIBLES", output)
+        self.assertIn("11111111", output)
+        self.assertIn("1234567", output)
+        self.assertIn("12345678", output)
+        self.assertIn("Consolidación Multimarca", output)
+
+    def test_poblar_limpiar_unblocks_all_users(self):
+        user_model = get_user_model()
+
+        # Creamos un superusuario bloqueado y un usuario estándar bloqueado
+        admin = user_model.objects.create_superuser(
+            username="11111111",
+            password="123",
+            email="admin@softech.com.ar",
+            is_active=False,
+            intentos_fallidos=5,
+        )
+        empleado = user_model.objects.create_user(
+            username="22222222",
+            password="123",
+            is_active=False,
+            intentos_fallidos=5,
+        )
+
+        out = StringIO()
+        call_command("poblar", limpiar=True, stdout=out)
+
+        admin.refresh_from_db()
+        empleado.refresh_from_db()
+
+        # Ambos usuarios deben estar desbloqueados
+        self.assertTrue(admin.is_active)
+        self.assertEqual(admin.intentos_fallidos, 0)
+        self.assertTrue(empleado.is_active)
+        self.assertEqual(empleado.intentos_fallidos, 0)
+
+        # El superusuario debe tener todos los roles asignados
+        nombres_grupos = set(admin.groups.values_list("name", flat=True))
+        for grupo_val in Grupos.values:
+            self.assertIn(grupo_val, nombres_grupos)
+
     def test_poblar_completo_creates_route_and_collections_for_driver(self):
         call_command("crear_grupos", stdout=StringIO())
         out = StringIO()

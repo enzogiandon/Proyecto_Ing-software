@@ -50,7 +50,7 @@ class Cobranza(models.Model):
         """
         detalles = self.detalles.all()
         ajustes = self.ajustes.all()
-        remitos = self.parada.remitos.filter(eliminado=False)
+        remitos = self.parada.remitos.all()
 
         total_declarado = sum(r.total for r in remitos)
         total_verificado_detalles = sum(

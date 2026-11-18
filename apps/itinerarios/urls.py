@@ -5,6 +5,7 @@ from .views import (
     CrearParadas,
     DetalleParada,
     EditarItinerario,
+    EliminarItinerario,
     ListaItinerarios,
     ReordenarItinerario,
 )
@@ -18,4 +19,5 @@ urlpatterns = [
     path("paradas/crear/", CrearParadas.as_view(), name="paradas_crear"),
     path("itinerario/<int:pk>/reordenar/", ReordenarItinerario.as_view(), name="itinerario_reordenar"),
     path("itinerario/<int:pk>/editar/", EditarItinerario.as_view(), name="itinerario_editar"),
+    path("itinerario/<int:pk>/eliminar/", EliminarItinerario.as_view(), name="itinerario_eliminar"),
 ]

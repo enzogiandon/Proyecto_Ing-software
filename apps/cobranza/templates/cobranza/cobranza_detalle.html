@@ -42,18 +42,8 @@
         </div>
     </div>
 
-    <!-- Mensajes Flash de Django -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
     <!-- Fila Superior: Datos de Parada / Comercio y Estado -->
-    <div class="row g-3">
+    <div class="row g-3 mb-2">
         <!-- Card Comercio / Parada -->
         <div class="col-md-7">
             <section class="itinerarios-card">
@@ -130,7 +120,7 @@
     </div>
 
     <!-- Tabla de Pagos Declarados vs Verificados -->
-    <div class="itinerarios-card">
+    <div class="itinerarios-card mb-3">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="text-section text-c-brand mb-3">
                 Detalle de Medios de Pago (DetallePago)
@@ -216,12 +206,12 @@
 
     <!-- Historial de Ajustes Administrativos (Criterio Escenario 3) -->
     {% if cobranza.ajustes.exists %}
-      <div class="card shadow-sm border-0 mb-4">
+      <div class="itinerarios-card mb-3">
             <h2 class="text-section text-c-brand mb-3">
                 Historial de Ajustes por Medio de Pago
             </h2>
           <div class="table-responsive">
-              <table class="table table-sm table-hover align-middle mb-0">
+              <table class="itinerarios-tabla">
                   <thead class="table-light small">
                       <tr>
                           <th class="ps-3">Fecha y Hora</th>
@@ -233,24 +223,32 @@
                   </thead>
                   <tbody>
                       {% for ajuste in cobranza.ajustes.all %}
-                      <tr>
-                          <td class="ps-3 small text-muted">{{ ajuste.fecha|date:"d/m/Y H:i" }} hs</td>
-                          <td>
-                              <span class="badge bg-light text-dark border">{{ ajuste.get_medio_display }}</span>
-                          </td>
-                          <td class="fw-semibold">
-                              {{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}
-                              <small class="text-muted">(DNI: {{ ajuste.usuario.username }})</small>
-                          </td>
-                          <td class="{% if ajuste.monto < 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
-                              ${{ ajuste.monto }}
-                          </td>
-                          <td class="small">{{ ajuste.motivo }}</td>
-                      </tr>
+                        <tr>
+                            <td class="ps-3 small text-muted">{{ ajuste.fecha|date:"d/m/Y H:i" }} hs</td>
+                            <td>
+                                <span class="itin-badge {% if ajuste.medio == 'efectivo' %}itin-badge--entregado{% elif ajuste.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
+                                    {{ ajuste.get_medio_display }}
+                                </span>
+                            </td>
+                            <td class="fw-semibold">
+                                <div class="cell-main cell-main--medium">
+                                    {{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}
+                                </div>
+                                <div class="cell-sub">
+                                    DNI: {{ ajuste.usuario.username }}
+                                </div>
+                            </td>
+                            <td class="{% if ajuste.monto < 0 %}text-danger{% else %}text-success{% endif %} fw-bold">${{ ajuste.monto }}</td>
+                            <td class="small">
+                                <span class="cell-sub" title="{{ ajuste.motivo }}">
+                                    {{ ajuste.motivo }}
+                                </span>
+                            </td>
+                        </tr>
                       {% empty %}
-                      <tr>
-                          <td colspan="5" class="text-center py-3 text-muted small">Sin ajustes registrados.</td>
-                      </tr>
+                        <tr>
+                            <td colspan="5" class="text-center py-3 text-muted small">Sin ajustes registrados.</td>
+                        </tr>
                       {% endfor %}
                   </tbody>
               </table>
@@ -274,7 +272,6 @@
                 </thead>
                 <tbody>
                     {% for remito in cobranza.parada.remitos.all %}
-                    {% if not remito.eliminado %}
                     <tr>
                         <td class="ps-3 fw-semibold">
                             <i class="bi bi-file-earmark-text text-muted me-1"></i>{{ remito.numero }}
@@ -288,7 +285,6 @@
                             </span>
                         </td>
                     </tr>
-                    {% endif %}
                     {% empty %}
                     <tr>
                         <td colspan="3" class="text-center py-3 text-muted small">

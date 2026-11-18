@@ -125,8 +125,8 @@ class EmpleadoViewsTests(TestCase):
                 "last_name": "Apellido actualizado",
                 "telefono": "1112345678",
                 "grupos": [self.gestion_personal.pk],
-                "password": "",
-                "password_confirm": "",
+                "password": "Intento-Cambio-Password-42!",
+                "password_confirm": "Intento-Cambio-Password-42!",
             },
         )
 
@@ -381,3 +381,41 @@ class PoblarCommandTests(TestCase):
         nombres_grupos = set(admin.groups.values_list("name", flat=True))
         for grupo_val in Grupos.values:
             self.assertIn(grupo_val, nombres_grupos)
+
+    def test_poblar_completo_creates_route_and_collections_for_driver(self):
+        call_command("crear_grupos", stdout=StringIO())
+        out = StringIO()
+        call_command("poblar", "--completo", stdout=out)
+        output = out.getvalue()
+
+        self.assertIn("Datos maestros cargados exitosamente", output)
+        self.assertIn("Itinerario asignado a 1234567", output)
+
+        user = get_user_model().objects.get(username="1234567")
+        self.assertIsNotNone(user.perfil_transportista)
+
+        from apps.itinerarios.models import Itinerario, Parada, EstadoItinerario, EstadoParada
+        from apps.cobranza.models import Cobranza
+        from apps.remitos.models import Remito
+
+        itinerarios = Itinerario.objects.filter(transportista=user.perfil_transportista)
+        self.assertEqual(itinerarios.count(), 1)
+        itinerario = itinerarios.first()
+        self.assertEqual(itinerario.estado, EstadoItinerario.ASIGNADO)
+
+        paradas = Parada.objects.filter(itinerario=itinerario).order_by("orden")
+        self.assertEqual(paradas.count(), 4)
+
+        # Paradas con cobranzas
+        cobranzas = Cobranza.objects.filter(parada__itinerario=itinerario)
+        self.assertEqual(cobranzas.count(), 2)
+        for c in cobranzas:
+            self.assertEqual(c.estado, "registrado")
+
+        # Una de las cobranzas tiene 2 medios de pago
+        detalles_conteo = [c.detalles.count() for c in cobranzas]
+        self.assertIn(2, detalles_conteo)
+
+        # Remitos asignados a paradas
+        remitos_asignados = Remito.objects.filter(parada__itinerario=itinerario)
+        self.assertGreaterEqual(remitos_asignados.count(), 5)

@@ -1,11 +1,13 @@
 import csv
 import io
 import os
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -36,14 +38,11 @@ from .models import (
 )
 
 
-class CrearRemito(CreateView):
+class CrearRemito(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     form_class = RemitoForm
     template_name = "remitos/remito_form.html"
-
     success_url = reverse_lazy("remitos:remito_lista")
-
-    permission_required = ""
-    raise_exception = True
+    permission_required = "remitos.add_remito"
 
     def form_valid(self, form):
         comercio = form.cleaned_data.get("comercio")
@@ -62,37 +61,30 @@ class CrearRemito(CreateView):
         return super().form_valid(form)
 
 
-class EditarRemito(UpdateView):
+class EditarRemito(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = RemitoForm
     model = Remito
     template_name = "remitos/remito_form.html"
-
     success_url = reverse_lazy("remitos:remito_lista")
-
-    permission_required = ""
-    raise_exception = True
-
-    def get_queryset(self):
-        return super().get_queryset().filter(eliminado=False)
+    permission_required = "remitos.change_remito"
 
 
-class DetalleRemito(DetailView):
+class DetalleRemito(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Remito
     template_name = "remitos/remito_detalle.html"
     context_object_name = "remito"
-
-    def get_queryset(self):
-        return super().get_queryset().filter(eliminado=False)
+    permission_required = "remitos.view_remito"
 
 
-class ListaRemito(ListView):
+class ListaRemito(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Remito
     template_name = "remitos/remito_lista.html"
     context_object_name = "remitos"
     paginate_by = 25
+    permission_required = "remitos.view_remito"
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(eliminado=False).select_related("comercio", "marca").order_by("-id")
+        qs = super().get_queryset().select_related("comercio", "marca").order_by("-id")
 
         comercio = self.request.GET.get("comercio", "").strip()
         estado = self.request.GET.get("estado", "").strip()
@@ -120,13 +112,11 @@ class ListaRemito(ListView):
         return context
 
 
-class EliminarRemito(DeleteView):
+class EliminarRemito(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Remito
     template_name = "remitos/remito_eliminar.html"
     success_url = reverse_lazy("remitos:remito_lista")
-
-    def get_queryset(self):
-        return super().get_queryset().filter(eliminado=False)
+    permission_required = "remitos.delete_remito"
 
     def form_valid(self, form):
         remito = self.get_object()
@@ -136,7 +126,7 @@ class EliminarRemito(DeleteView):
         if (
             parada
             and parada.estado == EstadoParada.PENDIENTE
-            and not parada.remitos.filter(eliminado=False).exists()
+            and not parada.remitos.exists()
         ):
             itinerario = parada.itinerario
             parada.delete()
@@ -149,11 +139,12 @@ class EliminarRemito(DeleteView):
         return resultado
 
 
-class ImportarRemitos(CreateView):
+class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     form_class = ImportacionRemitosForm
     model = ImportacionRemitos
     template_name = "remitos/importar_csv.html"
     success_url = reverse_lazy("core:inicio")
+    permission_required = "remitos.add_importacionremitos"
 
     def form_valid(self, form):
         archivos = self.request.FILES.getlist("archivo")
@@ -189,14 +180,15 @@ class ImportarRemitos(CreateView):
 
                 errores_filas = []
                 datos_validados = []
+                numeros_en_archivo = set()
 
                 for fila_num, row in enumerate(filas, start=2):
-                    cuit_comercio = row.get("cuit_comercio", "").strip()
-                    razon_social = row.get("razon_social", "").strip()
-                    domicilio = row.get("domicilio", "").strip()
-                    monto_str = row.get("monto_a_cobrar", "").strip()
-                    num_sucursal = row.get("numero_sucursal", "").strip()
-                    num_factura = row.get("numero_factura", "").strip()
+                    cuit_comercio = (row.get("cuit_comercio") or "").strip()
+                    razon_social = (row.get("razon_social") or "").strip()
+                    domicilio = (row.get("domicilio") or "").strip()
+                    monto_str = (row.get("monto_a_cobrar") or "").strip()
+                    num_sucursal = (row.get("numero_sucursal") or "").strip()
+                    num_factura = (row.get("numero_factura") or "").strip()
 
                     motivos = []
                     if (
@@ -213,16 +205,21 @@ class ImportarRemitos(CreateView):
                         total_monto = Decimal(monto_str)
                         if total_monto <= Decimal("0.00"):
                             motivos.append("El monto a cobrar debe ser mayor a cero")
-                    except Exception:
+                    except (InvalidOperation, TypeError):
                         motivos.append(f"Monto a cobrar inválido: '{monto_str}'")
 
                     if not num_sucursal or not num_factura:
                         motivos.append("Falta número de sucursal o factura")
+                    else:
+                        numero_remito = f"{num_sucursal}-{num_factura}"
+                        if numero_remito in numeros_en_archivo:
+                            motivos.append(f"Número de remito '{numero_remito}' duplicado dentro del mismo archivo")
+                        else:
+                            numeros_en_archivo.add(numero_remito)
 
                     if motivos:
                         errores_filas.append((fila_num, "; ".join(motivos)))
                     else:
-                        numero_remito = f"{num_sucursal}-{num_factura}"
                         datos_validados.append(
                             {
                                 "cuit_comercio": cuit_comercio,
@@ -232,6 +229,20 @@ class ImportarRemitos(CreateView):
                                 "numero": numero_remito,
                             }
                         )
+
+                # Si no hubo errores de formato, verificar duplicados contra la base de datos
+                if not errores_filas and datos_validados:
+                    existentes = set(
+                        Remito.objects.filter(
+                            numero__in=numeros_en_archivo,
+                        ).values_list("numero", flat=True)
+                    )
+                    if existentes:
+                        for idx, d in enumerate(datos_validados, start=2):
+                            if d["numero"] in existentes:
+                                errores_filas.append(
+                                    (idx, f"El remito '{d['numero']}' ya existe en el sistema.")
+                                )
 
                 archivo.seek(0)
 
@@ -297,7 +308,6 @@ class ImportarRemitos(CreateView):
                                 estado=EstadoRemito.PENDIENTE,
                                 parada=None,
                                 importacion=importacion,
-                                eliminado=False,
                             )
                             for d in datos_validados
                         ]
@@ -312,8 +322,12 @@ class ImportarRemitos(CreateView):
                         creados += 1
                         total_remitos_creados += remitos_creados_lote
 
-            except Exception as e:
-                errores.append(f"Error procesando {nombre_archivo}: {str(e)}")
+            except (UnicodeDecodeError, csv.Error, ValueError) as e:
+                errores.append(f"El archivo {nombre_archivo} tiene un formato inválido o no legible: {str(e)}")
+            except (IntegrityError, DatabaseError) as e:
+                errores.append(f"Error de base de datos al procesar {nombre_archivo}: {str(e)}")
+            except OSError as e:
+                errores.append(f"Error de lectura o acceso al archivo {nombre_archivo}: {str(e)}")
 
         if errores:
             for error in errores:
@@ -337,11 +351,12 @@ class ImportarRemitos(CreateView):
         return redirect(self.success_url)
 
 
-class ListaImportacion(ListView):
+class ListaImportacion(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_lista.html"
     context_object_name = "importaciones"
     paginate_by = 25
+    permission_required = "remitos.view_importacionremitos"
 
     def get_queryset(self):
         return (
@@ -351,25 +366,26 @@ class ListaImportacion(ListView):
         )
 
 
-class DetalleImportacion(DetailView):
+class DetalleImportacion(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_detalle.html"
     context_object_name = "importacion"
+    permission_required = "remitos.view_importacionremitos"
 
     def get_queryset(self):
         return super().get_queryset().prefetch_related("errores")
 
 
-class EliminarImportacion(DeleteView):
+class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = ImportacionRemitos
     template_name = "remitos/importacion_eliminar.html"
     success_url = reverse_lazy("remitos:importacion_lista")
+    permission_required = "remitos.delete_importacionremitos"
 
     def _tiene_remitos_no_pendientes(self, importacion):
-        # Verifica si existe al menos un remito vigente cuyo estado NO sea 'pendiente'
+        # Verifica si existe al menos un remito cuyo estado NO sea 'pendiente'
         return (
-            importacion.remitos.filter(eliminado=False)
-            .exclude(
+            importacion.remitos.exclude(
                 estado=EstadoRemito.PENDIENTE  # o "pendiente"
             )
             .exists()
@@ -393,9 +409,8 @@ class EliminarImportacion(DeleteView):
             return redirect(self.success_url)
 
         with transaction.atomic():
-            # Eliminación lógica de todos los remitos de esta importación
-            self.object.remitos.filter(eliminado=False).update(eliminado=True)
-
+            # Eliminación física de todos los remitos de esta importación
+            self.object.remitos.all().delete()
             self.object.delete()
 
         messages.success(
@@ -404,65 +419,73 @@ class EliminarImportacion(DeleteView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class CrearComercio(SuccessMessageMixin, CreateView):
+class CrearComercio(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     form_class = ComercioForm
     model = Comercio
     template_name = "remitos/comercio_crear.html"
     context_object_name = "comercios"
     success_url = reverse_lazy("remitos:comercio_lista")
     success_message = "Comercio agregado exitosamente"
+    permission_required = "remitos.add_comercio"
 
 
-class ListaComercio(ListView):
+class ListaComercio(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Comercio
     template_name = "remitos/comercio_lista.html"
     context_object_name = "comercios"
     paginate_by = 25
+    permission_required = "remitos.view_comercio"
 
     def get_queryset(self):
         return Comercio.objects.all().order_by("-activo", "-id")
 
 
-class EditarComercio(UpdateView):
+class EditarComercio(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = ComercioForm
     model = Comercio
     template_name = "remitos/comercio_form.html"
     success_url = reverse_lazy("remitos:comercio_lista")
+    permission_required = "remitos.change_comercio"
 
 
-class EliminarComercio(DeleteView):
+class EliminarComercio(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Comercio
     template_name = "remitos/comercio_eliminar.html"
     success_url = reverse_lazy("remitos:comercio_lista")
+    permission_required = "remitos.delete_comercio"
 
 
-class CrearMarca(SuccessMessageMixin, CreateView):
+class CrearMarca(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     form_class = MarcaForm
     model = Marca
     template_name = "remitos/marca_crear.html"
     context_object_name = "marcas"
     success_url = reverse_lazy("remitos:marca_lista")
     success_message = "Marca agregado exitosamente"
+    permission_required = "remitos.add_marca"
 
 
-class ListaMarca(ListView):
+class ListaMarca(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Marca
     template_name = "remitos/marca_lista.html"
     context_object_name = "marcas"
     paginate_by = 25
+    permission_required = "remitos.view_marca"
 
     def get_queryset(self):
         return Marca.objects.all().order_by("-activo", "-id")
 
 
-class EditarMarca(UpdateView):
+class EditarMarca(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = MarcaForm
     model = Marca
     template_name = "remitos/marca_form.html"
     success_url = reverse_lazy("remitos:marca_lista")
+    permission_required = "remitos.change_marca"
 
 
-class EliminarMarca(DeleteView):
+class EliminarMarca(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Marca
     template_name = "remitos/marca_eliminar.html"
     success_url = reverse_lazy("remitos:marca_lista")
+    permission_required = "remitos.delete_marca"

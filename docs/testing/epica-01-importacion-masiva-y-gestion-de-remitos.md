@@ -17,10 +17,10 @@ Esta épica contempla la ingesta masiva de remitos desde planillas tabulares (.c
 * **HU-02:** Importar planilla de remitos (5 pts)
 * **HU-04:** Agregar un remito individual (3 pts)
 * **HU-05:** Consultar remitos registrados (2 pts)
-* **HU-37:** Consultar historial de importaciones (2 pts)
+* **HU-37:** Consultar importaciones registrada (2 pts)
 * **HU-38:** Ver detalle de una importación (2 pts)
 * **HU-39:** Consultar detalle de un remito (2 pts)
-* **HU-40:** Eliminar un lote de importación (5 pts)
+* **HU-40:** Eliminar una importación (5 pts)
 * **HU-41:** Editar remito (3 pts)
 * **HU-42:** Eliminar remito (2 pts)
 

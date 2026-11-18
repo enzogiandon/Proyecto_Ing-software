@@ -262,3 +262,11 @@ expo-env.d.ts
 
 # Temporary scratch and QA artifacts
 scratch/
+
+# Metro & logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Otros
+Mejoras.md

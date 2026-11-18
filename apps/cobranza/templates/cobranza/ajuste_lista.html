@@ -92,7 +92,10 @@
                                 {{ ajuste.cobranza.parada.comercio.razon_social|default:"Sin comercio" }}
                             </div>
                             <small class="cell-sub">
-                                Cobranza #{{ ajuste.cobranza.id }} (Parada #{{ ajuste.cobranza.parada_id }})
+                                Cobranza #{{ ajuste.cobranza_id }}
+                            </small>
+                            <small class="cell-sub d-block">
+                                Parada #{{ ajuste.cobranza.parada_id }}
                             </small>
                         </td>
                         <td>
@@ -104,10 +107,12 @@
                             ${{ ajuste.monto }}
                         </td>
                         <td>
-                            <span class="itin-badge itin-badge--asignado">
+                            <div class="cell-main cell-main--medium">
                                 {{ ajuste.usuario.get_full_name|default:ajuste.usuario.username }}
-                            </span>
-                            <small class="cell-sub d-block">DNI: {{ ajuste.usuario.username }}</small>
+                            </div>
+                            <small class="cell-sub d-block">
+                                DNI: {{ ajuste.usuario.username }}
+                            </small>
                         </td>
                         <td class="text-truncate" style="max-width: 150px;">
                             <span class="cell-sub" title="{{ ajuste.motivo }}">

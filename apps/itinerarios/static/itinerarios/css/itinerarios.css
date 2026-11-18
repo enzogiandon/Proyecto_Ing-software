@@ -255,6 +255,23 @@
   color: var(--color-primary, #123c6b);
 }
 
+.btn-ver-detalle-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  opacity: 0.38;
+  border: 1px solid var(--color-border, #d1cac3);
+  border-radius: var(--radius-md, 8px);
+  font: 500 13px/normal var(--font-family);
+  text-decoration: none;
+  pointer-events: none;
+  cursor: default;
+  white-space: nowrap;
+}
+
 .btn-ver-detalle-primary {
   display: inline-flex;
   align-items: center;
@@ -533,7 +550,6 @@
   }
 }
 
-/* ---------- Acciones en Grilla de Itinerarios ---------- */
 .itinerarios-acciones-grupo {
   display: inline-flex;
   align-items: center;
@@ -574,7 +590,17 @@
   color: #ffffff;
 }
 
-/* ---------- Tarjeta Resumen de Itinerario (Figma) ---------- */
+.btn-accion-tabla--danger:hover:not(:disabled) {
+  background: var(--color-error-tint, #fee2e2);
+  border-color: #fca5a5;
+  color: var(--color-error, #b91c1c);
+}
+
+.btn-accion-tabla:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
 .itin-card-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -604,7 +630,6 @@
   color: var(--color-text, #1b1b1f);
 }
 
-/* ---------- Elementos de Tabla de Reordenar y Editar ---------- */
 .badge-orden-numero {
   display: inline-flex;
   align-items: center;

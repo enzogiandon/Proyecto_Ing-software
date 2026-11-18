@@ -196,3 +196,45 @@ class ItinerarioViewSetTests(TestCase):
         comercios_en_ruta = [d.comercio_id for d in detalles]
         self.assertEqual(set(comercios_en_ruta), {self.c1.id, self.c2.id})
 
+    def test_crear_ruta_no_reordena_itinerario(self):
+        # Verificar que guardar una plantilla no modifique el orden del itinerario activo
+        # Paradas iniciales: p1(FINALIZADA,orden=1), p2(PENDIENTE,orden=2), p3(PENDIENTE,orden=3), p4(PENDIENTE,orden=4)
+        ordenes_antes = {
+            self.p1.id: 1,
+            self.p2.id: 2,
+            self.p3.id: 3,
+            self.p4.id: 4,
+        }
+
+        # Guardar una plantilla con orden diferente: p4, p3, p1, p2
+        payload = {
+            "nombre": "Ruta Diferentes Orden",
+            "parada_ids": [self.p4.id, self.p3.id, self.p1.id, self.p2.id],
+        }
+        request = self.factory.post("/api/itinerarios/crear-ruta/", payload, format="json")
+        force_authenticate(request, user=self.user)
+        response = ItinerarioViewSet.as_view({"post": "crear_ruta"})(request)
+
+        self.assertEqual(response.status_code, 201)
+
+        # Verificar que el orden del itinerario NO cambió
+        self.p1.refresh_from_db()
+        self.p2.refresh_from_db()
+        self.p3.refresh_from_db()
+        self.p4.refresh_from_db()
+
+        self.assertEqual(self.p1.orden, ordenes_antes[self.p1.id])
+        self.assertEqual(self.p2.orden, ordenes_antes[self.p2.id])
+        self.assertEqual(self.p3.orden, ordenes_antes[self.p3.id])
+        self.assertEqual(self.p4.orden, ordenes_antes[self.p4.id])
+
+        # Verificar que la ruta SÍ fue creada con el orden correcto
+        ruta = RutaGuardada.objects.get(nombre="Ruta Diferentes Orden")
+        detalles = list(ruta.detalles.order_by("prioridad"))
+        self.assertEqual(len(detalles), 4)
+        self.assertEqual(detalles[0].comercio_id, self.c4.id)
+        self.assertEqual(detalles[1].comercio_id, self.c3.id)
+        self.assertEqual(detalles[2].comercio_id, self.c1.id)
+        self.assertEqual(detalles[3].comercio_id, self.c2.id)
+
+

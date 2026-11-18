@@ -78,7 +78,6 @@ class CrearParadasForm(forms.Form):
         # Comercios con remitos PENDIENTES o comercios que ya tienen parada PENDIENTE en este itinerario
         filtro_comercios = Q(
             remitos__estado=EstadoRemito.PENDIENTE,
-            remitos__eliminado=False,
         )
         if itinerario_obj:
             filtro_comercios |= Q(

@@ -1,10 +1,15 @@
 import re
 from decimal import Decimal
+from io import StringIO
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.core.models import Grupos
 from apps.itinerarios.models import EstadoItinerario, EstadoParada, Itinerario, Parada
 from apps.remitos.forms import RemitoForm
 from apps.remitos.models import (
@@ -21,6 +26,18 @@ from apps.remitos.models import (
 
 class RemitoTestCase(TestCase):
     def setUp(self):
+        call_command("crear_grupos", stdout=StringIO())
+        self.grupo_planificacion = Group.objects.get(
+            name=Grupos.ADMIN_PLANIFICACION
+        )
+        user_model = get_user_model()
+        self.usuario = user_model.objects.create_user(
+            username="33333333",
+            password="Test-Password-123!",
+        )
+        self.usuario.groups.add(self.grupo_planificacion)
+        self.client.force_login(self.usuario)
+
         self.comercio = Comercio.objects.create(
             razon_social="Comercio de prueba",
             cuit="30112233445",
@@ -43,19 +60,17 @@ class RemitoTestCase(TestCase):
 
 
 class RemitoModelTests(RemitoTestCase):
-    def test_delete_is_soft_delete(self):
+    def test_delete_is_hard_delete(self):
         remito = Remito.objects.create(
             numero="R-001",
             marca=self.marca,
             comercio=self.comercio,
             total=Decimal("1250.50"),
         )
-
+        pk = remito.pk
         remito.delete()
 
-        remito.refresh_from_db()
-        self.assertTrue(remito.eliminado)
-        self.assertTrue(Remito.objects.filter(pk=remito.pk).exists())
+        self.assertFalse(Remito.objects.filter(pk=pk).exists())
 
     def test_string_representation_contains_number_and_commerce(self):
         remito = Remito.objects.create(
@@ -222,8 +237,7 @@ class RemitoViewsTests(RemitoTestCase):
             reverse("remitos:remito_lista"),
             fetch_redirect_response=False,
         )
-        remito.refresh_from_db()
-        self.assertTrue(remito.eliminado)
+        self.assertFalse(Remito.objects.filter(pk=remito.pk).exists())
         # La parada se quedó sin remitos activos, debe haberse eliminado
         self.assertFalse(Parada.objects.filter(pk=parada.pk).exists())
 
@@ -262,6 +276,18 @@ class RemitoViewsTests(RemitoTestCase):
 
 class ImportacionRemitosTestCase(TestCase):
     def setUp(self):
+        call_command("crear_grupos", stdout=StringIO())
+        self.grupo_planificacion = Group.objects.get(
+            name=Grupos.ADMIN_PLANIFICACION
+        )
+        user_model = get_user_model()
+        self.usuario = user_model.objects.create_user(
+            username="44444444",
+            password="Test-Password-123!",
+        )
+        self.usuario.groups.add(self.grupo_planificacion)
+        self.client.force_login(self.usuario)
+
         self.marca1 = Marca.objects.create(
             nombre="Marca Uno",
             cuit="30654321090",
@@ -431,4 +457,27 @@ class ImportacionRemitosTestCase(TestCase):
         remito = Remito.objects.get(importacion=importacion)
         self.assertEqual(remito.comercio, comercio_existente)
         self.assertEqual(remito.comercio.razon_social, "Razón Social Original")
+        importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_con_numeros_duplicados_crea_error_importacion(self):
+        csv_con_duplicados = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112223,Monotributo,976-123456-1,Kiosco Central,\"Calle 1 123\",500.00,2026-10-21,0001,00007777\n"
+            "20301112223,Monotributo,976-123456-1,Kiosco Central,\"Calle 1 123\",600.00,2026-10-21,0001,00007777\n"
+        ).encode("utf-8")
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_con_duplicados)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get()
+        self.assertEqual(importacion.estado, EstadoImportacion.RECHAZADO)
+        errores = importacion.errores.all()
+        self.assertEqual(errores.count(), 1)
+        self.assertIn("duplicado", errores[0].motivo)
         importacion.archivo.delete(save=False)

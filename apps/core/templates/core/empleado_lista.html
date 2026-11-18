@@ -78,7 +78,7 @@
 
                                         <!-- Botón Restablecer credenciales -->
                                         <a href="{% url 'core:empleado_restablecer_credenciales' empleado.pk %}" 
-                                        class="btn {% if empleado.is_active %}btn-ver-detalle-primary-outline{% else %}btn-ver-detalle-primary{% endif %}" 
+                                        class="btn {% if empleado.intentos_fallidos < 5 %}btn-ver-detalle-primary-outline{% else %}btn-ver-detalle-primary{% endif %}" 
                                         title="Restablecer credenciales">
                                             <i class="fas fa-key"></i> Restablecer
                                         </a>

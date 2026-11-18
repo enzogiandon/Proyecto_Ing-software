@@ -62,7 +62,7 @@ class ImportacionRemitos(models.Model):
     archivo = models.FileField(
         upload_to=ruta_lote, help_text="Planilla enviadas por la marca"
     )
-    marca = models.ForeignKey(Marca, on_delete=models.DO_NOTHING)
+    marca = models.ForeignKey(Marca, on_delete=models.PROTECT)
     cantidad = models.PositiveIntegerField(
         default=0, help_text="Cantidad de remitos agregados por esta importacion"
     )

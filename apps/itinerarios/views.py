@@ -24,6 +24,7 @@ from apps.remitos.models import EstadoRemito, Remito
 from .forms import CrearItinerariosForm, CrearParadasForm
 from .models import (
     EstadoItinerario,
+    EstadoParada,
     EvidenciaParada,
     Itinerario,
     Parada,

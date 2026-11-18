@@ -103,26 +103,26 @@ def crear_paradas(
 def ordenar_itinerario_segun_ruta(
     itinerario: Itinerario, ruta_guardada: RutaGuardada
 ) -> list[Parada]:
-    """Ordena las paradas del itinerario:
-    - Preserva las paradas finalizadas/resueltas en su posición inicial.
-    - Reordena solo las paradas pendientes según la prioridad de la ruta guardada.
-    - Las paradas sin ruta se colocan al final.
+    """Ordena las paradas del itinerario preservando los slots de paradas no reordenables:
+    - Las paradas finalizadas o resueltas conservan intacta su posición ordinal histórica (slot).
+    - Las paradas pendientes se distribuyen ordenadas según la ruta guardada en los slots disponibles.
+    - Las paradas sin ruta se colocan al final de los slots pendientes.
     """
     paradas = list(itinerario.paradas.all().order_by("orden", "id"))
-
     prioridades = dict(ruta_guardada.detalles.values_list("comercio_id", "prioridad"))
 
-    # Separar paradas finalizadas (no reordenables) de pendientes (reordenables)
-    paradas_finalizadas = []
+    # Identificar paradas fijas (finalizadas o resueltas) vs reordenables (pendientes)
     paradas_pendientes = []
+    slots_disponibles = []
 
     for parada in paradas:
         if parada.estado in (EstadoParada.FINALIZADA, EstadoParada.RESUELTO):
-            paradas_finalizadas.append(parada)
-        else:
-            paradas_pendientes.append(parada)
+            # Conserva intacta su posición ordinal histórica en el itinerario
+            continue
+        paradas_pendientes.append(parada)
+        slots_disponibles.append(parada.orden)
 
-    # Reordenar solo las paradas pendientes según la ruta
+    # Ordenar las paradas pendientes: primero las que están en la ruta por prioridad, luego las que no
     paradas_con_ruta = []
     paradas_sin_ruta = []
 
@@ -133,14 +133,18 @@ def ordenar_itinerario_segun_ruta(
             paradas_sin_ruta.append(parada)
 
     paradas_con_ruta.sort(key=lambda p: prioridades[p.comercio_id])
+    pendientes_ordenadas = paradas_con_ruta + paradas_sin_ruta
 
-    # Reconstruir la secuencia: finalizadas + (pendientes con ruta + pendientes sin ruta)
-    paradas_finales = paradas_finalizadas + paradas_con_ruta + paradas_sin_ruta
+    # Asignar a cada parada pendiente ordenada su slot correspondiente
+    paradas_a_actualizar = []
+    for slot, parada in zip(slots_disponibles, pendientes_ordenadas):
+        if parada.orden != slot:
+            parada.orden = slot
+            paradas_a_actualizar.append(parada)
 
-    with transaction.atomic():
-        for orden_visita, parada in enumerate(paradas_finales, start=1):
-            parada.orden = orden_visita
+    if paradas_a_actualizar:
+        with transaction.atomic():
+            Parada.objects.bulk_update(paradas_a_actualizar, fields=["orden"])
 
-        Parada.objects.bulk_update(paradas_finales, fields=["orden"])
+    return list(itinerario.paradas.all().order_by("orden", "id"))
 
-    return paradas_finales

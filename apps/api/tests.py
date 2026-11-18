@@ -9,6 +9,7 @@ from apps.api.views import ItinerarioViewSet, ParadaViewSet
 from apps.cobranza.models import Cobranza
 from apps.core.models import Transportista
 from apps.itinerarios.models import (
+    DetalleRutaGuardada,
     EstadoItinerario,
     EstadoParada,
     Itinerario,
@@ -236,5 +237,67 @@ class ItinerarioViewSetTests(TestCase):
         self.assertEqual(detalles[1].comercio_id, self.c3.id)
         self.assertEqual(detalles[2].comercio_id, self.c1.id)
         self.assertEqual(detalles[3].comercio_id, self.c2.id)
+
+    def test_ordenar_por_ruta_preserva_slots_con_parada_finalizada_en_inicio(self):
+        # p1 (FINALIZADA) en slot 1. Pendientes: p2 (slot 2), p3 (slot 3), p4 (slot 4)
+        ruta = RutaGuardada.objects.create(transportista=self.transportista, nombre="Ruta Prioridad Inversa")
+        DetalleRutaGuardada.objects.create(ruta_guardada=ruta, comercio=self.c4, prioridad=1)
+        DetalleRutaGuardada.objects.create(ruta_guardada=ruta, comercio=self.c3, prioridad=2)
+        DetalleRutaGuardada.objects.create(ruta_guardada=ruta, comercio=self.c2, prioridad=3)
+
+        payload = {"ruta_id": ruta.id}
+        request = self.factory.post("/api/itinerarios/ordenar-por-ruta/", payload, format="json")
+        force_authenticate(request, user=self.user)
+        response = ItinerarioViewSet.as_view({"post": "ordenar_por_ruta"})(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.p1.refresh_from_db()
+        self.p4.refresh_from_db()
+        self.p3.refresh_from_db()
+        self.p2.refresh_from_db()
+
+        # p1 queda intacta en slot 1
+        self.assertEqual(self.p1.orden, 1)
+        # Las pendientes ocupan slots 2, 3, 4 según prioridad de plantilla
+        self.assertEqual(self.p4.orden, 2)
+        self.assertEqual(self.p3.orden, 3)
+        self.assertEqual(self.p2.orden, 4)
+
+    def test_ordenar_por_ruta_preserva_slots_con_parada_finalizada_intercalada(self):
+        # Escenario crítico señalado por el equipo: cobro out-of-order
+        # p3 (en slot 3) fue cobrada out-of-order y está FINALIZADA.
+        # p1 (slot 1), p2 (slot 2) y p4 (slot 4) siguen PENDIENTES.
+        self.p1.estado = EstadoParada.PENDIENTE
+        self.p1.save()
+        self.p3.estado = EstadoParada.FINALIZADA
+        self.p3.save()
+
+        # Plantilla prioriza: c4 (1), c2 (2), c1 (3)
+        ruta = RutaGuardada.objects.create(transportista=self.transportista, nombre="Ruta Out-of-order")
+        DetalleRutaGuardada.objects.create(ruta_guardada=ruta, comercio=self.c4, prioridad=1)
+        DetalleRutaGuardada.objects.create(ruta_guardada=ruta, comercio=self.c2, prioridad=2)
+        DetalleRutaGuardada.objects.create(ruta_guardada=ruta, comercio=self.c1, prioridad=3)
+
+        payload = {"ruta_id": ruta.id}
+        request = self.factory.post("/api/itinerarios/ordenar-por-ruta/", payload, format="json")
+        force_authenticate(request, user=self.user)
+        response = ItinerarioViewSet.as_view({"post": "ordenar_por_ruta"})(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.p1.refresh_from_db()
+        self.p2.refresh_from_db()
+        self.p3.refresh_from_db()
+        self.p4.refresh_from_db()
+
+        # p3 (FINALIZADA) conserva inalterado su slot 3 (NO salta a 1 ni se renúmera)
+        self.assertEqual(self.p3.orden, 3)
+        # Las paradas pendientes se distribuyen ordenadas en los slots libres [1, 2, 4]:
+        # c4 (prioridad 1) toma slot 1
+        self.assertEqual(self.p4.orden, 1)
+        # c2 (prioridad 2) toma slot 2
+        self.assertEqual(self.p2.orden, 2)
+        # c1 (prioridad 3) toma slot 4
+        self.assertEqual(self.p1.orden, 4)
+
 
 

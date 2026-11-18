@@ -66,6 +66,54 @@ class ItinerarioViewsTests(TestCase):
             total=0,
         )
 
+    def test_exportar_hoja_de_ruta_pdf(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio de prueba", "20123456789")
+        parada = Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+        )
+        remito = self.crear_remito(comercio, "R-001")
+        remito.total = 1250
+        remito.parada = parada
+        remito.save(update_fields=["total", "parada"])
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_exportar_pdf", args=[itinerario.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn(
+            'filename="Hoja_Ruta_IT-2026-00001.pdf"',
+            response["Content-Disposition"],
+        )
+        self.assertTrue(response.content.startswith(b"%PDF-"))
+
+    def test_exportar_hoja_de_ruta_sin_paradas_muestra_advertencia(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_exportar_pdf", args=[itinerario.pk]),
+            follow=True,
+        )
+
+        self.assertRedirects(response, reverse("itinerarios:itinerario_lista"))
+        self.assertContains(
+            response, "El itinerario no contiene paradas para exportar"
+        )
+
     def test_create_itinerary_uses_transportista_vehicle(self):
         second_vehiculo = Vehiculo.objects.create(patente="CD456EF")
         second_user = get_user_model().objects.create_user(

@@ -213,7 +213,8 @@
 }
 
 .itin-badge--en_ruta,
-.itin-badge--ruta {
+.itin-badge--ruta,
+.itin-badge--en_curso {
   background-color: var(--color-route-tint, #ede9fe);
   color: var(--color-route, #6d28d9);
 }
@@ -598,7 +599,7 @@
 
 .btn-accion-tabla:disabled {
   opacity: 0.38;
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .itin-card-summary {

@@ -2,12 +2,22 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.db.models import Case, Count, IntegerField, Prefetch, Q, Sum, When
+from django.db import DatabaseError, transaction
+from django.db.models import (
+    Case,
+    Count,
+    IntegerField,
+    Prefetch,
+    ProtectedError,
+    Q,
+    Sum,
+    When,
+)
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView, View
 
+from apps.cobranza.models import Cobranza
 from apps.core.models import Transportista, Vehiculo
 from apps.remitos.models import EstadoRemito, Remito
 
@@ -125,21 +135,27 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                     # Si la parada no tiene más remitos vigentes, se elimina y se reordenan las paradas restantes
                     remitos_restantes = parada.remitos.exists()
                     if not remitos_restantes:
-                        itinerario = parada.itinerario
-                        parada_id = parada.id
-                        comercio_nombre = parada.comercio.razon_social
-                        parada.delete()
+                        if Cobranza.objects.filter(parada=parada).exists():
+                            messages.error(
+                                request,
+                                "No se puede eliminar la parada porque posee cobranzas o rendiciones registradas.",
+                            )
+                        else:
+                            itinerario = parada.itinerario
+                            parada_id = parada.id
+                            comercio_nombre = parada.comercio.razon_social
+                            parada.delete()
 
-                        for i, p in enumerate(
-                            itinerario.paradas.all().order_by("orden", "id"), start=1
-                        ):
-                            p.orden = i
-                            p.save(update_fields=["orden"])
+                            for i, p in enumerate(
+                                itinerario.paradas.all().order_by("orden", "id"), start=1
+                            ):
+                                p.orden = i
+                                p.save(update_fields=["orden"])
 
-                        messages.success(
-                            request,
-                            f"Remito #{remito.numero} desvinculado. Al no quedar remitos, la parada #{parada_id} de «{comercio_nombre}» fue eliminada del itinerario.",
-                        )
+                            messages.success(
+                                request,
+                                f"Remito #{remito.numero} desvinculado. Al no quedar remitos, la parada #{parada_id} de «{comercio_nombre}» fue eliminada del itinerario.",
+                            )
                         return redirect("itinerarios:itinerario_lista")
 
                 messages.success(
@@ -372,6 +388,13 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
             parada_id = request.POST.get("parada_id")
             try:
                 parada = itinerario.paradas.get(id=parada_id)
+                if Cobranza.objects.filter(parada=parada).exists():
+                    messages.error(
+                        request,
+                        f"No se puede quitar la parada de «{parada.comercio.razon_social}» porque posee cobranzas o rendiciones registradas.",
+                    )
+                    return redirect("itinerarios:itinerario_editar", pk=itinerario.pk)
+
                 comercio_nombre = parada.comercio.razon_social
                 with transaction.atomic():
                     Remito.objects.filter(parada=parada).update(
@@ -468,14 +491,27 @@ class EliminarItinerario(LoginRequiredMixin, PermissionRequiredMixin, View):
             )
             return redirect("itinerarios:itinerario_lista")
 
-        with transaction.atomic():
-            Remito.objects.filter(parada__itinerario=itinerario).update(
-                parada=None,
-                estado=EstadoRemito.PENDIENTE,
+        if Cobranza.objects.filter(parada__itinerario=itinerario).exists():
+            messages.error(
+                request,
+                "No se puede eliminar el itinerario porque posee cobranzas o rendiciones registradas.",
             )
-            itinerario.delete()
+            return redirect("itinerarios:itinerario_lista")
 
-        messages.success(request, "Itinerario eliminado exitosamente")
+        try:
+            with transaction.atomic():
+                Remito.objects.filter(parada__itinerario=itinerario).update(
+                    parada=None,
+                    estado=EstadoRemito.PENDIENTE,
+                )
+                itinerario.delete()
+            messages.success(request, "Itinerario eliminado exitosamente")
+        except (ProtectedError, DatabaseError):
+            messages.error(
+                request,
+                "No se puede eliminar el itinerario debido a restricciones de integridad de datos.",
+            )
+
         return redirect("itinerarios:itinerario_lista")
 
     def get(self, request, pk, *args, **kwargs):

@@ -178,7 +178,8 @@ class RestablecerCredencialesEmpleado(LoginRequiredMixin, PermissionRequiredMixi
 
         empleado.set_password(form.cleaned_data["password"])
         empleado.is_active = True
-        empleado.save(update_fields=["password", "is_active"])
+        empleado.intentos_fallidos = 0
+        empleado.save(update_fields=["password", "is_active", "intentos_fallidos"])
 
         messages.success(request, "Credenciales restablecidas correctamente.")
         return redirect("core:empleado_lista")

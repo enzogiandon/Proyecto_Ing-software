@@ -62,7 +62,7 @@ class ImportacionRemitos(models.Model):
     archivo = models.FileField(
         upload_to=ruta_lote, help_text="Planilla enviadas por la marca"
     )
-    marca = models.ForeignKey(Marca, on_delete=models.DO_NOTHING)
+    marca = models.ForeignKey(Marca, on_delete=models.PROTECT)
     cantidad = models.PositiveIntegerField(
         default=0, help_text="Cantidad de remitos agregados por esta importacion"
     )
@@ -98,7 +98,7 @@ class ErrorImportacion(models.Model):
 
 
 class Remito(models.Model):
-    numero = models.CharField(max_length=50, unique=True, help_text="Numero de remito")
+    numero = models.CharField(max_length=50, help_text="Numero de remito")
     marca = models.ForeignKey(Marca, on_delete=models.PROTECT, related_name="remitos")
     estado = models.CharField(
         max_length=20, choices=EstadoRemito.choices, default=EstadoRemito.PENDIENTE
@@ -121,6 +121,14 @@ class Remito(models.Model):
         null=True,
         related_name="remitos",
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["marca", "numero"],
+                name="unique_remito_numero_por_marca",
+            )
+        ]
 
     def __str__(self):
         return f"Remito #{self.numero} - {self.comercio.razon_social}"

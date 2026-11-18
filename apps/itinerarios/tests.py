@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.cobranza.models import Cobranza, EstadoCobranza
 from apps.core.models import Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
@@ -370,6 +371,42 @@ class ItinerarioViewsTests(TestCase):
         remito.refresh_from_db()
         self.assertIsNone(remito.parada)
         self.assertEqual(remito.estado, EstadoRemito.PENDIENTE)
+
+    def test_delete_itinerary_with_cobranza_is_rejected(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 24),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = Comercio.objects.create(
+            cuit="20123456782",
+            razon_social="Comercio Con Cobranza",
+            domicilio="Av. Siempre Viva 742",
+        )
+        parada = Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+            estado=EstadoParada.PENDIENTE,
+        )
+        remito = self.crear_remito(comercio, "R-DEL-COB-01")
+        remito.parada = parada
+        remito.estado = EstadoRemito.ASIGNADO
+        remito.save()
+        Cobranza.objects.create(parada=parada, estado=EstadoCobranza.REGISTRADO)
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_eliminar", args=[itinerario.pk]),
+            follow=True,
+        )
+        self.assertRedirects(response, reverse("itinerarios:itinerario_lista"))
+        # El itinerario NO debe eliminarse para preservar la trazabilidad contable
+        self.assertTrue(Itinerario.objects.filter(pk=itinerario.pk).exists())
+        self.assertContains(
+            response,
+            "No se puede eliminar el itinerario porque posee cobranzas o rendiciones registradas.",
+        )
 
     def test_delete_nonexistent_itinerary_shows_error(self):
         response = self.client.post(

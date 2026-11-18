@@ -60,27 +60,66 @@
     </section>
 
     {% if importacion.errores.all %}
-    <section class="remitos-card mb-3">
-        <h2 class="text-section text-danger mb-3">Errores de importación</h2>
-        <div class="table-responsive">
-            <table class="remitos-tabla">
-                <thead>
-                    <tr>
-                        <th style="width: 120px;">Fila</th>
-                        <th>Motivo del error</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for error in importacion.errores.all %}
+        <section class="remitos-card mb-3">
+            <h2 class="text-section text-danger mb-3">Errores de importación</h2>
+            <div class="table-responsive">
+                <table class="remitos-tabla">
+                    <thead>
                         <tr>
-                            <td class="fw-semibold text-danger">Fila {{ error.fila }}</td>
-                            <td>{{ error.motivo }}</td>
+                            <th style="width: 120px;">Fila</th>
+                            <th>Motivo del error</th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
+                    </thead>
+                    <tbody>
+                        {% for error in importacion.errores.all %}
+                            <tr>
+                                <td class="fw-semibold text-danger">Fila {{ error.fila }}</td>
+                                <td>{{ error.motivo }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {% else %}
+        <section class="remitos-card mb-3">
+            <h2 class="text-section text-c-brand mb-3">Remitos importados</h2>
+            <div class="table-responsive">
+                <table class="remitos-tabla">
+                    <thead>
+                        <tr>
+                            <th>Nº de remito</th>
+                            <th>Estado</th>
+                            <th>Destinatario</th>
+                            <th>Monto a cobrar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for remito in importacion.remitos.all %}
+                            <tr>
+                                <td class="fw-semibold">
+                                    <a href="{% url 'remitos:remito_detalle' remito.pk %}" class="text-decoration-none text-c-primary fw-semibold">
+                                        {{ remito.numero }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="remito-estado-badge remito-estado-badge--{{ remito.estado|lower }}">
+                                        {{ remito.get_estado_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-medium">{{ remito.comercio.razon_social }}</div>
+                                    <small class="text-c-muted">{{ remito.comercio.domicilio|truncatechars:35 }}</small>
+                                </td>
+                                <td class="fw-medium">
+                                    $ {{ remito.total|floatformat:2 }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
     {% endif %}
 
     <div class="remitos-form-actions">

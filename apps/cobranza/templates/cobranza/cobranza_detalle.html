@@ -28,17 +28,17 @@
             </span>
         </header>
         <div class="d-flex align-items-end gap-2">
-
-            <!-- Botón Ajustar (habilitado para cobranzas con diferencia o registradas) -->
-            {% if cobranza.estado == "difiere" or cobranza.estado == "registrado" %}
+            {% if cobranza.estado == "registrado" %}
+                <!-- Botón Validar (habilitado para cobranzas registradas) -->
+                <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" class="btn-itinerario-primary">
+                    <i class="fas fa-circle-check"></i> Ir a Validar
+                </a>
+            {% elif cobranza.estado == "difiere" or cobranza.estado == "aprobado" %}
+                <!-- Botón Ajustar (habilitado para cobranzas con diferencia o aprobadas) -->
                 <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" class="btn-itinerario-outline">
                     <i class="fas fa-pen-to-square"></i> Ajustar
                 </a>
             {% endif %}
-
-            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" class="btn-itinerario-primary">
-                <i class="fas fa-circle-check"></i> Ir a Validar
-            </a>
         </div>
     </div>
 
@@ -146,7 +146,7 @@
                         <td class="text-muted">{{ forloop.counter }}</td>
                         <td>
                             <span class="itin-badge {% if det.medio == 'efectivo' %}itin-badge--entregado{% elif det.medio == 'transferencia' %}itin-badge--asignado{% else %}itin-badge--ruta{% endif %}">
-                                {{ det.get_medio_display }}
+                                {{ det.get_medio_display|capfirst }}
                             </span>
                         </td>
                         <td class="fw-bold text-dark">

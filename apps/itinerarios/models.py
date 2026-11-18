@@ -1,11 +1,13 @@
 # itinerarios/models.py
 
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 
 class EstadoItinerario(models.TextChoices):
     PENDIENTE = "pendiente", "Pendiente"
     ASIGNADO = "asignado", "Asignado"
+    EN_CURSO = "en_curso", "En curso"
     FINALIZADO = "finalizado", "Finalizado"
 
 
@@ -114,7 +116,11 @@ class EvidenciaParada(models.Model):
     parada = models.ForeignKey(
         Parada, on_delete=models.CASCADE, related_name="evidencias"
     )
-    archivo = models.ImageField(upload_to="remitos_firmados/")
+    archivo = models.FileField(upload_to="remitos_firmados/", validators=[
+            FileExtensionValidator(
+                allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'webp']
+            )
+        ])
     fecha = models.DateTimeField( auto_now_add=True)
 
     class Meta:

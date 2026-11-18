@@ -127,12 +127,12 @@
                                 </td>
                                 <td>
                                     <div class="itinerarios-acciones-grupo">
-                                        <a href="{% url 'itinerarios:itinerario_editar' itinerario.pk %}" class="btn-accion-tabla" title="Editar itinerario">
+                                        <a href="{% url 'itinerarios:itinerario_editar' itinerario.pk %}" class="btn {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}btn-ver-detalle-outline{% else %}btn-ver-detalle{% endif %}" title="Editar itinerario">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         {% with primera_parada=itinerario.paradas.first %}
                                             {% if primera_parada %}
-                                                <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn-accion-tabla" title="Reordenar secuencia de paradas">
+                                                <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}btn-ver-detalle-outline{% else %}btn-ver-detalle{% endif %}" title="Reordenar secuencia de paradas">
                                                     <i class="fas fa-sort"></i>
                                                 </a>
                                             {% else %}
@@ -143,9 +143,9 @@
                                             {% endif %}
                                         {% endwith %}
                                         <button type="button"
-                                                class="btn-accion-tabla btn-accion-tabla--danger"
+                                                class="btn-accion-tabla {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}btn-ver-detalle-outline{% else %}btn-accion-tabla--danger{% endif %}"
                                                 title="Eliminar itinerario"
-                                                {% if itinerario.estado == 'finalizado' %}disabled{% else %}onclick="confirmarEliminarItinerario('{% url 'itinerarios:itinerario_eliminar' itinerario.pk %}', 'IT-{{ itinerario.fecha|date:'Y' }}-{{ itinerario.id|stringformat:'05d' }}')"{% endif %}>
+                                                {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}disabled{% else %}onclick="confirmarEliminarItinerario('{% url 'itinerarios:itinerario_eliminar' itinerario.pk %}', 'IT-{{ itinerario.fecha|date:'Y' }}-{{ itinerario.id|stringformat:'05d' }}')"{% endif %}>
                                             <i class="far fa-trash-alt"></i>
                                         </button>
                                     </div>

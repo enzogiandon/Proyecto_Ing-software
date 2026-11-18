@@ -65,8 +65,19 @@ class EditarRemito(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = RemitoForm
     model = Remito
     template_name = "remitos/remito_form.html"
-    success_url = reverse_lazy("remitos:remito_lista")
     permission_required = "remitos.change_remito"
+
+    def get_success_url(self):
+        return reverse_lazy("remitos:remito_detalle", kwargs={"pk": self.object.pk})
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if self.object.estado != EstadoRemito.PENDIENTE:
+            messages.error(request, "Solo editable en estado pendiente")
+            return redirect("remitos:remito_detalle", pk=self.object.pk)
+            
+        return super().dispatch(request, *args, **kwargs)
 
 
 class DetalleRemito(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
@@ -182,6 +193,19 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                 datos_validados = []
                 numeros_en_archivo = set()
 
+                # Extraer CUITs válidos del archivo para consultar cuáles ya existen en la base de datos
+                cuits_en_filas = set()
+                for row in filas:
+                    cuit = (row.get("cuit_comercio") or "").strip()
+                    if cuit.isdigit() and len(cuit) == 11:
+                        cuits_en_filas.add(cuit)
+
+                cuits_existentes_db = set(
+                    Comercio.objects.filter(cuit__in=cuits_en_filas).values_list(
+                        "cuit", flat=True
+                    )
+                )
+
                 for fila_num, row in enumerate(filas, start=2):
                     cuit_comercio = (row.get("cuit_comercio") or "").strip()
                     razon_social = (row.get("razon_social") or "").strip()
@@ -198,6 +222,10 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                     ):
                         motivos.append(
                             "CUIT del comercio inválido (debe tener 11 dígitos numéricos)"
+                        )
+                    elif cuit_comercio not in cuits_existentes_db and not razon_social:
+                        motivos.append(
+                            "La razón social es obligatoria para comercios no registrados"
                         )
 
                     total_monto = None
@@ -230,10 +258,10 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                             }
                         )
 
-                # Si no hubo errores de formato, verificar duplicados contra la base de datos
                 if not errores_filas and datos_validados:
                     existentes = set(
                         Remito.objects.filter(
+                            marca=marca,
                             numero__in=numeros_en_archivo,
                         ).values_list("numero", flat=True)
                     )
@@ -241,7 +269,7 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         for idx, d in enumerate(datos_validados, start=2):
                             if d["numero"] in existentes:
                                 errores_filas.append(
-                                    (idx, f"El remito '{d['numero']}' ya existe en el sistema.")
+                                    (idx, "El número de remito debe ser único por marca proveedora.")
                                 )
 
                 archivo.seek(0)

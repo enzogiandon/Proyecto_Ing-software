@@ -584,6 +584,11 @@ class ParadaViewSet(viewsets.ModelViewSet):
         """
         parada = self.get_object()
 
+        if parada.estado == EstadoParada.FINALIZADA:
+            raise ValidationError({
+                "detail": "La cobranza de esta parada ya fue registrada y la visita se encuentra finalizada."
+            })
+
         if not isinstance(request.data, list) or len(request.data) == 0:
             raise ValidationError(
                 "Se espera una lista con al menos un detalle de pago."

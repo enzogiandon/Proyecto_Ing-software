@@ -88,7 +88,7 @@ class Transportista(models.Model):
         related_name="perfil_transportista",
     )
     vehiculo = models.ForeignKey(
-        Vehiculo, on_delete=models.CASCADE, blank=True, null=True
+        Vehiculo, on_delete=models.SET_NULL, blank=True, null=True
     )
 
     def __str__(self):

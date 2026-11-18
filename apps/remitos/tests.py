@@ -95,6 +95,80 @@ class RemitoFormTests(RemitoTestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("El monto total tiene que ser mayor a cero.", form.errors["total"])
 
+    def test_form_rejects_modifying_numero_on_existing_remito(self):
+        remito = Remito.objects.create(
+            numero="R-001",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+        )
+        form = RemitoForm(
+            data=self.datos_remito(numero="R-MODIFICADO"),
+            instance=remito,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "No está permitido modificar el número de remito una vez creado.",
+            form.errors["numero"],
+        )
+
+    def test_form_allows_same_numero_on_existing_remito(self):
+        remito = Remito.objects.create(
+            numero="R-001",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+        )
+        form = RemitoForm(
+            data=self.datos_remito(numero="R-001", total="1500.00"),
+            instance=remito,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_form_allows_same_numero_for_different_brands(self):
+        otra_marca = Marca.objects.create(
+            nombre="Otra Marca Distinta",
+            cuit="30111111111",
+        )
+        Remito.objects.create(
+            numero="R-COMPARTIDO",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("100.00"),
+        )
+        form = RemitoForm(
+            data={
+                "numero": "R-COMPARTIDO",
+                "marca": otra_marca.pk,
+                "comercio": self.comercio.pk,
+                "total": "200.00",
+            }
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_form_rejects_same_numero_for_same_brand(self):
+        Remito.objects.create(
+            numero="R-DUPLICADO",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("100.00"),
+        )
+        form = RemitoForm(
+            data={
+                "numero": "R-DUPLICADO",
+                "marca": self.marca.pk,
+                "comercio": self.comercio.pk,
+                "total": "200.00",
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "El número de remito debe ser único por marca proveedora.",
+            form.errors["numero"],
+        )
+
 
 class RemitoViewsTests(RemitoTestCase):
     def test_create_remito_persists_data_and_redirects(self):
@@ -202,11 +276,51 @@ class RemitoViewsTests(RemitoTestCase):
 
         self.assertRedirects(
             response,
-            reverse("remitos:remito_lista"),
+            reverse("remitos:remito_detalle", args=[remito.pk]),
             fetch_redirect_response=False,
         )
         remito.refresh_from_db()
         self.assertEqual(remito.total, Decimal("2400.00"))
+
+    def test_edit_remito_rejects_modifying_numero(self):
+        remito = Remito.objects.create(
+            numero="R-003",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+        )
+
+        response = self.client.post(
+            reverse("remitos:remito_editar", args=[remito.pk]),
+            self.datos_remito(numero="R-MODIFICADO", total="2400.00"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "No está permitido modificar el número de remito una vez creado.",
+        )
+        remito.refresh_from_db()
+        self.assertEqual(remito.numero, "R-003")
+
+    def test_edit_remito_only_allowed_in_pending_state(self):
+        remito = Remito.objects.create(
+            numero="R-003",
+            marca=self.marca,
+            comercio=self.comercio,
+            total=Decimal("1250.50"),
+            estado=EstadoRemito.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("remitos:remito_editar", args=[remito.pk])
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("remitos:remito_detalle", args=[remito.pk]),
+            fetch_redirect_response=False,
+        )
 
     def test_delete_remito_marks_it_deleted_and_redirects(self):
         itinerario = Itinerario.objects.create(
@@ -480,4 +594,118 @@ class ImportacionRemitosTestCase(TestCase):
         errores = importacion.errores.all()
         self.assertEqual(errores.count(), 1)
         self.assertIn("duplicado", errores[0].motivo)
+        importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_sin_razon_social_para_comercio_nuevo_es_rechazado(self):
+        csv_sin_razon_social = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112299,Monotributo,976-123456-1,,\"Calle Falsa 123\",500.00,2026-10-21,0001,00008888\n"
+        ).encode("utf-8")
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_sin_razon_social)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get()
+        self.assertEqual(importacion.estado, EstadoImportacion.RECHAZADO)
+        errores = importacion.errores.all()
+        self.assertEqual(errores.count(), 1)
+        self.assertIn("La razón social es obligatoria para comercios no registrados", errores[0].motivo)
+        self.assertFalse(Comercio.objects.filter(cuit="20301112299").exists())
+        importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_sin_razon_social_para_comercio_existente_es_aceptado(self):
+        Comercio.objects.create(
+            cuit="20301112288",
+            razon_social="Comercio Preexistente",
+            domicilio="Calle Real 456",
+        )
+        csv_sin_razon_social = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112288,Monotributo,976-123456-1,,\"Calle Falsa 123\",500.00,2026-10-21,0001,00009999\n"
+        ).encode("utf-8")
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_sin_razon_social)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get()
+        self.assertEqual(importacion.estado, EstadoImportacion.EXITO)
+        remito = Remito.objects.get(numero="0001-00009999")
+        self.assertEqual(remito.comercio.cuit, "20301112288")
+        self.assertEqual(remito.comercio.razon_social, "Comercio Preexistente")
+        importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_permite_mismo_numero_para_distinta_marca(self):
+        Remito.objects.create(
+            numero="0001-00007777",
+            marca=self.marca1,
+            comercio=Comercio.objects.create(
+                cuit="20301112223",
+                razon_social="Kiosco Central",
+                domicilio="Calle 1 123",
+            ),
+            total=Decimal("500.00"),
+        )
+        csv_misma_numeracion = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112223,Monotributo,976-123456-1,Kiosco Central,\"Calle 1 123\",700.00,2026-10-21,0001,00007777\n"
+        ).encode("utf-8")
+        # Se sube para marca2
+        archivo = SimpleUploadedFile("30709876542_20261027_DISTR-02.csv", csv_misma_numeracion)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get(marca=self.marca2)
+        self.assertEqual(importacion.estado, EstadoImportacion.EXITO)
+        self.assertEqual(Remito.objects.filter(numero="0001-00007777").count(), 2)
+        importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_rechaza_mismo_numero_para_misma_marca(self):
+        Remito.objects.create(
+            numero="0001-00007777",
+            marca=self.marca1,
+            comercio=Comercio.objects.create(
+                cuit="20301112223",
+                razon_social="Kiosco Central",
+                domicilio="Calle 1 123",
+            ),
+            total=Decimal("500.00"),
+        )
+        csv_misma_numeracion = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112223,Monotributo,976-123456-1,Kiosco Central,\"Calle 1 123\",700.00,2026-10-21,0001,00007777\n"
+        ).encode("utf-8")
+        # Se sube para marca1
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_misma_numeracion)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get(marca=self.marca1)
+        self.assertEqual(importacion.estado, EstadoImportacion.RECHAZADO)
+        errores = importacion.errores.all()
+        self.assertEqual(errores.count(), 1)
+        self.assertIn("El número de remito debe ser único por marca proveedora.", errores[0].motivo)
         importacion.archivo.delete(save=False)

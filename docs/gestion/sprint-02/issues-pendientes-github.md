@@ -25,6 +25,10 @@ Documento de consolidación y seguimiento de issues técnicos, bugs y especifica
 | 17 | [#24](https://github.com/enzogiandon/Proyecto_Ing-software/issues/24) | `Bug / UI` | Corregir clase CSS en campo de texto de MarcaForm (form-select en input de texto) | Épica 1 / HU-06 | `Abierto` |
 | 18 | [#25](https://github.com/enzogiandon/Proyecto_Ing-software/issues/25) | `Bug / Database` | Inconsistencia en on_delete de Marca: DO_NOTHING en ImportacionRemitos provoca IntegrityError | Épica 1 / HU-06 | `Abierto` |
 | 19 | [#26](https://github.com/enzogiandon/Proyecto_Ing-software/issues/26) | `Bug / Backend` | CrearItinerarios no valida si el transportista ya posee un itinerario asignado en la fecha seleccionada | Épica 3 / HU-13 | `Abierto` |
+| 20 | [#27](https://github.com/enzogiandon/Proyecto_Ing-software/issues/27) | `Bug / Mobile` | Falta de persistencia en dispositivos móviles nativos: storage.ts utiliza window.localStorage en lugar de AsyncStorage | Épica 6 / HU-23, HU-156 | `Abierto` |
+| 21 | [#28](https://github.com/enzogiandon/Proyecto_Ing-software/issues/28) | `Bug / Mobile` | authService.ts mapea todos los errores 401 a CLAVE impidiendo resaltar DNI incorrecto | Épica 6 / HU-23 | `Abierto` |
+| 22 | [#29](https://github.com/enzogiandon/Proyecto_Ing-software/issues/29) | `Bug / UI / Mobile` | itinerario.tsx no renderiza badges de estado operativo según parada.estado y exhibe pie de lista hardcodeado | Épica 6 / HU-62 | `Abierto` |
+| 23 | [#30](https://github.com/enzogiandon/Proyecto_Ing-software/issues/30) | `Bug / API` | ParadaViewSet.registrar_cobranza no valida si la parada ya está finalizada permitiendo duplicar DetallePago | Épica 7 / HU-30, HU-31 | `Abierto` |
 
 ---
 
@@ -492,6 +496,69 @@ El documento PDF generado debe incluir:
 - [ ] Crear la vista en `apps/itinerarios/views.py` y registrar la URL.
 - [ ] Agregar el botón en los templates web (`itinerario_lista.html` e `itinerario_detalle.html`).
 - [ ] Escribir tests unitarios en `apps/itinerarios/tests.py`.
+
+---
+
+## 📌 Issue #20
+### Título: `[Bug/Mobile] Falta de persistencia en dispositivos móviles nativos: storage.ts utiliza window.localStorage en lugar de AsyncStorage`
+
+**GitHub Issue:** [#27](https://github.com/enzogiandon/Proyecto_Ing-software/issues/27)  
+**Labels sugeridas:** `mobile`, `bug`, `sprint-2`, `frontend`  
+**Épica / HU vinculada:** Épica 6 / HU-23, HU-156
+
+#### 📖 Descripción
+En el servicio de sesión de la app móvil (`src/mobile/src/services/storage.ts`), se recurre a `window.localStorage` para persistir los tokens de acceso y refresco JWT. En terminales Android/iOS reales bajo React Native, `window.localStorage` no está definido, guardando los tokens exclusivamente en memoria volátil (`memoryAccessToken`). Si el chofer minimiza o suspende la aplicación en segundo plano, la sesión se pierde obligándolo a reautenticarse en plena calle.
+
+#### 📍 Ubicación en el Código
+- `src/mobile/src/services/storage.ts`: líneas 16-25, 33-42, 51-60, 68-73.
+- `src/mobile/package.json`: falta la dependencia `@react-native-async-storage/async-storage`.
+
+---
+
+## 📌 Issue #21
+### Título: `[Bug/Mobile] authService.ts mapea todos los errores 401 a CLAVE impidiendo resaltar DNI incorrecto (HU-23)`
+
+**GitHub Issue:** [#28](https://github.com/enzogiandon/Proyecto_Ing-software/issues/28)  
+**Labels sugeridas:** `mobile`, `bug`, `sprint-2`, `auth`  
+**Épica / HU vinculada:** Épica 6 / HU-23
+
+#### 📖 Descripción
+Al recibir un error HTTP 401 (Unauthorized) del backend, `authService.ts` siempre asigna `tipoError: 'CLAVE'`, sin importar si el fallo se debió a un DNI inexistente o a una contraseña errónea. Esto provoca que la pantalla `LoginScreen` nunca resalte el campo DNI con la advertencia de error exigida por el Criterio 2 de la HU-23.
+
+#### 📍 Ubicación en el Código
+- `src/mobile/src/services/authService.ts`: líneas 212-225.
+- `src/mobile/src/app/login.tsx`: líneas 100-110.
+
+---
+
+## 📌 Issue #22
+### Título: `[Bug/UI/Mobile] itinerario.tsx no renderiza badges de estado operativo según parada.estado y exhibe pie de lista hardcodeado (HU-62)`
+
+**GitHub Issue:** [#29](https://github.com/enzogiandon/Proyecto_Ing-software/issues/29)  
+**Labels sugeridas:** `mobile`, `bug`, `sprint-2`, `ui`  
+**Épica / HU vinculada:** Épica 6 / HU-62
+
+#### 📖 Descripción
+La pantalla de itinerario móvil no refleja visualmente si una parada fue finalizada (debería ser verde) o presenta un inconveniente (debería ser roja), renderizando siempre la primera tarjeta con `#1` en naranja y las restantes con `#{idx+2}` en gris neutro. Además, incluye un bloque estático de texto al pie que menciona siempre *"paradas 7 y 8 / Kiosco El Sol · Mercado San José"*.
+
+#### 📍 Ubicación en el Código
+- `src/mobile/src/app/itinerario.tsx`: líneas 405-420, 475-490 y 548-560.
+
+---
+
+## 📌 Issue #23
+### Título: `[Bug/API] ParadaViewSet.registrar_cobranza no valida si la parada ya está finalizada permitiendo duplicar DetallePago`
+
+**GitHub Issue:** [#30](https://github.com/enzogiandon/Proyecto_Ing-software/issues/30)  
+**Labels sugeridas:** `backend`, `api`, `bug`, `sprint-2`, `cobranzas`  
+**Épica / HU vinculada:** Épica 7 / HU-30, HU-31
+
+#### 📖 Descripción
+El endpoint `POST /api/paradas/{id}/registrar-cobranza/` no verifica si `parada.estado == EstadoParada.FINALIZADA`. Ante una retransmisión por fallo de red o doble llamada simultánea, `DetallePago.objects.bulk_create(detalles_a_crear)` inserta duplicados de los renglones de pago en la base de datos, distorsionando el cuadre y arqueo de caja.
+
+#### 📍 Ubicación en el Código
+- `apps/api/views.py`: líneas 586-638.
+
 
 
 

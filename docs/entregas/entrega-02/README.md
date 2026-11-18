@@ -47,7 +47,7 @@ entrega-02/
 ├── final/                             <- Entregables consolidados finales
 ├── borradores/                        <- Trabajo colaborativo en curso
 │   ├── iniciativas-y-epicas.md        <- Propuesta formal de iniciativas y épicas (7 Épicas)
-│   ├── historias-de-usuario.md        <- Backlog consolidado de HUs desde Taiga (51 HUs)
+│   ├── historias-de-usuario.md        <- Backlog consolidado de HUs desde Taiga (53 HUs, 150 pts)
 │   ├── taiga-epics.csv                <- Exportación oficial de épicas desde Taiga
 │   ├── taiga-user-stories.csv         <- Exportación oficial de historias de usuario desde Taiga
 │   └── pgp.md                         <- [ACTUAL] Borrador completo del Plan de Gestión de Proyecto (IEEE 1058)
@@ -71,7 +71,7 @@ entrega-02/
 - [x] Definir iniciativas estratégicas y épicas funcionales del sistema logístico ([Ver Borrador](borradores/iniciativas-y-epicas.md)).
 - [x] Redactar el borrador formal del Plan de Gestión de Proyecto ([Ver Borrador PGP](borradores/pgp.md)).
 - [x] Configurar el proyecto en Taiga y vincular a los 7 integrantes de Softech.
-- [x] Escribir, estimar (Planning Poker) y priorizar el backlog de Historias de Usuario en Taiga (Sprint 1 planificado con 28 HUs y 73 pts).
+- [x] Escribir, estimar (Planning Poker) y priorizar el backlog de Historias de Usuario en Taiga (53 HUs y 150 pts: Sprint 1 con 24 HUs / 59 pts; Sprint 2 con 29 HUs / 91 pts).
 - [x] Asignar nominalmente los roles internos del equipo para el PGP en reunión de grupo (formalizado en Sprint Planning 1).
 - [ ] Realizar revisión cruzada entre integrantes y generar versiones finales en `final/`.
 - [ ] Registrar la URL definitiva del proyecto Taiga en este documento.

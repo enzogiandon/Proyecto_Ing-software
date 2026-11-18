@@ -16,8 +16,8 @@ Esta épica contempla la creación de hojas de ruta / itinerarios diarios, la as
 
 * **HU-13:** Agregar itinerario (5 pts)
 * **HU-14:** Asignar o cambiar transportista de un itinerario (2 pts)
-* **HU-46:** Agregar remitos a un itinerario (5 pts)
-* **HU-47:** Eliminar remitos de un itinerario (3 pts)
+* **HU-46:** Agregar paradas a un itinerario (5 pts)
+* **HU-47:** Eliminar paradas de un itinerario (3 pts)
 * **HU-48:** Eliminar itinerario (2 pts)
 * **HU-59:** Reordenar secuencia de paradas del itinerario (3 pts)
 * **HU-60:** Listar itinerarios del día (2 pts)

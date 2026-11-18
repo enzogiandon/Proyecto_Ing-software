@@ -19,9 +19,9 @@ Esta épica abarca el panel administrativo de control de entregas en tiempo real
 * **HU-19:** Consultar y validar cobranzas (8 pts)
 * **HU-20:** Conciliar cobranzas durante la jornada (3 pts)
 * **HU-21:** Realizar cuadre y arqueo de la caja (3 pts)
-* **HU-49:** Validar un pago (5 pts)
-* **HU-50:** Ver detalle de un pago (2 pts)
-* **HU-58:** Gestionar ajustes de cobranzas (5 pts)
+* **HU-49:** Validar cobranza (5 pts)
+* **HU-50:** Ver detalle de cobranza (2 pts)
+* **HU-58:** Ajustar cobranza (5 pts)
 
 ---
 

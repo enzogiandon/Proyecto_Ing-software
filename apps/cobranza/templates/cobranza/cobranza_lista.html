@@ -143,20 +143,50 @@
                                         title="Ver comprobantes y pagos">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        
+                                        {% if cobranza.estado == 'registrado' %}
+                                            <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
+                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
+                                                class="btn btn-ver-detalle-outline" 
+                                                title="{% if cobranza.estado == 'registrado' %}Debe realizar el arqueo/validación antes de ajustar diferencias{% else %}Ajustar importe por diferencia{% endif %}">
+                                                <i class="fas fa-pen-to-square"></i>
+                                            </a>
 
-                                        <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
-                                        <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
-                                            class="btn {% if cobranza.estado == 'difiere' or cobranza.estado == 'registrado' %}btn-ver-detalle{% else %}btn-ver-detalle-outline{% endif %}" 
-                                            title="Ajustar importe por diferencia">
-                                            <i class="fas fa-pen-to-square"></i>
-                                        </a>
+                                            <!-- Botón Validar -->
+                                            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
+                                            class="btn btn-ver-detalle-primary" 
+                                            title="Arqueo y validación de importes">
+                                                <i class="fas fa-circle-check"></i> Validar
+                                            </a>
+                                        {% elif cobranza.estado == 'difiere' or cobranza.estado == 'aprobado' %}
+                                            <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
+                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
+                                                class="btn btn-ver-detalle" 
+                                                title="Ajustar importe por diferencia">
+                                                <i class="fas fa-pen-to-square"></i>
+                                            </a>
 
-                                        <!-- Botón Validar -->
-                                        <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
-                                        class="btn {% if cobranza.estado == 'aprobado' %}btn-ver-detalle-primary-outline{% else %}btn-ver-detalle-primary{% endif %}" 
-                                        title="Arqueo y validación de importes">
-                                            <i class="fas fa-circle-check"></i> Validar
-                                        </a>
+                                            <!-- Botón Validar -->
+                                            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
+                                            class="btn btn-ver-detalle-primary-outline" 
+                                            title="Arqueo y validación de importes">
+                                                <i class="fas fa-circle-check"></i> Validada
+                                            </a>
+                                        {% else %}
+                                            <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
+                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
+                                                class="btn btn-ver-detalle-outline" 
+                                                title="Ajustar importe por diferencia">
+                                                <i class="fas fa-pen-to-square"></i>
+                                            </a>
+
+                                            <!-- Botón Validar -->
+                                            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
+                                            class="btn btn-ver-detalle-primary-outline" 
+                                            title="Arqueo y validación de importes">
+                                                <i class="fas fa-circle-check"></i> Validada
+                                            </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

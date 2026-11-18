@@ -29,6 +29,7 @@
     
     <!-- Lista de empleados -->
     <div class="itinerarios-card p-3 overflow-hidden">
+        {% if empleados %}
             <div class="table-responsive">
                 <table class="itinerarios-tabla">
                     <thead>
@@ -99,12 +100,6 @@
                                     </div>
                                 </td>
                             </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    No se encontraron empleados registrados.
-                                </td>
-                            </tr>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -112,6 +107,19 @@
             <div class="itinerarios-tabla-footer">
                 Se muestran {{ empleados|length }} empleados.
             </div>
+        {% else %}
+            <div class="itin-paradas-empty mb-0 border-0">
+                <div class="itin-paradas-empty__icon">
+                    <i class="fas fa-users fa-2x"></i>
+                </div>
+                <div class="itin-paradas-empty__title">No hay empleados registrados</div>
+                <p class="itin-paradas-empty__desc mb-3">Registrá un nuevo empleado para comenzar a gestionar el personal.</p>
+                <a href="{% url 'core:empleado_crear' %}" class="btn-itinerario-primary">
+                    <i class="fas fa-plus"></i>
+                    <span>Agregar personal</span>
+                </a>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Paginación -->

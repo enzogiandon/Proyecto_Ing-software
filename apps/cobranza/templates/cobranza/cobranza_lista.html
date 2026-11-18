@@ -66,6 +66,7 @@
 
     <!-- Tabla de Cobranzas -->
     <div class="itinerarios-card p-3 overflow-hidden">
+        {% if cobranzas %}
             <div class="table-responsive">
                 <table class="itinerarios-tabla">
                     <thead>
@@ -190,13 +191,6 @@
                                     </div>
                                 </td>
                             </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <i class="fas fa-inbox fs-2 d-block mb-2 text-secondary"></i>
-                                    No se encontraron cobranzas registradas con los filtros seleccionados.
-                                </td>
-                            </tr>
                     {% endfor %}
                     </tbody>
                 </table>
@@ -204,6 +198,15 @@
             <div class="itinerarios-tabla-footer">
                 Se muestran {{ cobranzas|length }} cobranzas. Ajustá los filtros para acotar la búsqueda.
             </div>
+        {% else %}
+            <div class="itin-paradas-empty mb-0 border-0">
+                <div class="itin-paradas-empty__icon">
+                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                </div>
+                <div class="itin-paradas-empty__title">No hay cobranzas registradas</div>
+                <p class="itin-paradas-empty__desc mb-3">Aún no se han cargado cobranzas.</p>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Paginación -->

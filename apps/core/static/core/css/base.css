@@ -281,7 +281,6 @@ body {
     color: var(--color-success, #065F46);
 }
 .alert-clean {
-  border: 1px solid transparent;
   border-radius: var(--border-radius);
   font-size: 0.9rem;
   box-shadow: var(--shadow-sm);

@@ -125,8 +125,8 @@ class EmpleadoViewsTests(TestCase):
                 "last_name": "Apellido actualizado",
                 "telefono": "1112345678",
                 "grupos": [self.gestion_personal.pk],
-                "password": "",
-                "password_confirm": "",
+                "password": "Intento-Cambio-Password-42!",
+                "password_confirm": "Intento-Cambio-Password-42!",
             },
         )
 

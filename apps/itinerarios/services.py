@@ -104,16 +104,29 @@ def ordenar_itinerario_segun_ruta(
     itinerario: Itinerario, ruta_guardada: RutaGuardada
 ) -> list[Parada]:
     """Ordena las paradas del itinerario:
-    primero los comercios que figuran en la ruta (por prioridad), y los que no están en la ruta se colocan al final.
+    - Preserva las paradas finalizadas/resueltas en su posición inicial.
+    - Reordena solo las paradas pendientes según la prioridad de la ruta guardada.
+    - Las paradas sin ruta se colocan al final.
     """
-    paradas = list(itinerario.paradas.all())
+    paradas = list(itinerario.paradas.all().order_by("orden", "id"))
 
     prioridades = dict(ruta_guardada.detalles.values_list("comercio_id", "prioridad"))
 
+    # Separar paradas finalizadas (no reordenables) de pendientes (reordenables)
+    paradas_finalizadas = []
+    paradas_pendientes = []
+
+    for parada in paradas:
+        if parada.estado in (EstadoParada.FINALIZADA, EstadoParada.RESUELTO):
+            paradas_finalizadas.append(parada)
+        else:
+            paradas_pendientes.append(parada)
+
+    # Reordenar solo las paradas pendientes según la ruta
     paradas_con_ruta = []
     paradas_sin_ruta = []
 
-    for parada in paradas:
+    for parada in paradas_pendientes:
         if parada.comercio_id in prioridades:
             paradas_con_ruta.append(parada)
         else:
@@ -121,7 +134,8 @@ def ordenar_itinerario_segun_ruta(
 
     paradas_con_ruta.sort(key=lambda p: prioridades[p.comercio_id])
 
-    paradas_finales = paradas_con_ruta + paradas_sin_ruta
+    # Reconstruir la secuencia: finalizadas + (pendientes con ruta + pendientes sin ruta)
+    paradas_finales = paradas_finalizadas + paradas_con_ruta + paradas_sin_ruta
 
     with transaction.atomic():
         for orden_visita, parada in enumerate(paradas_finales, start=1):

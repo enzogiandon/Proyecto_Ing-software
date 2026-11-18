@@ -318,7 +318,6 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
                     prioridad += 1
 
             DetalleRutaGuardada.objects.bulk_create(detalles_para_crear)
-            ordenar_itinerario_segun_ruta(itinerario, ruta_guardada)
 
         status_code = status.HTTP_201_CREATED if creada else status.HTTP_200_OK
         mensaje = (

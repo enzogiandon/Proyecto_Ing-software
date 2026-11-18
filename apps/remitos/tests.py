@@ -553,3 +553,53 @@ class ImportacionRemitosTestCase(TestCase):
         self.assertEqual(errores.count(), 1)
         self.assertIn("duplicado", errores[0].motivo)
         importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_sin_razon_social_para_comercio_nuevo_es_rechazado(self):
+        csv_sin_razon_social = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112299,Monotributo,976-123456-1,,\"Calle Falsa 123\",500.00,2026-10-21,0001,00008888\n"
+        ).encode("utf-8")
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_sin_razon_social)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get()
+        self.assertEqual(importacion.estado, EstadoImportacion.RECHAZADO)
+        errores = importacion.errores.all()
+        self.assertEqual(errores.count(), 1)
+        self.assertIn("La razón social es obligatoria para comercios no registrados", errores[0].motivo)
+        self.assertFalse(Comercio.objects.filter(cuit="20301112299").exists())
+        importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_sin_razon_social_para_comercio_existente_es_aceptado(self):
+        Comercio.objects.create(
+            cuit="20301112288",
+            razon_social="Comercio Preexistente",
+            domicilio="Calle Real 456",
+        )
+        csv_sin_razon_social = (
+            "cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura\n"
+            "20301112288,Monotributo,976-123456-1,,\"Calle Falsa 123\",500.00,2026-10-21,0001,00009999\n"
+        ).encode("utf-8")
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_sin_razon_social)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get()
+        self.assertEqual(importacion.estado, EstadoImportacion.EXITO)
+        remito = Remito.objects.get(numero="0001-00009999")
+        self.assertEqual(remito.comercio.cuit, "20301112288")
+        self.assertEqual(remito.comercio.razon_social, "Comercio Preexistente")
+        importacion.archivo.delete(save=False)

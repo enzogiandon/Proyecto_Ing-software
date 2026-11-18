@@ -193,6 +193,19 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                 datos_validados = []
                 numeros_en_archivo = set()
 
+                # Extraer CUITs válidos del archivo para consultar cuáles ya existen en la base de datos
+                cuits_en_filas = set()
+                for row in filas:
+                    cuit = (row.get("cuit_comercio") or "").strip()
+                    if cuit.isdigit() and len(cuit) == 11:
+                        cuits_en_filas.add(cuit)
+
+                cuits_existentes_db = set(
+                    Comercio.objects.filter(cuit__in=cuits_en_filas).values_list(
+                        "cuit", flat=True
+                    )
+                )
+
                 for fila_num, row in enumerate(filas, start=2):
                     cuit_comercio = (row.get("cuit_comercio") or "").strip()
                     razon_social = (row.get("razon_social") or "").strip()
@@ -209,6 +222,10 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                     ):
                         motivos.append(
                             "CUIT del comercio inválido (debe tener 11 dígitos numéricos)"
+                        )
+                    elif cuit_comercio not in cuits_existentes_db and not razon_social:
+                        motivos.append(
+                            "La razón social es obligatoria para comercios no registrados"
                         )
 
                     total_monto = None

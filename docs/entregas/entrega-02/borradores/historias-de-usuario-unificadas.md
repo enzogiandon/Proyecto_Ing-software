@@ -62,12 +62,13 @@ quiero IMPORTAR LAS PLANILLAS DE REMITOS DE LAS MARCAS PROVEEDORAS
 para CARGAR Y PROCESAR AUTOMÁTICAMENTE LA INFORMACIÓN EN EL SISTEMA.
 
 **Reglas a considerar:**
-- Las planillas son provistas por las marcas proveedoras bajo una estructura tabular preestablecida de columnas (`cuit_comercio`, `condicion_iva`, `numero_iibb`, `razon_social`, `domicilio`, `monto_a_cobrar`, `fecha_factura`, `numero_sucursal`, `numero_factura`).   
-- Solo se admiten archivos en formato `.csv` delimitados por comas y codificados en UTF-8 o UTF-8-sig.   
-- Cada archivo debe asociarse a una marca proveedora registrada. Si el nombre del archivo inicia con el CUIT de una marca registrada (nomenclatura `<cuit_marca>_<fecha>_<lote>.csv`), el sistema asocia automáticamente la marca proveedora correspondiente.   
-- Si el CUIT del comercio ya existe en la base de datos, el remito se asocia automáticamente a la razón social y domicilio maestros registrados, ignorando variaciones menores en el archivo. Si el CUIT no existe previamente y la razón social viene vacía, la fila se rechaza.   
-- Cada fila válida representa un remito individual conformado por `<numero_sucursal>-<numero_factura>`.   
-- La importación y el procesamiento del lote se ejecutan de manera atómica e integral: si una o más filas contienen datos vacíos requeridos, formatos incorrectos o números de remito duplicados para esa marca, se rechaza la totalidad del archivo y no se registra ningún remito.
+- Las planillas deben ajustarse estrictamente a la especificación técnica de intercambio definida en `docs/especificacion-planillas-importacion.md`.
+- **Estructura y Formato del Archivo:** Solo se admiten archivos `.csv` delimitados por comas (`,`), codificados en `UTF-8` o `UTF-8-sig`, con cabecera obligatoria compuesta exactamente por 9 columnas: `cuit_comercio`, `condicion_iva`, `numero_iibb`, `razon_social`, `domicilio`, `monto_a_cobrar`, `fecha_factura`, `numero_sucursal`, `numero_factura`.
+- **Nomenclatura y Autoasociación de Marca:** Cada archivo debe asociarse a una marca proveedora registrada. Si el nombre del archivo cumple el patrón estándar `<cuit_marca>_<fecha>_<lote>.csv` (ej. `30654321090_20261027_DISTR-01.csv`), el sistema identifica automáticamente la marca mediante el CUIT inicial. Caso contrario, requiere selección manual en el formulario.
+- **Identificación Unívoca del Remito:** Cada fila representa un remito conformado por `<numero_sucursal>-<numero_factura>` (sucursal de 4 dígitos y factura de 8 dígitos, ej. `0005-00024715`). El número de remito resultante debe ser estrictamente único por marca proveedora tanto dentro del archivo como contra los registros previos del sistema.
+- **Regla Maestra de Comercios (Resolución por CUIT):** Si el `cuit_comercio` (11 dígitos numéricos sin guiones) ya existe en la base de datos maestra, el remito se vincula automáticamente a la entidad existente preservando su razón social y domicilio oficiales. Si el CUIT no existe en el sistema, la columna `razon_social` es de ingreso obligatorio para registrar el nuevo comercio destinatario.
+- **Validaciones de Importe y Fechas:** El `monto_a_cobrar` debe ser un valor decimal estrictamente mayor a `0.00` con punto como separador decimal. La columna `fecha_factura` es opcional (formato ISO `YYYY-MM-DD`) y representa la emisión contable de la marca, siendo independiente de la fecha en que se diagrame la entrega logística.
+- **Atomicidad Transaccional e Integridad de Lote:** El procesamiento se ejecuta bajo el principio de "todo o nada". Si una o más filas presentan columnas requeridas vacías, tipos de datos incompatibles, CUIT inválido, importes menores o iguales a cero o remitos duplicados, el lote completo se califica en estado "Rechazado", no se registra ningún remito en la base de datos y se guarda el detalle de los errores observados por número de fila.
 
 **Criterios de Aceptación:**
 

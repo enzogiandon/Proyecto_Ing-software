@@ -131,7 +131,7 @@ export function normalizarParadaBackend(data: any): DetalleParada {
     },
     montoCobranza: monto,
     cantidadRemitos: data.remitos?.length ?? MOCK_PARADA_SELECCIONADA.cantidadRemitos,
-    estadoCobro: data.estadoCobro || (data.estado === 'completada' ? 'validado' : 'pendiente'),
+    estadoCobro: data.estadoCobro || (data.estado === 'completada' || data.estado === 'finalizada' ? 'validado' : 'pendiente'),
     remitos: (data.remitos && data.remitos.length > 0)
       ? data.remitos.map((r: any, idx: number) => ({
           id: r.id ?? idx + 1,

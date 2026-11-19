@@ -73,25 +73,36 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
           ? { patente: usuario.vehiculo.patente, modelo: usuario.vehiculo.modelo }
           : MOCK_ITINERARIO_ASIGNADO.vehiculo;
 
-        const paradasMapeadas: ParadaItem[] = data.map((p: any, idx: number) => ({
-          id: p.id,
-          orden: p.orden ?? (idx + 1),
-          subtitulo: `Parada ${p.orden ?? (idx + 1)} de ${data.length} · ${p.estado === 'en_curso' ? 'Próxima entrega' : 'A continuación'}`,
-          estado: p.estado || 'pendiente',
-          comercio: {
-            id: p.comercio?.id ?? idx + 1,
-            razonSocial: p.comercio?.razon_social || p.comercio?.razonSocial || 'Comercio',
-            cuit: p.comercio?.cuit || '30-71122334-4',
-            domicilio: p.comercio?.domicilio || p.comercio?.direccion || 'Sin dirección',
-            localidad: p.comercio?.localidad || 'Zona de Entrega',
-            telefono: p.comercio?.telefono || '11-4201-9988',
-          },
-          montoCobranza: typeof p.monto_recaudar === 'string'
-            ? parseFloat(p.monto_recaudar) || 0
-            : (p.montoCobranza ?? 0),
-          cantidadRemitos: p.remitos?.length ?? (p.cantidadRemitos ?? 1),
-          horaEstimada: p.hora_entrega || `${9 + idx}:30 hs`,
-        }));
+        const paradasMapeadas: ParadaItem[] = data.map((p: any, idx: number) => {
+          const estadoEtiqueta =
+            p.estado === 'finalizada' || p.estado === 'completada'
+              ? 'Entregada'
+              : p.estado === 'error'
+              ? 'Con inconveniente'
+              : p.estado === 'en_curso'
+              ? 'Próxima entrega'
+              : 'A continuación';
+
+          return {
+            id: p.id,
+            orden: p.orden ?? (idx + 1),
+            subtitulo: `Parada ${p.orden ?? (idx + 1)} de ${data.length} · ${estadoEtiqueta}`,
+            estado: p.estado || 'pendiente',
+            comercio: {
+              id: p.comercio?.id ?? idx + 1,
+              razonSocial: p.comercio?.razon_social || p.comercio?.razonSocial || 'Comercio',
+              cuit: p.comercio?.cuit || '30-71122334-4',
+              domicilio: p.comercio?.domicilio || p.comercio?.direccion || 'Sin dirección',
+              localidad: p.comercio?.localidad || 'Zona de Entrega',
+              telefono: p.comercio?.telefono || '11-4201-9988',
+            },
+            montoCobranza: typeof p.monto_recaudar === 'string'
+              ? parseFloat(p.monto_recaudar) || 0
+              : (p.montoCobranza ?? 0),
+            cantidadRemitos: p.remitos?.length ?? (p.cantidadRemitos ?? 1),
+            horaEstimada: p.hora_entrega || `${9 + idx}:30 hs`,
+          };
+        });
 
         const paradasCompletadas = paradasMapeadas.filter(
           (p) => (p.estado as string) === 'finalizada' || (p.estado as string) === 'completada'

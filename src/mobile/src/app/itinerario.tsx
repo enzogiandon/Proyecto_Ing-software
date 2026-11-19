@@ -6,7 +6,7 @@
  * 1. El header corporativo que toma dinámicamente el nombre y las iniciales del chofer que inició
  * 2. La tarjeta con la barra de progreso (porcentaje de entregas completadas en color Naranja YA).
  * 3. El botón de acceso a 'Rutas Guardadas' (que conecta con el módulo de recorridos del Sprint 1).
- * 4. La lista de paradas: destacando la próxima parada (#1) con llamada a la acción en naranja
+ * 4. La lista de paradas: destacando la próxima parada a visitar con llamada a la acción en naranja
  *    ('Ir a la parada') que conecta directamente con la pantalla de Validar Cobro (HU-32)
  *    y las paradas siguientes con su detalle y monto total a recaudar.
  * 5. La vista de 'Itinerario sin asignar': si el chofer todavía no tiene hoja de ruta asignada,
@@ -179,7 +179,7 @@ export default function ItinerarioScreen() {
     );
   };
 
-  // Separo la próxima parada (la #1 a entregar) del resto de las paradas
+  // Separo la próxima parada a entregar del resto de las paradas
   const paradas = itinerario?.paradas || [];
   const proximaParada = paradas[0];
   const siguientesParadas = paradas.slice(1);
@@ -400,24 +400,24 @@ export default function ItinerarioScreen() {
               </Text>
             </View>
             <Text style={styles.seccionSubtitulo}>
-              Prioridad de visita · continuás en la parada {proximaParada ? proximaParada.orden : 5} de {itinerario.totalParadas}
+              Prioridad de visita · continuás en la parada {proximaParada ? proximaParada.orden : 1} de {itinerario.totalParadas}
             </Text>
           </View>
 
-          {/* PARADA DESTACADA #1 (Conecta con la pantalla de Validar Cobro) */}
+          {/* PARADA DESTACADA (Conecta con la pantalla de Validar Cobro) */}
           {proximaParada && (
             <View style={styles.paradaCardDestacada}>
               <View style={styles.paradaHeaderRow}>
-                {/* Badge Naranja YA */}
+                {/* Badge Naranja YA con número correlativo real */}
                 <View style={styles.badgeNaranja}>
-                  <Text style={styles.badgeNaranjaTexto}>#1</Text>
+                  <Text style={styles.badgeNaranjaTexto}>#{proximaParada.orden}</Text>
                 </View>
                 <View style={styles.paradaTituloWrap}>
                   <Text style={styles.comercioNombre}>
                     {proximaParada.comercio.razonSocial}
                   </Text>
                   <Text style={styles.comercioSubtitulo}>
-                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${itinerario.totalParadas} · Próxima entrega`}
+                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${itinerario.totalParadas} · ${proximaParada.estado === 'finalizada' ? 'Entregada' : proximaParada.estado === 'error' ? 'Con inconveniente' : 'Próxima entrega'}`}
                   </Text>
                 </View>
               </View>
@@ -472,20 +472,20 @@ export default function ItinerarioScreen() {
             </View>
           )}
 
-          {/* PARADAS SIGUIENTES #2 EN ADELANTE (Figma: Botón Contorno Azul) */}
-          {siguientesParadas.map((parada, idx) => (
+          {/* PARADAS SIGUIENTES (Figma: Botón Contorno Azul) */}
+          {siguientesParadas.map((parada) => (
             <View key={parada.id} style={styles.paradaCardSecundaria}>
               <View style={styles.paradaHeaderRow}>
-                {/* Badge de orden secundario */}
+                {/* Badge con número correlativo real */}
                 <View style={styles.badgeNeutro}>
-                  <Text style={styles.badgeNeutroTexto}>#{idx + 2}</Text>
+                  <Text style={styles.badgeNeutroTexto}>#{parada.orden}</Text>
                 </View>
                 <View style={styles.paradaTituloWrap}>
                   <Text style={styles.comercioNombre}>
                     {parada.comercio.razonSocial}
                   </Text>
                   <Text style={styles.comercioSubtituloSecundario}>
-                    {parada.subtitulo || `Parada ${parada.orden} de ${itinerario.totalParadas} · A continuación`}
+                    {parada.subtitulo || `Parada ${parada.orden} de ${itinerario.totalParadas} · ${parada.estado === 'finalizada' ? 'Entregada' : parada.estado === 'error' ? 'Con inconveniente' : 'A continuación'}`}
                   </Text>
                 </View>
               </View>
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Parada activa (#1)
+  // Parada activa / destacada
   paradaCardDestacada: {
     backgroundColor: RepartoYA.blanco,
     borderRadius: 16,
@@ -871,6 +871,39 @@ const styles = StyleSheet.create({
   },
   badgeNeutroTexto: {
     color: RepartoYA.carbon,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  // Estilos semánticos preparados para estados operativos (HU-62)
+  badgeVerde: {
+    backgroundColor: RepartoYA.exitoFondo,
+    borderWidth: 1,
+    borderColor: RepartoYA.exito,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  badgeVerdeTexto: {
+    color: RepartoYA.exito,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  badgeRojo: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderWidth: 1,
+    borderColor: RepartoYA.error,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  badgeRojoTexto: {
+    color: RepartoYA.error,
     fontWeight: '800',
     fontSize: 14,
   },
@@ -1007,40 +1040,6 @@ const styles = StyleSheet.create({
     color: RepartoYA.azulRuta,
     fontSize: 14,
     fontWeight: '700',
-  },
-
-  // Footer paradas
-  footerParadasRestantes: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: RepartoYA.blanco,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: RepartoYA.grisBorde,
-  },
-  iconoRutaPunteadaCustom: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
-  },
-  iconoRutaPunteada: {
-    fontSize: 20,
-    marginRight: 10,
-  },
-  footerParadasInfo: {
-    flex: 1,
-  },
-  footerParadasTitulo: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: RepartoYA.carbon,
-  },
-  footerParadasDetalle: {
-    fontSize: 12,
-    color: RepartoYA.grisTexto,
-    marginTop: 1,
   },
 
   // Estado sin asignar

@@ -41,6 +41,11 @@ export default function RegistrarInconveniente() {
   const paradaAnterior = useRef(parada.id);
   const activa = useRef(true);
 
+  const cobroYaValidado =
+    (parada as any)?.estadoCobro === 'validado' ||
+    (parada as any)?.estado === 'finalizada' ||
+    (parada as any)?.estado === 'completada';
+
   useFocusEffect(useCallback(() => {
     activa.current = true;
     const seleccionada = getParadaSeleccionada();
@@ -63,6 +68,10 @@ export default function RegistrarInconveniente() {
 
   const registrar = async () => {
     if (envioEnCurso.current) return;
+    if (cobroYaValidado) {
+      setError('Esta parada ya cuenta con cobro validado y entrega finalizada. No se pueden registrar inconvenientes.');
+      return;
+    }
     if (!tipo) {
       setError('Seleccioná el motivo del inconveniente.');
       return;
@@ -179,6 +188,15 @@ export default function RegistrarInconveniente() {
             </Text>
           </View>
 
+          {cobroYaValidado && (
+            <View style={styles.bannerBloqueado}>
+              <Text style={styles.bannerBloqueadoTitulo}>🔒 Parada ya cobrada y finalizada</Text>
+              <Text style={styles.bannerBloqueadoTexto}>
+                Esta parada ya cuenta con la cobranza validada y la entrega completada exitosamente. Por reglas de consistencia y trazabilidad operativa, no es posible asentar inconvenientes sobre una visita finalizada.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.tarjeta}>
             <Text style={styles.tituloSeccion}>
               Motivo del inconveniente <Text style={styles.requerido}>*</Text>
@@ -283,15 +301,21 @@ export default function RegistrarInconveniente() {
           </View>
 
           <TouchableOpacity
-            style={[styles.botonRegistrar, enviando && { opacity: 0.5 }]}
+            style={[styles.botonRegistrar, (enviando || cobroYaValidado) && { opacity: 0.5 }]}
             onPress={registrar}
-            disabled={enviando}
-            accessibilityState={{ busy: enviando, disabled: enviando }}
+            disabled={enviando || cobroYaValidado}
+            accessibilityState={{ busy: enviando, disabled: enviando || cobroYaValidado }}
             accessibilityRole="button"
           >
             {enviando && <ActivityIndicator color={RepartoYA.blanco} />}
             <Text style={styles.textoRegistrar}>
-              {enviando ? 'Enviando inconveniente…' : error ? 'Reintentar envío' : 'Registrar inconveniente'}
+              {cobroYaValidado
+                ? 'Inconveniente no aplicable'
+                : enviando
+                ? 'Enviando inconveniente…'
+                : error
+                ? 'Reintentar envío'
+                : 'Registrar inconveniente'}
             </Text>
           </TouchableOpacity>
 
@@ -376,6 +400,25 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     borderWidth: 1,
     borderColor: RepartoYA.grisBorde,
+  },
+  bannerBloqueado: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
+  },
+  bannerBloqueadoTitulo: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#991B1B',
+    marginBottom: 4,
+  },
+  bannerBloqueadoTexto: {
+    fontSize: 13,
+    color: '#7F1D1D',
+    lineHeight: 18,
   },
   etiquetaParada: {
     color: RepartoYA.naranjaYA,

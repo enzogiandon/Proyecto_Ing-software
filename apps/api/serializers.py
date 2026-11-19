@@ -239,22 +239,31 @@ class RegistrarRemitosInputSerializer(serializers.Serializer):
     )
 
     def validate_remitos(self, value):
+        parada = self.context["parada"]
         remitos = []
         for item in value:
             if not item or not str(item).strip():
                 raise serializers.ValidationError("No puede haber remitos vacíos.")
 
-            item_str = str(item).strip()
-            try:
-                remito = Remito.objects.get(pk=int(item_str))
-            except (TypeError, ValueError, Remito.DoesNotExist):
-                remito = Remito.objects.filter(numero=item_str).first()
-                if remito is None:
-                    raise serializers.ValidationError(
-                        f"El remito '{item_str}' no existe o no pertenece a la operación."
-                    )
+            numero = str(item).strip()
+            coincidencias = list(
+                Remito.objects.filter(
+                    numero=numero,
+                    comercio=parada.comercio,
+                    estado__in=[EstadoRemito.PENDIENTE, EstadoRemito.ASIGNADO],
+                )[:2]
+            )
+            if not coincidencias:
+                raise serializers.ValidationError(
+                    f"El remito '{numero}' no existe o no pertenece a la operación."
+                )
+            if len(coincidencias) > 1:
+                raise serializers.ValidationError(
+                    f"El remito '{numero}' es ambiguo: hay más de un remito con "
+                    "ese número para este comercio."
+                )
 
-            remitos.append(remito)
+            remitos.append(coincidencias[0])
 
         if not remitos:
             raise serializers.ValidationError("Debe enviar al menos un remito.")

@@ -540,7 +540,7 @@ class ParadaViewSet(viewsets.ModelViewSet):
                 {"detail": "El usuario autenticado no tiene asignado un perfil de transportista."}
             )
 
-        if parada.itinerario.transportista_id != request.user.perfil_transportista_id:
+        if parada.itinerario.transportista_id != request.user.perfil_transportista.pk:
             raise ValidationError(
                 {"detail": "La parada no pertenece a tu itinerario activo."}
             )

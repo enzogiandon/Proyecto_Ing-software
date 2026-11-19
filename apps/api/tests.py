@@ -79,6 +79,102 @@ class RegistrarCobranzaTests(TestCase):
         self.assertEqual(self.remito.estado, EstadoRemito.ASIGNADO)
 
 
+class RegistrarRemitosTests(TestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.user = User.objects.create_user(username="12345678", password="secret123")
+        self.transportista = Transportista.objects.create(usuario=self.user)
+        self.itinerario = Itinerario.objects.create(
+            fecha=date.today(),
+            estado=EstadoItinerario.ASIGNADO,
+            transportista=self.transportista,
+        )
+        self.comercio = Comercio.objects.create(
+            razon_social="Comercio Test",
+            cuit="30112233445",
+            domicilio="Calle Falsa 123",
+        )
+        self.otro_comercio = Comercio.objects.create(
+            razon_social="Otro Comercio",
+            cuit="30112233446",
+            domicilio="Calle Falsa 456",
+        )
+        self.marca = Marca.objects.create(nombre="Marca A", cuit="30998877665")
+        self.otra_marca = Marca.objects.create(nombre="Marca B", cuit="30998877666")
+        self.parada = Parada.objects.create(
+            itinerario=self.itinerario,
+            comercio=self.comercio,
+            orden=1,
+        )
+
+    def crear_remito(self, numero, marca=None, comercio=None, estado=EstadoRemito.PENDIENTE):
+        return Remito.objects.create(
+            numero=numero,
+            marca=marca or self.marca,
+            comercio=comercio or self.comercio,
+            total=Decimal("100.00"),
+            estado=estado,
+        )
+
+    def registrar(self, remitos):
+        request = self.factory.post(
+            f"/api/paradas/{self.parada.id}/registrar-remitos/",
+            {"remitos": remitos},
+            format="json",
+        )
+        force_authenticate(request, user=self.user)
+        return ParadaViewSet.as_view({"post": "registrar_remitos"})(
+            request, pk=self.parada.pk
+        )
+
+    def test_registra_remito_pendiente_del_comercio_por_numero(self):
+        remito = self.crear_remito("R-001")
+
+        response = self.registrar(["R-001"])
+
+        self.assertEqual(response.status_code, 201)
+        remito.refresh_from_db()
+        self.assertEqual(remito.parada, self.parada)
+        self.assertEqual(remito.estado, EstadoRemito.ASIGNADO)
+
+    def test_numero_numerico_no_se_confunde_con_la_pk_de_otro_remito(self):
+        ajeno = self.crear_remito("R-999")
+        buscado = self.crear_remito(str(ajeno.pk))
+
+        response = self.registrar([str(ajeno.pk)])
+
+        self.assertEqual(response.status_code, 201)
+        ajeno.refresh_from_db()
+        buscado.refresh_from_db()
+        self.assertIsNone(ajeno.parada)
+        self.assertEqual(buscado.parada, self.parada)
+
+    def test_rechaza_numero_repetido_en_dos_marcas_del_mismo_comercio(self):
+        primero = self.crear_remito("R-001", marca=self.marca)
+        segundo = self.crear_remito("R-001", marca=self.otra_marca)
+
+        response = self.registrar(["R-001"])
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("ambiguo", str(response.data))
+        primero.refresh_from_db()
+        segundo.refresh_from_db()
+        self.assertIsNone(primero.parada)
+        self.assertIsNone(segundo.parada)
+
+    def test_mismo_numero_en_otro_comercio_no_interfiere(self):
+        ajeno = self.crear_remito("R-001", comercio=self.otro_comercio)
+        propio = self.crear_remito("R-001", marca=self.otra_marca)
+
+        response = self.registrar(["R-001"])
+
+        self.assertEqual(response.status_code, 201)
+        ajeno.refresh_from_db()
+        propio.refresh_from_db()
+        self.assertIsNone(ajeno.parada)
+        self.assertEqual(propio.parada, self.parada)
+
+
 class ItinerarioViewSetTests(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()

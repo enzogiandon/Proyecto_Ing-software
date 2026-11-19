@@ -143,6 +143,86 @@ class EmpleadoViewsTests(TestCase):
         self.assertQuerySetEqual(employee.groups.all(), [self.gestion_personal])
         self.assertFalse(Transportista.objects.filter(usuario=employee).exists())
 
+    def test_update_employee_rejects_assigning_vehicle_to_suspended_transportista(self):
+        employee = get_user_model().objects.create_user(
+            username="56789099",
+            password="Original-Password-42!",
+            first_name="Nombre",
+            last_name="Suspendido",
+            is_active=False,
+        )
+        employee.groups.add(self.grupo_transportista)
+        Transportista.objects.create(usuario=employee)
+        vehiculo = Vehiculo.objects.create(
+            patente="AA111AA",
+            modelo="Mercedes",
+            estado=EstadoVehiculo.DISPONIBLE,
+        )
+
+        response = self.client.post(
+            reverse("core:empleado_editar", args=[employee.pk]),
+            {
+                "username": employee.username,
+                "email": "suspendido@example.com",
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk],
+                "vehiculo": vehiculo.pk,
+                "password": "",
+                "password_confirm": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("vehiculo", form.errors)
+        self.assertIn(
+            "No se puede asignar un vehículo a un transportista suspendido.",
+            form.errors["vehiculo"],
+        )
+
+    def test_update_employee_rejects_assigning_non_available_vehicle(self):
+        employee = get_user_model().objects.create_user(
+            username="56789098",
+            password="Original-Password-42!",
+            first_name="Nombre",
+            last_name="Activo",
+            is_active=True,
+        )
+        employee.groups.add(self.grupo_transportista)
+        Transportista.objects.create(usuario=employee)
+        vehiculo_no_operativo = Vehiculo.objects.create(
+            patente="BB222BB",
+            modelo="Ford",
+            estado=EstadoVehiculo.NO_OPERATIVO,
+        )
+
+        response = self.client.post(
+            reverse("core:empleado_editar", args=[employee.pk]),
+            {
+                "username": employee.username,
+                "email": "activo@example.com",
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk],
+                "vehiculo": vehiculo_no_operativo.pk,
+                "password": "",
+                "password_confirm": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("vehiculo", form.errors)
+        self.assertIn(
+            "El vehículo seleccionado no se encuentra disponible.",
+            form.errors["vehiculo"],
+        )
+
     def test_suspend_employee_disables_account_without_deleting_it(self):
         employee = get_user_model().objects.create_user(
             username="67890123",

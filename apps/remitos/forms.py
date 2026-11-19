@@ -127,7 +127,7 @@ class MarcaForm(forms.ModelForm):
         fields = ["nombre", "cuit", "telefono", "email"]
         widgets = {
             "nombre": forms.TextInput(
-                attrs={"class": "form-select", "placeholder": "Razon social"}
+                attrs={"class": "form-control", "placeholder": "Razon social"}
             ),
             "cuit": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "CUIT"}

@@ -11,7 +11,7 @@ from django.urls import reverse
 
 from apps.core.models import Grupos
 from apps.itinerarios.models import EstadoItinerario, EstadoParada, Itinerario, Parada
-from apps.remitos.forms import RemitoForm
+from apps.remitos.forms import MarcaForm, RemitoForm
 from apps.remitos.models import (
     Comercio,
     ErrorImportacion,
@@ -168,6 +168,11 @@ class RemitoFormTests(RemitoTestCase):
             "El número de remito debe ser único por marca proveedora.",
             form.errors["numero"],
         )
+
+    def test_marca_form_widgets(self):
+        form = MarcaForm()
+        self.assertEqual(form.fields["nombre"].widget.attrs.get("class"), "form-control")
+        self.assertEqual(form.fields["cuit"].widget.attrs.get("class"), "form-control")
 
 
 class RemitoViewsTests(RemitoTestCase):
@@ -737,3 +742,4 @@ class ImportacionRemitosTestCase(TestCase):
             any("Importación fallida: la estructura del archivo seleccionado es inválida" in str(m) for m in messages)
         )
         importacion.archivo.delete(save=False)
+

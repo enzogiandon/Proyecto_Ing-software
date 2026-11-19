@@ -151,6 +151,15 @@ class SuspenderEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
         if empleado and empleado.is_active:
             empleado.is_active = False
             empleado.save(update_fields=["is_active"])
+
+            perfil = getattr(empleado, "perfil_transportista", None)
+            if perfil and perfil.vehiculo:
+                vehiculo = perfil.vehiculo
+                perfil.vehiculo = None
+                perfil.save(update_fields=["vehiculo"])
+                vehiculo.estado = EstadoVehiculo.DISPONIBLE
+                vehiculo.save(update_fields=["estado"])
+
             messages.success(request, "Cuenta del empleado deshabilitada.")
         else:
             empleado.is_active = True

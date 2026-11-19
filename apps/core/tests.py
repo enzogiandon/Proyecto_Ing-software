@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.forms import EmpleadoCreateForm
-from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
+from apps.core.models import EstadoVehiculo, Grupos, Transportista, Usuario, Vehiculo
 
 
 class EmpleadoViewsTests(TestCase):
@@ -379,6 +379,39 @@ class VehiculoViewsTests(TestCase):
             [message.message for message in get_messages(response.wsgi_request)],
             ["Vehículo modificado exitosamente"],
         )
+
+    def test_update_vehicle_to_no_operativo_unassigns_transportista(self):
+        vehiculo = Vehiculo.objects.create(
+            patente="AB123CD", estado=EstadoVehiculo.ASIGNADO
+        )
+        user = Usuario.objects.create_user(
+            username="98765432",
+            password="test-password-123",
+            first_name="Chofer",
+            last_name="Test",
+        )
+        transportista = Transportista.objects.create(usuario=user, vehiculo=vehiculo)
+
+        response = self.client.post(
+            reverse("core:vehiculo_editar", args=[vehiculo.pk]),
+            {
+                "patente": "AB123CD",
+                "modelo": "Camión",
+                "poliza": "POL-123",
+                "estado": EstadoVehiculo.NO_OPERATIVO,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:vehiculo_lista"),
+            fetch_redirect_response=False,
+        )
+        vehiculo.refresh_from_db()
+        self.assertEqual(vehiculo.estado, EstadoVehiculo.NO_OPERATIVO)
+        transportista.refresh_from_db()
+        self.assertIsNone(transportista.vehiculo)
+
 
     def test_create_vehicle_requires_login(self):
         self.client.logout()

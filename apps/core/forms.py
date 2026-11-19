@@ -372,3 +372,9 @@ class VehiculoForm(forms.ModelForm):
         if vehiculos.exists():
             raise ValidationError("Vehículo repetido")
         return patente
+
+    def save(self, commit=True):
+        vehiculo = super().save(commit=commit)
+        if vehiculo.estado == EstadoVehiculo.NO_OPERATIVO:
+            Transportista.objects.filter(vehiculo=vehiculo).update(vehiculo=None)
+        return vehiculo

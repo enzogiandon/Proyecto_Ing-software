@@ -189,6 +189,35 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                 if not filas:
                     raise ValueError(f"El archivo {nombre_archivo} está vacío.")
 
+                columnas_requeridas = {
+                    "cuit_comercio",
+                    "razon_social",
+                    "domicilio",
+                    "monto_a_cobrar",
+                    "numero_sucursal",
+                    "numero_factura",
+                }
+                columnas_archivo = set(reader.fieldnames or [])
+                if not columnas_requeridas.issubset(columnas_archivo):
+                    archivo.seek(0)
+                    with transaction.atomic():
+                        importacion = ImportacionRemitos.objects.create(
+                            archivo=archivo,
+                            marca=marca,
+                            estado=EstadoImportacion.RECHAZADO,
+                            cantidad=0,
+                        )
+                        lotes_guardados += 1
+                        ErrorImportacion.objects.create(
+                            importacion=importacion,
+                            fila=1,
+                            motivo="Importación fallida: la estructura del archivo seleccionado es inválida.",
+                        )
+                    errores.append(
+                        "Importación fallida: la estructura del archivo seleccionado es inválida"
+                    )
+                    continue
+
                 errores_filas = []
                 datos_validados = []
                 numeros_en_archivo = set()
@@ -296,7 +325,7 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         ]
                         ErrorImportacion.objects.bulk_create(errores_objs, batch_size=100)
                         errores.append(
-                            f"El archivo {nombre_archivo} contiene {len(errores_filas)} errores y fue rechazado (Lote #{importacion.id})."
+                            f"Importación rechazada: se detectaron {len(errores_filas)} errores en las filas observadas de {nombre_archivo}. Corrija el archivo e intente nuevamente."
                         )
                     else:
                         # 1. Obtener comercios existentes y crear los que falten en bloque
@@ -432,7 +461,7 @@ class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
         if self._tiene_remitos_no_pendientes(self.object):
             messages.error(
                 self.request,
-                "No se puede eliminar la importación porque contiene remitos que ya fueron asignados a un itinerario.",
+                "La importación no se puede eliminar porque contiene remitos que ya fueron asignados a un itinerario.",
             )
             return redirect(self.success_url)
 
@@ -442,7 +471,7 @@ class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
             self.object.delete()
 
         messages.success(
-            self.request, "Importación y sus remitos eliminados correctamente."
+            self.request, "La importación y sus remitos asociados fueron eliminados exitosamente."
         )
         return HttpResponseRedirect(self.get_success_url())
 

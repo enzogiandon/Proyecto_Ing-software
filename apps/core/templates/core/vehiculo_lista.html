@@ -28,6 +28,7 @@
 
     <!-- Lista de vehículos -->
     <div class="itinerarios-card p-3 overflow-hidden">
+        {% if vehiculos %}
             <div class="table-responsive">
                 <table class="itinerarios-tabla">
                     <thead>
@@ -95,6 +96,19 @@
             <div class="itinerarios-tabla-footer">
                 Se muestran {{ vehiculos|length }} vehículos.
             </div>
+        {% else %}
+            <div class="itin-paradas-empty mb-0 border-0">
+                <div class="itin-paradas-empty__icon">
+                    <i class="fas fa-truck fa-2x"></i>
+                </div>
+                <div class="itin-paradas-empty__title">No hay vehículos registrados</div>
+                <p class="itin-paradas-empty__desc mb-3">Registrá un nuevo vehículo para comenzar administrar la flota.</p>
+                <a href="{% url 'core:vehiculo_crear' %}" class="btn-itinerario-primary">
+                    <i class="fas fa-plus"></i>
+                    <span>Agregar vehículo</span>
+                </a>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Paginación -->

@@ -221,6 +221,12 @@ class Command(BaseCommand):
                     "estado": EstadoVehiculo.ASIGNADO,
                 },
                 {
+                    "patente": "AD345JK",
+                    "modelo": "Renault Kangoo 1.6",
+                    "poliza": "POL-567890",
+                    "estado": EstadoVehiculo.ASIGNADO,
+                },
+                {
                     "patente": "AE789GH",
                     "modelo": "Ford Cargo 915",
                     "poliza": "POL-345678",
@@ -253,6 +259,15 @@ class Command(BaseCommand):
                     "last_name": "Pérez",
                     "telefono": "5491155557777",
                     "vehiculo": vehiculos["AG456EF"],
+                    "is_active": True,
+                    "intentos_fallidos": 0,
+                },
+                {
+                    "username": "12345680",
+                    "first_name": "Lucas",
+                    "last_name": "Rodríguez",
+                    "telefono": "5491155556666",
+                    "vehiculo": vehiculos["AD345JK"],
                     "is_active": True,
                     "intentos_fallidos": 0,
                 },
@@ -804,7 +819,7 @@ class Command(BaseCommand):
                         total_remitos += 1
 
             # ------------------------------------------------------------------
-            # 7. Itinerario activo y ruta guardada (Chofer Martín Pérez - 12345678)
+            # 7. Itinerario asignado y ruta guardada (Chofer Martín Pérez - 12345678)
             # ------------------------------------------------------------------
             transportista_martin = Transportista.objects.filter(
                 usuario__username="12345678"
@@ -1085,6 +1100,108 @@ class Command(BaseCommand):
                     )
 
             # ------------------------------------------------------------------
+            # 8.1. Itinerario en curso (Chofer Lucas Rodríguez - 12345680)
+            # ------------------------------------------------------------------
+            transportista_lucas = Transportista.objects.filter(
+                usuario__username="12345680"
+            ).first()
+            itinerario_en_curso = None
+            total_paradas_en_curso = 0
+
+            if transportista_lucas:
+                itinerario_en_curso, _ = Itinerario.objects.get_or_create(
+                    fecha=date.today(),
+                    transportista=transportista_lucas,
+                    defaults={
+                        "estado": EstadoItinerario.EN_CURSO,
+                        "vehiculo": transportista_lucas.vehiculo,
+                    },
+                )
+                itinerario_en_curso.estado = EstadoItinerario.EN_CURSO
+                itinerario_en_curso.vehiculo = transportista_lucas.vehiculo
+                itinerario_en_curso.save()
+
+                paradas_en_curso_comercios = comercios_disponibles[8:11]
+                paradas_en_curso_cfg = [
+                    {
+                        "orden": 1,
+                        "estado": EstadoParada.FINALIZADA,
+                        "hora_entrega": timezone.now().replace(hour=10, minute=30, second=0),
+                        "remito_total": Decimal("135000.00"),
+                        "remito_estado": EstadoRemito.ENTREGADO,
+                        "cobranza_estado": EstadoCobranza.REGISTRADO,
+                        "detalles": [
+                            {"medio": MedioPago.EFECTIVO, "declarado": Decimal("135000.00"), "verificado": Decimal("0.00")},
+                        ],
+                    },
+                    {
+                        "orden": 2,
+                        "estado": EstadoParada.PENDIENTE,
+                        "hora_entrega": None,
+                        "remito_total": Decimal("85000.00"),
+                        "remito_estado": EstadoRemito.ASIGNADO,
+                        "cobranza_estado": None,
+                    },
+                    {
+                        "orden": 3,
+                        "estado": EstadoParada.PENDIENTE,
+                        "hora_entrega": None,
+                        "remito_total": Decimal("112000.00"),
+                        "remito_estado": EstadoRemito.ASIGNADO,
+                        "cobranza_estado": None,
+                    },
+                ]
+
+                for p_idx, c_obj in enumerate(paradas_en_curso_comercios, start=1):
+                    if not c_obj:
+                        continue
+                    cfg_ec = paradas_en_curso_cfg[p_idx - 1]
+                    p_obj, _ = Parada.objects.get_or_create(
+                        itinerario=itinerario_en_curso,
+                        comercio=c_obj,
+                        defaults={
+                            "orden": cfg_ec["orden"],
+                            "estado": cfg_ec["estado"],
+                            "hora_entrega": cfg_ec["hora_entrega"],
+                        },
+                    )
+                    p_obj.orden = cfg_ec["orden"]
+                    p_obj.estado = cfg_ec["estado"]
+                    p_obj.hora_entrega = cfg_ec["hora_entrega"]
+                    p_obj.save()
+                    total_paradas_en_curso += 1
+
+                    rem_ec = Remito.objects.filter(comercio=c_obj, parada=p_obj).first()
+                    if not rem_ec:
+                        Remito.objects.create(
+                            numero=f"0010-{str(p_idx).zfill(8)}",
+                            marca=marcas_list[p_idx % len(marcas_list)],
+                            comercio=c_obj,
+                            total=cfg_ec["remito_total"],
+                            estado=cfg_ec["remito_estado"],
+                            parada=p_obj,
+                        )
+                    else:
+                        rem_ec.estado = cfg_ec["remito_estado"]
+                        rem_ec.total = cfg_ec["remito_total"]
+                        rem_ec.save(update_fields=["estado", "total"])
+
+                    if cfg_ec.get("cobranza_estado"):
+                        Cobranza.objects.filter(parada=p_obj).delete()
+                        cob_ec = Cobranza.objects.create(
+                            parada=p_obj,
+                            estado=cfg_ec["cobranza_estado"],
+                            observacion="Cobranza de parada en curso registrada por chofer.",
+                        )
+                        for d_ec in cfg_ec["detalles"]:
+                            DetallePago.objects.create(
+                                cobranza=cob_ec,
+                                medio=d_ec["medio"],
+                                monto_declarado=d_ec["declarado"],
+                                monto_verificado=d_ec.get("verificado", Decimal("0.00")),
+                            )
+
+            # ------------------------------------------------------------------
             # 9. Flujo Completo: Itinerario, Paradas y Cobranza para usuario 1234567
             # ------------------------------------------------------------------
             itinerario_creado = None
@@ -1261,13 +1378,17 @@ class Command(BaseCommand):
 
         if itinerario_martin:
             self.stdout.write(
-                f"  • Itinerario activo (Hoy): #{itinerario_martin.id} con {total_paradas_creadas} paradas para Chofer Martín Pérez"
+                f"  • Itinerario asignado (Hoy): #{itinerario_martin.id} con {total_paradas_creadas} paradas para Chofer Martín Pérez"
             )
             self.stdout.write(
                 "  • Ruta guardada de prueba: 'Ruta Costera 12' (3 comercios)"
             )
             self.stdout.write(
                 f"  • Cobranzas de ejemplo: {total_cobranzas_creadas} cobranzas registradas (1 Registrada, 1 Aprobada, 1 Difiere con Ajuste)"
+            )
+        if itinerario_en_curso:
+            self.stdout.write(
+                f"  • Itinerario en curso (Hoy): #{itinerario_en_curso.id} con {total_paradas_en_curso} paradas para Chofer Lucas Rodríguez"
             )
         if itinerario_ayer:
             self.stdout.write(
@@ -1298,12 +1419,16 @@ class Command(BaseCommand):
         self.stdout.write("     - Flujo de prueba: Login -> /itinerario -> Reordenar paradas -> Guardar orden -> Rutas guardadas.")
         self.stdout.write("   • Chofer 3: DNI 12345679 | Clave: 123 | Carlos Bloqueado | Cuenta Inhabilitada")
         self.stdout.write("     - Caso de prueba: Login rechazado con alerta de cuenta inhabilitada/suspendida (HU-23 Escenario 4).")
+        self.stdout.write("   • Chofer 4: DNI 12345680 | Clave: 123 | Lucas Rodríguez | Vehículo: AD345JK (Renault Kangoo 1.6)")
+        self.stdout.write("     - Caso de prueba: Itinerario en curso (Hoy) con entregas en progreso para monitoreo en vivo y filtros (HU-60 / HU-68).")
 
         self.stdout.write(self.style.WARNING("\n3. Flota de Vehículos"))
-        self.stdout.write("   • Asignados : AF123CD, AG456EF (a choferes de prueba)")
+        self.stdout.write("   • Asignados : AF123CD, AG456EF, AD345JK (a choferes de prueba)")
         self.stdout.write("   • Disponible: AE789GH (Ford Cargo 915) -> Caso de prueba: Asignación a nuevo chofer.")
 
         self.stdout.write(self.style.WARNING("\n4. Itinerarios y Operación en Calle (App Móvil / Web)"))
+        self.stdout.write("   • Itinerario Asignado (Hoy)      : Estado 'Asignado' para Chofer Martín Pérez (HU-46 / HU-62).")
+        self.stdout.write("   • Itinerario En Curso (Hoy)      : Estado 'En curso' para Chofer Lucas Rodríguez (HU-60 / HU-68).")
         self.stdout.write("   • Parada #4 (Incidente/Error)     : Local cerrado (HU-56 / HU-18) para monitoreo de contingencias.")
         self.stdout.write("   • Parada #5 (Consolidación Multimarca): 2 remitos de 2 marcas distintas agrupados en la misma visita (HU-25 / HU-36).")
         self.stdout.write("   • Itinerario Histórico de Ayer   : Estado 'Finalizado' para prueba de filtros y exportación PDF de hoja de ruta (HU-60 / HU-61).")

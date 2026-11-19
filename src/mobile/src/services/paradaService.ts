@@ -6,6 +6,7 @@ import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { ParadaItem } from '../types/itinerario';
 import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
 import * as mockItinData from '../data/mockItinerario';
+import { entregarItinerarioActualizado } from './itinerarioService';
 
 // Parada seleccionada en memoria durante la navegación
 let paradaSeleccionadaActual: DetalleParada = MOCK_PARADA_SELECCIONADA;
@@ -60,6 +61,7 @@ export const actualizarEstadoCobroParada = (
   estadoParada?: DetalleParada['estado']
 ) => {
   if (paradaSeleccionadaActual) {
+    const nuevoEstado = estadoParada || (estado === 'validado' ? 'finalizada' : 'pendiente');
     const verificada = paradasVerificadas.has(paradaSeleccionadaActual);
     paradaSeleccionadaActual = {
       ...paradaSeleccionadaActual,
@@ -67,6 +69,45 @@ export const actualizarEstadoCobroParada = (
       ...(estadoParada ? { estado: estadoParada } : {}),
     };
     if (verificada) paradasVerificadas.add(paradaSeleccionadaActual);
+
+    // Sincronizar también en mocks para reflejar la parada entregada en el itinerario
+    const targetId = paradaSeleccionadaActual.id;
+    const actualizarMock = (itin: any) => {
+      if (!itin || !Array.isArray(itin.paradas)) return false;
+      const p = itin.paradas.find((item: any) => item.id === targetId);
+      if (p) {
+        p.estado = nuevoEstado;
+        if (nuevoEstado === 'finalizada' || nuevoEstado === 'completada') {
+          p.subtitulo = `Parada ${p.orden} de ${itin.totalParadas || itin.paradas.length} · Entregada`;
+        }
+        itin.paradasCompletadas = itin.paradas.filter(
+          (item: any) => (item.estado as string) === 'finalizada' || (item.estado as string) === 'completada'
+        ).length;
+        return true;
+      }
+      return false;
+    };
+
+    let modificado = false;
+    if (actualizarMock(MOCK_ITINERARIO_ASIGNADO)) modificado = true;
+    if (actualizarMock((mockItinData as any).MOCK_ITINERARIO_11111111)) modificado = true;
+    if (actualizarMock((mockItinData as any).MOCK_ITINERARIO_22222222)) modificado = true;
+    if (actualizarMock((mockItinData as any).MOCK_ITINERARIO_44444444)) modificado = true;
+
+    if (modificado) {
+      const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+      const itinActivo = usuario?.dni === '11111111'
+        ? (mockItinData as any).MOCK_ITINERARIO_11111111
+        : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+        ? ((mockItinData as any).MOCK_ITINERARIO_22222222 || (mockItinData as any).MOCK_ITINERARIO_44444444)
+        : MOCK_ITINERARIO_ASIGNADO;
+      if (itinActivo) {
+        entregarItinerarioActualizado({
+          ...itinActivo,
+          paradas: [...itinActivo.paradas],
+        });
+      }
+    }
   }
 };
 

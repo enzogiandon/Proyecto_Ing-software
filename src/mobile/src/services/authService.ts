@@ -1,4 +1,4 @@
-import { CHOFERES_PRUEBA, UsuarioTransportista, MOCK_CHOFER_ACTUAL } from '../data/mockData';
+import { UsuarioTransportista } from '../data/mockData';
 import {
   saveTokens,
   clearTokens,
@@ -22,7 +22,7 @@ export interface LoginResult {
   user?: Partial<UsuarioTransportista>;
   tokens?: AuthTokens;
   error?: string;
-  tipoError?: 'DNI' | 'CLAVE' | 'INHABILITADO' | 'SERVIDOR';
+  tipoError?: 'DNI' | 'CLAVE' | 'INHABILITADO' | 'CONEXION' | 'SERVIDOR';
 }
 
 // Variables de sesión activa del chofer en memoria
@@ -166,22 +166,14 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       await saveTokens(data.access, data.refresh);
 
       const jwtPayload = parseJwtPayload(data.access);
-      const choferEncontrado = buscarChoferPorDni(dniLimpio);
 
-      // Determinar nombre y vehículo según choferEncontrado, JWT payload o DNI ingresado
-      const firstName = choferEncontrado?.first_name ||
-        jwtPayload?.first_name ||
-        jwtPayload?.name ||
-        (dniLimpio === '12345678' ? 'Martín' : dniLimpio === '1234567' ? 'Lautaro' : 'Transportista');
-
-      const lastName = choferEncontrado?.last_name ||
-        jwtPayload?.last_name ||
-        (dniLimpio === '12345678' ? 'Rodríguez' : dniLimpio === '1234567' ? 'Gómez' : dniLimpio);
-
-      const vehiculo = choferEncontrado?.vehiculo || {
-        id: choferEncontrado?.id || 10,
-        patente: dniLimpio === '12345678' ? 'AB 458 CD' : dniLimpio === '1234567' ? 'AF 123 CD' : `AF ${dniLimpio.slice(-3)} YA`,
-        modelo: dniLimpio === '12345678' ? 'Unidad 024 · Iveco Daily' : dniLimpio === '1234567' ? 'Mercedes-Benz Accelo 815' : 'Unidad de Reparto',
+      // Determinar nombre y vehículo directamente de la base de datos (vía JWT claims)
+      const firstName = jwtPayload?.first_name || jwtPayload?.name || '';
+      const lastName = jwtPayload?.last_name || '';
+      const vehiculo = jwtPayload?.vehiculo || {
+        id: 0,
+        patente: 'S/D',
+        modelo: 'Unidad de Reparto',
         estado: 'disponible',
       };
 
@@ -191,7 +183,7 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
         last_name: lastName,
         vehiculo,
         habilitado: true,
-        is_active: true,
+        is_active: jwtPayload?.is_active ?? true,
       };
 
       setUsuarioActual(userAutenticado);
@@ -275,68 +267,11 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       tipoError: 'SERVIDOR',
     };
   } catch (error: any) {
-    // Si la conexión falla (servidor no encendido, timeout, offline), usamos el mock híbrido
-    console.warn('Backend Django no alcanzable. Usando autenticación simulada (Mock):', error?.message);
-    return loginConMock(dniLimpio, claveLimpia);
-  }
-}
-
-function buscarChoferPorDni(dni: string): UsuarioTransportista | undefined {
-  if (dni === '38492011') return CHOFERES_PRUEBA.find((c) => c.dni === '33333333');
-  if (dni === '12345678' || dni === '44444444') return CHOFERES_PRUEBA.find((c) => c.dni === '22222222');
-  if (dni === '1234567') return CHOFERES_PRUEBA.find((c) => c.dni === '11111111');
-  return CHOFERES_PRUEBA.find((c) => c.dni === dni);
-}
-
-/**
- * Autenticación simulada basada en los estados de Figma y CHOFERES_PRUEBA
- */
-function loginConMock(dni: string, clave: string): LoginResult {
-  const chofer = buscarChoferPorDni(dni);
-
-  if (!chofer) {
+    console.warn('[AuthService] No se pudo conectar con el servidor:', error?.message);
     return {
       success: false,
-      error: 'El DNI es incorrecto. Intentá nuevamente.',
-      tipoError: 'DNI',
+      error: 'No se pudo conectar con la base de datos del servidor. Verificá tu conexión a internet o que el backend esté en ejecución.',
+      tipoError: 'CONEXION',
     };
   }
-
-  // Permite ingresar con la clave registrada o claves maestras de prueba ('1234', 'chofer123' o 4 dígitos de su DNI)
-  const claveValida =
-    chofer.password === clave ||
-    clave === '1234' ||
-    clave === 'chofer123' ||
-    clave === chofer.dni.slice(0, 4);
-  if (!claveValida) {
-    chofer.intentos_fallidos += 1;
-    return {
-      success: false,
-      error: 'La clave es incorrecta. Intentá nuevamente.',
-      tipoError: 'CLAVE',
-    };
-  }
-
-  if (!chofer.habilitado || !chofer.is_active) {
-    return {
-      success: false,
-      error: 'Tu cuenta se encuentra inhabilitada.',
-      tipoError: 'INHABILITADO',
-    };
-  }
-
-  chofer.intentos_fallidos = 0;
-  sesionActiva = true;
-  setAuthToken('mock-jwt-access-token-xyz');
-  saveTokens('mock-jwt-access-token-xyz', 'mock-jwt-refresh-token-xyz').catch(() => {});
-  setUsuarioActual(chofer);
-
-  return {
-    success: true,
-    user: chofer,
-    tokens: {
-      access: 'mock-jwt-access-token-xyz',
-      refresh: 'mock-jwt-refresh-token-xyz',
-    },
-  };
 }

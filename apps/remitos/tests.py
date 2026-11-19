@@ -709,3 +709,31 @@ class ImportacionRemitosTestCase(TestCase):
         self.assertEqual(errores.count(), 1)
         self.assertIn("El número de remito debe ser único por marca proveedora.", errores[0].motivo)
         importacion.archivo.delete(save=False)
+
+    def test_importar_remitos_valida_estructura_columnas(self):
+        # CSV con columnas faltantes (falta 'numero_factura' y 'monto_a_cobrar')
+        csv_invalido = (
+            "cuit_comercio,razon_social,domicilio,numero_sucursal\n"
+            "20301112223,Kiosco Central,\"Calle 1 123\",0001\n"
+        ).encode("utf-8")
+        archivo = SimpleUploadedFile("30654321090_20261027_DISTR-01.csv", csv_invalido)
+
+        response = self.client.post(
+            reverse("remitos:importacion_crear"),
+            {
+                "archivo": [archivo],
+            },
+        )
+        self.assertRedirects(response, reverse("core:inicio"), fetch_redirect_response=False)
+
+        importacion = ImportacionRemitos.objects.get(marca=self.marca1)
+        self.assertEqual(importacion.estado, EstadoImportacion.RECHAZADO)
+        errores = importacion.errores.all()
+        self.assertEqual(errores.count(), 1)
+        self.assertIn("la estructura del archivo seleccionado es inválida", errores[0].motivo)
+
+        messages = list(response.wsgi_request._messages)
+        self.assertTrue(
+            any("Importación fallida: la estructura del archivo seleccionado es inválida" in str(m) for m in messages)
+        )
+        importacion.archivo.delete(save=False)

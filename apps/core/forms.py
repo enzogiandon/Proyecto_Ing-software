@@ -11,7 +11,7 @@ from .models import EstadoVehiculo, Grupos, Transportista, Usuario, Vehiculo
 
 class LoginForm(AuthenticationForm):
     error_messages = {
-        "invalid_login": "El usuario o la contraseña ingresados son incorrectos. Inténtalo de nuevo.",
+        "invalid_login": "El DNI o la contraseña ingresados son incorrectos. Inténtalo de nuevo.",
         "inactive": "Esta cuenta se encuentra suspendida.",
     }
 
@@ -19,7 +19,7 @@ class LoginForm(AuthenticationForm):
         super().__init__(*args, **kwargs)
 
         self.fields["username"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Usuario"}
+            {"class": "form-control", "placeholder": "DNI"}
         )
         self.fields["password"].widget.attrs.update(
             {"class": "form-control", "placeholder": "Contraseña"}

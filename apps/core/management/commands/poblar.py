@@ -793,85 +793,45 @@ class Command(BaseCommand):
                         vehiculo=vehiculo_1234567,
                     )
 
-                    # Parada 1: Comercio "23200048148" (finalizada con cobranza registrada en 2 medios de pago)
+                    # Parada 1: Comercio "23200048148" (pendiente de entrega)
                     comercio_1 = comercios["23200048148"]
                     parada_1 = Parada.objects.create(
                         itinerario=itinerario_creado,
                         comercio=comercio_1,
                         orden=1,
-                        estado=EstadoParada.FINALIZADA,
-                        hora_entrega=timezone.now(),
+                        estado=EstadoParada.PENDIENTE,
                     )
                     total_paradas_creadas += 1
 
                     remito_1 = remitos_creados.get("0005-00024715")
                     if remito_1:
                         remito_1.parada = parada_1
-                        remito_1.estado = EstadoRemito.ENTREGADO
+                        remito_1.estado = EstadoRemito.ASIGNADO
                         remito_1.save(update_fields=["parada", "estado"])
 
-                        cobranza_1 = Cobranza.objects.create(
-                            parada=parada_1,
-                            estado=EstadoCobranza.REGISTRADO,
-                        )
-                        # Pago con 2 medios (efectivo y transferencia)
-                        monto_efectivo = Decimal("150000.00")
-                        monto_transferencia = remito_1.total - monto_efectivo
-
-                        DetallePago.objects.create(
-                            cobranza=cobranza_1,
-                            medio=MedioPago.EFECTIVO,
-                            monto_declarado=monto_efectivo,
-                            monto_verificado=None,
-                        )
-                        DetallePago.objects.create(
-                            cobranza=cobranza_1,
-                            medio=MedioPago.TRANSFERENCIA,
-                            monto_declarado=monto_transferencia,
-                            monto_verificado=None,
-                        )
-                        total_cobranzas_creadas += 1
-
-                    # Parada 2: Comercio "23200000145" (finalizada con cobranza registrada / pendiente de validación)
+                    # Parada 2: Comercio "23200000145" (pendiente de entrega)
                     # Este comercio tiene dos remitos: 0002-00015378 ($475923.72) y 0004-00003901 ($733385.18)
                     comercio_2 = comercios["23200000145"]
                     parada_2 = Parada.objects.create(
                         itinerario=itinerario_creado,
                         comercio=comercio_2,
                         orden=2,
-                        estado=EstadoParada.FINALIZADA,
-                        hora_entrega=timezone.now(),
+                        estado=EstadoParada.PENDIENTE,
                     )
                     total_paradas_creadas += 1
 
                     remito_2a = remitos_creados.get("0002-00015378")
                     remito_2b = remitos_creados.get("0004-00003901")
-                    total_monto_parada_2 = Decimal("0.00")
 
                     if remito_2a:
                         remito_2a.parada = parada_2
-                        remito_2a.estado = EstadoRemito.ENTREGADO
+                        remito_2a.estado = EstadoRemito.ASIGNADO
                         remito_2a.save(update_fields=["parada", "estado"])
-                        total_monto_parada_2 += remito_2a.total
 
                     if remito_2b:
                         remito_2b.parada = parada_2
-                        remito_2b.estado = EstadoRemito.ENTREGADO
+                        remito_2b.estado = EstadoRemito.ASIGNADO
                         remito_2b.save(update_fields=["parada", "estado"])
-                        total_monto_parada_2 += remito_2b.total
-
-                    if total_monto_parada_2 > Decimal("0.00"):
-                        cobranza_2 = Cobranza.objects.create(
-                            parada=parada_2,
-                            estado=EstadoCobranza.REGISTRADO,
-                        )
-                        DetallePago.objects.create(
-                            cobranza=cobranza_2,
-                            medio=MedioPago.TRANSFERENCIA,
-                            monto_declarado=total_monto_parada_2,
-                            monto_verificado=None,
-                        )
-                        total_cobranzas_creadas += 1
 
                     # Parada 3: Comercio "23200033191" (pendiente de entrega)
                     comercio_3 = comercios["23200033191"]
@@ -975,6 +935,88 @@ class Command(BaseCommand):
                             remito_ic_2.estado = EstadoRemito.ASIGNADO
                             remito_ic_2.save(update_fields=["parada", "estado"])
 
+                    # ----------------------------------------------------------
+                    # Itinerario 3: Finalizado (del día de ayer, asignado a 1234567)
+                    # ----------------------------------------------------------
+                    ayer = hoy - timezone.timedelta(days=1)
+                    itinerario_finalizado = Itinerario.objects.create(
+                        fecha=ayer,
+                        estado=EstadoItinerario.FINALIZADO,
+                        transportista=transportista_1234567,
+                        vehiculo=vehiculo_1234567,
+                    )
+
+                    # Parada 1 del itinerario finalizado: Comercio 23200063767 (con 2 remitos entregados)
+                    comercio_fin_1 = comercios.get("23200063767")
+                    if comercio_fin_1:
+                        parada_fin_1 = Parada.objects.create(
+                            itinerario=itinerario_finalizado,
+                            comercio=comercio_fin_1,
+                            orden=1,
+                            estado=EstadoParada.FINALIZADA,
+                            hora_entrega=timezone.now() - timezone.timedelta(days=1, hours=3),
+                        )
+                        total_paradas_creadas += 1
+
+                        remito_fin_1a = remitos_creados.get("0002-00033994")
+                        remito_fin_1b = remitos_creados.get("0006-00028325")
+                        monto_parada_fin_1 = Decimal("0.00")
+
+                        if remito_fin_1a:
+                            remito_fin_1a.parada = parada_fin_1
+                            remito_fin_1a.estado = EstadoRemito.ENTREGADO
+                            remito_fin_1a.save(update_fields=["parada", "estado"])
+                            monto_parada_fin_1 += remito_fin_1a.total
+
+                        if remito_fin_1b:
+                            remito_fin_1b.parada = parada_fin_1
+                            remito_fin_1b.estado = EstadoRemito.ENTREGADO
+                            remito_fin_1b.save(update_fields=["parada", "estado"])
+                            monto_parada_fin_1 += remito_fin_1b.total
+
+                        if monto_parada_fin_1 > Decimal("0.00"):
+                            cobranza_fin_1 = Cobranza.objects.create(
+                                parada=parada_fin_1,
+                                estado=EstadoCobranza.REGISTRADO,
+                            )
+                            DetallePago.objects.create(
+                                cobranza=cobranza_fin_1,
+                                medio=MedioPago.EFECTIVO,
+                                monto_declarado=monto_parada_fin_1,
+                                monto_verificado=None,
+                            )
+                            total_cobranzas_creadas += 1
+
+                    # Parada 2 del itinerario finalizado: Comercio 20200070268
+                    comercio_fin_2 = comercios.get("20200070268")
+                    if comercio_fin_2:
+                        parada_fin_2 = Parada.objects.create(
+                            itinerario=itinerario_finalizado,
+                            comercio=comercio_fin_2,
+                            orden=2,
+                            estado=EstadoParada.FINALIZADA,
+                            hora_entrega=timezone.now() - timezone.timedelta(days=1, hours=2),
+                        )
+                        total_paradas_creadas += 1
+
+                        remito_fin_2 = remitos_creados.get("0005-00010362")
+                        if remito_fin_2:
+                            remito_fin_2.parada = parada_fin_2
+                            remito_fin_2.estado = EstadoRemito.ENTREGADO
+                            remito_fin_2.save(update_fields=["parada", "estado"])
+
+                            cobranza_fin_2 = Cobranza.objects.create(
+                                parada=parada_fin_2,
+                                estado=EstadoCobranza.REGISTRADO,
+                            )
+                            DetallePago.objects.create(
+                                cobranza=cobranza_fin_2,
+                                medio=MedioPago.TRANSFERENCIA,
+                                monto_declarado=remito_fin_2.total,
+                                monto_verificado=None,
+                            )
+                            total_cobranzas_creadas += 1
+
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros cargados exitosamente.")
         )
@@ -993,7 +1035,7 @@ class Command(BaseCommand):
 
         if options["completo"]:
             self.stdout.write(
-                f"  • Itinerario asignado (ID #{itinerario_creado.id if itinerario_creado else 'N/A'}) y en curso (ID #{itinerario_en_curso.id if 'itinerario_en_curso' in locals() else 'N/A'}) creados con {total_paradas_creadas} paradas en total."
+                f"  • Itinerarios creados: asignado (ID #{itinerario_creado.id if itinerario_creado else 'N/A'}), en curso (ID #{itinerario_en_curso.id if 'itinerario_en_curso' in locals() else 'N/A'}) y finalizado (ID #{itinerario_finalizado.id if 'itinerario_finalizado' in locals() else 'N/A'}) con {total_paradas_creadas} paradas en total."
             )
             self.stdout.write(
                 f"  • Cobranzas registradas: {total_cobranzas_creadas}."

@@ -34,6 +34,7 @@ from apps.itinerarios.models import (
 from apps.remitos.models import (
     Comercio,
     ErrorImportacion,
+    EstadoImportacion,
     EstadoRemito,
     ImportacionRemitos,
     Marca,
@@ -279,6 +280,15 @@ class Command(BaseCommand):
                     "vehiculo": None,
                     "is_active": False,
                     "intentos_fallidos": 5,
+                },
+                {
+                    "username": "12345681",
+                    "first_name": "Esteban",
+                    "last_name": "Suplente",
+                    "telefono": "5491155559999",
+                    "vehiculo": None,
+                    "is_active": True,
+                    "intentos_fallidos": 0,
                 },
             ]
 
@@ -745,68 +755,81 @@ class Command(BaseCommand):
                     },
                     # Snacks Andinos S.R.L. (30709876542)
                     {
-                        "numero": "0002-00015378",
+                        "numero": "0090-00015378",
                         "marca": marcas["30709876542"],
                         "comercio": comercios["23200039289"],
                         "total": Decimal("475923.72"),
                     },
                     {
-                        "numero": "0006-00025539",
+                        "numero": "0090-00025539",
                         "marca": marcas["30709876542"],
                         "comercio": comercios["23200042867"],
                         "total": Decimal("692074.74"),
                     },
                     {
-                        "numero": "0005-00015345",
+                        "numero": "0090-00015345",
                         "marca": marcas["30709876542"],
                         "comercio": comercios["23200056655"],
                         "total": Decimal("671210.29"),
                     },
                     # Gaseosas del Sur S.A. (30712345671)
                     {
-                        "numero": "0004-00003901",
+                        "numero": "0090-00003901",
                         "marca": marcas["30712345671"],
                         "comercio": comercios["23200039289"],
                         "total": Decimal("733385.18"),
                     },
                     {
-                        "numero": "0004-00003921",
+                        "numero": "0090-00003921",
                         "marca": marcas["30712345671"],
                         "comercio": comercios["30200025527"],
                         "total": Decimal("492487.48"),
                     },
                     {
-                        "numero": "0002-00033994",
+                        "numero": "0090-00033994",
                         "marca": marcas["30712345671"],
                         "comercio": comercios["23200063767"],
                         "total": Decimal("334706.88"),
                     },
                     # Lacteos El Tambo S.A. (33698712347)
                     {
-                        "numero": "0006-00028325",
+                        "numero": "0090-00028325",
                         "marca": marcas["33698712347"],
                         "comercio": comercios["23200063767"],
                         "total": Decimal("526471.00"),
                     },
                     {
-                        "numero": "0005-00010362",
+                        "numero": "0090-00010362",
                         "marca": marcas["33698712347"],
                         "comercio": comercios["23200058011"],
                         "total": Decimal("353247.34"),
                     },
                     {
-                        "numero": "0006-00028378",
+                        "numero": "0090-00028378",
                         "marca": marcas["33698712347"],
                         "comercio": comercios["23200060768"],
                         "total": Decimal("609129.43"),
+                    },
+                    # Casos de Unicidad Compuesta por Marca + Remito (HU-04)
+                    {
+                        "numero": "0001-00099999",
+                        "marca": marcas["30654321090"],  # Cervecería La Diagonal S.A.
+                        "comercio": comercios["23200034562"],
+                        "total": Decimal("150000.00"),
+                    },
+                    {
+                        "numero": "0001-00099999",
+                        "marca": marcas["30709876542"],  # Snacks Andinos S.R.L.
+                        "comercio": comercios["23200039289"],
+                        "total": Decimal("85000.00"),
                     },
                 ]
 
                 for r_info in remitos_definicion:
                     remito_obj, creado = Remito.objects.get_or_create(
                         numero=r_info["numero"],
+                        marca=r_info["marca"],
                         defaults={
-                            "marca": r_info["marca"],
                             "comercio": r_info["comercio"],
                             "total": r_info["total"],
                             "estado": EstadoRemito.PENDIENTE,
@@ -815,8 +838,49 @@ class Command(BaseCommand):
                         },
                     )
                     remitos_creados[r_info["numero"]] = remito_obj
+                    remitos_creados[(r_info["marca"].cuit, r_info["numero"])] = remito_obj
                     if creado:
                         total_remitos += 1
+
+                # 6.1. Lotes de Importación de Remitos (HU-37, HU-38, HU-40)
+                # Lote 1: Exitoso y Descartable (remitos en estado PENDIENTE para probar HU-40)
+                lote_descartable, _ = ImportacionRemitos.objects.get_or_create(
+                    archivo="importaciones/30709876542_lote_descartable.csv",
+                    defaults={
+                        "marca": marcas["30709876542"],
+                        "cantidad": 2,
+                        "estado": EstadoImportacion.EXITO,
+                    },
+                )
+                rem_desc_1 = remitos_creados.get("0090-00025539")
+                rem_desc_2 = remitos_creados.get("0090-00003921")
+                if rem_desc_1:
+                    rem_desc_1.importacion = lote_descartable
+                    rem_desc_1.save(update_fields=["importacion"])
+                if rem_desc_2:
+                    rem_desc_2.importacion = lote_descartable
+                    rem_desc_2.save(update_fields=["importacion"])
+
+                # Lote 2: Con Errores / Rechazado (para probar HU-38: detalle de excepciones)
+                lote_rechazado, _ = ImportacionRemitos.objects.get_or_create(
+                    archivo="importaciones/30712345671_lote_con_errores.csv",
+                    defaults={
+                        "marca": marcas["30712345671"],
+                        "cantidad": 0,
+                        "estado": EstadoImportacion.RECHAZADO,
+                    },
+                )
+                ErrorImportacion.objects.filter(importacion=lote_rechazado).delete()
+                ErrorImportacion.objects.create(
+                    importacion=lote_rechazado,
+                    fila=2,
+                    motivo="CUIT del comercio inválido (debe tener 11 dígitos numéricos).",
+                )
+                ErrorImportacion.objects.create(
+                    importacion=lote_rechazado,
+                    fila=5,
+                    motivo="La razón social es obligatoria para comercios no registrados previamente.",
+                )
 
             # ------------------------------------------------------------------
             # 7. Itinerario asignado y ruta guardada (Chofer Martín Pérez - 12345678)
@@ -1015,11 +1079,11 @@ class Command(BaseCommand):
                                 mp_payment_id=det.get("mp_payment_id"),
                             )
 
-                        if cfg.get("ajuste") and admin_user:
+                        if cfg.get("ajuste") and conciliacion:
                             ajuste_data = cfg["ajuste"]
                             AjusteCobranza.objects.create(
                                 cobranza=cobranza_obj,
-                                usuario=admin_user,
+                                usuario=conciliacion,
                                 medio=ajuste_data["medio"],
                                 monto=ajuste_data["monto"],
                                 motivo=ajuste_data["motivo"],
@@ -1202,6 +1266,30 @@ class Command(BaseCommand):
                             )
 
             # ------------------------------------------------------------------
+            # 8.2. Itinerario eliminable de prueba (HU-48 Happy Path - Sin cobranzas)
+            # ------------------------------------------------------------------
+            itinerario_eliminable, _ = Itinerario.objects.get_or_create(
+                fecha=date.today() + timedelta(days=1),
+                transportista=transportista_lucas,
+                defaults={
+                    "estado": EstadoItinerario.ASIGNADO,
+                    "vehiculo": transportista_lucas.vehiculo if transportista_lucas else None,
+                },
+            )
+            itinerario_eliminable.estado = EstadoItinerario.ASIGNADO
+            itinerario_eliminable.save()
+            comercio_el = comercios.get("27200002143")
+            if comercio_el:
+                Parada.objects.get_or_create(
+                    itinerario=itinerario_eliminable,
+                    comercio=comercio_el,
+                    defaults={
+                        "orden": 1,
+                        "estado": EstadoParada.PENDIENTE,
+                    },
+                )
+
+            # ------------------------------------------------------------------
             # 9. Flujo Completo: Itinerario, Paradas y Cobranza para usuario 1234567
             # ------------------------------------------------------------------
             itinerario_creado = None
@@ -1281,8 +1369,8 @@ class Command(BaseCommand):
                     )
                     total_paradas_completo += 1
 
-                    remito_2a = remitos_creados.get("0002-00015378")
-                    remito_2b = remitos_creados.get("0004-00003901")
+                    remito_2a = remitos_creados.get("0090-00015378")
+                    remito_2b = remitos_creados.get("0090-00003901")
                     total_monto_parada_2 = Decimal("0.00")
 
                     if remito_2a:
@@ -1337,7 +1425,7 @@ class Command(BaseCommand):
                     total_paradas_completo += 1
 
                     remito_4a = remitos_creados.get("0002-00023496")
-                    remito_4b = remitos_creados.get("0005-00015345")
+                    remito_4b = remitos_creados.get("0090-00015345")
                     if remito_4a:
                         remito_4a.parada = parada_4
                         remito_4a.estado = EstadoRemito.ASIGNADO
@@ -1346,6 +1434,19 @@ class Command(BaseCommand):
                         remito_4b.parada = parada_4
                         remito_4b.estado = EstadoRemito.ASIGNADO
                         remito_4b.save(update_fields=["parada", "estado"])
+
+                    # Ruta guardada de prueba para usuario 1234567 (HU-63, HU-64, HU-65)
+                    ruta_guardada_lautaro, _ = RutaGuardada.objects.get_or_create(
+                        transportista=transportista_1234567,
+                        nombre="Ruta Rapida Alternativa",
+                    )
+                    DetalleRutaGuardada.objects.filter(ruta_guardada=ruta_guardada_lautaro).delete()
+                    for idx_r, com_r in enumerate([comercio_1, comercio_2, comercio_3, comercio_4], start=1):
+                        DetalleRutaGuardada.objects.create(
+                            ruta_guardada=ruta_guardada_lautaro,
+                            comercio=com_r,
+                            prioridad=idx_r,
+                        )
 
         self.stdout.write("")
         self.stdout.write(
@@ -1373,7 +1474,7 @@ class Command(BaseCommand):
             )
         else:
             self.stdout.write(
-                "  • Chofer 1234567: Sin itinerario asignado (estado vacío institucional HU-62; use --completo para generarlo)"
+                "  • Chofer 1234567: Sin itinerario asignado (use --completo para generarlo)"
             )
 
         if itinerario_martin:
@@ -1384,7 +1485,7 @@ class Command(BaseCommand):
                 "  • Ruta guardada de prueba: 'Ruta Costera 12' (3 comercios)"
             )
             self.stdout.write(
-                f"  • Cobranzas de ejemplo: {total_cobranzas_creadas} cobranzas registradas (1 Registrada, 1 Aprobada, 1 Difiere con Ajuste)"
+                f"  • Cobranzas de ejemplo: {total_cobranzas_creadas} cobranzas registradas (1 Registrada, 1 Aprobada, 1 Difiere con Ajuste auditado por 22222222)"
             )
         if itinerario_en_curso:
             self.stdout.write(
@@ -1405,38 +1506,33 @@ class Command(BaseCommand):
             self.style.HTTP_INFO("=" * 70)
         )
 
-        self.stdout.write(self.style.WARNING("\n1. Superusuario (Administrador con todos los roles)"))
-        self.stdout.write("   • DNI / Usuario : 11111111")
-        self.stdout.write("   • Contraseña    : 123")
-        self.stdout.write("   • Roles         : Todos (Planificación, Conciliación, Gestión de Personal, Transportista)")
-        self.stdout.write("   • Caso de prueba: Acceso completo a todos los módulos del panel administrativo web.")
+        self.stdout.write(self.style.WARNING("\n1. Superusuario y Administrativos Web"))
+        self.stdout.write("   • Superusuario Admin   : 11111111 | Clave: 123 (Todos los accesos)")
+        self.stdout.write("   • Admin Conciliación   : 22222222 | Clave: 123 (Cobranzas, Arqueo, Ajuste con DNI registrado)")
+        self.stdout.write("   • Admin Planificación  : 33333333 | Clave: 123 (Planillas, Remitos, Diagramación)")
+        self.stdout.write("   • Admin Personal       : 44444444 | Clave: 123 (Choferes, Desbloqueo)")
 
         self.stdout.write(self.style.WARNING("\n2. Transportistas (Choferes - App Móvil / Rutas)"))
-        self.stdout.write("   • Chofer 1: DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD (Mercedes-Benz Accelo 815)")
-        self.stdout.write("     - Caso de prueba: Transportista sin itinerario asignado (estado vacío institucional HU-62).")
-        self.stdout.write("   • Chofer 2: DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF (Iveco Daily 70C17)")
-        self.stdout.write("     - Caso de prueba: Itinerario activo asignado con 5 paradas (3 cobradas, 1 con error/incidente, 1 pendiente multimarca).")
-        self.stdout.write("     - Flujo de prueba: Login -> /itinerario -> Reordenar paradas -> Guardar orden -> Rutas guardadas.")
-        self.stdout.write("   • Chofer 3: DNI 12345679 | Clave: 123 | Carlos Bloqueado | Cuenta Inhabilitada")
-        self.stdout.write("     - Caso de prueba: Login rechazado con alerta de cuenta inhabilitada/suspendida (HU-23 Escenario 4).")
-        self.stdout.write("   • Chofer 4: DNI 12345680 | Clave: 123 | Lucas Rodríguez | Vehículo: AD345JK (Renault Kangoo 1.6)")
-        self.stdout.write("     - Caso de prueba: Itinerario en curso (Hoy) con entregas en progreso para monitoreo en vivo y filtros (HU-60 / HU-68).")
+        self.stdout.write("   • Chofer 1 (Activo Completo): DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD")
+        self.stdout.write("     - Itinerario de hoy con 4 paradas (2 finalizadas con cobranza, 2 pendientes de entrega en calle).")
+        self.stdout.write("     - Ruta guardada: 'Ruta Rapida Alternativa'.")
+        self.stdout.write("   • Chofer 2 (Completo Avanzado): DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF")
+        self.stdout.write("     - Itinerario de hoy con 5 paradas (1 registrada, 1 aprobada, 1 difiere con ajuste auditado, 1 error local cerrado, 1 multimarca).")
+        self.stdout.write("     - Ruta guardada: 'Ruta Costera 12'.")
+        self.stdout.write("   • Chofer 3 (Bloqueado/Suspendido): DNI 12345679 | Clave: 123 | Carlos Bloqueado (Para probar desbloqueo HU-11 / HU-66).")
+        self.stdout.write("   • Chofer 4 (En Curso): DNI 12345680 | Clave: 123 | Lucas Rodríguez | Vehículo: AD345JK (Itinerario en curso HU-60).")
+        self.stdout.write("   • Chofer 5 (Sin Ruta - Caso de Borde): DNI 12345681 | Clave: 123 | Esteban Suplente (Sin itinerario asignado HU-62).")
 
-        self.stdout.write(self.style.WARNING("\n3. Flota de Vehículos"))
-        self.stdout.write("   • Asignados : AF123CD, AG456EF, AD345JK (a choferes de prueba)")
-        self.stdout.write("   • Disponible: AE789GH (Ford Cargo 915) -> Caso de prueba: Asignación a nuevo chofer.")
+        self.stdout.write(self.style.WARNING("\n3. Lotes de Importación y Remitos"))
+        self.stdout.write("   • Lote Descartable (HU-40) : Snacks Andinos S.R.L. con remitos PENDIENTES (eliminable sin trabas).")
+        self.stdout.write("   • Lote Rechazado (HU-38)   : Gaseosas del Sur S.A. con errores de fila registrados para auditoría.")
+        self.stdout.write("   • Remitos Clave Compuesta  : #0001-00099999 (coexiste en Cervecería La Diagonal y Snacks Andinos).")
 
-        self.stdout.write(self.style.WARNING("\n4. Itinerarios y Operación en Calle (App Móvil / Web)"))
-        self.stdout.write("   • Itinerario Asignado (Hoy)      : Estado 'Asignado' para Chofer Martín Pérez (HU-46 / HU-62).")
-        self.stdout.write("   • Itinerario En Curso (Hoy)      : Estado 'En curso' para Chofer Lucas Rodríguez (HU-60 / HU-68).")
-        self.stdout.write("   • Parada #4 (Incidente/Error)     : Local cerrado (HU-56 / HU-18) para monitoreo de contingencias.")
-        self.stdout.write("   • Parada #5 (Consolidación Multimarca): 2 remitos de 2 marcas distintas agrupados en la misma visita (HU-25 / HU-36).")
-        self.stdout.write("   • Itinerario Histórico de Ayer   : Estado 'Finalizado' para prueba de filtros y exportación PDF de hoja de ruta (HU-60 / HU-61).")
+        self.stdout.write(self.style.WARNING("\n4. Itinerarios y Trazabilidad"))
+        self.stdout.write("   • Itinerario de Hoy (Activo)     : Asignado a Lautaro Gómez (#" + str(itinerario_creado.id if itinerario_creado else 'N/A') + ") y Martín Pérez.")
+        self.stdout.write("   • Itinerario Eliminable (HU-48)  : Hoja de ruta para mañana asignada a Lucas Rodríguez (sin cobranzas, eliminable).")
+        self.stdout.write("   • Itinerario Histórico (Inmutable): Finalizado ayer para Martín Pérez (controles deshabilitados, protegido).")
 
-        self.stdout.write(self.style.WARNING("\n5. Módulo de Cobranzas y Conciliación (Panel Administrativo Web)"))
-        self.stdout.write("   • Cobranza Registrada (Pendiente)  : Parada #1 - Declarada por chofer ($150.000). Lista para arqueo y validación (botón 'Validar').")
-        self.stdout.write("   • Cobranza Aprobada (Conciliada)   : Parada #2 - Validada con QR de Mercado Pago ($220.000).")
-        self.stdout.write("   • Cobranza con Diferencia (Difiere): Parada #3 - Declarado $310.000, verificado $300.000 (faltante de $10.000) con Ajuste complementario registrado.")
         self.stdout.write(
             self.style.HTTP_INFO("=" * 70 + "\n")
         )

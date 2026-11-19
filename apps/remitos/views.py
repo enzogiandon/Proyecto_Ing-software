@@ -268,7 +268,9 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                     if not num_sucursal or not num_factura:
                         motivos.append("Falta número de sucursal o factura")
                     else:
-                        numero_remito = f"{num_sucursal}-{num_factura}"
+                        num_sucursal_pad = num_sucursal.zfill(4) if num_sucursal.isdigit() else num_sucursal
+                        num_factura_pad = num_factura.zfill(8) if num_factura.isdigit() else num_factura
+                        numero_remito = f"{num_sucursal_pad}-{num_factura_pad}"
                         if numero_remito in numeros_en_archivo:
                             motivos.append(f"Número de remito '{numero_remito}' duplicado dentro del mismo archivo")
                         else:
@@ -379,12 +381,12 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         creados += 1
                         total_remitos_creados += remitos_creados_lote
 
-            except (UnicodeDecodeError, csv.Error, ValueError) as e:
-                errores.append(f"El archivo {nombre_archivo} tiene un formato inválido o no legible: {str(e)}")
-            except (IntegrityError, DatabaseError) as e:
-                errores.append(f"Error de base de datos al procesar {nombre_archivo}: {str(e)}")
-            except OSError as e:
-                errores.append(f"Error de lectura o acceso al archivo {nombre_archivo}: {str(e)}")
+            except (UnicodeDecodeError, csv.Error, ValueError):
+                errores.append(f"El archivo {nombre_archivo} tiene un formato inválido o no legible.")
+            except (IntegrityError, DatabaseError):
+                errores.append(f"Error de base de datos al procesar {nombre_archivo}.")
+            except OSError:
+                errores.append(f"Error de lectura o acceso al archivo {nombre_archivo}.")
 
         if errores:
             for error in errores:
@@ -430,7 +432,7 @@ class DetalleImportacion(LoginRequiredMixin, PermissionRequiredMixin, DetailView
     permission_required = "remitos.view_importacionremitos"
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related("errores")
+        return super().get_queryset().prefetch_related("errores", "remitos")
 
 
 class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):

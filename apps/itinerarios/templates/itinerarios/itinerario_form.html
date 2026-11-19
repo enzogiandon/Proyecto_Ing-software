@@ -68,18 +68,34 @@
 
             <div class="itin-stop-groups">
                 {% for checkbox in form.transportistas %}
+                    {% with ocupado=checkbox.data.value.value %}
                     <label class="itin-stop-group" for="{{ checkbox.id_for_label }}">
                         <div class="itin-stop-group__header">
                             <div class="itin-stop-group__left">
-                                {{ checkbox.tag }}
+                                {% if ocupado in form.ocupados_ids %}
+                                    <input type="checkbox" disabled>
+                                {% else %}
+                                    {{ checkbox.tag }}
+                                {% endif %}
                                 <div>
                                     <div class="cell-main">{{ checkbox.choice_label }}</div>
-                                    <div class="cell-sub">Transportista activo con vehículo asignado</div>
+                                    <div class="cell-sub">
+                                        {% if ocupado in form.ocupados_ids %}
+                                            Ya tiene un itinerario asignado para la fecha indicada
+                                        {% else %}
+                                            Transportista activo con vehículo asignado
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
-                            <span class="itin-badge itin-badge--asignado">Disponible</span>
+                            {% if ocupado in form.ocupados_ids %}
+                                <span class="itin-badge itin-badge--finalizado">Ocupado</span>
+                            {% else %}
+                                <span class="itin-badge itin-badge--asignado">Disponible</span>
+                            {% endif %}
                         </div>
                     </label>
+                    {% endwith %}
                 {% empty %}
                     <div class="itin-paradas-empty">
                         <div class="itin-paradas-empty__icon">

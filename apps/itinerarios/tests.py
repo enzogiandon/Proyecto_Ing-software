@@ -19,7 +19,7 @@ from apps.itinerarios.models import (
     Parada,
     ProblemaParada,
 )
-from apps.itinerarios.services import crear_paradas
+from apps.itinerarios.services import crear_itinerarios, crear_paradas
 from apps.remitos.models import Comercio, EstadoRemito, Marca, Remito
 
 
@@ -99,6 +99,77 @@ class ItinerarioViewsTests(TestCase):
         self.assertEqual(itinerario.vehiculo, self.vehiculo)
         self.assertEqual(itinerario.fecha, date(2026, 10, 25))
         self.assertEqual(itinerario.estado, EstadoItinerario.ASIGNADO)
+
+    def test_create_itinerary_rejects_transportista_busy_on_date(self):
+        second_vehiculo = Vehiculo.objects.create(patente="CD456EF")
+        second_user = get_user_model().objects.create_user(
+            username="33333333",
+            password="Driver-Password-123!",
+        )
+        second_user.groups.add(self.grupo_transportista)
+        second_transportista = Transportista.objects.create(
+            usuario=second_user,
+            vehiculo=second_vehiculo,
+        )
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_crear"),
+            {
+                "fecha": "2026-10-25",
+                "transportistas": [
+                    self.transportista.pk,
+                    second_transportista.pk,
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "ya tiene un itinerario asignado para la fecha indicada"
+        )
+        self.assertEqual(Itinerario.objects.count(), 1)
+
+    def test_create_itinerary_allows_same_transportista_on_other_date(self):
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_crear"),
+            {"fecha": "2026-10-26", "transportistas": [self.transportista.pk]},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("itinerarios:itinerario_lista"),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(Itinerario.objects.count(), 2)
+
+    def test_crear_itinerarios_service_rejects_busy_transportista(self):
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            f"El transportista {self.transportista} ya tiene un itinerario "
+            "asignado para el 25/10/2026.",
+        ):
+            crear_itinerarios([self.transportista], date(2026, 10, 25))
+        self.assertEqual(Itinerario.objects.count(), 1)
 
     def test_create_stops_assigns_pending_receipts_to_existing_itinerary(self):
         itinerario = Itinerario.objects.create(

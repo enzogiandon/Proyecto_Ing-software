@@ -135,6 +135,13 @@ class EditarEmpleado(
     success_message = "Empleado modificado correctamente"
     permission_required = "core.change_usuario"
 
+    def dispatch(self, request, *args, **kwargs):
+        empleado = self.get_object()
+        if not empleado.is_active:
+            messages.error(request, "Error: Transportista deshabilitado")
+            return redirect("core:empleado_lista")
+        return super().dispatch(request, *args, **kwargs)
+
 
 class SuspenderEmpleado(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = "core.change_usuario"

@@ -174,14 +174,9 @@ class EmpleadoViewsTests(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
-        form = response.context["form"]
-        self.assertFalse(form.is_valid())
-        self.assertIn("vehiculo", form.errors)
-        self.assertIn(
-            "No se puede asignar un vehículo a un transportista suspendido.",
-            form.errors["vehiculo"],
-        )
+        self.assertRedirects(response, reverse("core:empleado_lista"))
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("Error: Transportista deshabilitado" in m.message for m in messages))
 
     def test_update_employee_rejects_assigning_non_available_vehicle(self):
         employee = get_user_model().objects.create_user(

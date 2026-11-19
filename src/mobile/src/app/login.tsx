@@ -96,13 +96,17 @@ export default function LoginScreen() {
       // Llamo al servicio de autenticación conectado con el backend
       const resultado = await loginTransportista(dni, clave);
 
-      // Si falló, me fijo qué tipo de error fue para pintar la UI correspondiente
+      // Si falló, me fijo qué tipo de error fue para pintar la UI correspondiente (HU-23)
       if (!resultado.success) {
         if (resultado.tipoError === 'DNI') {
           setErrorDni(resultado.error || 'El DNI es incorrecto. Intentá nuevamente.');
+          setErrorClave('');
         } else if (resultado.tipoError === 'CLAVE') {
           setErrorClave(resultado.error || 'La clave es incorrecta. Intentá nuevamente.');
+          setErrorDni('');
         } else if (resultado.tipoError === 'INHABILITADO') {
+          setErrorDni('');
+          setErrorClave('');
           setModalInhabilitadoVisible(true);
         } else {
           Alert.alert('Aviso', resultado.error || 'No se pudo iniciar sesión.');

@@ -192,16 +192,23 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       };
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 400) {
       let data: any = {};
       try {
         data = await response.json(); // <-- Leemos el body JSON de fetch
       } catch {}
 
-      const detail = (data?.detail || '').toLowerCase();
-      const codigo = data?.codigo || data?.code;
+      const detail = (typeof data?.detail === 'string' ? data.detail : '').toLowerCase();
+      const codigo = (typeof (data?.codigo || data?.code) === 'string' ? (data.codigo || data.code) : '').toUpperCase();
 
-      if (codigo === 'CUENTA_SUSPENDIDA' || detail.includes('suspendida') || detail.includes('inhabilitada')) {
+      // Caso 1: Cuenta inhabilitada o bloqueada por intentos
+      if (
+        codigo === 'CUENTA_SUSPENDIDA' ||
+        codigo === 'CUENTA_BLOQUEADA' ||
+        detail.includes('suspendida') ||
+        detail.includes('inhabilitada') ||
+        detail.includes('bloqueada')
+      ) {
         return {
           success: false,
           error: data?.detail || 'Tu cuenta se encuentra inhabilitada.',
@@ -209,10 +216,45 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
         };
       }
 
+      // Caso 2: DNI inexistente o no registrado (HU-23 Criterio 2)
+      if (
+        codigo === 'DNI_INCORRECTO' ||
+        codigo === 'DNI_INEXISTENTE' ||
+        codigo === 'DNI_NO_REGISTRADO' ||
+        codigo === 'DNI_NO_ENCONTRADO' ||
+        detail.includes('dni') ||
+        detail.includes('credenciales inválidas') ||
+        detail.includes('credenciales invalidas') ||
+        detail.includes('no active account') ||
+        data?.username
+      ) {
+        return {
+          success: false,
+          error: 'El DNI es incorrecto. Intentá nuevamente.',
+          tipoError: 'DNI',
+        };
+      }
+
+      // Caso 3: Clave incorrecta (HU-23 Criterio 2)
+      if (
+        codigo === 'CLAVE_INCORRECTA' ||
+        detail.includes('contraseña') ||
+        detail.includes('clave') ||
+        detail.includes('password') ||
+        data?.password
+      ) {
+        return {
+          success: false,
+          error: 'La clave es incorrecta. Intentá nuevamente.',
+          tipoError: 'CLAVE',
+        };
+      }
+
+      // Fallback: Si no se pudo discriminar, se asume DNI incorrecto según HU-23
       return {
         success: false,
-        error: 'El DNI o la clave ingresada son incorrectos.',
-        tipoError: 'CLAVE',
+        error: 'El DNI es incorrecto. Intentá nuevamente.',
+        tipoError: 'DNI',
       };
     }
 

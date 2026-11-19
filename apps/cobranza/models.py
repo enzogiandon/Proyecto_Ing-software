@@ -48,11 +48,14 @@ class Cobranza(models.Model):
         Recalcula el estado de la cobranza tras registrar un ajuste.
         No sobreescribe la observación inicial de validación/rechazo.
         """
+        if hasattr(self, "_prefetched_objects_cache"):
+            self._prefetched_objects_cache.pop("ajustes", None)
+            self._prefetched_objects_cache.pop("detalles", None)
+
         detalles = self.detalles.all()
         ajustes = self.ajustes.all()
-        remitos = self.parada.remitos.all()
 
-        total_declarado = sum(r.total for r in remitos)
+        total_declarado = sum(d.monto_declarado for d in detalles)
         total_verificado_detalles = sum(
             d.monto_verificado for d in detalles if d.monto_verificado is not None
         )

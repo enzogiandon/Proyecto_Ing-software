@@ -517,10 +517,9 @@ class EliminarComercio(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 class CrearMarca(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     form_class = MarcaForm
     model = Marca
-    template_name = "remitos/marca_crear.html"
-    context_object_name = "marcas"
+    template_name = "remitos/marca_form.html"
     success_url = reverse_lazy("remitos:marca_lista")
-    success_message = "Marca agregado exitosamente"
+    success_message = "Marca agregada exitosamente"
     permission_required = "remitos.add_marca"
 
 
@@ -535,11 +534,12 @@ class ListaMarca(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return Marca.objects.all().order_by("-activo", "-id")
 
 
-class EditarMarca(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+class EditarMarca(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     form_class = MarcaForm
     model = Marca
     template_name = "remitos/marca_form.html"
     success_url = reverse_lazy("remitos:marca_lista")
+    success_message = "Marca modificada exitosamente"
     permission_required = "remitos.change_marca"
 
 

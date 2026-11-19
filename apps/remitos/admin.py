@@ -26,9 +26,9 @@ class ErrorImportacionInline(admin.TabularInline):
 # ---------------------------------------------------------
 @admin.register(Marca)
 class MarcaAdmin(admin.ModelAdmin):
-    list_display = ("nombre", "cuit", "telefono", "email", "activo")
+    list_display = ("nombre", "cuit", "activo")
     list_filter = ("activo",)
-    search_fields = ("nombre", "cuit", "email")
+    search_fields = ("nombre", "cuit")
 
 
 @admin.register(Comercio)

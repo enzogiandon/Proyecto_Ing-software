@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object.pk %}Editar{% else %}Añadir{% endif %} marca - RepartoYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'core/css/empleado_form.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="form-pagina">
+
+    <header class="form-pagina__encabezado">
+        <a href="{% url 'remitos:marca_lista' %}" class="home-btn form-pagina__volver">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Volver a marcas</span>
+        </a>
+
+        <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-3">
+            <div class="form-pagina__titulos">
+                <h1 class="text-title">{% if object.pk %}Editar marca{% else %}Añadir marca{% endif %}</h1>
+                <p class="text-body">{% if object.pk %}Actualizá los datos de la marca.{% else %}Registrá una nueva marca proveedora{% endif %}</p>
+            </div>
+
+            {% if object.pk %}
+                <span class="estado-badge {% if object.activo %}estado-badge--info{% else %}estado-badge--error{% endif %} text-badge">
+                    {% if object.activo %}Activa{% else %}Inactiva{% endif %}
+                </span>
+            {% endif %}
+        </div>
+    </header>
+
+    <form method="post" class="form-pagina__formulario">
+        {% csrf_token %}
+
+        <section class="panel-form" aria-labelledby="titulo-info-marca">
+            <h2 id="titulo-info-marca" class="text-section panel-form__titulo">Información de la marca</h2>
+
+            {% if form.non_field_errors %}
+                <div class="aviso-form aviso-form--error" role="alert">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="fila-campos fila-campos--2">
+                <!-- Nombre de la marca -->
+                <div class="campo-form{% if form.nombre.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.nombre.id_for_label }}" class="campo-form__etiqueta">Nombre / Razón Social</label>
+                    {{ form.nombre }}
+                    {% for error in form.nombre.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- CUIT -->
+                <div class="campo-form{% if form.cuit.errors %} campo-form--error{% endif %}">
+                    <label for="{{ form.cuit.id_for_label }}" class="campo-form__etiqueta">CUIT</label>
+                    {{ form.cuit }}
+                    {% for error in form.cuit.errors %}
+                        <p class="campo-form__error" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <div class="acciones-form">
+            <p class="text-help acciones-form__nota">Los cambios se aplicarán al guardar.</p>
+            <div class="acciones-form__botones">
+                <a href="{% url 'remitos:marca_lista' %}" class="home-btn home-btn--cancelar">
+                    Cancelar
+                </a>
+                <button type="submit" class="home-btn home-btn--primary">
+                    {% if object.pk %}Guardar cambios{% else %}Guardar marca{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

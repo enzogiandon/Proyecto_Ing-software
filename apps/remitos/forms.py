@@ -14,10 +14,23 @@ class RemitoForm(forms.ModelForm):
         return total
 
     def clean_numero(self):
-        numero = self.cleaned_data.get("numero")
+        numero = (self.cleaned_data.get("numero") or "").strip()
         if self.instance and self.instance.pk and numero != self.instance.numero:
             raise ValidationError("No está permitido modificar el número de remito una vez creado.")
-        return numero
+
+        partes = numero.split("-")
+        if (
+            len(partes) != 2
+            or not partes[0].isdigit()
+            or not partes[1].isdigit()
+            or not (1 <= len(partes[0]) <= 4)
+            or not (1 <= len(partes[1]) <= 8)
+        ):
+            raise ValidationError(
+                "El número de remito debe tener formato 'sucursal-factura' con un único guion, hasta 4 dígitos antes y hasta 8 dígitos después (ej: 0001-00001001)."
+            )
+
+        return f"{partes[0].zfill(4)}-{partes[1].zfill(8)}"
 
     def clean(self):
         cleaned_data = super().clean()

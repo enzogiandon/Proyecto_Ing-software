@@ -59,6 +59,7 @@ export default function ItinerarioScreen() {
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
   const [iniciandoJornada, setIniciandoJornada] = useState<boolean>(false);
+  const [errorSinItinerario, setErrorSinItinerario] = useState<string | null>(null);
   // Estado para el modal de confirmación de cierre de sesión (HU-156)
   const [modalLogoutVisible, setModalLogoutVisible] = useState<boolean>(false);
 
@@ -83,8 +84,14 @@ export default function ItinerarioScreen() {
     try {
       const res = await obtenerItinerarioJornada();
       setItinerario(res.itinerario);
+      if (!res.itinerario) {
+        setErrorSinItinerario(res.error || 'No posees ningún itinerario asignado para esta jornada.');
+      } else {
+        setErrorSinItinerario(null);
+      }
     } catch (e) {
       console.error('Error al cargar itinerario:', e);
+      setErrorSinItinerario('Error de conexión al consultar el itinerario.');
     } finally {
       setCargando(false);
     }
@@ -160,10 +167,21 @@ export default function ItinerarioScreen() {
     if (!itinerario) return;
     setIniciandoJornada(true);
     try {
-      await comenzarJornadaLaboral(itinerario.id);
+      const res = await comenzarJornadaLaboral(itinerario.id);
+      if (!res.success) {
+        Alert.alert(
+          'Itinerario no disponible',
+          res.error || 'No posees ningún itinerario asignado para iniciar.'
+        );
+        if (res.code === 'SIN_ITINERARIO_ASIGNADO') {
+          setItinerario(null);
+          setErrorSinItinerario(res.error || 'No posees ningún itinerario asignado para iniciar.');
+        }
+        return;
+      }
       const actualizado: ItinerarioJornada = {
         ...itinerario,
-        estado: 'en_curso',
+        estado: (res.estado as any) || 'en_curso',
       };
       setItinerario(actualizado);
       entregarItinerarioActualizado(actualizado);
@@ -364,7 +382,8 @@ export default function ItinerarioScreen() {
             </View>
             <Text style={styles.sinAsignarTitulo}>Itinerario sin asignar</Text>
             <Text style={styles.sinAsignarDescripcion}>
-              No tenés un itinerario asignado para esta jornada. Cuando haya uno disponible, vas a poder consultar las paradas, las direcciones y los montos a cobrar.
+              {errorSinItinerario ||
+                'No tenés un itinerario asignado para esta jornada. Cuando haya uno disponible, vas a poder consultar las paradas, las direcciones y los montos a cobrar.'}
             </Text>
 
             <TouchableOpacity

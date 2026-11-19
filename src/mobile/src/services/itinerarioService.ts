@@ -10,17 +10,22 @@ import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 
 /**
  * Inicia formalmente la jornada laboral del transportista (HU-68).
- * Comunica el cambio al backend Django (/api/itinerarios/iniciar-jornada/)
+ * Comunica el cambio al backend Django (/api/itinerarios/iniciar/ con fallback a /iniciar-jornada/)
  * y persiste el estado en AsyncStorage para garantizar soporte offline y persistencia tras reinicio.
  */
-export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promise<{ success: boolean; error?: string }> {
+export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promise<{
+  success: boolean;
+  error?: string;
+  code?: string;
+  estado?: string;
+}> {
   const token = getAuthToken();
 
   try {
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timeoutId = controller ? setTimeout(() => controller.abort(), 7000) : null;
 
-    await fetch(`${API_BASE_URL}/api/itinerarios/iniciar-jornada/`, {
+    let response = await fetch(`${API_BASE_URL}/api/itinerarios/iniciar/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -30,13 +35,47 @@ export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promis
       ...(controller ? { signal: controller.signal } : {}),
     });
 
+    // Fallback hacia /api/itinerarios/iniciar-jornada/ si /api/itinerarios/iniciar/ no estuviese disponible
+    if (response.status === 404) {
+      response = await fetch(`${API_BASE_URL}/api/itinerarios/iniciar-jornada/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ itinerario_id: itinerarioId }),
+        ...(controller ? { signal: controller.signal } : {}),
+      });
+    }
+
     if (timeoutId) clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const dataError = await response.json().catch(() => ({}));
+      const code = dataError?.code || (response.status === 404 ? 'SIN_ITINERARIO_ASIGNADO' : undefined);
+      const errorMsg =
+        dataError?.detail ||
+        dataError?.mensaje ||
+        (code === 'SIN_ITINERARIO_ASIGNADO'
+          ? 'No posees ningún itinerario asignado para iniciar.'
+          : 'Error al iniciar la jornada laboral.');
+
+      // Si el backend rechazó expresamente porque no hay itinerario asignado, retornamos error sin persistir
+      return {
+        success: false,
+        error: errorMsg,
+        code,
+      };
+    }
+
+    const data = await response.json().catch(() => ({}));
+    await saveJornadaIniciada(itinerarioId, true);
+    return { success: true, estado: data?.estado || 'en_curso' };
   } catch (err: any) {
     console.warn('[ItinerarioService] Sincronización offline al iniciar jornada:', err?.message);
+    await saveJornadaIniciada(itinerarioId, true);
+    return { success: true, estado: 'en_curso' };
   }
-
-  await saveJornadaIniciada(itinerarioId, true);
-  return { success: true };
 }
 
 /**
@@ -60,6 +99,7 @@ export function isJornadaIniciada(itinerario?: ItinerarioJornada | null): boolea
 export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Promise<{
   itinerario: ItinerarioJornada | null;
   error?: string;
+  code?: string;
 }> {
   const token = getAuthToken();
   const usuario = getUsuarioActual();
@@ -68,8 +108,8 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-    // Consulta el endpoint canónico del ViewSet en Django (/api/itinerarios/paradas/)
-    let response = await fetch(`${API_BASE_URL}/api/itinerarios/paradas/`, {
+    // 1. Intentamos consultar primero /api/itinerarios/hoy/ (cabecera estructurada del día)
+    let response = await fetch(`${API_BASE_URL}/api/itinerarios/hoy/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -78,9 +118,23 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
       signal: controller.signal,
     });
 
-    // Si la ruta alternativa /api/itinerarios/hoy/ estuviese disponible, probar como fallback
+    // 2. Si /api/itinerarios/hoy/ devolvió 404, verificar si es error semántico o fallback a /paradas/
     if (response.status === 404) {
-      response = await fetch(`${API_BASE_URL}/api/itinerarios/hoy/`, {
+      const data404 = await response.json().catch(() => ({}));
+      if (
+        data404?.code === 'SIN_ITINERARIO_ASIGNADO' ||
+        data404?.detail?.includes('No posees ningún itinerario')
+      ) {
+        clearTimeout(timeoutId);
+        return {
+          itinerario: null,
+          code: 'SIN_ITINERARIO_ASIGNADO',
+          error: data404?.detail || 'No posees ningún itinerario asignado para hoy.',
+        };
+      }
+
+      // Si no es un 404 semántico de negocio, consultar el endpoint estándar /paradas/
+      response = await fetch(`${API_BASE_URL}/api/itinerarios/paradas/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +157,7 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
       // Si devolvió el array de paradas ordenadas desde /api/itinerarios/paradas/
       if (Array.isArray(data)) {
         if (!soloDjango && data.length === 0) {
-          return { itinerario: null };
+          return { itinerario: null, code: 'SIN_ITINERARIO_ASIGNADO' };
         }
 
         const transportistaNombre = usuario?.first_name
@@ -183,11 +237,16 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
     if (response.status === 400 || response.status === 404) {
       const dataError = await response.json().catch(() => ({}));
       if (
+        dataError?.code === 'SIN_ITINERARIO_ASIGNADO' ||
         dataError?.detail?.includes('No posees ningún itinerario') ||
         dataError?.detail?.includes('no tiene asignado') ||
         (!soloDjango && response.status === 404)
       ) {
-        return { itinerario: null };
+        return {
+          itinerario: null,
+          code: dataError?.code || 'SIN_ITINERARIO_ASIGNADO',
+          error: dataError?.detail || 'No posees ningún itinerario asignado para iniciar.',
+        };
       }
     }
 

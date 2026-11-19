@@ -93,12 +93,46 @@ test('HU-68: comenzarJornadaLaboral persiste el inicio en almacenamiento nativo 
   const resultado = await itinerarioService.comenzarJornadaLaboral(101);
   assert.equal(resultado.success, true);
   assert.equal(llamadasHttp.length, 1);
-  assert.equal(llamadasHttp[0].url, 'http://test/api/itinerarios/iniciar-jornada/');
+  assert.equal(llamadasHttp[0].url, 'http://test/api/itinerarios/iniciar/');
   assert.equal(llamadasHttp[0].body.itinerario_id, 101);
 
   // Verificamos persistencia nativa
   const persistido = await storageMock.isJornadaIniciadaStorage(101);
   assert.equal(persistido, true);
+});
+
+test('HU-68: comenzarJornadaLaboral maneja rechazo cuando el transportista no posee itinerario asignado', async () => {
+  const asyncStorageMock = createAsyncStorageMock();
+  const storageMock = loadModule('services/storage.ts', {
+    '@react-native-async-storage/async-storage': { __esModule: true, default: asyncStorageMock, ...asyncStorageMock },
+  }, { window: undefined });
+
+  const fetchMock = async (url, opciones) => {
+    return {
+      ok: false,
+      status: 400,
+      json: async () => ({
+        code: 'SIN_ITINERARIO_ASIGNADO',
+        detail: 'No posees ningún itinerario asignado para iniciar.',
+      }),
+    };
+  };
+
+  const itinerarioService = loadModule('services/itinerarioService.ts', {
+    './authService': { getAuthToken: () => 'token-prueba', getUsuarioActual: () => ({ first_name: 'Martín' }), API_BASE_URL: 'http://test' },
+    './storage': storageMock,
+    '../data/mockItinerario': { MOCK_ITINERARIO_ASIGNADO: { id: 101, estado: 'asignado', paradas: [] }, MOCK_ITINERARIO_SIN_ASIGNAR: null },
+    '../types/itinerario': {},
+  }, { window: undefined, fetch: fetchMock });
+
+  const resultado = await itinerarioService.comenzarJornadaLaboral(101);
+  assert.equal(resultado.success, false);
+  assert.equal(resultado.code, 'SIN_ITINERARIO_ASIGNADO');
+  assert.equal(resultado.error, 'No posees ningún itinerario asignado para iniciar.');
+
+  // Verifica que no se persiste en AsyncStorage si falló el inicio
+  const persistido = await storageMock.isJornadaIniciadaStorage(101);
+  assert.equal(persistido, false);
 });
 
 test('HU-68: en Recorridos Guardados, una jornada sin iniciar bloquea Cargar y Guardar', () => {

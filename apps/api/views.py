@@ -102,17 +102,92 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
         itinerario = Itinerario.objects.filter(
             transportista=user.perfil_transportista,
-            estado__in=[EstadoItinerario.ASIGNADO],
+            estado__in=[EstadoItinerario.ASIGNADO, EstadoItinerario.EN_CURSO],
         ).order_by("-fecha", "-id").first()
 
         if not itinerario:
             raise ValidationError(
                 {
-                    "detail": "No posees ningún itinerario activo o asignado en este momento."
+                    "code": "SIN_ITINERARIO_ASIGNADO",
+                    "detail": "No posees ningún itinerario activo o asignado en este momento.",
                 }
             )
 
         return itinerario
+
+    @action(detail=False, methods=["post"], url_path="iniciar")
+    def iniciar(self, request):
+        """
+        Inicia la jornada laboral pasando el itinerario activo de 'asignado' a 'en_curso' (HU-68).
+        Endpoint: POST /api/itinerarios/iniciar/
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {"detail": "El usuario autenticado no tiene asignado un perfil de transportista."}
+            )
+
+        transportista = user.perfil_transportista
+        hoy = timezone.localdate()
+
+        # Verificar si ya tiene uno en curso hoy
+        en_curso = Itinerario.objects.filter(
+            transportista=transportista,
+            fecha=hoy,
+            estado=EstadoItinerario.EN_CURSO,
+        ).order_by("-id").first()
+        if en_curso:
+            return Response(
+                {
+                    "mensaje": "El itinerario ya se encuentra en curso.",
+                    "itinerario_id": en_curso.id,
+                    "estado": en_curso.estado,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        # Buscar el asignado para hoy e iniciarlo (o el último asignado activo)
+        itinerario = Itinerario.objects.filter(
+            transportista=transportista,
+            fecha=hoy,
+            estado=EstadoItinerario.ASIGNADO,
+        ).order_by("-id").first()
+
+        if not itinerario:
+            # Fallback por compatibilidad con fechas de datos de prueba
+            itinerario = Itinerario.objects.filter(
+                transportista=transportista,
+                estado=EstadoItinerario.ASIGNADO,
+            ).order_by("-fecha", "-id").first()
+
+        if not itinerario:
+            raise ValidationError(
+                {
+                    "code": "SIN_ITINERARIO_ASIGNADO",
+                    "detail": "No posees ningún itinerario asignado para iniciar.",
+                }
+            )
+
+        if itinerario.estado == EstadoItinerario.ASIGNADO:
+            itinerario.estado = EstadoItinerario.EN_CURSO
+            itinerario.save(update_fields=["estado"])
+
+        return Response(
+            {
+                "mensaje": "Itinerario iniciado correctamente.",
+                "itinerario_id": itinerario.id,
+                "estado": itinerario.estado,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["post"], url_path="iniciar-jornada")
+    def iniciar_jornada(self, request):
+        """
+        Alias retrocompatible de iniciar (HU-68).
+        Endpoint: POST /api/itinerarios/iniciar-jornada/
+        """
+        return self.iniciar(request)
 
     @action(detail=False, methods=["get"], url_path="paradas")
     def paradas(self, request):
@@ -149,11 +224,17 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
 
         itinerario = Itinerario.objects.filter(
             transportista=user.perfil_transportista,
-            estado__in=[EstadoItinerario.ASIGNADO],
+            estado__in=[EstadoItinerario.ASIGNADO, EstadoItinerario.EN_CURSO],
         ).order_by("-fecha", "-id").first()
 
         if not itinerario:
-            return Response(None, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {
+                    "code": "SIN_ITINERARIO_ASIGNADO",
+                    "detail": "No posees ningún itinerario asignado para hoy.",
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         paradas = (
             itinerario.paradas.select_related("comercio", "cobranza")
@@ -206,6 +287,52 @@ class ItinerarioViewSet(viewsets.ReadOnlyModelViewSet):
                     1 for p in paradas if p.estado == EstadoParada.FINALIZADA
                 ),
                 "paradas": paradas_data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["get"], url_path="estado_hoy")
+    def estado_hoy(self, request):
+        """
+        Consulta rápida del estado del itinerario del chofer para hoy (Opción A).
+        Endpoint: GET /api/itinerarios/estado_hoy/
+        """
+        user = request.user
+        if not hasattr(user, "perfil_transportista"):
+            raise ValidationError(
+                {"detail": "El usuario autenticado no tiene asignado un perfil de transportista."}
+            )
+        hoy = timezone.localdate()
+        itinerario = Itinerario.objects.filter(
+            transportista=user.perfil_transportista,
+            fecha=hoy,
+            estado__in=[EstadoItinerario.ASIGNADO, EstadoItinerario.EN_CURSO],
+        ).order_by("-id").first()
+
+        if not itinerario:
+            itinerario = Itinerario.objects.filter(
+                transportista=user.perfil_transportista,
+                estado__in=[EstadoItinerario.ASIGNADO, EstadoItinerario.EN_CURSO],
+            ).order_by("-fecha", "-id").first()
+
+        if not itinerario:
+            return Response(
+                {
+                    "tiene_itinerario": False,
+                    "estado": None,
+                    "puede_iniciar": False,
+                    "code": "SIN_ITINERARIO_ASIGNADO",
+                    "detail": "No posees ningún itinerario asignado para hoy.",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {
+                "tiene_itinerario": True,
+                "itinerario_id": itinerario.id,
+                "estado": itinerario.estado,
+                "puede_iniciar": itinerario.estado == EstadoItinerario.ASIGNADO,
             },
             status=status.HTTP_200_OK,
         )

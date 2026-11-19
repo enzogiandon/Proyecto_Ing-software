@@ -114,6 +114,8 @@ class ProblemaParadaSerializer(serializers.ModelSerializer):
 
 
 class EvidenciaParadaSerializer(serializers.ModelSerializer):
+    archivo = serializers.ImageField()
+
     class Meta:
         model = EvidenciaParada
         fields = ["id", "parada", "archivo", "fecha"]

@@ -1,7 +1,10 @@
 from datetime import date
 from decimal import Decimal
+import io
+from PIL import Image
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
@@ -70,3 +73,45 @@ class RegistrarCobranzaTests(TestCase):
         self.remito.refresh_from_db()
         self.assertEqual(self.parada.estado, EstadoParada.PENDIENTE)
         self.assertEqual(self.remito.estado, EstadoRemito.ASIGNADO)
+
+    def test_subir_evidencia_rejects_non_image_files(self):
+        text_file = SimpleUploadedFile(
+            "nota.txt", b"este no es un archivo de imagen", content_type="text/plain"
+        )
+        request = self.factory.post(
+            f"/api/paradas/{self.parada.id}/subir-evidencia/",
+            {"archivo": text_file},
+            format="multipart",
+        )
+        force_authenticate(request, user=self.user)
+
+        response = ParadaViewSet.as_view({"post": "subir_evidencia"})(
+            request,
+            pk=self.parada.pk,
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("archivo", response.data)
+
+    def test_subir_evidencia_accepts_valid_image(self):
+        buffer = io.BytesIO()
+        image = Image.new("RGB", (100, 100), color="blue")
+        image.save(buffer, format="JPEG")
+        image_file = SimpleUploadedFile(
+            "foto.jpg", buffer.getvalue(), content_type="image/jpeg"
+        )
+
+        request = self.factory.post(
+            f"/api/paradas/{self.parada.id}/subir-evidencia/",
+            {"archivo": image_file},
+            format="multipart",
+        )
+        force_authenticate(request, user=self.user)
+
+        response = ParadaViewSet.as_view({"post": "subir_evidencia"})(
+            request,
+            pk=self.parada.pk,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(self.parada.evidencias.exists())

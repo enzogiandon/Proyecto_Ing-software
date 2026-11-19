@@ -1,41 +1,20 @@
-from decimal import Decimal
-from io import BytesIO
-from xml.sax.saxutils import escape
-
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.db import DatabaseError, transaction
-from django.db.models import (
-    Case,
-    Count,
-    IntegerField,
-    Prefetch,
-    ProtectedError,
-    Q,
-    Sum,
-    When,
-)
-from django.http import HttpResponse
+from django.db import transaction
+from django.db.models import Case, Count, IntegerField, Prefetch, Q, Sum, When
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView, View
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from apps.cobranza.models import Cobranza
+from apps.cobranza.models import AjusteCobranza, Cobranza, DetallePago
 from apps.core.models import Transportista, Vehiculo
 from apps.remitos.models import EstadoRemito, Remito
 
 from .forms import CrearItinerariosForm, CrearParadasForm
 from .models import (
     EstadoItinerario,
-    EstadoParada,
     EvidenciaParada,
     Itinerario,
     Parada,
@@ -110,225 +89,6 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return context
 
 
-class ExportarHojaRutaPDF(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
-    model = Itinerario
-    permission_required = "itinerarios.view_itinerario"
-
-    def get_queryset(self):
-        return (
-            super()
-            .get_queryset()
-            .select_related("transportista__usuario", "vehiculo")
-            .prefetch_related(
-                Prefetch(
-                    "paradas",
-                    queryset=Parada.objects.select_related("comercio")
-                    .prefetch_related(
-                        Prefetch(
-                            "remitos",
-                            queryset=Remito.objects.order_by("numero"),
-                        )
-                    )
-                    .order_by("orden", "id"),
-                )
-            )
-        )
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        paradas = list(self.object.paradas.all())
-        if not paradas:
-            messages.warning(
-                request, "El itinerario no contiene paradas para exportar"
-            )
-            return redirect("itinerarios:itinerario_lista")
-
-        styles = getSampleStyleSheet()
-        styles.add(
-            ParagraphStyle(
-                name="RouteTitle",
-                parent=styles["Title"],
-                alignment=TA_CENTER,
-                spaceAfter=8 * mm,
-            )
-        )
-        styles.add(
-            ParagraphStyle(
-                name="RouteCell",
-                parent=styles["BodyText"],
-                fontSize=8,
-                leading=10,
-            )
-        )
-        styles.add(
-            ParagraphStyle(
-                name="RouteHeader",
-                parent=styles["BodyText"],
-                fontName="Helvetica-Bold",
-                fontSize=8,
-                textColor=colors.white,
-            )
-        )
-
-        itinerario = self.object
-        codigo = f"IT-{itinerario.fecha:%Y}-{itinerario.pk:05d}"
-        transportista = itinerario.transportista
-        nombre_transportista = (
-            transportista.usuario.get_full_name() or transportista.usuario.username
-            if transportista
-            else "Sin asignar"
-        )
-        dni = transportista.usuario.username if transportista else "—"
-        vehiculo = itinerario.vehiculo
-        datos_vehiculo = (
-            " - ".join(
-                value
-                for value in (vehiculo.modelo, vehiculo.patente)
-                if value
-            )
-            if vehiculo
-            else "Sin asignar"
-        )
-
-        historia = [
-            Paragraph("HOJA DE RUTA", styles["RouteTitle"]),
-            Table(
-                [
-                    [
-                        Paragraph(f"<b>Itinerario:</b> {codigo}", styles["RouteCell"]),
-                        Paragraph(
-                            f"<b>Fecha de entrega:</b> {itinerario.fecha:%d/%m/%Y}",
-                            styles["RouteCell"],
-                        ),
-                    ],
-                    [
-                        Paragraph(
-                            f"<b>Transportista:</b> {escape(nombre_transportista)}",
-                            styles["RouteCell"],
-                        ),
-                        Paragraph(f"<b>DNI:</b> {escape(dni)}", styles["RouteCell"]),
-                    ],
-                    [
-                        Paragraph(
-                            f"<b>Vehículo:</b> {escape(datos_vehiculo)}",
-                            styles["RouteCell"],
-                        ),
-                        "",
-                    ],
-                ],
-                colWidths=[93 * mm, 93 * mm],
-                style=TableStyle(
-                    [
-                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                    ]
-                ),
-            ),
-            Spacer(1, 6 * mm),
-        ]
-
-        filas = [
-            [
-                Paragraph("N°", styles["RouteHeader"]),
-                Paragraph("Comercio y domicilio", styles["RouteHeader"]),
-                Paragraph("Remito(s)", styles["RouteHeader"]),
-                Paragraph("Total a cobrar", styles["RouteHeader"]),
-            ]
-        ]
-        total_itinerario = Decimal("0.00")
-        for numero, parada in enumerate(paradas, start=1):
-            remitos = list(parada.remitos.all())
-            total_parada = sum(
-                (remito.total for remito in remitos), Decimal("0.00")
-            )
-            total_itinerario += total_parada
-            numeros_remito = "<br/>".join(
-                escape(remito.numero) for remito in remitos
-            ) or "Sin remitos"
-            filas.append(
-                [
-                    Paragraph(str(numero), styles["RouteCell"]),
-                    Paragraph(
-                        f"<b>{escape(parada.comercio.razon_social)}</b><br/>"
-                        f"{escape(parada.comercio.domicilio)}",
-                        styles["RouteCell"],
-                    ),
-                    Paragraph(numeros_remito, styles["RouteCell"]),
-                    Paragraph(f"${total_parada:.2f}", styles["RouteCell"]),
-                ]
-            )
-
-        filas.append(
-            [
-                "",
-                "",
-                Paragraph("<b>Total del itinerario</b>", styles["RouteCell"]),
-                Paragraph(f"<b>${total_itinerario:.2f}</b>", styles["RouteCell"]),
-            ]
-        )
-        tabla_paradas = Table(
-            filas,
-            colWidths=[12 * mm, 86 * mm, 58 * mm, 30 * mm],
-            repeatRows=1,
-        )
-        tabla_paradas.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#234B6B")),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#AAB7C4")),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("ALIGN", (0, 1), (0, -1), "CENTER"),
-                    ("ALIGN", (-1, 1), (-1, -1), "RIGHT"),
-                    ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#EAF0F5")),
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                ]
-            )
-        )
-        historia.append(tabla_paradas)
-        historia.extend(
-            [
-                Spacer(1, 10 * mm),
-                Table(
-                    [
-                        ["Observaciones operativas", "Firma de conformidad del transportista"],
-                        ["", ""],
-                    ],
-                    colWidths=[105 * mm, 81 * mm],
-                    rowHeights=[9 * mm, 30 * mm],
-                    style=TableStyle(
-                        [
-                            ("BOX", (0, 0), (-1, -1), 0.75, colors.black),
-                            ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.black),
-                            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                            ("FONTSIZE", (0, 0), (-1, -1), 8),
-                            ("LEFTPADDING", (0, 0), (-1, -1), 5),
-                        ]
-                    ),
-                ),
-            ]
-        )
-
-        buffer = BytesIO()
-        document = SimpleDocTemplate(
-            buffer,
-            pagesize=A4,
-            rightMargin=12 * mm,
-            leftMargin=12 * mm,
-            topMargin=12 * mm,
-            bottomMargin=12 * mm,
-            title=f"Hoja de Ruta {codigo}",
-        )
-        document.build(historia)
-
-        response = HttpResponse(buffer.getvalue(), content_type="application/pdf")
-        response["Content-Disposition"] = (
-            f'attachment; filename="Hoja_Ruta_{codigo}.pdf"'
-        )
-        return response
-
-
 class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = Parada
     template_name = "itinerarios/parada_detalle.html"
@@ -366,27 +126,24 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                     # Si la parada no tiene más remitos vigentes, se elimina y se reordenan las paradas restantes
                     remitos_restantes = parada.remitos.exists()
                     if not remitos_restantes:
-                        if Cobranza.objects.filter(parada=parada).exists():
-                            messages.error(
-                                request,
-                                "No se puede eliminar la parada porque posee cobranzas o rendiciones registradas.",
-                            )
-                        else:
-                            itinerario = parada.itinerario
-                            parada_id = parada.id
-                            comercio_nombre = parada.comercio.razon_social
-                            parada.delete()
+                        itinerario = parada.itinerario
+                        parada_id = parada.id
+                        comercio_nombre = parada.comercio.razon_social
+                        AjusteCobranza.objects.filter(cobranza__parada=parada).delete()
+                        DetallePago.objects.filter(cobranza__parada=parada).delete()
+                        Cobranza.objects.filter(parada=parada).delete()
+                        parada.delete()
 
-                            for i, p in enumerate(
-                                itinerario.paradas.all().order_by("orden", "id"), start=1
-                            ):
-                                p.orden = i
-                                p.save(update_fields=["orden"])
+                        for i, p in enumerate(
+                            itinerario.paradas.all().order_by("orden", "id"), start=1
+                        ):
+                            p.orden = i
+                            p.save(update_fields=["orden"])
 
-                            messages.success(
-                                request,
-                                f"Remito #{remito.numero} desvinculado. Al no quedar remitos, la parada #{parada_id} de «{comercio_nombre}» fue eliminada del itinerario.",
-                            )
+                        messages.success(
+                            request,
+                            f"Remito #{remito.numero} desvinculado. Al no quedar remitos, la parada #{parada_id} de «{comercio_nombre}» fue eliminada del itinerario.",
+                        )
                         return redirect("itinerarios:itinerario_lista")
 
                 messages.success(
@@ -619,15 +376,11 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
             parada_id = request.POST.get("parada_id")
             try:
                 parada = itinerario.paradas.get(id=parada_id)
-                if Cobranza.objects.filter(parada=parada).exists():
-                    messages.error(
-                        request,
-                        f"No se puede quitar la parada de «{parada.comercio.razon_social}» porque posee cobranzas o rendiciones registradas.",
-                    )
-                    return redirect("itinerarios:itinerario_editar", pk=itinerario.pk)
-
                 comercio_nombre = parada.comercio.razon_social
                 with transaction.atomic():
+                    AjusteCobranza.objects.filter(cobranza__parada=parada).delete()
+                    DetallePago.objects.filter(cobranza__parada=parada).delete()
+                    Cobranza.objects.filter(parada=parada).delete()
                     Remito.objects.filter(parada=parada).update(
                         parada=None, estado=EstadoRemito.PENDIENTE
                     )
@@ -716,42 +469,27 @@ class EliminarItinerario(LoginRequiredMixin, PermissionRequiredMixin, View):
             messages.error(request, "Itinerario no encontrado")
             return redirect("itinerarios:itinerario_lista")
 
-        if itinerario.estado in [EstadoItinerario.FINALIZADO, EstadoItinerario.EN_CURSO]:
+        if itinerario.estado == EstadoItinerario.FINALIZADO:
             messages.error(
-                request, f"No se puede eliminar un itinerario en estado '{itinerario.get_estado_display()}'."
+                request, "No se puede eliminar un itinerario finalizado."
             )
             return redirect("itinerarios:itinerario_lista")
 
-        if Cobranza.objects.filter(parada__itinerario=itinerario).exists():
-            messages.error(
-                request,
-                "No se puede eliminar el itinerario porque posee cobranzas o rendiciones registradas.",
+        with transaction.atomic():
+            AjusteCobranza.objects.filter(
+                cobranza__parada__itinerario=itinerario
+            ).delete()
+            DetallePago.objects.filter(
+                cobranza__parada__itinerario=itinerario
+            ).delete()
+            Cobranza.objects.filter(parada__itinerario=itinerario).delete()
+            Remito.objects.filter(parada__itinerario=itinerario).update(
+                parada=None,
+                estado=EstadoRemito.PENDIENTE,
             )
-            return redirect("itinerarios:itinerario_lista")
+            itinerario.delete()
 
-        if itinerario.paradas.filter(estado=EstadoParada.FINALIZADA).exists():
-            messages.error(
-                request,
-                "No se puede eliminar el itinerario porque contiene paradas que ya fueron finalizadas.",
-            )
-            return redirect("itinerarios:itinerario_lista")
-
-        try:
-            with transaction.atomic():
-                Remito.objects.filter(parada__itinerario=itinerario).exclude(
-                    estado=EstadoRemito.ENTREGADO
-                ).update(
-                    parada=None,
-                    estado=EstadoRemito.PENDIENTE,
-                )
-                itinerario.delete()
-            messages.success(request, "Itinerario eliminado exitosamente")
-        except (ProtectedError, DatabaseError):
-            messages.error(
-                request,
-                "No se puede eliminar el itinerario debido a restricciones de integridad de datos.",
-            )
-
+        messages.success(request, "Itinerario eliminado exitosamente")
         return redirect("itinerarios:itinerario_lista")
 
     def get(self, request, pk, *args, **kwargs):

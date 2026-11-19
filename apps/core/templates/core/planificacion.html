@@ -5,6 +5,8 @@
 {% url 'remitos:importacion_crear' as url_importacion_nueva %}
 {% url 'itinerarios:itinerario_lista' as url_itinerarios %}
 {% url 'itinerarios:itinerario_crear' as url_itinerario_nuevo %}
+{% url 'remitos:marca_lista' as url_marcas %}
+{% url 'remitos:marca_crear' as url_marca_nueva %}
 
 {% now "l, j \d\e F \d\e Y" as fecha_hoy %}
 <div class="home">
@@ -69,6 +71,19 @@
             <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
                 <i class="fas fa-receipt" aria-hidden="true"></i>
                 <span>Agregar remito</span>
+            </span>
+            {% endif %}
+
+            <!-- Botón de "Ver marcas" -->
+            {% if url_marcas %}
+            <a href="{{ url_marcas }}" class="home-btn home-btn--bloque">
+                <i class="fas fa-tags" aria-hidden="true"></i>
+                <span>Marcas proveedoras</span>
+            </a>
+            {% else %}
+            <span class="home-btn home-btn--bloque is-disabled" aria-disabled="true">
+                <i class="fas fa-tags" aria-hidden="true"></i>
+                <span>Marcas proveedoras</span>
             </span>
             {% endif %}
         </section>

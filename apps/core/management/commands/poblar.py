@@ -273,29 +273,21 @@ class Command(BaseCommand):
                 {
                     "nombre": "Cerveceria La Diagonal S.A.",
                     "cuit": "30654321090",
-                    "telefono": "1143401000",
-                    "email": "ventas@cervecerialadiagonal.com.ar",
                     "activo": True,
                 },
                 {
                     "nombre": "Snacks Andinos S.R.L.",
                     "cuit": "30709876542",
-                    "telefono": "1147083000",
-                    "email": "distribucion@snacksandinos.com.ar",
                     "activo": True,
                 },
                 {
                     "nombre": "Gaseosas del Sur S.A.",
                     "cuit": "30712345671",
-                    "telefono": "1143657000",
-                    "email": "pedidos@gaseosasdelsur.com.ar",
                     "activo": True,
                 },
                 {
                     "nombre": "Lacteos El Tambo S.A.",
                     "cuit": "33698712347",
-                    "telefono": "1147084000",
-                    "email": "contacto@lacteoseltambo.com.ar",
                     "activo": True,
                 },
             ]
@@ -918,6 +910,71 @@ class Command(BaseCommand):
                         remito_4b.estado = EstadoRemito.ASIGNADO
                         remito_4b.save(update_fields=["parada", "estado"])
 
+                    # ----------------------------------------------------------
+                    # Itinerario 2: En curso (asignado a 12345678 - Martín Pérez)
+                    # ----------------------------------------------------------
+                    chofer_2 = Usuario.objects.filter(username="12345678").first()
+                    transportista_12345678 = (
+                        getattr(chofer_2, "perfil_transportista", None) if chofer_2 else None
+                    )
+                    vehiculo_12345678 = (
+                        transportista_12345678.vehiculo if transportista_12345678 else None
+                    )
+
+                    itinerario_en_curso = Itinerario.objects.create(
+                        fecha=hoy,
+                        estado=EstadoItinerario.EN_CURSO,
+                        transportista=transportista_12345678,
+                        vehiculo=vehiculo_12345678,
+                    )
+
+                    # Parada 1 del itinerario en curso: Comercio 20200022190
+                    comercio_ic_1 = comercios.get("20200022190")
+                    if comercio_ic_1:
+                        parada_ic_1 = Parada.objects.create(
+                            itinerario=itinerario_en_curso,
+                            comercio=comercio_ic_1,
+                            orden=1,
+                            estado=EstadoParada.FINALIZADA,
+                            hora_entrega=timezone.now(),
+                        )
+                        total_paradas_creadas += 1
+
+                        remito_ic_1 = remitos_creados.get("0006-00025539")
+                        if remito_ic_1:
+                            remito_ic_1.parada = parada_ic_1
+                            remito_ic_1.estado = EstadoRemito.ENTREGADO
+                            remito_ic_1.save(update_fields=["parada", "estado"])
+
+                            cobranza_ic_1 = Cobranza.objects.create(
+                                parada=parada_ic_1,
+                                estado=EstadoCobranza.REGISTRADO,
+                            )
+                            DetallePago.objects.create(
+                                cobranza=cobranza_ic_1,
+                                medio=MedioPago.EFECTIVO,
+                                monto_declarado=remito_ic_1.total,
+                                monto_verificado=None,
+                            )
+                            total_cobranzas_creadas += 1
+
+                    # Parada 2 del itinerario en curso: Comercio 30200025527 (pendiente)
+                    comercio_ic_2 = comercios.get("30200025527")
+                    if comercio_ic_2:
+                        parada_ic_2 = Parada.objects.create(
+                            itinerario=itinerario_en_curso,
+                            comercio=comercio_ic_2,
+                            orden=2,
+                            estado=EstadoParada.PENDIENTE,
+                        )
+                        total_paradas_creadas += 1
+
+                        remito_ic_2 = remitos_creados.get("0004-00003921")
+                        if remito_ic_2:
+                            remito_ic_2.parada = parada_ic_2
+                            remito_ic_2.estado = EstadoRemito.ASIGNADO
+                            remito_ic_2.save(update_fields=["parada", "estado"])
+
         self.stdout.write(
             self.style.SUCCESS("✓ Datos maestros cargados exitosamente.")
         )
@@ -936,7 +993,7 @@ class Command(BaseCommand):
 
         if options["completo"]:
             self.stdout.write(
-                f"  • Itinerario asignado a 1234567: ID #{itinerario_creado.id if itinerario_creado else 'N/A'} con {total_paradas_creadas} paradas."
+                f"  • Itinerario asignado (ID #{itinerario_creado.id if itinerario_creado else 'N/A'}) y en curso (ID #{itinerario_en_curso.id if 'itinerario_en_curso' in locals() else 'N/A'}) creados con {total_paradas_creadas} paradas en total."
             )
             self.stdout.write(
                 f"  • Cobranzas registradas: {total_cobranzas_creadas}."

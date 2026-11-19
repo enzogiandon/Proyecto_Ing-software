@@ -64,11 +64,13 @@
 
         <div class="d-flex gap-2">
             <button type="submit" class="btn-itinerario-outline">
-                Filtrar
+                <i class="fas fa-filter"></i>
+                <span>Filtrar</span>
             </button>
             {% if filtro_fecha or filtro_transportista or filtro_estado %}
-                <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline text-muted">
-                    Limpiar
+                <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline text-muted" title="Limpiar todos los filtros">
+                    <i class="fas fa-times"></i>
+                    <span>Limpiar</span>
                 </a>
             {% endif %}
         </div>
@@ -163,12 +165,27 @@
                 <div class="itin-paradas-empty__icon">
                     <i class="fas fa-route fa-2x"></i>
                 </div>
-                <div class="itin-paradas-empty__title">No hay itinerarios registrados</div>
-                <p class="itin-paradas-empty__desc mb-3">Creá un nuevo itinerario para comenzar a planificar las entregas del día.</p>
-                <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
-                    <i class="fas fa-plus"></i>
-                    <span>Agregar itinerario</span>
-                </a>
+                {% if filtro_fecha or filtro_transportista or filtro_estado %}
+                    <div class="itin-paradas-empty__title">No se encontraron itinerarios con los filtros aplicados</div>
+                    <p class="itin-paradas-empty__desc mb-3">Probá cambiando los criterios de búsqueda o limpiá los filtros para ver todos los itinerarios.</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+                            <i class="fas fa-times"></i>
+                            <span>Limpiar filtros</span>
+                        </a>
+                        <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Agregar itinerario</span>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="itin-paradas-empty__title">No hay itinerarios registrados</div>
+                    <p class="itin-paradas-empty__desc mb-3">Creá un nuevo itinerario para comenzar a planificar las entregas del día.</p>
+                    <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
+                        <i class="fas fa-plus"></i>
+                        <span>Agregar itinerario</span>
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>

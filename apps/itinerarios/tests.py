@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from io import StringIO
 
 from django.contrib.auth import get_user_model
@@ -723,6 +724,199 @@ class ItinerarioViewsTests(TestCase):
         itinerario.refresh_from_db()
         self.assertEqual(itinerario.transportista, self.transportista)
         self.assertContains(response_fail, "Transportista no asignado")
+
+    # -------------------------------------------------------------------------
+    # HU-60: Listar itinerarios del día y filtrado operativo
+    # -------------------------------------------------------------------------
+    def test_hu60_scenario_1_consulta_general_itinerarios_del_dia(self):
+        hoy = date.today()
+        itinerario = Itinerario.objects.create(
+            fecha=hoy,
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Central", "20123456790")
+        remito_1 = Remito.objects.create(
+            numero="0001-00000001",
+            marca=self.marca,
+            comercio=comercio,
+            total=Decimal("1500.50"),
+        )
+        remito_2 = Remito.objects.create(
+            numero="0001-00000002",
+            marca=self.marca,
+            comercio=comercio,
+            total=Decimal("2500.00"),
+        )
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+
+        response = self.client.get(reverse("itinerarios:itinerario_lista"))
+        self.assertEqual(response.status_code, 200)
+
+        # Validamos columnas operativas de la grilla
+        codigo_itinerario = f"IT-{hoy.strftime('%Y')}-{itinerario.pk:05d}"
+        self.assertContains(response, codigo_itinerario)
+        self.assertContains(response, hoy.strftime("%d/%m/%Y"))
+        self.assertContains(response, self.transportista.usuario.username)
+        self.assertContains(response, self.vehiculo.patente)
+        self.assertContains(response, "1 paradas")
+        self.assertContains(response, "2 remitos")
+        self.assertContains(response, "4000,50")
+        self.assertContains(response, "Asignado")
+
+    def test_hu60_scenario_2_filtrado_por_fecha(self):
+        fecha_a = date(2026, 11, 25)
+        fecha_b = date(2026, 11, 26)
+        itin_a = Itinerario.objects.create(
+            fecha=fecha_a,
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_b = Itinerario.objects.create(
+            fecha=fecha_b,
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"fecha": "2026-11-25"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"IT-2026-{itin_a.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_b.pk:05d}")
+
+    def test_hu60_scenario_3_filtrado_por_transportista(self):
+        user_model = get_user_model()
+        otro_user = user_model.objects.create_user(
+            username="33333333",
+            password="Driver-Password-123!",
+            first_name="Carlos",
+            last_name="Chofer",
+        )
+        otro_user.groups.add(self.grupo_transportista)
+        otro_vehiculo = Vehiculo.objects.create(patente="ZZ999YY")
+        otro_transportista = Transportista.objects.create(
+            usuario=otro_user,
+            vehiculo=otro_vehiculo,
+        )
+
+        itin_propio = Itinerario.objects.create(
+            fecha=date(2026, 11, 27),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_otro = Itinerario.objects.create(
+            fecha=date(2026, 11, 27),
+            transportista=otro_transportista,
+            vehiculo=otro_vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_sin_asignar = Itinerario.objects.create(
+            fecha=date(2026, 11, 28),
+            transportista=None,
+            vehiculo=None,
+            estado=EstadoItinerario.PENDIENTE,
+        )
+
+        # Filtro por chofer específico
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"transportista": str(self.transportista.pk)},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"IT-2026-{itin_propio.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_otro.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_sin_asignar.pk:05d}")
+
+        # Filtro por sin asignar
+        response_sin = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"transportista": "sin_asignar"},
+        )
+        self.assertEqual(response_sin.status_code, 200)
+        self.assertContains(response_sin, f"IT-2026-{itin_sin_asignar.pk:05d}")
+        self.assertNotContains(response_sin, f"IT-2026-{itin_propio.pk:05d}")
+        self.assertNotContains(response_sin, f"IT-2026-{itin_otro.pk:05d}")
+
+    def test_hu60_scenario_4_filtrado_por_estado(self):
+        itin_asignado = Itinerario.objects.create(
+            fecha=date(2026, 11, 29),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_en_curso = Itinerario.objects.create(
+            fecha=date(2026, 11, 30),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.EN_CURSO,
+        )
+        itin_finalizado = Itinerario.objects.create(
+            fecha=date(2026, 12, 1),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.FINALIZADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"estado": "en_curso"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"IT-2026-{itin_en_curso.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_asignado.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_finalizado.pk:05d}")
+
+    def test_hu60_filtros_combinados_y_estado_vacio(self):
+        Itinerario.objects.create(
+            fecha=date(2026, 11, 29),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        # Combinación exitosa
+        response_match = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {
+                "fecha": "2026-11-29",
+                "transportista": str(self.transportista.pk),
+                "estado": "asignado",
+            },
+        )
+        self.assertEqual(response_match.status_code, 200)
+        self.assertContains(response_match, "IT-2026-")
+
+        # Combinación sin coincidencias despliega mensaje informativo de filtros
+        response_empty = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {
+                "fecha": "2026-11-29",
+                "estado": "finalizado",
+            },
+        )
+        self.assertEqual(response_empty.status_code, 200)
+        self.assertContains(
+            response_empty,
+            "No se encontraron itinerarios con los filtros aplicados",
+        )
+        self.assertContains(response_empty, "Limpiar filtros")
+
+    def test_hu60_filtros_valores_invalidos_no_producen_error(self):
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {
+                "fecha": "fecha-invalida",
+                "transportista": "invalido",
+                "estado": "estado-inventado",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
 
 
 class ItinerariosModelTests(TestCase):

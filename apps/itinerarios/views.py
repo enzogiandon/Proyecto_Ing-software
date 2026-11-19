@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -59,13 +61,19 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         estado = self.request.GET.get("estado", "").strip()
 
         if fecha:
-            qs = qs.filter(fecha=fecha)
+            try:
+                datetime.strptime(fecha, "%Y-%m-%d").date()
+                qs = qs.filter(fecha=fecha)
+            except ValueError:
+                pass
         if transportista:
             if transportista == "sin_asignar":
                 qs = qs.filter(transportista__isnull=True)
+            elif transportista.isdigit():
+                qs = qs.filter(transportista_id=int(transportista))
             else:
-                qs = qs.filter(transportista_id=transportista)
-        if estado:
+                qs = qs.none()
+        if estado and estado in [c[0] for c in EstadoItinerario.choices]:
             qs = qs.filter(estado=estado)
 
         return qs
@@ -79,6 +87,7 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         context["filtro_fecha"] = self.request.GET.get("fecha", "")
         context["filtro_transportista"] = self.request.GET.get("transportista", "")
         context["filtro_estado"] = self.request.GET.get("estado", "")
+        context["fecha_hoy"] = date.today().isoformat()
         context["paradas_seguimiento"] = (
             Parada.objects.select_related("comercio", "itinerario")
             .annotate(

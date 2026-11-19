@@ -1,7 +1,7 @@
 // src/mobile/src/types/itinerario.ts
 
 export type EstadoParada = 'pendiente' | 'en_curso' | 'finalizada' | 'error';
-export type EstadoItinerario = 'pendiente' | 'asignado' | 'en_ruta' | 'finalizado' | 'sin_asignar';
+export type EstadoItinerario = 'pendiente' | 'asignado' | 'en_curso' | 'en_ruta' | 'finalizado' | 'sin_asignar';
 
 export interface Comercio {
   id: number;

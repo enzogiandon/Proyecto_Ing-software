@@ -32,7 +32,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
-import { loginTransportista, setUsuarioActual } from '../services/authService';
+import { loginTransportista, setUsuarioActual, restaurarSesion } from '../services/authService';
 // Núcleo del cambio: Importamos el servicio centralizado para enlazar con WhatsApp
 import { contactarSoporteWhatsApp } from '../services/soporteService';
 
@@ -57,6 +57,18 @@ export default function LoginScreen() {
 
       return () => clearTimeout(timer);
     }
+
+    // Si ya existe sesión persistida en el dispositivo, acceder directamente a itinerario
+    let cancelado = false;
+    restaurarSesion().then((autenticado) => {
+      if (autenticado && !cancelado) {
+        router.replace('/itinerario' as any);
+      }
+    });
+
+    return () => {
+      cancelado = true;
+    };
   }, [params?.sesionCerrada]);
 
   // Insets dinámicos para no pisar la cámara ni la barra de estado en Android / iOS
@@ -96,13 +108,17 @@ export default function LoginScreen() {
       // Llamo al servicio de autenticación conectado con el backend
       const resultado = await loginTransportista(dni, clave);
 
-      // Si falló, me fijo qué tipo de error fue para pintar la UI correspondiente
+      // Si falló, me fijo qué tipo de error fue para pintar la UI correspondiente (HU-23)
       if (!resultado.success) {
         if (resultado.tipoError === 'DNI') {
           setErrorDni(resultado.error || 'El DNI es incorrecto. Intentá nuevamente.');
+          setErrorClave('');
         } else if (resultado.tipoError === 'CLAVE') {
           setErrorClave(resultado.error || 'La clave es incorrecta. Intentá nuevamente.');
+          setErrorDni('');
         } else if (resultado.tipoError === 'INHABILITADO') {
+          setErrorDni('');
+          setErrorClave('');
           setModalInhabilitadoVisible(true);
         } else {
           Alert.alert('Aviso', resultado.error || 'No se pudo iniciar sesión.');

@@ -6,7 +6,7 @@
  * 1. El header corporativo que toma dinámicamente el nombre y las iniciales del chofer que inició
  * 2. La tarjeta con la barra de progreso (porcentaje de entregas completadas en color Naranja YA).
  * 3. El botón de acceso a 'Rutas Guardadas' (que conecta con el módulo de recorridos del Sprint 1).
- * 4. La lista de paradas: destacando la próxima parada (#1) con llamada a la acción en naranja
+ * 4. La lista de paradas: destacando la próxima parada a visitar con llamada a la acción en naranja
  *    ('Ir a la parada') que conecta directamente con la pantalla de Validar Cobro (HU-32)
  *    y las paradas siguientes con su detalle y monto total a recaudar.
  * 5. La vista de 'Itinerario sin asignar': si el chofer todavía no tiene hoja de ruta asignada,
@@ -35,8 +35,14 @@ import type { Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
-import { obtenerItinerarioJornada, tomarItinerarioActualizado } from '../services/itinerarioService';
-import { getUsuarioActual, estaAutenticado, cerrarSesion } from '../services/authService';
+import {
+  obtenerItinerarioJornada,
+  tomarItinerarioActualizado,
+  entregarItinerarioActualizado,
+  isJornadaIniciada,
+  comenzarJornadaLaboral,
+} from '../services/itinerarioService';
+import { getUsuarioActual, estaAutenticado, restaurarSesion, cerrarSesion } from '../services/authService';
 import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 import { seleccionarParadaItem } from '../services/paradaService';
 // Núcleo del cambio: Servicio para abrir chat de WhatsApp con soporte de Base Logística
@@ -52,6 +58,7 @@ export default function ItinerarioScreen() {
   // Estado del itinerario y control de carga
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
+  const [iniciandoJornada, setIniciandoJornada] = useState<boolean>(false);
   // Estado para el modal de confirmación de cierre de sesión (HU-156)
   const [modalLogoutVisible, setModalLogoutVisible] = useState<boolean>(false);
 
@@ -84,17 +91,32 @@ export default function ItinerarioScreen() {
   };
 
   useEffect(() => {
-    if (!estaAutenticado()) {
-      router.replace('/login' as any);
-      return;
+    let cancelado = false;
+
+    async function inicializar() {
+      if (!estaAutenticado()) {
+        const restaurado = await restaurarSesion();
+        if (!restaurado && !cancelado) {
+          router.replace('/login' as any);
+          return;
+        }
+      }
+      if (cancelado) return;
+
+      const actualizado = tomarItinerarioActualizado();
+      if (actualizado) {
+        setItinerario(actualizado);
+        setCargando(false);
+        return;
+      }
+      cargarDatos();
     }
-    const actualizado = tomarItinerarioActualizado();
-    if (actualizado) {
-      setItinerario(actualizado);
-      setCargando(false);
-      return;
-    }
-    cargarDatos();
+
+    inicializar();
+
+    return () => {
+      cancelado = true;
+    };
   }, []);
 
   // Bloquea el botón físico o gesto de retroceso del celular para no volver al login una vez autenticado
@@ -130,8 +152,41 @@ export default function ItinerarioScreen() {
     } as any);
   };
 
-  // Núcleo Sprint 2 (HU-24): Botón de acceso a reordenar paradas
+  // HU-68: Determina si la jornada laboral ya fue iniciada ('en_curso' o 'en_ruta')
+  const jornadaIniciada = isJornadaIniciada(itinerario);
+
+  // HU-68: Inicia la jornada laboral formal y desbloquea las operaciones
+  const handleComenzarJornada = async () => {
+    if (!itinerario) return;
+    setIniciandoJornada(true);
+    try {
+      await comenzarJornadaLaboral(itinerario.id);
+      const actualizado: ItinerarioJornada = {
+        ...itinerario,
+        estado: 'en_curso',
+      };
+      setItinerario(actualizado);
+      entregarItinerarioActualizado(actualizado);
+      Alert.alert(
+        '¡Jornada laboral iniciada!',
+        'Ya podés visitar paradas, reordenar el recorrido y registrar cobranzas.'
+      );
+    } catch {
+      Alert.alert('Aviso', 'No se pudo iniciar la jornada laboral. Intentá nuevamente.');
+    } finally {
+      setIniciandoJornada(false);
+    }
+  };
+
+  // Núcleo Sprint 2 (HU-24 y HU-68): Botón de acceso a reordenar paradas
   const handleReordenarParadas = () => {
+    if (!jornadaIniciada) {
+      Alert.alert(
+        'Jornada no iniciada',
+        'Debés presionar "Comenzar jornada laboral" antes de poder reordenar las paradas.'
+      );
+      return;
+    }
     router.push('/reordenar-paradas' as Href);
   };
 
@@ -141,8 +196,15 @@ export default function ItinerarioScreen() {
     router.push('/recorridos-guardados' as Href);
   };
 
-  // Redirección hacia la pantalla de detalle de la parada (HU-67)
+  // Redirección hacia la pantalla de detalle de la parada (HU-67 y HU-68)
   const handleIrAParada = (parada: ParadaItem) => {
+    if (!jornadaIniciada) {
+      Alert.alert(
+        'Jornada no iniciada',
+        'La hoja de ruta está en modo solo lectura. Presioná "Comenzar jornada laboral" para ingresar a la parada.'
+      );
+      return;
+    }
     seleccionarParadaItem(parada, itinerario?.totalParadas || paradas.length);
     router.push({
       pathname: '/parada',
@@ -151,6 +213,13 @@ export default function ItinerarioScreen() {
   };
 
   const handleVerDetalle = (parada: ParadaItem) => {
+    if (!jornadaIniciada) {
+      Alert.alert(
+        'Jornada no iniciada',
+        'La hoja de ruta está en modo solo lectura. Presioná "Comenzar jornada laboral" para consultar el detalle de la parada.'
+      );
+      return;
+    }
     seleccionarParadaItem(parada, itinerario?.totalParadas || paradas.length);
     router.push({
       pathname: '/parada',
@@ -179,7 +248,7 @@ export default function ItinerarioScreen() {
     );
   };
 
-  // Separo la próxima parada (la #1 a entregar) del resto de las paradas
+  // Separo la próxima parada a entregar del resto de las paradas
   const paradas = itinerario?.paradas || [];
   const proximaParada = paradas[0];
   const siguientesParadas = paradas.slice(1);
@@ -363,6 +432,40 @@ export default function ItinerarioScreen() {
             </View>
           </View>
 
+          {/* HU-68: Tarjeta y Botón de Inicio de Jornada Laboral */}
+          {!jornadaIniciada ? (
+            <View style={styles.cardComenzarJornada}>
+              <View style={styles.bannerJornadaPendiente}>
+                <Text style={styles.bannerJornadaTitulo}>🟡 Hoja de ruta asignada · Esperando inicio</Text>
+                <Text style={styles.bannerJornadaTexto}>
+                  Tu recorrido está asignado. Iniciá la jornada laboral para habilitar el reordenamiento, la carga de recorridos y la gestión de paradas.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.botonComenzarJornada}
+                onPress={handleComenzarJornada}
+                disabled={iniciandoJornada}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Comenzar jornada laboral"
+              >
+                {iniciandoJornada ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <View style={styles.filaBotonComenzar}>
+                    <Text style={styles.iconoPlayComenzar}>▶</Text>
+                    <Text style={styles.textoBotonComenzar}>Comenzar jornada laboral</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.badgeJornadaEnCurso}>
+              <Text style={styles.textoJornadaEnCurso}>🟢 Jornada laboral en curso</Text>
+            </View>
+          )}
+
           {/* Botón con ícono minimalista oficial de recorridos guardados */}
           <TouchableOpacity
             style={styles.botonRutasGuardadas}
@@ -377,18 +480,33 @@ export default function ItinerarioScreen() {
             <Text style={styles.textoRutasGuardadas}>Recorridos guardados</Text>
           </TouchableOpacity>
 
-          {/* Núcleo del cambio Sprint 2 (HU-24): Botón Reordenar paradas según Figma */}
+          {/* Núcleo del cambio Sprint 2 (HU-24 y HU-68): Botón Reordenar paradas según Figma */}
           <TouchableOpacity
-            style={styles.botonReordenarParadas}
+            style={[
+              styles.botonReordenarParadas,
+              !jornadaIniciada && styles.botonReordenarParadasBloqueado,
+            ]}
             onPress={handleReordenarParadas}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={jornadaIniciada ? 'Reordenar paradas' : 'Reordenar paradas bloqueado'}
           >
             <Image
               source={require('../../assets/icons/icono-ruta.png')}
-              style={styles.iconoReordenarParadas}
+              style={[
+                styles.iconoReordenarParadas,
+                !jornadaIniciada && { opacity: 0.4 },
+              ]}
               resizeMode="contain"
             />
-            <Text style={styles.textoReordenarParadas}>Reordenar paradas</Text>
+            <Text
+              style={[
+                styles.textoReordenarParadas,
+                !jornadaIniciada && styles.textoReordenarParadasBloqueado,
+              ]}
+            >
+              {jornadaIniciada ? 'Reordenar paradas' : '🔒 Reordenar paradas (Iniciá jornada)'}
+            </Text>
           </TouchableOpacity>
 
           {/* Encabezado de la lista: Próximas paradas */}
@@ -400,24 +518,24 @@ export default function ItinerarioScreen() {
               </Text>
             </View>
             <Text style={styles.seccionSubtitulo}>
-              Prioridad de visita · continuás en la parada {proximaParada ? proximaParada.orden : 5} de {itinerario.totalParadas}
+              Prioridad de visita · continuás en la parada {proximaParada ? proximaParada.orden : 1} de {itinerario.totalParadas}
             </Text>
           </View>
 
-          {/* PARADA DESTACADA #1 (Conecta con la pantalla de Validar Cobro) */}
+          {/* PARADA DESTACADA (Conecta con la pantalla de Validar Cobro) */}
           {proximaParada && (
             <View style={styles.paradaCardDestacada}>
               <View style={styles.paradaHeaderRow}>
-                {/* Badge Naranja YA */}
+                {/* Badge Naranja YA con número correlativo real */}
                 <View style={styles.badgeNaranja}>
-                  <Text style={styles.badgeNaranjaTexto}>#1</Text>
+                  <Text style={styles.badgeNaranjaTexto}>#{proximaParada.orden}</Text>
                 </View>
                 <View style={styles.paradaTituloWrap}>
                   <Text style={styles.comercioNombre}>
                     {proximaParada.comercio.razonSocial}
                   </Text>
                   <Text style={styles.comercioSubtitulo}>
-                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${itinerario.totalParadas} · Próxima entrega`}
+                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${itinerario.totalParadas} · ${proximaParada.estado === 'finalizada' ? 'Entregada' : proximaParada.estado === 'error' ? 'Con inconveniente' : 'Próxima entrega'}`}
                   </Text>
                 </View>
               </View>
@@ -462,30 +580,35 @@ export default function ItinerarioScreen() {
 
               {/* Botón de acción primario en Naranja YA -> Va a Validar Cobro */}
               <TouchableOpacity
-                style={styles.botonIrParada}
+                style={[
+                  styles.botonIrParada,
+                  !jornadaIniciada && styles.botonIrParadaBloqueado,
+                ]}
                 onPress={() => handleIrAParada(proximaParada)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.iconoNavegacion}>➤</Text>
-                <Text style={styles.textoBotonIrParada}>Ir a la parada</Text>
+                <Text style={styles.iconoNavegacion}>{jornadaIniciada ? '➤' : '🔒'}</Text>
+                <Text style={[styles.textoBotonIrParada, !jornadaIniciada && styles.textoBotonIrParadaBloqueado]}>
+                  {jornadaIniciada ? 'Ir a la parada' : 'Solo lectura (Iniciá jornada)'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* PARADAS SIGUIENTES #2 EN ADELANTE (Figma: Botón Contorno Azul) */}
-          {siguientesParadas.map((parada, idx) => (
+          {/* PARADAS SIGUIENTES (Figma: Botón Contorno Azul) */}
+          {siguientesParadas.map((parada) => (
             <View key={parada.id} style={styles.paradaCardSecundaria}>
               <View style={styles.paradaHeaderRow}>
-                {/* Badge de orden secundario */}
+                {/* Badge con número correlativo real */}
                 <View style={styles.badgeNeutro}>
-                  <Text style={styles.badgeNeutroTexto}>#{idx + 2}</Text>
+                  <Text style={styles.badgeNeutroTexto}>#{parada.orden}</Text>
                 </View>
                 <View style={styles.paradaTituloWrap}>
                   <Text style={styles.comercioNombre}>
                     {parada.comercio.razonSocial}
                   </Text>
                   <Text style={styles.comercioSubtituloSecundario}>
-                    {parada.subtitulo || `Parada ${parada.orden} de ${itinerario.totalParadas} · A continuación`}
+                    {parada.subtitulo || `Parada ${parada.orden} de ${itinerario.totalParadas} · ${parada.estado === 'finalizada' ? 'Entregada' : parada.estado === 'error' ? 'Con inconveniente' : 'A continuación'}`}
                   </Text>
                 </View>
               </View>
@@ -530,16 +653,24 @@ export default function ItinerarioScreen() {
 
               {/* Botón con contorno azul */}
               <TouchableOpacity
-                style={styles.botonVerDetalle}
+                style={[
+                  styles.botonVerDetalle,
+                  !jornadaIniciada && styles.botonVerDetalleBloqueado,
+                ]}
                 onPress={() => handleVerDetalle(parada)}
                 activeOpacity={0.85}
               >
                 <Image
                   source={require('../../assets/icons/icono-adjuntar-archivo.png')}
-                  style={styles.iconoVerDetalleCustom}
+                  style={[
+                    styles.iconoVerDetalleCustom,
+                    !jornadaIniciada && { opacity: 0.5 },
+                  ]}
                   resizeMode="contain"
                 />
-                <Text style={styles.textoBotonVerDetalle}>Ver detalle de parada</Text>
+                <Text style={[styles.textoBotonVerDetalle, !jornadaIniciada && { color: '#9CA3AF' }]}>
+                  {jornadaIniciada ? 'Ver detalle de parada' : '🔒 Solo lectura'}
+                </Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -817,7 +948,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Parada activa (#1)
+  // Parada activa / destacada
   paradaCardDestacada: {
     backgroundColor: RepartoYA.blanco,
     borderRadius: 16,
@@ -871,6 +1002,39 @@ const styles = StyleSheet.create({
   },
   badgeNeutroTexto: {
     color: RepartoYA.carbon,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  // Estilos semánticos preparados para estados operativos (HU-62)
+  badgeVerde: {
+    backgroundColor: RepartoYA.exitoFondo,
+    borderWidth: 1,
+    borderColor: RepartoYA.exito,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  badgeVerdeTexto: {
+    color: RepartoYA.exito,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  badgeRojo: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderWidth: 1,
+    borderColor: RepartoYA.error,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  badgeRojoTexto: {
+    color: RepartoYA.error,
     fontWeight: '800',
     fontSize: 14,
   },
@@ -1007,40 +1171,6 @@ const styles = StyleSheet.create({
     color: RepartoYA.azulRuta,
     fontSize: 14,
     fontWeight: '700',
-  },
-
-  // Footer paradas
-  footerParadasRestantes: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: RepartoYA.blanco,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: RepartoYA.grisBorde,
-  },
-  iconoRutaPunteadaCustom: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
-  },
-  iconoRutaPunteada: {
-    fontSize: 20,
-    marginRight: 10,
-  },
-  footerParadasInfo: {
-    flex: 1,
-  },
-  footerParadasTitulo: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: RepartoYA.carbon,
-  },
-  footerParadasDetalle: {
-    fontSize: 12,
-    color: RepartoYA.grisTexto,
-    marginTop: 1,
   },
 
   // Estado sin asignar
@@ -1240,5 +1370,90 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     fontSize: 16,
     fontWeight: '700',
+  },
+
+  // HU-68: Estilos de Inicio de Jornada Laboral
+  cardComenzarJornada: {
+    backgroundColor: '#FFF8F3',
+    borderWidth: 1.5,
+    borderColor: RepartoYA.naranjaYA,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: RepartoYA.naranjaYA,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  bannerJornadaPendiente: {
+    marginBottom: 12,
+  },
+  bannerJornadaTitulo: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#B44507',
+    marginBottom: 4,
+  },
+  bannerJornadaTexto: {
+    fontSize: 13,
+    color: '#6B4028',
+    lineHeight: 18,
+  },
+  botonComenzarJornada: {
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 10,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filaBotonComenzar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconoPlayComenzar: {
+    color: RepartoYA.blanco,
+    fontSize: 16,
+    marginRight: 8,
+    fontWeight: '900',
+  },
+  textoBotonComenzar: {
+    color: RepartoYA.blanco,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  badgeJornadaEnCurso: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  textoJornadaEnCurso: {
+    color: '#065F46',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  botonReordenarParadasBloqueado: {
+    borderColor: '#D1D5DB',
+    backgroundColor: '#F9FAFB',
+  },
+  textoReordenarParadasBloqueado: {
+    color: '#9CA3AF',
+  },
+  botonIrParadaBloqueado: {
+    backgroundColor: '#E5E7EB',
+  },
+  textoBotonIrParadaBloqueado: {
+    color: '#6B7280',
+  },
+  botonVerDetalleBloqueado: {
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
   },
 });

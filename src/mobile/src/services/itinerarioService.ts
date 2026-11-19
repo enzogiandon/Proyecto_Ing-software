@@ -1,11 +1,56 @@
 // src/services/itinerarioService.ts
 import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
+import { saveJornadaIniciada, isJornadaIniciadaStorage } from './storage';
 import {
   MOCK_ITINERARIO_ASIGNADO,
-  MOCK_ITINERARIO_44444444,
   MOCK_ITINERARIO_SIN_ASIGNAR,
 } from '../data/mockItinerario';
+import * as mockItinData from '../data/mockItinerario';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
+
+/**
+ * Inicia formalmente la jornada laboral del transportista (HU-68).
+ * Comunica el cambio al backend Django (/api/itinerarios/iniciar-jornada/)
+ * y persiste el estado en AsyncStorage para garantizar soporte offline y persistencia tras reinicio.
+ */
+export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promise<{ success: boolean; error?: string }> {
+  const token = getAuthToken();
+
+  try {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 7000) : null;
+
+    await fetch(`${API_BASE_URL}/api/itinerarios/iniciar-jornada/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ itinerario_id: itinerarioId }),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+
+    if (timeoutId) clearTimeout(timeoutId);
+  } catch (err: any) {
+    console.warn('[ItinerarioService] Sincronización offline al iniciar jornada:', err?.message);
+  }
+
+  await saveJornadaIniciada(itinerarioId, true);
+  return { success: true };
+}
+
+/**
+ * Verifica si la jornada laboral del itinerario ya fue iniciada ('en_curso' o 'en_ruta').
+ */
+export function isJornadaIniciada(itinerario?: ItinerarioJornada | null): boolean {
+  if (!itinerario) return false;
+  return (
+    itinerario.estado === 'en_curso' ||
+    itinerario.estado === 'en_ruta' ||
+    itinerario.estado === 'finalizado' ||
+    (itinerario.paradasCompletadas !== undefined && itinerario.paradasCompletadas > 0)
+  );
+}
 
 /**
  * Obtiene la hoja de ruta / itinerario activo del transportista.
@@ -73,32 +118,47 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
           ? { patente: usuario.vehiculo.patente, modelo: usuario.vehiculo.modelo }
           : MOCK_ITINERARIO_ASIGNADO.vehiculo;
 
-        const paradasMapeadas: ParadaItem[] = data.map((p: any, idx: number) => ({
-          id: p.id,
-          orden: p.orden ?? (idx + 1),
-          subtitulo: `Parada ${p.orden ?? (idx + 1)} de ${data.length} · ${p.estado === 'en_curso' ? 'Próxima entrega' : 'A continuación'}`,
-          estado: p.estado || 'pendiente',
-          comercio: {
-            id: p.comercio?.id ?? idx + 1,
-            razonSocial: p.comercio?.razon_social || p.comercio?.razonSocial || 'Comercio',
-            cuit: p.comercio?.cuit || '30-71122334-4',
-            domicilio: p.comercio?.domicilio || p.comercio?.direccion || 'Sin dirección',
-            localidad: p.comercio?.localidad || 'Zona de Entrega',
-            telefono: p.comercio?.telefono || '11-4201-9988',
-          },
-          montoCobranza: typeof p.monto_recaudar === 'string'
-            ? parseFloat(p.monto_recaudar) || 0
-            : (p.montoCobranza ?? 0),
-          cantidadRemitos: p.remitos?.length ?? (p.cantidadRemitos ?? 1),
-          horaEstimada: p.hora_entrega || `${9 + idx}:30 hs`,
-        }));
+        const paradasMapeadas: ParadaItem[] = data.map((p: any, idx: number) => {
+          const estadoEtiqueta =
+            p.estado === 'finalizada' || p.estado === 'completada'
+              ? 'Entregada'
+              : p.estado === 'error'
+              ? 'Con inconveniente'
+              : p.estado === 'en_curso'
+              ? 'Próxima entrega'
+              : 'A continuación';
+
+          return {
+            id: p.id,
+            orden: p.orden ?? (idx + 1),
+            subtitulo: `Parada ${p.orden ?? (idx + 1)} de ${data.length} · ${estadoEtiqueta}`,
+            estado: p.estado || 'pendiente',
+            comercio: {
+              id: p.comercio?.id ?? idx + 1,
+              razonSocial: p.comercio?.razon_social || p.comercio?.razonSocial || 'Comercio',
+              cuit: p.comercio?.cuit || '30-71122334-4',
+              domicilio: p.comercio?.domicilio || p.comercio?.direccion || 'Sin dirección',
+              localidad: p.comercio?.localidad || 'Zona de Entrega',
+              telefono: p.comercio?.telefono || '11-4201-9988',
+            },
+            montoCobranza: typeof p.monto_recaudar === 'string'
+              ? parseFloat(p.monto_recaudar) || 0
+              : (p.montoCobranza ?? 0),
+            cantidadRemitos: p.remitos?.length ?? (p.cantidadRemitos ?? 1),
+            horaEstimada: p.hora_entrega || `${9 + idx}:30 hs`,
+          };
+        });
 
         const paradasCompletadas = paradasMapeadas.filter(
           (p) => (p.estado as string) === 'finalizada' || (p.estado as string) === 'completada'
         ).length;
 
+        const itinerarioId = 101;
+        const jornadaIniciada = await isJornadaIniciadaStorage(itinerarioId);
+        const estadoCalculado = jornadaIniciada ? 'en_curso' : 'asignado';
+
         const itinerario: ItinerarioJornada = {
-          id: 101,
+          id: itinerarioId,
           fecha: new Date().toLocaleDateString('es-AR', {
             weekday: 'short',
             day: 'numeric',
@@ -106,7 +166,7 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
             year: 'numeric',
           }),
           rutaNombre: 'Ruta 12 · San Martín',
-          estado: 'en_ruta',
+          estado: estadoCalculado,
           transportistaNombre,
           transportistaIniciales,
           vehiculo,
@@ -133,33 +193,61 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 
     throw new Error(`HTTP ${response.status}`);
   } catch (error: any) {
-    if (soloDjango) throw error;
+    const token = getAuthToken();
+    const esMock = !token || token.startsWith('mock-');
+    if (soloDjango && !esMock) throw error;
     console.warn('Backend de itinerario no disponible. Usando datos Mock de Figma:', error?.message);
     // Modo híbrido: retorna el itinerario correspondiente al usuario autenticado
     const usuarioActual = getUsuarioActual();
     if (usuarioActual?.dni === '55555555') {
       return { itinerario: MOCK_ITINERARIO_SIN_ASIGNAR };
     }
-    if (usuarioActual?.dni === '44444444') {
-      return { itinerario: MOCK_ITINERARIO_44444444 };
+    if (usuarioActual?.dni === '11111111') {
+      const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111 || MOCK_ITINERARIO_ASIGNADO;
+      const idMock = itin1111?.id || 102;
+      const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
+      const estadoMock = jornadaIniciada ? 'en_curso' : (itin1111?.estado || 'en_curso');
+      return {
+        itinerario: {
+          ...itin1111,
+          estado: estadoMock,
+        },
+      };
+    }
+    if (usuarioActual?.dni === '22222222' || usuarioActual?.dni === '44444444') {
+      const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222 || (mockItinData as any).MOCK_ITINERARIO_44444444 || MOCK_ITINERARIO_ASIGNADO;
+      const idMock = itin2222?.id || 103;
+      const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
+      const estadoMock = jornadaIniciada ? 'en_curso' : (itin2222?.estado || 'en_curso');
+      return {
+        itinerario: {
+          ...itin2222,
+          estado: estadoMock,
+        },
+      };
     }
 
-    // Para cualquier otro chofer (12345678, 1234567, etc.), adaptar dinámicamente nombre y unidad
+    // Para Carlos Gómez (33333333) y default
     const nombre = usuarioActual?.first_name
       ? `${usuarioActual.first_name} ${usuarioActual.last_name || ''}`.trim()
-      : (MOCK_ITINERARIO_ASIGNADO.transportistaNombre || 'Martín Rodríguez');
+      : (MOCK_ITINERARIO_ASIGNADO.transportistaNombre || 'Carlos Gómez');
 
     const iniciales = usuarioActual?.first_name
       ? `${usuarioActual.first_name[0] || ''}${usuarioActual.last_name ? usuarioActual.last_name[0] : ''}`.toUpperCase()
-      : (MOCK_ITINERARIO_ASIGNADO.transportistaIniciales || 'MR');
+      : (MOCK_ITINERARIO_ASIGNADO.transportistaIniciales || 'CG');
 
     const vehiculo = usuarioActual?.vehiculo
       ? { patente: usuarioActual.vehiculo.patente, modelo: usuarioActual.vehiculo.modelo }
       : MOCK_ITINERARIO_ASIGNADO.vehiculo;
 
+    const idMock = MOCK_ITINERARIO_ASIGNADO.id || 101;
+    const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
+    const estadoMock = jornadaIniciada ? 'en_curso' : (MOCK_ITINERARIO_ASIGNADO.estado || 'asignado');
+
     return {
       itinerario: {
         ...MOCK_ITINERARIO_ASIGNADO,
+        estado: estadoMock,
         transportistaNombre: nombre,
         transportistaIniciales: iniciales,
         vehiculo,

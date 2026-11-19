@@ -17,6 +17,7 @@ import {
 } from '../types/api';
 import { MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
+import * as mockItinData from '../data/mockItinerario';
 
 // Conversión del Mock local al modelo Parada de Django
 export function getMockParadaOficial(): Parada {
@@ -88,11 +89,94 @@ export async function guardarOrdenRuta(paradaIds: number[]): Promise<Parada[]> {
     return response.data;
   } catch (error: any) {
     console.warn('[Itinerarios] Fallback local para guardar orden de paradas:', error?.message);
+    const dni = getMockDni();
+    const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+    const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222;
+    const itin = dni === '11111111'
+      ? (itin1111 || MOCK_ITINERARIO_ASIGNADO)
+      : dni === '22222222' || dni === '44444444'
+      ? (itin2222 || MOCK_ITINERARIO_ASIGNADO)
+      : MOCK_ITINERARIO_ASIGNADO;
+    reordenarMockItinerario(itin, paradaIds);
     return getMockParadasActivas();
   }
 }
 
 export let MOCK_RUTAS_GUARDADAS: RutaGuardadaItem[] = [];
+
+function getMockDni(): string {
+  if (typeof globalThis !== 'undefined' && (globalThis as any).__mockChoferDni) {
+    return (globalThis as any).__mockChoferDni;
+  }
+  return '33333333';
+}
+
+export function getMockRutasGuardadas(): RutaGuardadaItem[] {
+  const dni = getMockDni();
+  if (dni === '11111111') {
+    return [
+      { id: 101, nombre: 'Ruta Ampliada Norte' },
+      ...MOCK_RUTAS_GUARDADAS.filter((r) => r.id !== 101),
+    ];
+  }
+  // Para Carlos Gómez (33333333) y default
+  return [
+    { id: 301, nombre: 'Ruta Habitual San Martín' },
+    ...MOCK_RUTAS_GUARDADAS.filter((r) => r.id !== 301),
+  ];
+}
+
+function reordenarMockItinerario(itinerario: any, nuevoOrden: number[]) {
+  if (!itinerario || !Array.isArray(itinerario.paradas)) return;
+  const paradasMap = new Map<number, any>(itinerario.paradas.map((p: any) => [p.id, p]));
+  const paradasOrdenadas: any[] = [];
+
+  nuevoOrden.forEach((id, index) => {
+    const parada = paradasMap.get(id);
+    if (parada) {
+      parada.orden = index + 1;
+      parada.subtitulo = `Parada ${index + 1} de ${itinerario.totalParadas || nuevoOrden.length} · ${
+        parada.estado === 'en_curso' ? 'Próxima entrega' : 'A continuación'
+      }`;
+      paradasOrdenadas.push(parada);
+      paradasMap.delete(id);
+    }
+  });
+
+  // Principio Caso 2: Cualquier parada asignada en la jornada de hoy que NO estaba en la plantilla
+  // se coloca automáticamente al final del itinerario para no perder ninguna entrega.
+  for (const [, paradaRestante] of paradasMap) {
+    const nuevoIndice = paradasOrdenadas.length + 1;
+    paradaRestante.orden = nuevoIndice;
+    paradaRestante.subtitulo = `Parada ${nuevoIndice} de ${itinerario.totalParadas || nuevoIndice} · A continuación`;
+    paradasOrdenadas.push(paradaRestante);
+  }
+
+  itinerario.paradas = paradasOrdenadas;
+}
+
+function aplicarRutaMockLocal(rutaId: number): number[] {
+  const dni = getMockDni();
+  const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+
+  if (dni === '11111111' || rutaId === 101) {
+    // Caso 1: Lautaro Gómez (11111111)
+    // Paradas de hoy: [11, 12, 13]
+    // Plantilla: [12, 99 (Panadería La Nueva - ausente hoy), 13, 11]
+    // Orden resultante: [12, 13, 11]
+    const nuevoOrden = [12, 13, 11];
+    if (itin1111) reordenarMockItinerario(itin1111, nuevoOrden);
+    return nuevoOrden;
+  }
+
+  // Caso 2: Carlos Gómez (33333333) / Ruta Habitual San Martín (id: 301)
+  // Paradas de hoy: [1, 2, 3, 4] (donde 4 es Mercado San José, parada extra de hoy)
+  // Plantilla habitual: [3, 2, 1] (Kiosco El Sol, Autoservicio La Esquina, Almacén Don Pedro)
+  // Orden resultante: [3, 2, 1, 4] -> Parada 4 queda al final sin perderse
+  const nuevoOrden = [3, 2, 1, 4];
+  reordenarMockItinerario(MOCK_ITINERARIO_ASIGNADO, nuevoOrden);
+  return nuevoOrden;
+}
 
 /**
  * POST /api/itinerarios/crear-ruta/

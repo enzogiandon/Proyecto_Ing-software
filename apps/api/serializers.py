@@ -27,7 +27,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         try:
             user = User.objects.get(**{self.username_field: username})
         except User.DoesNotExist:
-            raise AuthenticationFailed("Credenciales inválidas.")
+            raise AuthenticationFailed(
+                {
+                    "detail": "El DNI es incorrecto. Intentá nuevamente.",
+                    "codigo": "DNI_INCORRECTO",
+                }
+            )
 
 
         if user and user.check_password(password) and not user.is_active:
@@ -45,10 +50,20 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             if user.intentos_fallidos >= 5:
                 user.is_active = False
                 user.save(update_fields=['intentos_fallidos', 'is_active'])
-                raise AuthenticationFailed("Superaste el límite de intentos. Cuenta bloqueada.")
+                raise AuthenticationFailed(
+                    {
+                        "detail": "Superaste el límite de intentos. Cuenta bloqueada.",
+                        "codigo": "CUENTA_BLOQUEADA",
+                    }
+                )
 
             user.save(update_fields=['intentos_fallidos'])
-            raise AuthenticationFailed("Contraseña incorrecta.")
+            raise AuthenticationFailed(
+                {
+                    "detail": "La clave es incorrecta. Intentá nuevamente.",
+                    "codigo": "CLAVE_INCORRECTA",
+                }
+            )
 
         if user.intentos_fallidos > 0:
             user.intentos_fallidos = 0

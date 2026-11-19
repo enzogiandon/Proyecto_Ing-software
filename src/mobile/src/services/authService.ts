@@ -47,8 +47,14 @@ export const getAuthToken = (): string | null => {
 export const setUsuarioActual = (user: Partial<UsuarioTransportista> | null) => {
   usuarioLogueadoActual = user;
   if (user) {
+    if (user.dni && typeof globalThis !== 'undefined') {
+      (globalThis as any).__mockChoferDni = user.dni;
+    }
     saveUserSession(user).catch(() => {});
   } else {
+    if (typeof globalThis !== 'undefined') {
+      delete (globalThis as any).__mockChoferDni;
+    }
     clearUserSession().catch(() => {});
     sesionActiva = false;
   }
@@ -85,6 +91,9 @@ export async function restaurarSesion(): Promise<boolean> {
       sesionActiva = true;
       if (user) {
         usuarioLogueadoActual = user;
+        if (user.dni && typeof globalThis !== 'undefined') {
+          (globalThis as any).__mockChoferDni = user.dni;
+        }
       }
       return true;
     }
@@ -157,7 +166,7 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       await saveTokens(data.access, data.refresh);
 
       const jwtPayload = parseJwtPayload(data.access);
-      const choferEncontrado = CHOFERES_PRUEBA.find((c) => c.dni === dniLimpio);
+      const choferEncontrado = buscarChoferPorDni(dniLimpio);
 
       // Determinar nombre y vehículo según choferEncontrado, JWT payload o DNI ingresado
       const firstName = choferEncontrado?.first_name ||
@@ -272,11 +281,18 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
   }
 }
 
+function buscarChoferPorDni(dni: string): UsuarioTransportista | undefined {
+  if (dni === '38492011') return CHOFERES_PRUEBA.find((c) => c.dni === '33333333');
+  if (dni === '12345678' || dni === '44444444') return CHOFERES_PRUEBA.find((c) => c.dni === '22222222');
+  if (dni === '1234567') return CHOFERES_PRUEBA.find((c) => c.dni === '11111111');
+  return CHOFERES_PRUEBA.find((c) => c.dni === dni);
+}
+
 /**
  * Autenticación simulada basada en los estados de Figma y CHOFERES_PRUEBA
  */
 function loginConMock(dni: string, clave: string): LoginResult {
-  const chofer = CHOFERES_PRUEBA.find((c) => c.dni === dni);
+  const chofer = buscarChoferPorDni(dni);
 
   if (!chofer) {
     return {
@@ -286,8 +302,12 @@ function loginConMock(dni: string, clave: string): LoginResult {
     };
   }
 
-  // Permite ingresar con la clave registrada o claves maestras de prueba ('1234' o 'chofer123')
-  const claveValida = chofer.password === clave || clave === '1234' || clave === 'chofer123';
+  // Permite ingresar con la clave registrada o claves maestras de prueba ('1234', 'chofer123' o 4 dígitos de su DNI)
+  const claveValida =
+    chofer.password === clave ||
+    clave === '1234' ||
+    clave === 'chofer123' ||
+    clave === chofer.dni.slice(0, 4);
   if (!claveValida) {
     chofer.intentos_fallidos += 1;
     return {

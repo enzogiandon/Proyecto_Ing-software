@@ -3,9 +3,9 @@ import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
 import { saveJornadaIniciada, isJornadaIniciadaStorage } from './storage';
 import {
   MOCK_ITINERARIO_ASIGNADO,
-  MOCK_ITINERARIO_44444444,
   MOCK_ITINERARIO_SIN_ASIGNAR,
 } from '../data/mockItinerario';
+import * as mockItinData from '../data/mockItinerario';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 
 /**
@@ -193,25 +193,48 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 
     throw new Error(`HTTP ${response.status}`);
   } catch (error: any) {
-    if (soloDjango) throw error;
+    const token = getAuthToken();
+    const esMock = !token || token.startsWith('mock-');
+    if (soloDjango && !esMock) throw error;
     console.warn('Backend de itinerario no disponible. Usando datos Mock de Figma:', error?.message);
     // Modo híbrido: retorna el itinerario correspondiente al usuario autenticado
     const usuarioActual = getUsuarioActual();
     if (usuarioActual?.dni === '55555555') {
       return { itinerario: MOCK_ITINERARIO_SIN_ASIGNAR };
     }
-    if (usuarioActual?.dni === '44444444') {
-      return { itinerario: MOCK_ITINERARIO_44444444 };
+    if (usuarioActual?.dni === '11111111') {
+      const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111 || MOCK_ITINERARIO_ASIGNADO;
+      const idMock = itin1111?.id || 102;
+      const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
+      const estadoMock = jornadaIniciada ? 'en_curso' : (itin1111?.estado || 'en_curso');
+      return {
+        itinerario: {
+          ...itin1111,
+          estado: estadoMock,
+        },
+      };
+    }
+    if (usuarioActual?.dni === '22222222' || usuarioActual?.dni === '44444444') {
+      const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222 || (mockItinData as any).MOCK_ITINERARIO_44444444 || MOCK_ITINERARIO_ASIGNADO;
+      const idMock = itin2222?.id || 103;
+      const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
+      const estadoMock = jornadaIniciada ? 'en_curso' : (itin2222?.estado || 'en_curso');
+      return {
+        itinerario: {
+          ...itin2222,
+          estado: estadoMock,
+        },
+      };
     }
 
-    // Para cualquier otro chofer (12345678, 1234567, etc.), adaptar dinámicamente nombre y unidad
+    // Para Carlos Gómez (33333333) y default
     const nombre = usuarioActual?.first_name
       ? `${usuarioActual.first_name} ${usuarioActual.last_name || ''}`.trim()
-      : (MOCK_ITINERARIO_ASIGNADO.transportistaNombre || 'Martín Rodríguez');
+      : (MOCK_ITINERARIO_ASIGNADO.transportistaNombre || 'Carlos Gómez');
 
     const iniciales = usuarioActual?.first_name
       ? `${usuarioActual.first_name[0] || ''}${usuarioActual.last_name ? usuarioActual.last_name[0] : ''}`.toUpperCase()
-      : (MOCK_ITINERARIO_ASIGNADO.transportistaIniciales || 'MR');
+      : (MOCK_ITINERARIO_ASIGNADO.transportistaIniciales || 'CG');
 
     const vehiculo = usuarioActual?.vehiculo
       ? { patente: usuarioActual.vehiculo.patente, modelo: usuarioActual.vehiculo.modelo }

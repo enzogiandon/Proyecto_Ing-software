@@ -4,7 +4,8 @@
 import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { ParadaItem } from '../types/itinerario';
-import { MOCK_ITINERARIO_ASIGNADO, MOCK_ITINERARIO_44444444 } from '../data/mockItinerario';
+import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
+import * as mockItinData from '../data/mockItinerario';
 
 // Parada seleccionada en memoria durante la navegación
 let paradaSeleccionadaActual: DetalleParada = MOCK_PARADA_SELECCIONADA;
@@ -28,13 +29,20 @@ export const getParadaSeleccionada = (): DetalleParada => {
 export const obtenerParadaSeleccionadaOId = (paradaId?: number): DetalleParada => {
   if (paradaId !== undefined && paradaSeleccionadaActual?.id !== paradaId) {
     const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
-    const itinerarioUsuario = usuario?.dni === '44444444'
-      ? MOCK_ITINERARIO_44444444
+    const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+    const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222;
+    const itin4444 = (mockItinData as any).MOCK_ITINERARIO_44444444 || itin2222;
+
+    const itinerarioUsuario = usuario?.dni === '11111111'
+      ? (itin1111 || MOCK_ITINERARIO_ASIGNADO)
+      : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+      ? (itin2222 || itin4444 || MOCK_ITINERARIO_ASIGNADO)
       : MOCK_ITINERARIO_ASIGNADO;
     const paradasDisponibles = [
       ...(itinerarioUsuario?.paradas || []),
       ...(MOCK_ITINERARIO_ASIGNADO?.paradas || []),
-      ...((MOCK_ITINERARIO_44444444 as any)?.paradas || []),
+      ...(itin1111?.paradas || []),
+      ...(itin2222?.paradas || []),
     ];
     const encontrada =
       paradasDisponibles.find((p) => p.id === paradaId) ||
@@ -186,13 +194,20 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
     // Si no hay backend, buscar la parada solicitada en el itinerario
     if (paradaId !== undefined) {
       const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
-      const itinerarioUsuario = usuario?.dni === '44444444'
-        ? MOCK_ITINERARIO_44444444
+      const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+      const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222;
+      const itin4444 = (mockItinData as any).MOCK_ITINERARIO_44444444 || itin2222;
+
+      const itinerarioUsuario = usuario?.dni === '11111111'
+        ? (itin1111 || MOCK_ITINERARIO_ASIGNADO)
+        : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+        ? (itin2222 || itin4444 || MOCK_ITINERARIO_ASIGNADO)
         : MOCK_ITINERARIO_ASIGNADO;
       const paradasDisponibles = [
         ...(itinerarioUsuario?.paradas || []),
         ...(MOCK_ITINERARIO_ASIGNADO?.paradas || []),
-        ...((MOCK_ITINERARIO_44444444 as any)?.paradas || []),
+        ...(itin1111?.paradas || []),
+        ...(itin2222?.paradas || []),
       ];
       const encontrada =
         paradasDisponibles.find((p) => p.id === paradaId) ||

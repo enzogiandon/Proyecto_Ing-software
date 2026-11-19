@@ -432,7 +432,7 @@ class DetalleImportacion(LoginRequiredMixin, PermissionRequiredMixin, DetailView
     permission_required = "remitos.view_importacionremitos"
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related("errores")
+        return super().get_queryset().prefetch_related("errores", "remitos")
 
 
 class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):

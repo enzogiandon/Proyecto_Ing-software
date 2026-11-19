@@ -10,7 +10,7 @@
 
 ## 🎯 Criterios Editoriales y Metodológicos de Unificación
 
-Este documento presenta una reescritura integral del backlog de **53 Historias de Usuario (HU)** registradas en Taiga, homologando la sintaxis, el vocabulario técnico-operativo y la estructura narrativa conforme a los estándares de ingeniería de software de **Softech** y las pautas de calidad de la cátedra:
+Este documento presenta una reescritura integral del backlog de **54 Historias de Usuario (HU)** registradas en Taiga, homologando la sintaxis, el vocabulario técnico-operativo y la estructura narrativa conforme a los estándares de ingeniería de software de **Softech** y las pautas de calidad de la cátedra:
 
 1. **Estructura homogénea de 4 campos:**
    * **Campo 1 (Identificador):** Formato uniforme `HU-[ID]: [NOMBRE DE LA HISTORIA EN MAYÚSCULAS]`.

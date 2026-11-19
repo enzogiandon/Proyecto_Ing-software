@@ -1,11 +1,56 @@
 // src/services/itinerarioService.ts
 import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
+import { saveJornadaIniciada, isJornadaIniciadaStorage } from './storage';
 import {
   MOCK_ITINERARIO_ASIGNADO,
   MOCK_ITINERARIO_44444444,
   MOCK_ITINERARIO_SIN_ASIGNAR,
 } from '../data/mockItinerario';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
+
+/**
+ * Inicia formalmente la jornada laboral del transportista (HU-68).
+ * Comunica el cambio al backend Django (/api/itinerarios/iniciar-jornada/)
+ * y persiste el estado en AsyncStorage para garantizar soporte offline y persistencia tras reinicio.
+ */
+export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promise<{ success: boolean; error?: string }> {
+  const token = getAuthToken();
+
+  try {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 7000) : null;
+
+    await fetch(`${API_BASE_URL}/api/itinerarios/iniciar-jornada/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ itinerario_id: itinerarioId }),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+
+    if (timeoutId) clearTimeout(timeoutId);
+  } catch (err: any) {
+    console.warn('[ItinerarioService] Sincronización offline al iniciar jornada:', err?.message);
+  }
+
+  await saveJornadaIniciada(itinerarioId, true);
+  return { success: true };
+}
+
+/**
+ * Verifica si la jornada laboral del itinerario ya fue iniciada ('en_curso' o 'en_ruta').
+ */
+export function isJornadaIniciada(itinerario?: ItinerarioJornada | null): boolean {
+  if (!itinerario) return false;
+  return (
+    itinerario.estado === 'en_curso' ||
+    itinerario.estado === 'en_ruta' ||
+    itinerario.estado === 'finalizado' ||
+    (itinerario.paradasCompletadas !== undefined && itinerario.paradasCompletadas > 0)
+  );
+}
 
 /**
  * Obtiene la hoja de ruta / itinerario activo del transportista.
@@ -108,8 +153,12 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
           (p) => (p.estado as string) === 'finalizada' || (p.estado as string) === 'completada'
         ).length;
 
+        const itinerarioId = 101;
+        const jornadaIniciada = await isJornadaIniciadaStorage(itinerarioId);
+        const estadoCalculado = jornadaIniciada ? 'en_curso' : 'asignado';
+
         const itinerario: ItinerarioJornada = {
-          id: 101,
+          id: itinerarioId,
           fecha: new Date().toLocaleDateString('es-AR', {
             weekday: 'short',
             day: 'numeric',
@@ -117,7 +166,7 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
             year: 'numeric',
           }),
           rutaNombre: 'Ruta 12 · San Martín',
-          estado: 'en_ruta',
+          estado: estadoCalculado,
           transportistaNombre,
           transportistaIniciales,
           vehiculo,
@@ -168,9 +217,14 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
       ? { patente: usuarioActual.vehiculo.patente, modelo: usuarioActual.vehiculo.modelo }
       : MOCK_ITINERARIO_ASIGNADO.vehiculo;
 
+    const idMock = MOCK_ITINERARIO_ASIGNADO.id || 101;
+    const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
+    const estadoMock = jornadaIniciada ? 'en_curso' : (MOCK_ITINERARIO_ASIGNADO.estado || 'asignado');
+
     return {
       itinerario: {
         ...MOCK_ITINERARIO_ASIGNADO,
+        estado: estadoMock,
         transportistaNombre: nombre,
         transportistaIniciales: iniciales,
         vehiculo,

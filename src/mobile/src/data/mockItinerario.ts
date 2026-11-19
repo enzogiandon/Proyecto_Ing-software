@@ -9,7 +9,7 @@ export const MOCK_ITINERARIO_ASIGNADO: ItinerarioJornada = {
   id: 101,
   fecha: 'Lun, 19 oct 2026',
   rutaNombre: 'Ruta 12 · San Martín',
-  estado: 'en_ruta',
+  estado: 'asignado',
   transportistaNombre: 'Martín Rodríguez',
   transportistaIniciales: 'MR',
   vehiculo: {
@@ -17,7 +17,7 @@ export const MOCK_ITINERARIO_ASIGNADO: ItinerarioJornada = {
     modelo: 'Unidad 024 · Iveco Daily',
   },
   totalParadas: 8,
-  paradasCompletadas: 4,
+  paradasCompletadas: 0,
   paradas: [
     {
       id: 1,

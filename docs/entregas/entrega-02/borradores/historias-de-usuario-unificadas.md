@@ -1207,6 +1207,57 @@ En la pantalla de detalle, el chofer visualiza los botones de acción habilitado
 
 ---
 
+#### HU-68: INICIAR JORNADA LABORAL Y HABILITACIÓN DE HOJA DE RUTA
+
+**Título:**
+Como TRANSPORTISTA  
+quiero INICIAR FORMALMENTE MI JORNADA LABORAL DESDE LA APLICACIÓN  
+para HABILITAR LA OPERACIÓN DE PARADAS, EL REORDENAMIENTO Y LA APLICACIÓN DE RECORRIDOS, NOTIFICANDO A LA BASE QUE EL VEHÍCULO ESTÁ EN CALLE.
+
+**Reglas a considerar:**
+- Al ingresar a la pantalla principal "Mi Itinerario" con una hoja de ruta asignada para el día, el sistema exhibe un botón prioritario y destacado: "Comenzar jornada laboral".
+- Mientras la jornada laboral no haya sido iniciada:
+  * El itinerario permanece en estado 'Asignado' y se despliega en modo preventivo / solo lectura.
+  * El chofer puede visualizar la secuencia de paradas, comercios, direcciones y montos a cobrar previstos, pero no puede interactuar con las tarjetas ni ingresar al detalle de ninguna parada.
+  * El botón "Reordenar paradas" permanece deshabilitado / bloqueado.
+  * El transportista puede acceder a la sección "Recorridos Guardados" para consultar y visualizar sus plantillas, pero el sistema bloquea tanto la creación de nuevas plantillas ("+ Guardar orden actual") como la carga de recorridos guardados ("Cargar"), informando el motivo.
+  * La eliminación de plantillas obsoletas en "Recorridos Guardados" permanece permitida.
+- Al pulsar "Comenzar jornada laboral":
+  * El sistema transiciona el estado del itinerario de 'asignado' a 'en_curso' tanto en el backend Django como en el dispositivo móvil.
+  * Desaparece el botón de inicio de jornada y se habilita la totalidad de las funciones operativas: ingreso al detalle de paradas (HU-67), registro de cobros (HU-31), remitos y documentos (HU-30), reordenamiento táctil de paradas (HU-24), y guardado o carga de plantillas de recorridos (HU-26 y HU-64).
+- Persistencia y robustez ante desconexión o reinicio:
+  * El estado de jornada iniciada se persiste de forma segura en almacenamiento nativo (`AsyncStorage`) y en base de datos.
+  * Si la aplicación se minimiza, se reinicia o se descarga de memoria RAM durante el reparto, al reabrir la app el chofer accede directamente a su itinerario en estado "En curso", manteniendo habilitadas todas las operaciones sin requerir volver a comenzar la jornada.
+
+**Criterios de Aceptación:**
+
+ESCENARIO 1: Consulta preventiva con jornada no iniciada  
+Dado que el transportista inicia sesión y posee un itinerario asignado para el día que aún no comenzó,  
+cuando visualiza la pantalla de "Mi Itinerario",  
+entonces se exhibe el botón "Comenzar jornada laboral", la lista de paradas en modo solo lectura (sin acceso a detalles de parada) y el botón "Reordenar paradas" bloqueado.
+
+ESCENARIO 2: Bloqueo de guardado y carga en Recorridos Guardados previo al inicio de jornada  
+Dado que la jornada laboral no ha sido iniciada,  
+cuando el chofer ingresa a la sección "Recorridos Guardados",  
+entonces puede consultar sus plantillas personales existentes, pero los botones "Cargar" y "+ Guardar orden actual" se encuentran deshabilitados, advirtiendo que debe comenzar la jornada para aplicar o guardar recorridos.
+
+ESCENARIO 3: Activación exitosa de la jornada laboral  
+Dado que el chofer presiona el botón "Comenzar jornada laboral",  
+cuando el sistema confirma el cambio de estado a 'en_curso',  
+entonces desaparece el botón de inicio, se muestra el indicador de jornada activa, se desbloquean los accesos al detalle de cada parada y queda plenamente habilitado el reordenamiento de paradas.
+
+ESCENARIO 4: Habilitación de carga y guardado de recorridos con jornada en curso  
+Dado que la jornada laboral ya fue iniciada ('en_curso'),  
+cuando el chofer navega a "Recorridos Guardados",  
+entonces los botones "Cargar" y "+ Guardar orden actual" se encuentran habilitados y disponibles para su uso inmediato.
+
+ESCENARIO 5: Persistencia del estado 'en_curso' tras reinicio de la aplicación  
+Dado que el transportista ya inició su jornada laboral,  
+cuando se cierra por completo la aplicación móvil o se descarga de la memoria RAM y se vuelve a abrir,  
+entonces el sistema restaura el itinerario directamente en estado "En curso", sin mostrar nuevamente el botón de comenzar jornada ni bloquear las paradas.
+
+---
+
 ---
 
 ### ÉPICA: REGISTRO DE ENTREGAS Y COBRANZAS EN DESTINO (Taiga #29)

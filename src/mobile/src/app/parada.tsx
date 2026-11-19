@@ -50,7 +50,7 @@ export default function ParadaScreen() {
   const cobroValidado =
     parada.estadoCobro === 'validado' ||
     parada.estado === 'finalizada' ||
-    parada.estado === 'completada';
+    (parada.estado as any) === 'completada';
 
   // Modales interactivos para las acciones secundarias
   const [modalRemitosVisible, setModalRemitosVisible] = useState<boolean>(false);

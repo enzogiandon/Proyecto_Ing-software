@@ -1,5 +1,12 @@
 import { CHOFERES_PRUEBA, UsuarioTransportista, MOCK_CHOFER_ACTUAL } from '../data/mockData';
-import { saveTokens, clearTokens } from './storage';
+import {
+  saveTokens,
+  clearTokens,
+  getAccessToken,
+  saveUserSession,
+  getUserSession,
+  clearUserSession,
+} from './storage';
 import { BACKEND_URL } from './config';
 
 // Configuración dinámica de la URL base del Backend Django
@@ -18,30 +25,7 @@ export interface LoginResult {
   tipoError?: 'DNI' | 'CLAVE' | 'INHABILITADO' | 'SERVIDOR';
 }
 
-// Variables de sesión activa del chofer (persistencia en memoria y localStorage en web)
-const STORAGE_USER_KEY = 'repartoya_transportista_session';
-const STORAGE_TOKEN_KEY = 'repartoya_transportista_token';
-
-function getStoredUser(): Partial<UsuarioTransportista> | null {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_USER_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch {}
-  }
-  return null;
-}
-
-function getStoredToken(): string | null {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_TOKEN_KEY);
-      if (stored) return stored;
-    } catch {}
-  }
-  return null;
-}
-
+// Variables de sesión activa del chofer en memoria
 let tokenAccesoActual: string | null = null;
 let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = null;
 let sesionActiva = false;
@@ -49,16 +33,10 @@ let sesionActiva = false;
 export const setAuthToken = (token: string | null) => {
   tokenAccesoActual = token;
   if (token) {
-    saveTokens(token);
+    saveTokens(token).catch(() => {});
   } else {
-    clearTokens();
+    clearTokens().catch(() => {});
     sesionActiva = false;
-  }
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      if (token) window.localStorage.setItem(STORAGE_TOKEN_KEY, token);
-      else window.localStorage.removeItem(STORAGE_TOKEN_KEY);
-    } catch {}
   }
 };
 
@@ -68,14 +46,11 @@ export const getAuthToken = (): string | null => {
 
 export const setUsuarioActual = (user: Partial<UsuarioTransportista> | null) => {
   usuarioLogueadoActual = user;
-  if (!user) {
+  if (user) {
+    saveUserSession(user).catch(() => {});
+  } else {
+    clearUserSession().catch(() => {});
     sesionActiva = false;
-  }
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      if (user) window.localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-      else window.localStorage.removeItem(STORAGE_USER_KEY);
-    } catch {}
   }
 };
 
@@ -84,14 +59,41 @@ export const getUsuarioActual = (): Partial<UsuarioTransportista> | null => {
 };
 
 export const estaAutenticado = (): boolean => {
-  return sesionActiva;
+  return sesionActiva || !!tokenAccesoActual;
 };
 
 export const cerrarSesion = () => {
   sesionActiva = false;
-  setAuthToken(null);
-  setUsuarioActual(null);
+  tokenAccesoActual = null;
+  usuarioLogueadoActual = null;
+  clearTokens().catch(() => {});
+  clearUserSession().catch(() => {});
 };
+
+/**
+ * Restaura la sesión del transportista desde el almacenamiento persistente
+ * (AsyncStorage en Android/iOS o localStorage en Web).
+ * Retorna true si hay un token válido recuperado y restaura los datos del usuario.
+ */
+export async function restaurarSesion(): Promise<boolean> {
+  try {
+    const token = await getAccessToken();
+    const user = await getUserSession<Partial<UsuarioTransportista>>();
+
+    if (token) {
+      tokenAccesoActual = token;
+      sesionActiva = true;
+      if (user) {
+        usuarioLogueadoActual = user;
+      }
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('[AuthService] Error al restaurar sesión:', err);
+    return false;
+  }
+}
 
 // Decodificador seguro de JWT compatible con Web, Node y React Native
 function parseJwtPayload(token: string): Record<string, any> | null {
@@ -305,6 +307,8 @@ function loginConMock(dni: string, clave: string): LoginResult {
 
   chofer.intentos_fallidos = 0;
   sesionActiva = true;
+  setAuthToken('mock-jwt-access-token-xyz');
+  saveTokens('mock-jwt-access-token-xyz', 'mock-jwt-refresh-token-xyz').catch(() => {});
   setUsuarioActual(chofer);
 
   return {

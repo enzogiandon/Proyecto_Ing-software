@@ -114,60 +114,6 @@ class ItinerarioViewsTests(TestCase):
             response, "El itinerario no contiene paradas para exportar"
         )
 
-    def test_exportar_hoja_de_ruta_pendiente_muestra_advertencia(self):
-        itinerario = Itinerario.objects.create(
-            fecha=date(2026, 10, 25),
-            transportista=self.transportista,
-            vehiculo=self.vehiculo,
-            estado=EstadoItinerario.PENDIENTE,
-        )
-        comercio = self.crear_comercio("Comercio pendiente", "20123456790")
-        Parada.objects.create(
-            itinerario=itinerario,
-            comercio=comercio,
-            orden=1,
-        )
-
-        response = self.client.get(
-            reverse("itinerarios:itinerario_exportar_pdf", args=[itinerario.pk]),
-            follow=True,
-        )
-
-        self.assertRedirects(response, reverse("itinerarios:itinerario_lista"))
-        self.assertContains(
-            response,
-            "Solo se pueden exportar itinerarios asignados, en curso o finalizados.",
-        )
-
-    def test_exportar_hoja_de_ruta_permite_estados_posteriores(self):
-        itinerario = Itinerario.objects.create(
-            fecha=date(2026, 10, 25),
-            transportista=self.transportista,
-            vehiculo=self.vehiculo,
-            estado=EstadoItinerario.ASIGNADO,
-        )
-        comercio = self.crear_comercio("Comercio posterior", "20123456791")
-        Parada.objects.create(
-            itinerario=itinerario,
-            comercio=comercio,
-            orden=1,
-        )
-
-        for estado in (EstadoItinerario.EN_CURSO, EstadoItinerario.FINALIZADO):
-            with self.subTest(estado=estado):
-                itinerario.estado = estado
-                itinerario.save(update_fields=["estado"])
-
-                response = self.client.get(
-                    reverse(
-                        "itinerarios:itinerario_exportar_pdf",
-                        args=[itinerario.pk],
-                    )
-                )
-
-                self.assertEqual(response.status_code, 200)
-                self.assertEqual(response["Content-Type"], "application/pdf")
-
     def test_create_itinerary_uses_transportista_vehicle(self):
         second_vehiculo = Vehiculo.objects.create(patente="CD456EF")
         second_user = get_user_model().objects.create_user(

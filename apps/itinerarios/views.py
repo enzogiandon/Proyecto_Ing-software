@@ -142,16 +142,6 @@ class ExportarHojaRutaPDF(LoginRequiredMixin, PermissionRequiredMixin, DetailVie
                 request, "El itinerario no contiene paradas para exportar"
             )
             return redirect("itinerarios:itinerario_lista")
-        if self.object.estado not in (
-            EstadoItinerario.ASIGNADO,
-            EstadoItinerario.EN_CURSO,
-            EstadoItinerario.FINALIZADO,
-        ):
-            messages.warning(
-                request,
-                "Solo se pueden exportar itinerarios asignados, en curso o finalizados.",
-            )
-            return redirect("itinerarios:itinerario_lista")
 
         styles = getSampleStyleSheet()
         styles.add(

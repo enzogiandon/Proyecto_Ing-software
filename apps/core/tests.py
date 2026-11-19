@@ -223,6 +223,14 @@ class EmpleadoViewsTests(TestCase):
             username="67890123",
             password="Original-Password-42!",
         )
+        vehiculo = Vehiculo.objects.create(
+            patente="CC333CC",
+            modelo="Iveco",
+            estado=EstadoVehiculo.ASIGNADO,
+        )
+        transportista = Transportista.objects.create(
+            usuario=employee, vehiculo=vehiculo
+        )
 
         response = self.client.post(
             reverse("core:empleado_suspender", args=[employee.pk])
@@ -236,6 +244,10 @@ class EmpleadoViewsTests(TestCase):
         employee.refresh_from_db()
         self.assertFalse(employee.is_active)
         self.assertTrue(get_user_model().objects.filter(pk=employee.pk).exists())
+        transportista.refresh_from_db()
+        self.assertIsNone(transportista.vehiculo)
+        vehiculo.refresh_from_db()
+        self.assertEqual(vehiculo.estado, EstadoVehiculo.DISPONIBLE)
         self.client.logout()
         self.assertFalse(
             self.client.login(

@@ -62,6 +62,9 @@ class EmpleadoCreateForm(forms.ModelForm):
         empty_label="Seleccione un vehículo (opcional)",
         widget=forms.Select(attrs={"class": "form-select"}),
         label="Vehículo asignado",
+        error_messages={
+            "invalid_choice": "El vehículo seleccionado no se encuentra disponible."
+        },
     )
 
     class Meta:
@@ -162,6 +165,9 @@ class EmpleadoUpdateForm(forms.ModelForm):
         empty_label="Seleccione un vehículo (opcional)",
         widget=forms.Select(attrs={"class": "form-select"}),
         label="Vehículo asignado",
+        error_messages={
+            "invalid_choice": "El vehículo seleccionado no se encuentra disponible."
+        },
     )
 
     class Meta:
@@ -206,27 +212,23 @@ class EmpleadoUpdateForm(forms.ModelForm):
             perfil = getattr(self.instance, "perfil_transportista", None)
             
             # Vehículos disponibles + el vehículo actualmente asignado a este transportista
-            qs_disponibles = Q(transportista__isnull=True, estado="disponible")
+            qs_disponibles = Q(transportista__isnull=True, estado=EstadoVehiculo.DISPONIBLE)
             if perfil and perfil.vehiculo_id:
-                qs_final = Vehiculo.objects.filter(qs_disponibles | Q(pk=perfil.vehiculo_id))
+                qs_final = Vehiculo.objects.filter(qs_disponibles | Q(pk=perfil.vehiculo_id)).order_by("modelo", "patente")
                 self.fields["vehiculo"].initial = perfil.vehiculo
             else:
-                qs_final = Vehiculo.objects.filter(qs_disponibles)
+                qs_final = Vehiculo.objects.filter(qs_disponibles).order_by("modelo", "patente")
 
-            self.fields["vehiculo"].queryset = Vehiculo.objects.all().order_by("modelo", "patente")
+            self.fields["vehiculo"].queryset = qs_final
 
     def clean_vehiculo(self):
-        if "vehiculo" in self.data and self.data["vehiculo"]:
-            try:
-                v = Vehiculo.objects.get(pk=self.data["vehiculo"])
-                if v.estado != EstadoVehiculo.DISPONIBLE:
-                    perfil = getattr(self.instance, "perfil_transportista", None)
-                    vehiculo_actual = perfil.vehiculo if perfil else None
-                    if v != vehiculo_actual:
-                        raise ValidationError("El vehículo seleccionado no se encuentra disponible.")
-            except (Vehiculo.DoesNotExist, ValueError):
-                pass
-        return self.cleaned_data.get("vehiculo")
+        vehiculo = self.cleaned_data.get("vehiculo")
+        if vehiculo:
+            perfil = getattr(self.instance, "perfil_transportista", None)
+            vehiculo_actual = perfil.vehiculo if perfil else None
+            if vehiculo != vehiculo_actual and vehiculo.estado != EstadoVehiculo.DISPONIBLE:
+                raise ValidationError("El vehículo seleccionado no se encuentra disponible.")
+        return vehiculo
 
     def clean_grupos(self):
         grupos = self.cleaned_data.get("grupos")

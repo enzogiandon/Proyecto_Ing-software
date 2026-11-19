@@ -856,13 +856,13 @@ class ParadaViewSet(viewsets.ModelViewSet):
                 }
             )
 
-        archivo = request.FILES["archivo"]
-        evidencia = EvidenciaParada.objects.create(
-            parada=parada,
-            archivo=archivo,
+        serializer = EvidenciaParadaSerializer(
+            data={"archivo": request.FILES["archivo"]},
+            context={"request": request},
         )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(parada=parada)
 
-        serializer = EvidenciaParadaSerializer(evidencia, context={"request": request})
         return Response(
             {
                 "mensaje": "Evidencia subida correctamente.",

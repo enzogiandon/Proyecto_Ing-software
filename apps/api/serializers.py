@@ -88,9 +88,11 @@ def calcular_monto_recaudar(parada) -> str:
 
 
 class ComercioSerializer(serializers.ModelSerializer):
+    razonSocial = serializers.CharField(source="razon_social", read_only=True)
+
     class Meta:
         model = Comercio
-        fields = ["id", "razon_social", "cuit", "domicilio", "telefono"]
+        fields = ["id", "razon_social", "razonSocial", "cuit", "domicilio", "telefono"]
 
 
 class RemitoSerializer(serializers.ModelSerializer):
@@ -102,13 +104,30 @@ class RemitoSerializer(serializers.ModelSerializer):
 class ListaParadaSerializer(serializers.ModelSerializer):
     comercio = ComercioSerializer(read_only=True)
     monto_recaudar = serializers.SerializerMethodField()
+    montoCobranza = serializers.SerializerMethodField()
+    cantidadRemitos = serializers.SerializerMethodField()
 
     class Meta:
         model = Parada
-        fields = ["id", "orden", "estado", "comercio", "monto_recaudar"]
+        fields = [
+            "id",
+            "orden",
+            "estado",
+            "comercio",
+            "monto_recaudar",
+            "montoCobranza",
+            "cantidadRemitos",
+        ]
 
     def get_monto_recaudar(self, obj) -> str:
         return calcular_monto_recaudar(obj)
+
+    def get_montoCobranza(self, obj) -> float:
+        total = obj.remitos.aggregate(total=Sum("total"))["total"] or Decimal("0.00")
+        return float(total)
+
+    def get_cantidadRemitos(self, obj) -> int:
+        return obj.remitos.count()
 
 
 class ProblemaParadaSerializer(serializers.ModelSerializer):
@@ -129,6 +148,8 @@ class ProblemaParadaSerializer(serializers.ModelSerializer):
 
 
 class EvidenciaParadaSerializer(serializers.ModelSerializer):
+    archivo = serializers.ImageField()
+
     class Meta:
         model = EvidenciaParada
         fields = ["id", "parada", "archivo", "fecha"]
@@ -139,6 +160,8 @@ class DetalleParadaSerializer(serializers.ModelSerializer):
     comercio = ComercioSerializer(read_only=True)
     remitos = RemitoSerializer(many=True, read_only=True)
     monto_recaudar = serializers.SerializerMethodField()
+    montoCobranza = serializers.SerializerMethodField()
+    cantidadRemitos = serializers.SerializerMethodField()
     evidencias = EvidenciaParadaSerializer(many=True, read_only=True)
 
     class Meta:
@@ -151,11 +174,20 @@ class DetalleParadaSerializer(serializers.ModelSerializer):
             "comercio",
             "remitos",
             "monto_recaudar",
+            "montoCobranza",
+            "cantidadRemitos",
             "evidencias",
         ]
 
     def get_monto_recaudar(self, obj) -> str:
         return calcular_monto_recaudar(obj)
+
+    def get_montoCobranza(self, obj) -> float:
+        total = obj.remitos.aggregate(total=Sum("total"))["total"] or Decimal("0.00")
+        return float(total)
+
+    def get_cantidadRemitos(self, obj) -> int:
+        return obj.remitos.count()
 
 
 class GuardarRutaSerializer(serializers.Serializer):

@@ -23,8 +23,6 @@ class EstadoRemito(models.TextChoices):
 class Marca(models.Model):
     nombre = models.CharField(max_length=50, unique=True)
     cuit = models.CharField(max_length=11, unique=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    email = models.CharField(max_length=50, blank=True, null=True)
     activo = models.BooleanField(default=True)
 
     def __str__(self):

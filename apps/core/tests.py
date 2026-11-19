@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.forms import EmpleadoCreateForm
-from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
+from apps.core.models import EstadoVehiculo, Grupos, Transportista, Usuario, Vehiculo
 
 
 class EmpleadoViewsTests(TestCase):
@@ -143,10 +143,93 @@ class EmpleadoViewsTests(TestCase):
         self.assertQuerySetEqual(employee.groups.all(), [self.gestion_personal])
         self.assertFalse(Transportista.objects.filter(usuario=employee).exists())
 
+    def test_update_employee_rejects_assigning_vehicle_to_suspended_transportista(self):
+        employee = get_user_model().objects.create_user(
+            username="56789099",
+            password="Original-Password-42!",
+            first_name="Nombre",
+            last_name="Suspendido",
+            is_active=False,
+        )
+        employee.groups.add(self.grupo_transportista)
+        Transportista.objects.create(usuario=employee)
+        vehiculo = Vehiculo.objects.create(
+            patente="AA111AA",
+            modelo="Mercedes",
+            estado=EstadoVehiculo.DISPONIBLE,
+        )
+
+        response = self.client.post(
+            reverse("core:empleado_editar", args=[employee.pk]),
+            {
+                "username": employee.username,
+                "email": "suspendido@example.com",
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk],
+                "vehiculo": vehiculo.pk,
+                "password": "",
+                "password_confirm": "",
+            },
+        )
+
+        self.assertRedirects(response, reverse("core:empleado_lista"))
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("Error: Transportista deshabilitado" in m.message for m in messages))
+
+    def test_update_employee_rejects_assigning_non_available_vehicle(self):
+        employee = get_user_model().objects.create_user(
+            username="56789098",
+            password="Original-Password-42!",
+            first_name="Nombre",
+            last_name="Activo",
+            is_active=True,
+        )
+        employee.groups.add(self.grupo_transportista)
+        Transportista.objects.create(usuario=employee)
+        vehiculo_no_operativo = Vehiculo.objects.create(
+            patente="BB222BB",
+            modelo="Ford",
+            estado=EstadoVehiculo.NO_OPERATIVO,
+        )
+
+        response = self.client.post(
+            reverse("core:empleado_editar", args=[employee.pk]),
+            {
+                "username": employee.username,
+                "email": "activo@example.com",
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk],
+                "vehiculo": vehiculo_no_operativo.pk,
+                "password": "",
+                "password_confirm": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("vehiculo", form.errors)
+        self.assertIn(
+            "El vehículo seleccionado no se encuentra disponible.",
+            form.errors["vehiculo"],
+        )
+
     def test_suspend_employee_disables_account_without_deleting_it(self):
         employee = get_user_model().objects.create_user(
             username="67890123",
             password="Original-Password-42!",
+        )
+        vehiculo = Vehiculo.objects.create(
+            patente="CC333CC",
+            modelo="Iveco",
+            estado=EstadoVehiculo.ASIGNADO,
+        )
+        transportista = Transportista.objects.create(
+            usuario=employee, vehiculo=vehiculo
         )
 
         response = self.client.post(
@@ -161,6 +244,10 @@ class EmpleadoViewsTests(TestCase):
         employee.refresh_from_db()
         self.assertFalse(employee.is_active)
         self.assertTrue(get_user_model().objects.filter(pk=employee.pk).exists())
+        transportista.refresh_from_db()
+        self.assertIsNone(transportista.vehiculo)
+        vehiculo.refresh_from_db()
+        self.assertEqual(vehiculo.estado, EstadoVehiculo.DISPONIBLE)
         self.client.logout()
         self.assertFalse(
             self.client.login(
@@ -304,6 +391,39 @@ class VehiculoViewsTests(TestCase):
             [message.message for message in get_messages(response.wsgi_request)],
             ["Vehículo modificado exitosamente"],
         )
+
+    def test_update_vehicle_to_no_operativo_unassigns_transportista(self):
+        vehiculo = Vehiculo.objects.create(
+            patente="AB123CD", estado=EstadoVehiculo.ASIGNADO
+        )
+        user = Usuario.objects.create_user(
+            username="98765432",
+            password="test-password-123",
+            first_name="Chofer",
+            last_name="Test",
+        )
+        transportista = Transportista.objects.create(usuario=user, vehiculo=vehiculo)
+
+        response = self.client.post(
+            reverse("core:vehiculo_editar", args=[vehiculo.pk]),
+            {
+                "patente": "AB123CD",
+                "modelo": "Camión",
+                "poliza": "POL-123",
+                "estado": EstadoVehiculo.NO_OPERATIVO,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:vehiculo_lista"),
+            fetch_redirect_response=False,
+        )
+        vehiculo.refresh_from_db()
+        self.assertEqual(vehiculo.estado, EstadoVehiculo.NO_OPERATIVO)
+        transportista.refresh_from_db()
+        self.assertIsNone(transportista.vehiculo)
+
 
     def test_create_vehicle_requires_login(self):
         self.client.logout()

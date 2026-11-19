@@ -23,12 +23,6 @@
                 <h1 class="text-title">{% if object.pk %}Editar vehículo{% else %}Añadir vehículo{% endif %}</h1>
                 <p class="text-body">{% if object.pk %}Actualiza los datos del vehículo.{% else %}Añade un nuevo vehículo a la flota{% endif %}</p>
             </div>
-
-            {% if object.pk and object.estado %}
-                <span class="estado-badge {% if object.estado == 'disponible' %}estado-badge--info{% elif object.estado == 'no_operativo' %}estado-badge--error{% else %}estado-badge--warning{% endif %} text-badge">
-                    {{ object.get_estado_display }}
-                </span>
-            {% endif %}
         </div>
     </header>
 
@@ -81,6 +75,7 @@
                 <legend class="estado-laboral__etiqueta">Estado</legend>
                 <div class="estado-laboral__opciones">
                     {% for opcion in form.estado %}
+                    {% if opcion.data.label != "Asignado" %}
                         <label class="opcion-estado">
                             <input type="radio" name="{{ opcion.data.name }}" value="{{ opcion.data.value }}"{% if opcion.data.selected %} checked{% endif %}>
                             <span class="opcion-estado__caja">
@@ -88,6 +83,7 @@
                                 <span>{{ opcion.data.label }}</span>
                             </span>
                         </label>
+                    {% endif %}
                     {% endfor %}
                 </div>
                 {% for error in form.estado.errors %}

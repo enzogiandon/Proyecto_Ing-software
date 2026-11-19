@@ -329,29 +329,21 @@ class Command(BaseCommand):
                 {
                     "nombre": "Cerveceria La Diagonal S.A.",
                     "cuit": "30654321090",
-                    "telefono": "1143401000",
-                    "email": "ventas@cervecerialadiagonal.com.ar",
                     "activo": True,
                 },
                 {
                     "nombre": "Snacks Andinos S.R.L.",
                     "cuit": "30709876542",
-                    "telefono": "1147083000",
-                    "email": "distribucion@snacksandinos.com.ar",
                     "activo": True,
                 },
                 {
                     "nombre": "Gaseosas del Sur S.A.",
                     "cuit": "30712345671",
-                    "telefono": "1143657000",
-                    "email": "pedidos@gaseosasdelsur.com.ar",
                     "activo": True,
                 },
                 {
                     "nombre": "Lacteos El Tambo S.A.",
                     "cuit": "33698712347",
-                    "telefono": "1147084000",
-                    "email": "contacto@lacteoseltambo.com.ar",
                     "activo": True,
                 },
             ]
@@ -1318,21 +1310,20 @@ class Command(BaseCommand):
                         vehiculo=vehiculo_1234567,
                     )
 
-                    # Parada 1: Comercio "23200048148" (finalizada con cobranza registrada en 2 medios de pago)
+                    # Parada 1: Comercio "23200048148" (pendiente de entrega)
                     comercio_1 = comercios["23200048148"]
                     parada_1 = Parada.objects.create(
                         itinerario=itinerario_creado,
                         comercio=comercio_1,
                         orden=1,
-                        estado=EstadoParada.FINALIZADA,
-                        hora_entrega=timezone.now(),
+                        estado=EstadoParada.PENDIENTE,
                     )
                     total_paradas_completo += 1
 
                     remito_1 = remitos_creados.get("0005-00024715")
                     if remito_1:
                         remito_1.parada = parada_1
-                        remito_1.estado = EstadoRemito.ENTREGADO
+                        remito_1.estado = EstadoRemito.ASIGNADO
                         remito_1.save(update_fields=["parada", "estado"])
 
                         cobranza_1 = Cobranza.objects.create(
@@ -1358,14 +1349,13 @@ class Command(BaseCommand):
                         total_cobranzas_completo += 1
 
                     # Parada 2: Comercio "23200000145" (finalizada con cobranza registrada / pendiente de validación)
-                    # Este comercio tiene dos remitos: 0002-00015378 ($475923.72) y 0004-00003901 ($733385.18)
+                    # Este comercio tiene dos remitos: 0090-00015378 y 0090-00003901
                     comercio_2 = comercios["23200000145"]
                     parada_2 = Parada.objects.create(
                         itinerario=itinerario_creado,
                         comercio=comercio_2,
                         orden=2,
-                        estado=EstadoParada.FINALIZADA,
-                        hora_entrega=timezone.now(),
+                        estado=EstadoParada.PENDIENTE,
                     )
                     total_paradas_completo += 1
 
@@ -1375,13 +1365,12 @@ class Command(BaseCommand):
 
                     if remito_2a:
                         remito_2a.parada = parada_2
-                        remito_2a.estado = EstadoRemito.ENTREGADO
+                        remito_2a.estado = EstadoRemito.ASIGNADO
                         remito_2a.save(update_fields=["parada", "estado"])
-                        total_monto_parada_2 += remito_2a.total
 
                     if remito_2b:
                         remito_2b.parada = parada_2
-                        remito_2b.estado = EstadoRemito.ENTREGADO
+                        remito_2b.estado = EstadoRemito.ASIGNADO
                         remito_2b.save(update_fields=["parada", "estado"])
                         total_monto_parada_2 += remito_2b.total
 
@@ -1517,7 +1506,7 @@ class Command(BaseCommand):
         self.stdout.write("     - Itinerario de hoy con 4 paradas (2 finalizadas con cobranza, 2 pendientes de entrega en calle).")
         self.stdout.write("     - Ruta guardada: 'Ruta Rapida Alternativa'.")
         self.stdout.write("   • Chofer 2 (Completo Avanzado): DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF")
-        self.stdout.write("     - Itinerario de hoy con 5 paradas (1 registrada, 1 aprobada, 1 difiere con ajuste auditado, 1 error local cerrado, 1 multimarca).")
+        self.stdout.write("     - Itinerario de hoy con 5 paradas (1 registrada, 1 aprobada, 1 difiere con ajuste auditado, 1 error local cerrado, 1 Consolidación Multimarca).")
         self.stdout.write("     - Ruta guardada: 'Ruta Costera 12'.")
         self.stdout.write("   • Chofer 3 (Bloqueado/Suspendido): DNI 12345679 | Clave: 123 | Carlos Bloqueado (Para probar desbloqueo HU-11 / HU-66).")
         self.stdout.write("   • Chofer 4 (En Curso): DNI 12345680 | Clave: 123 | Lucas Rodríguez | Vehículo: AD345JK (Itinerario en curso HU-60).")

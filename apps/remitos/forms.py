@@ -137,18 +137,12 @@ class ComercioForm(forms.ModelForm):
 class MarcaForm(forms.ModelForm):
     class Meta:
         model = Marca
-        fields = ["nombre", "cuit", "telefono", "email"]
+        fields = ["nombre", "cuit"]
         widgets = {
             "nombre": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Razon social"}
+                attrs={"class": "form-control", "placeholder": "Razón social"}
             ),
             "cuit": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "CUIT"}
-            ),
-            "telefono": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "11 1234 1234"}
-            ),
-            "email": forms.EmailInput(
-                attrs={"class": "form-control", "placeholder": "email@mail.com"}
+                attrs={"class": "form-control", "placeholder": "CUIT (11 dígitos)"}
             ),
         }

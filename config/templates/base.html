@@ -73,6 +73,10 @@
                             <i class="fas fa-route"></i>
                             <span>Itinerarios</span>
                         </a>
+                        <a href="{% url 'remitos:marca_lista' %}" class="sidebar-link {% if 'marca' in request.resolver_match.url_name %}active{% endif %}">
+                            <i class="fas fa-tags"></i>
+                            <span>Marcas</span>
+                        </a>
                     {% endif %}
 
                     {% if request.user|has_group:'administrativo-conciliacion' %}

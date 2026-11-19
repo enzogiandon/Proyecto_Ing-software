@@ -20,7 +20,7 @@
     <header>
         <h1 class="text-title mb-1">Agregar paradas</h1>
         <p class="text-body text-c-secondary mb-0">
-            Seleccioná las paradas que querés agregar. Cada parada incluye todos los remitos pendientes del mismo destinatario y domicilio.
+            Seleccioná un comercio completo para asignar todos sus remitos a la vez, o desplegá su menú para elegir remitos específicos.
         </p>
     </header>
 
@@ -51,51 +51,273 @@
         </div>
 
         <div class="mb-4">
-            <div class="itin-paradas-header">
-                <h2 class="text-section mb-0">{{ form.comercios.label }}</h2>
+            <div class="itin-paradas-header d-flex justify-content-between align-items-center mb-3">
+                <h2 class="text-section mb-0">Comercios y remitos a asignar</h2>
+                <span class="text-muted small">Tildá el comercio para marcar todos o desplegalo para selección individual</span>
             </div>
-            {% if form.comercios.errors %}
-                <div class="text-danger small mb-2">{{ form.comercios.errors.0 }}</div>
+            {% if form.remitos.errors %}
+                <div class="alert alert-danger alert-clean py-2 px-3 small mb-3">
+                    <i class="fas fa-triangle-exclamation me-2"></i>{{ form.remitos.errors.0 }}
+                </div>
             {% endif %}
 
             <div class="itin-stop-groups">
-                {% for checkbox in form.comercios %}
-                    <label class="itin-stop-group" for="{{ checkbox.id_for_label }}">
-                        <div class="itin-stop-group__header">
+                {% for grupo in comercios_agrupados %}
+                    <div class="itin-stop-group {% if grupo.selected_count > 0 %}is-selected{% endif %}" id="group-{{ grupo.comercio.id }}" data-comercio-id="{{ grupo.comercio.id }}">
+                        <div class="itin-stop-group__header" onclick="toggleAccordion('{{ grupo.comercio.id }}', event)">
                             <div class="itin-stop-group__left">
-                                {{ checkbox.tag }}
+                                <input type="checkbox"
+                                       class="itin-stop-checkbox master-checkbox"
+                                       id="master-check-{{ grupo.comercio.id }}"
+                                       data-comercio-id="{{ grupo.comercio.id }}"
+                                       {% if grupo.all_selected %}checked{% endif %}
+                                       onclick="event.stopPropagation(); toggleMaster('{{ grupo.comercio.id }}', this.checked)">
                                 <div>
-                                    <div class="cell-main">{{ checkbox.choice_label }}</div>
+                                    <div class="cell-main fw-semibold">{{ grupo.comercio.razon_social }}</div>
+                                    <div class="text-c-secondary small">
+                                        <i class="fas fa-map-marker-alt me-1 text-muted"></i>{{ grupo.comercio.domicilio }}
+                                    </div>
                                 </div>
                             </div>
-                            <span class="itin-badge itin-badge--pendiente">Remitos pendientes</span>
+                            <div class="itin-stop-group__right">
+                                <span class="itin-badge {% if grupo.selected_count == grupo.total_count %}itin-badge--asignado{% elif grupo.selected_count > 0 %}itin-badge--parcial{% else %}itin-badge--pendiente{% endif %} group-counter-badge" id="badge-{{ grupo.comercio.id }}">
+                                    {{ grupo.selected_count }} / {{ grupo.total_count }} remito{{ grupo.total_count|pluralize }}
+                                </span>
+                                <div class="fw-semibold text-end group-total-monto" id="monto-{{ grupo.comercio.id }}" style="min-width: 90px;">
+                                    ${{ grupo.selected_monto|floatformat:2 }}
+                                </div>
+                                <button type="button" class="btn-accordion-toggle" aria-label="Desplegar remitos" onclick="event.stopPropagation(); toggleAccordion('{{ grupo.comercio.id }}')">
+                                    <i class="fas fa-chevron-down accordion-chevron {% if grupo.selected_count > 0 and not grupo.all_selected %}is-open{% endif %}" id="chevron-{{ grupo.comercio.id }}"></i>
+                                </button>
+                            </div>
                         </div>
-                    </label>
+
+                        <!-- Panel desplegable con los remitos -->
+                        <div class="itin-stop-group__body" id="body-{{ grupo.comercio.id }}" style="display: {% if grupo.selected_count > 0 and not grupo.all_selected %}block{% else %}none{% endif %};">
+                            {% for item in grupo.remitos %}
+                                <label class="itin-stop-remito-row {% if item.is_selected %}is-selected{% endif %}" for="remito-check-{{ item.remito.id }}" id="row-remito-{{ item.remito.id }}">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input type="checkbox"
+                                               name="remitos"
+                                               value="{{ item.remito.id }}"
+                                               id="remito-check-{{ item.remito.id }}"
+                                               class="itin-remito-checkbox child-checkbox"
+                                               data-comercio-id="{{ grupo.comercio.id }}"
+                                               data-monto="{{ item.remito.total }}"
+                                               {% if item.is_selected %}checked{% endif %}
+                                               onchange="onChildChange('{{ grupo.comercio.id }}', '{{ item.remito.id }}')">
+                                        <div>
+                                            <span class="fw-semibold text-c-brand">Remito #{{ item.remito.numero }}</span>
+                                            <span class="text-muted ms-2 small">({{ item.remito.marca.nombre }})</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="itin-badge itin-badge--{{ item.remito.estado|lower }}">{{ item.remito.get_estado_display }}</span>
+                                        <span class="fw-semibold text-end" style="min-width: 80px;">${{ item.remito.total|floatformat:2 }}</span>
+                                    </div>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
                 {% empty %}
                     <div class="itin-paradas-empty">
                         <div class="itin-paradas-empty__icon">
                             <i class="fas fa-route"></i>
                         </div>
-                        <div class="itin-paradas-empty__title">Todavía no hay paradas pendientes</div>
-                        <p class="itin-paradas-empty__desc">No hay comercios con remitos pendientes de asignación.</p>
+                        <div class="itin-paradas-empty__title">Todavía no hay remitos pendientes</div>
+                        <p class="itin-paradas-empty__desc">No hay comercios con remitos pendientes de asignación para este itinerario.</p>
                     </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="itin-form-actions">
-            <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
-                Cancelar
-            </a>
-            <button type="submit" class="btn-itinerario-primary">
-                Asignar paradas
-            </button>
+        <div class="itin-sticky-bar">
+            <div class="itin-sticky-bar__summary">
+                <div class="itin-sticky-stat">
+                    <span class="itin-sticky-stat__value" id="stat-paradas">0</span>
+                    <span class="itin-sticky-stat__label">paradas</span>
+                </div>
+                <div class="itin-sticky-stat">
+                    <span class="itin-sticky-stat__value" id="stat-remitos">0</span>
+                    <span class="itin-sticky-stat__label">remitos</span>
+                </div>
+                <div class="itin-sticky-stat">
+                    <span class="itin-sticky-stat__label">Total:</span>
+                    <span class="itin-sticky-stat__value text-success" id="stat-monto">$0.00</span>
+                </div>
+            </div>
+            <div class="itin-sticky-bar__actions">
+                <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn-itinerario-primary" id="btn-submit">
+                    <i class="fas fa-check me-1"></i> Asignar al itinerario
+                </button>
+            </div>
         </div>
     </form>
 </div>
 
 <script>
+    function toggleAccordion(comercioId, event) {
+        if (event && (event.target.tagName === 'INPUT' || event.target.closest('button'))) {
+            return;
+        }
+        const body = document.getElementById('body-' + comercioId);
+        const chevron = document.getElementById('chevron-' + comercioId);
+        if (!body) return;
+        const isHidden = (body.style.display === 'none' || body.style.display === '');
+        body.style.display = isHidden ? 'block' : 'none';
+        if (chevron) {
+            chevron.classList.toggle('is-open', isHidden);
+        }
+    }
+
+    function toggleMaster(comercioId, isChecked) {
+        const childCheckboxes = document.querySelectorAll('.child-checkbox[data-comercio-id="' + comercioId + '"]');
+        childCheckboxes.forEach(cb => {
+            cb.checked = isChecked;
+            const row = document.getElementById('row-remito-' + cb.value);
+            if (row) row.classList.toggle('is-selected', isChecked);
+        });
+
+        const master = document.getElementById('master-check-' + comercioId);
+        if (master) {
+            master.indeterminate = false;
+            master.checked = isChecked;
+        }
+
+        updateComercioUI(comercioId);
+        updateStickySummary();
+    }
+
+    function onChildChange(comercioId, remitoId) {
+        const row = document.getElementById('row-remito-' + remitoId);
+        const cb = document.getElementById('remito-check-' + remitoId);
+        if (row && cb) {
+            row.classList.toggle('is-selected', cb.checked);
+        }
+
+        const childCheckboxes = document.querySelectorAll('.child-checkbox[data-comercio-id="' + comercioId + '"]');
+        const total = childCheckboxes.length;
+        let checkedCount = 0;
+        childCheckboxes.forEach(c => {
+            if (c.checked) checkedCount++;
+        });
+
+        const master = document.getElementById('master-check-' + comercioId);
+        if (master) {
+            if (checkedCount === 0) {
+                master.checked = false;
+                master.indeterminate = false;
+            } else if (checkedCount === total) {
+                master.checked = true;
+                master.indeterminate = false;
+            } else {
+                master.checked = false;
+                master.indeterminate = true;
+            }
+        }
+
+        updateComercioUI(comercioId);
+        updateStickySummary();
+    }
+
+    function updateComercioUI(comercioId) {
+        const group = document.getElementById('group-' + comercioId);
+        const childCheckboxes = document.querySelectorAll('.child-checkbox[data-comercio-id="' + comercioId + '"]');
+        const badge = document.getElementById('badge-' + comercioId);
+        const montoEl = document.getElementById('monto-' + comercioId);
+
+        let checkedCount = 0;
+        let selectedMonto = 0;
+        const total = childCheckboxes.length;
+
+        childCheckboxes.forEach(cb => {
+            if (cb.checked) {
+                checkedCount++;
+                const monto = parseFloat(cb.dataset.monto.replace(',', '.')) || 0;
+                selectedMonto += monto;
+            }
+        });
+
+        if (group) {
+            group.classList.toggle('is-selected', checkedCount > 0);
+        }
+
+        if (badge) {
+            badge.textContent = `${checkedCount} / ${total} remito${total === 1 ? '' : 's'}`;
+            badge.className = 'itin-badge group-counter-badge';
+            if (checkedCount === total && total > 0) {
+                badge.classList.add('itin-badge--asignado');
+            } else if (checkedCount > 0) {
+                badge.classList.add('itin-badge--parcial');
+            } else {
+                badge.classList.add('itin-badge--pendiente');
+            }
+        }
+
+        if (montoEl) {
+            montoEl.textContent = '$' + selectedMonto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+
+    function updateStickySummary() {
+        const allGroups = document.querySelectorAll('.itin-stop-group');
+        let selectedParadas = 0;
+        let selectedRemitos = 0;
+        let totalMonto = 0;
+
+        allGroups.forEach(group => {
+            const checkedChildren = group.querySelectorAll('.child-checkbox:checked');
+            if (checkedChildren.length > 0) {
+                selectedParadas++;
+                selectedRemitos += checkedChildren.length;
+                checkedChildren.forEach(cb => {
+                    const monto = parseFloat(cb.dataset.monto.replace(',', '.')) || 0;
+                    totalMonto += monto;
+                });
+            }
+        });
+
+        const statParadas = document.getElementById('stat-paradas');
+        const statRemitos = document.getElementById('stat-remitos');
+        const statMonto = document.getElementById('stat-monto');
+
+        if (statParadas) statParadas.textContent = selectedParadas;
+        if (statRemitos) statRemitos.textContent = selectedRemitos;
+        if (statMonto) statMonto.textContent = '$' + totalMonto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
+        // Inicializar estado indeterminate de los master checkboxes
+        document.querySelectorAll('.itin-stop-group').forEach(group => {
+            const cid = group.dataset.comercioId;
+            const master = document.getElementById('master-check-' + cid);
+            const childCheckboxes = group.querySelectorAll('.child-checkbox');
+            const total = childCheckboxes.length;
+            let checkedCount = 0;
+            childCheckboxes.forEach(cb => {
+                if (cb.checked) checkedCount++;
+            });
+
+            if (master && total > 0) {
+                if (checkedCount === 0) {
+                    master.checked = false;
+                    master.indeterminate = false;
+                } else if (checkedCount === total) {
+                    master.checked = true;
+                    master.indeterminate = false;
+                } else {
+                    master.checked = false;
+                    master.indeterminate = true;
+                }
+            }
+            updateComercioUI(cid);
+        });
+
+        updateStickySummary();
+
         const itinerarioSelect = document.getElementById("id_itinerario");
         if (itinerarioSelect) {
             itinerarioSelect.addEventListener("change", function () {

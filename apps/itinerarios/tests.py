@@ -19,6 +19,7 @@ from apps.itinerarios.models import (
     Parada,
     ProblemaParada,
 )
+from apps.itinerarios.forms import CrearParadasForm
 from apps.itinerarios.services import crear_itinerarios, crear_paradas
 from apps.remitos.models import Comercio, EstadoRemito, Marca, Remito
 
@@ -258,6 +259,175 @@ class ItinerarioViewsTests(TestCase):
         self.assertEqual(paradas[0].orden, 1)
         self.assertEqual(paradas[1].comercio, comercio_3)
         self.assertEqual(paradas[1].orden, 2)
+
+    def test_crear_paradas_con_seleccion_granular_de_remitos(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Granular", "20123456794")
+        remito_1 = self.crear_remito(comercio, "R-GRAN-1")
+        remito_2 = self.crear_remito(comercio, "R-GRAN-2")
+        remito_3 = self.crear_remito(comercio, "R-GRAN-3")
+
+        # Seleccionar solo 2 de los 3 remitos (cherry-picking)
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+
+        self.assertEqual(itinerario.paradas.count(), 1)
+        parada = itinerario.paradas.first()
+        self.assertEqual(parada.comercio, comercio)
+
+        remito_1.refresh_from_db()
+        remito_2.refresh_from_db()
+        remito_3.refresh_from_db()
+
+        self.assertEqual(remito_1.parada, parada)
+        self.assertEqual(remito_1.estado, EstadoRemito.ASIGNADO)
+        self.assertEqual(remito_2.parada, parada)
+        self.assertEqual(remito_2.estado, EstadoRemito.ASIGNADO)
+
+        # El tercer remito no seleccionado debe permanecer pendiente y sin parada
+        self.assertIsNone(remito_3.parada)
+        self.assertEqual(remito_3.estado, EstadoRemito.PENDIENTE)
+
+    def test_dividir_remitos_del_mismo_comercio_en_dos_itinerarios(self):
+        itinerario_1 = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itinerario_2 = Itinerario.objects.create(
+            fecha=date(2026, 10, 26),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Split", "20123456795")
+        remito_lunes = self.crear_remito(comercio, "R-SPLIT-LUNES")
+        remito_martes = self.crear_remito(comercio, "R-SPLIT-MARTES")
+
+        # Asignar R-SPLIT-LUNES a itinerario 1
+        crear_paradas(itinerario_1, remitos=[remito_lunes])
+        # Asignar R-SPLIT-MARTES a itinerario 2
+        crear_paradas(itinerario_2, remitos=[remito_martes])
+
+        self.assertEqual(itinerario_1.paradas.count(), 1)
+        self.assertEqual(itinerario_2.paradas.count(), 1)
+
+        parada_1 = itinerario_1.paradas.first()
+        parada_2 = itinerario_2.paradas.first()
+
+        self.assertNotEqual(parada_1.pk, parada_2.pk)
+        self.assertEqual(parada_1.comercio, comercio)
+        self.assertEqual(parada_2.comercio, comercio)
+
+        remito_lunes.refresh_from_db()
+        remito_martes.refresh_from_db()
+
+        self.assertEqual(remito_lunes.parada, parada_1)
+        self.assertEqual(remito_lunes.estado, EstadoRemito.ASIGNADO)
+        self.assertEqual(remito_martes.parada, parada_2)
+        self.assertEqual(remito_martes.estado, EstadoRemito.ASIGNADO)
+
+    def test_desasignar_remito_especifico_al_actualizar_parada(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Update", "20123456796")
+        remito_1 = self.crear_remito(comercio, "R-UPD-1")
+        remito_2 = self.crear_remito(comercio, "R-UPD-2")
+
+        # Asignar ambos inicialmente
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+        self.assertEqual(itinerario.paradas.count(), 1)
+        parada = itinerario.paradas.first()
+
+        # Actualizar dejando solo remito_1
+        crear_paradas(itinerario, remitos=[remito_1])
+
+        self.assertEqual(itinerario.paradas.count(), 1)
+        remito_1.refresh_from_db()
+        remito_2.refresh_from_db()
+
+        self.assertEqual(remito_1.parada, parada)
+        self.assertEqual(remito_1.estado, EstadoRemito.ASIGNADO)
+        self.assertIsNone(remito_2.parada)
+        self.assertEqual(remito_2.estado, EstadoRemito.PENDIENTE)
+
+    def test_crear_paradas_desmarcar_todos_remitos_elimina_parada(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio_1 = self.crear_comercio("Comercio Del-1", "20123456797")
+        comercio_2 = self.crear_comercio("Comercio Del-2", "20123456798")
+        remito_1 = self.crear_remito(comercio_1, "R-DEL-1")
+        remito_2 = self.crear_remito(comercio_2, "R-DEL-2")
+
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+        self.assertEqual(itinerario.paradas.count(), 2)
+
+        # Desmarcar comercio 1 por completo, pasando solo remito_2
+        crear_paradas(itinerario, remitos=[remito_2])
+
+        self.assertEqual(itinerario.paradas.count(), 1)
+        remito_1.refresh_from_db()
+        remito_2.refresh_from_db()
+
+        self.assertIsNone(remito_1.parada)
+        self.assertEqual(remito_1.estado, EstadoRemito.PENDIENTE)
+        self.assertIsNotNone(remito_2.parada)
+        self.assertEqual(remito_2.estado, EstadoRemito.ASIGNADO)
+
+    def test_form_paradas_builds_comercios_agrupados_tri_state(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Form", "20123456799")
+        remito_1 = self.crear_remito(comercio, "R-FORM-1")
+        remito_2 = self.crear_remito(comercio, "R-FORM-2")
+
+        # 1. Sin seleccionar (unbound)
+        form = CrearParadasForm(itinerario_id=itinerario.pk)
+        self.assertEqual(len(form.comercios_agrupados), 1)
+        grupo = form.comercios_agrupados[0]
+        self.assertEqual(grupo["total_count"], 2)
+        self.assertEqual(grupo["selected_count"], 0)
+        self.assertFalse(grupo["all_selected"])
+        self.assertFalse(grupo["is_indeterminate"])
+
+        # 2. Selección parcial (bound) -> Indeterminate
+        bound_form = CrearParadasForm(
+            data={"itinerario": itinerario.pk, "remitos": [remito_1.pk]},
+            itinerario_id=itinerario.pk,
+        )
+        self.assertTrue(bound_form.is_valid())
+        grupo_bound = bound_form.comercios_agrupados[0]
+        self.assertEqual(grupo_bound["selected_count"], 1)
+        self.assertFalse(grupo_bound["all_selected"])
+        self.assertTrue(grupo_bound["is_indeterminate"])
+
+        # 3. Selección completa (bound) -> All selected
+        all_form = CrearParadasForm(
+            data={"itinerario": itinerario.pk, "remitos": [remito_1.pk, remito_2.pk]},
+            itinerario_id=itinerario.pk,
+        )
+        self.assertTrue(all_form.is_valid())
+        grupo_all = all_form.comercios_agrupados[0]
+        self.assertEqual(grupo_all["selected_count"], 2)
+        self.assertTrue(grupo_all["all_selected"])
+        self.assertFalse(grupo_all["is_indeterminate"])
 
     def test_delivery_detail_shows_receipts_evidence_and_contingencies(self):
         itinerario = Itinerario.objects.create(

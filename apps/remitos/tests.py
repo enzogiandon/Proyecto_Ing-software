@@ -187,12 +187,12 @@ class RemitoViewsTests(RemitoTestCase):
         self.assertEqual(remito.estado, EstadoRemito.PENDIENTE)
         self.assertIsNone(remito.parada)
 
-    def test_create_remito_assigns_existing_pending_stop_automatically(self):
+    def test_create_remito_always_created_pending_without_stop(self):
         itinerario = Itinerario.objects.create(
             fecha="2026-11-15",
             estado=EstadoItinerario.ASIGNADO,
         )
-        parada = Parada.objects.create(
+        Parada.objects.create(
             itinerario=itinerario,
             comercio=self.comercio,
             orden=1,
@@ -210,8 +210,8 @@ class RemitoViewsTests(RemitoTestCase):
             fetch_redirect_response=False,
         )
         remito = Remito.objects.get(numero="R-AUTO-1")
-        self.assertEqual(remito.parada, parada)
-        self.assertEqual(remito.estado, EstadoRemito.ASIGNADO)
+        self.assertIsNone(remito.parada)
+        self.assertEqual(remito.estado, EstadoRemito.PENDIENTE)
 
     def test_create_remito_ignores_non_pending_stops(self):
         itinerario = Itinerario.objects.create(

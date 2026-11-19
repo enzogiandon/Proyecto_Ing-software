@@ -209,11 +209,20 @@ class CrearParadas(
             kwargs["itinerario_id"] = itinerario_id
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context.get("form")
+        if form and hasattr(form, "comercios_agrupados"):
+            context["comercios_agrupados"] = form.comercios_agrupados
+        else:
+            context["comercios_agrupados"] = []
+        return context
+
     def form_valid(self, form):
         try:
             crear_paradas(
                 form.cleaned_data["itinerario"],
-                form.cleaned_data["comercios"],
+                remitos=form.cleaned_data.get("remitos"),
             )
         except ValidationError as error:
             form.add_error(None, error)

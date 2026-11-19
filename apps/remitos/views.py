@@ -45,19 +45,8 @@ class CrearRemito(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     permission_required = "remitos.add_remito"
 
     def form_valid(self, form):
-        comercio = form.cleaned_data.get("comercio")
-        parada_existente = Parada.objects.filter(
-            comercio=comercio,
-            estado=EstadoParada.PENDIENTE,
-        ).first()
-
-        if parada_existente:
-            form.instance.parada = parada_existente
-            form.instance.estado = EstadoRemito.ASIGNADO
-        else:
-            form.instance.parada = None
-            form.instance.estado = EstadoRemito.PENDIENTE
-
+        form.instance.parada = None
+        form.instance.estado = EstadoRemito.PENDIENTE
         return super().form_valid(form)
 
 

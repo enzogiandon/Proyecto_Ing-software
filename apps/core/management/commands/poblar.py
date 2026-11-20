@@ -290,6 +290,11 @@ class Command(BaseCommand):
                     "cuit": "33698712347",
                     "activo": True,
                 },
+                {
+                    "nombre": "Inactiva Prueba",
+                    "cuit": "30999999991",
+                    "activo": False,
+                },
             ]
             marcas = {}
             for m_data in marcas_data:

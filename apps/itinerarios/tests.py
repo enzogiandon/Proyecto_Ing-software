@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from io import StringIO
 
 from django.contrib.auth import get_user_model
@@ -8,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.cobranza.models import Cobranza, EstadoCobranza
 from apps.core.models import Grupos, Transportista, Vehiculo
 from apps.itinerarios.models import (
     DetalleRutaGuardada,
@@ -18,7 +20,8 @@ from apps.itinerarios.models import (
     Parada,
     ProblemaParada,
 )
-from apps.itinerarios.services import crear_paradas
+from apps.itinerarios.forms import CrearParadasForm
+from apps.itinerarios.services import crear_itinerarios, crear_paradas
 from apps.remitos.models import Comercio, EstadoRemito, Marca, Remito
 
 
@@ -98,6 +101,126 @@ class ItinerarioViewsTests(TestCase):
         self.assertEqual(itinerario.vehiculo, self.vehiculo)
         self.assertEqual(itinerario.fecha, date(2026, 10, 25))
         self.assertEqual(itinerario.estado, EstadoItinerario.ASIGNADO)
+
+    def test_create_itinerary_rejects_transportista_busy_on_date(self):
+        second_vehiculo = Vehiculo.objects.create(patente="CD456EF")
+        second_user = get_user_model().objects.create_user(
+            username="33333333",
+            password="Driver-Password-123!",
+        )
+        second_user.groups.add(self.grupo_transportista)
+        second_transportista = Transportista.objects.create(
+            usuario=second_user,
+            vehiculo=second_vehiculo,
+        )
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_crear"),
+            {
+                "fecha": "2026-10-25",
+                "transportistas": [
+                    self.transportista.pk,
+                    second_transportista.pk,
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, "ya tiene un itinerario asignado para la fecha indicada"
+        )
+        self.assertEqual(Itinerario.objects.count(), 1)
+
+    def test_create_itinerary_allows_same_transportista_on_other_date(self):
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_crear"),
+            {"fecha": "2026-10-26", "transportistas": [self.transportista.pk]},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("itinerarios:itinerario_lista"),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(Itinerario.objects.count(), 2)
+
+    def test_crear_itinerario_get_default_date(self):
+        response = self.client.get(reverse("itinerarios:itinerario_crear"))
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("fecha"), date.today().isoformat())
+        self.assertContains(response, 'id="btn-actualizar-fecha"')
+        self.assertContains(response, 'id="fecha-modificada-aviso"')
+        self.assertContains(response, 'id="transportistas-container"')
+
+    def test_crear_itinerario_get_with_date_query_param(self):
+        second_vehiculo = Vehiculo.objects.create(patente="CD456EF")
+        second_user = get_user_model().objects.create_user(
+            username="33333333",
+            password="Driver-Password-123!",
+        )
+        second_user.groups.add(self.grupo_transportista)
+        second_transportista = Transportista.objects.create(
+            usuario=second_user,
+            vehiculo=second_vehiculo,
+        )
+
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_crear"),
+            {"fecha": "2026-10-25"},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("fecha"), "2026-10-25")
+        self.assertIn(self.transportista.pk, form.ocupados_ids)
+        self.assertNotIn(second_transportista.pk, form.ocupados_ids)
+        self.assertContains(response, "Ocupado")
+        self.assertContains(response, "Disponible")
+
+    def test_crear_itinerario_get_with_invalid_date(self):
+        response = self.client.get(
+            reverse("itinerarios:itinerario_crear"),
+            {"fecha": "fecha-invalida"},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("fecha"), date.today().isoformat())
+
+    def test_crear_itinerarios_service_rejects_busy_transportista(self):
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            f"El transportista {self.transportista} ya tiene un itinerario "
+            "asignado para el 25/10/2026.",
+        ):
+            crear_itinerarios([self.transportista], date(2026, 10, 25))
+        self.assertEqual(Itinerario.objects.count(), 1)
 
     def test_create_stops_assigns_pending_receipts_to_existing_itinerary(self):
         itinerario = Itinerario.objects.create(
@@ -186,6 +309,175 @@ class ItinerarioViewsTests(TestCase):
         self.assertEqual(paradas[0].orden, 1)
         self.assertEqual(paradas[1].comercio, comercio_3)
         self.assertEqual(paradas[1].orden, 2)
+
+    def test_crear_paradas_con_seleccion_granular_de_remitos(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Granular", "20123456794")
+        remito_1 = self.crear_remito(comercio, "R-GRAN-1")
+        remito_2 = self.crear_remito(comercio, "R-GRAN-2")
+        remito_3 = self.crear_remito(comercio, "R-GRAN-3")
+
+        # Seleccionar solo 2 de los 3 remitos (cherry-picking)
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+
+        self.assertEqual(itinerario.paradas.count(), 1)
+        parada = itinerario.paradas.first()
+        self.assertEqual(parada.comercio, comercio)
+
+        remito_1.refresh_from_db()
+        remito_2.refresh_from_db()
+        remito_3.refresh_from_db()
+
+        self.assertEqual(remito_1.parada, parada)
+        self.assertEqual(remito_1.estado, EstadoRemito.ASIGNADO)
+        self.assertEqual(remito_2.parada, parada)
+        self.assertEqual(remito_2.estado, EstadoRemito.ASIGNADO)
+
+        # El tercer remito no seleccionado debe permanecer pendiente y sin parada
+        self.assertIsNone(remito_3.parada)
+        self.assertEqual(remito_3.estado, EstadoRemito.PENDIENTE)
+
+    def test_dividir_remitos_del_mismo_comercio_en_dos_itinerarios(self):
+        itinerario_1 = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itinerario_2 = Itinerario.objects.create(
+            fecha=date(2026, 10, 26),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Split", "20123456795")
+        remito_lunes = self.crear_remito(comercio, "R-SPLIT-LUNES")
+        remito_martes = self.crear_remito(comercio, "R-SPLIT-MARTES")
+
+        # Asignar R-SPLIT-LUNES a itinerario 1
+        crear_paradas(itinerario_1, remitos=[remito_lunes])
+        # Asignar R-SPLIT-MARTES a itinerario 2
+        crear_paradas(itinerario_2, remitos=[remito_martes])
+
+        self.assertEqual(itinerario_1.paradas.count(), 1)
+        self.assertEqual(itinerario_2.paradas.count(), 1)
+
+        parada_1 = itinerario_1.paradas.first()
+        parada_2 = itinerario_2.paradas.first()
+
+        self.assertNotEqual(parada_1.pk, parada_2.pk)
+        self.assertEqual(parada_1.comercio, comercio)
+        self.assertEqual(parada_2.comercio, comercio)
+
+        remito_lunes.refresh_from_db()
+        remito_martes.refresh_from_db()
+
+        self.assertEqual(remito_lunes.parada, parada_1)
+        self.assertEqual(remito_lunes.estado, EstadoRemito.ASIGNADO)
+        self.assertEqual(remito_martes.parada, parada_2)
+        self.assertEqual(remito_martes.estado, EstadoRemito.ASIGNADO)
+
+    def test_desasignar_remito_especifico_al_actualizar_parada(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Update", "20123456796")
+        remito_1 = self.crear_remito(comercio, "R-UPD-1")
+        remito_2 = self.crear_remito(comercio, "R-UPD-2")
+
+        # Asignar ambos inicialmente
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+        self.assertEqual(itinerario.paradas.count(), 1)
+        parada = itinerario.paradas.first()
+
+        # Actualizar dejando solo remito_1
+        crear_paradas(itinerario, remitos=[remito_1])
+
+        self.assertEqual(itinerario.paradas.count(), 1)
+        remito_1.refresh_from_db()
+        remito_2.refresh_from_db()
+
+        self.assertEqual(remito_1.parada, parada)
+        self.assertEqual(remito_1.estado, EstadoRemito.ASIGNADO)
+        self.assertIsNone(remito_2.parada)
+        self.assertEqual(remito_2.estado, EstadoRemito.PENDIENTE)
+
+    def test_crear_paradas_desmarcar_todos_remitos_elimina_parada(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio_1 = self.crear_comercio("Comercio Del-1", "20123456797")
+        comercio_2 = self.crear_comercio("Comercio Del-2", "20123456798")
+        remito_1 = self.crear_remito(comercio_1, "R-DEL-1")
+        remito_2 = self.crear_remito(comercio_2, "R-DEL-2")
+
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+        self.assertEqual(itinerario.paradas.count(), 2)
+
+        # Desmarcar comercio 1 por completo, pasando solo remito_2
+        crear_paradas(itinerario, remitos=[remito_2])
+
+        self.assertEqual(itinerario.paradas.count(), 1)
+        remito_1.refresh_from_db()
+        remito_2.refresh_from_db()
+
+        self.assertIsNone(remito_1.parada)
+        self.assertEqual(remito_1.estado, EstadoRemito.PENDIENTE)
+        self.assertIsNotNone(remito_2.parada)
+        self.assertEqual(remito_2.estado, EstadoRemito.ASIGNADO)
+
+    def test_form_paradas_builds_comercios_agrupados_tri_state(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Form", "20123456799")
+        remito_1 = self.crear_remito(comercio, "R-FORM-1")
+        remito_2 = self.crear_remito(comercio, "R-FORM-2")
+
+        # 1. Sin seleccionar (unbound)
+        form = CrearParadasForm(itinerario_id=itinerario.pk)
+        self.assertEqual(len(form.comercios_agrupados), 1)
+        grupo = form.comercios_agrupados[0]
+        self.assertEqual(grupo["total_count"], 2)
+        self.assertEqual(grupo["selected_count"], 0)
+        self.assertFalse(grupo["all_selected"])
+        self.assertFalse(grupo["is_indeterminate"])
+
+        # 2. Selección parcial (bound) -> Indeterminate
+        bound_form = CrearParadasForm(
+            data={"itinerario": itinerario.pk, "remitos": [remito_1.pk]},
+            itinerario_id=itinerario.pk,
+        )
+        self.assertTrue(bound_form.is_valid())
+        grupo_bound = bound_form.comercios_agrupados[0]
+        self.assertEqual(grupo_bound["selected_count"], 1)
+        self.assertFalse(grupo_bound["all_selected"])
+        self.assertTrue(grupo_bound["is_indeterminate"])
+
+        # 3. Selección completa (bound) -> All selected
+        all_form = CrearParadasForm(
+            data={"itinerario": itinerario.pk, "remitos": [remito_1.pk, remito_2.pk]},
+            itinerario_id=itinerario.pk,
+        )
+        self.assertTrue(all_form.is_valid())
+        grupo_all = all_form.comercios_agrupados[0]
+        self.assertEqual(grupo_all["selected_count"], 2)
+        self.assertTrue(grupo_all["all_selected"])
+        self.assertFalse(grupo_all["is_indeterminate"])
 
     def test_delivery_detail_shows_receipts_evidence_and_contingencies(self):
         itinerario = Itinerario.objects.create(
@@ -371,6 +663,42 @@ class ItinerarioViewsTests(TestCase):
         self.assertIsNone(remito.parada)
         self.assertEqual(remito.estado, EstadoRemito.PENDIENTE)
 
+    def test_delete_itinerary_with_cobranza_is_rejected(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 24),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = Comercio.objects.create(
+            cuit="20123456782",
+            razon_social="Comercio Con Cobranza",
+            domicilio="Av. Siempre Viva 742",
+        )
+        parada = Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+            estado=EstadoParada.PENDIENTE,
+        )
+        remito = self.crear_remito(comercio, "R-DEL-COB-01")
+        remito.parada = parada
+        remito.estado = EstadoRemito.ASIGNADO
+        remito.save()
+        Cobranza.objects.create(parada=parada, estado=EstadoCobranza.REGISTRADO)
+
+        response = self.client.post(
+            reverse("itinerarios:itinerario_eliminar", args=[itinerario.pk]),
+            follow=True,
+        )
+        self.assertRedirects(response, reverse("itinerarios:itinerario_lista"))
+        # El itinerario NO debe eliminarse para preservar la trazabilidad contable
+        self.assertTrue(Itinerario.objects.filter(pk=itinerario.pk).exists())
+        self.assertContains(
+            response,
+            "No se puede eliminar el itinerario porque posee cobranzas o rendiciones registradas.",
+        )
+
     def test_delete_nonexistent_itinerary_shows_error(self):
         response = self.client.post(
             reverse("itinerarios:itinerario_eliminar", args=[99999]),
@@ -445,6 +773,243 @@ class ItinerarioViewsTests(TestCase):
         itinerario.refresh_from_db()
         self.assertEqual(itinerario.transportista, self.transportista)
         self.assertContains(response_fail, "Transportista no asignado")
+
+    def test_editar_itinerario_muestra_boton_modificar_paradas_sin_columna_quitar(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Test", "20999888776")
+        Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+            estado=EstadoParada.PENDIENTE,
+        )
+        response = self.client.get(
+            reverse("itinerarios:itinerario_editar", args=[itinerario.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Modificar paradas")
+        self.assertNotContains(response, ">Quitar<")
+        self.assertNotContains(response, "btn-quitar-parada")
+        self.assertNotContains(response, "confirmarQuitarParada")
+
+    def test_crear_paradas_redirecciona_a_next_si_esta_presente(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Redirect", "20888777665")
+        self.crear_remito(comercio, "R-RED-001")
+        next_url = reverse("itinerarios:itinerario_editar", args=[itinerario.pk])
+
+        response = self.client.post(
+            reverse("itinerarios:paradas_crear"),
+            {
+                "itinerario": itinerario.pk,
+                "comercios": [comercio.pk],
+                "next": next_url,
+            },
+        )
+        self.assertRedirects(response, next_url)
+
+    # -------------------------------------------------------------------------
+    # HU-60: Listar itinerarios del día y filtrado operativo
+    # -------------------------------------------------------------------------
+    def test_hu60_scenario_1_consulta_general_itinerarios_del_dia(self):
+        hoy = date.today()
+        itinerario = Itinerario.objects.create(
+            fecha=hoy,
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Central", "20123456790")
+        remito_1 = Remito.objects.create(
+            numero="0001-00000001",
+            marca=self.marca,
+            comercio=comercio,
+            total=Decimal("1500.50"),
+        )
+        remito_2 = Remito.objects.create(
+            numero="0001-00000002",
+            marca=self.marca,
+            comercio=comercio,
+            total=Decimal("2500.00"),
+        )
+        crear_paradas(itinerario, remitos=[remito_1, remito_2])
+
+        response = self.client.get(reverse("itinerarios:itinerario_lista"))
+        self.assertEqual(response.status_code, 200)
+
+        # Validamos columnas operativas de la grilla
+        codigo_itinerario = f"IT-{hoy.strftime('%Y')}-{itinerario.pk:05d}"
+        self.assertContains(response, codigo_itinerario)
+        self.assertContains(response, hoy.strftime("%d/%m/%Y"))
+        self.assertContains(response, self.transportista.usuario.username)
+        self.assertContains(response, self.vehiculo.patente)
+        self.assertContains(response, "1 paradas")
+        self.assertContains(response, "2 remitos")
+        self.assertContains(response, "4000,50")
+        self.assertContains(response, "Asignado")
+
+    def test_hu60_scenario_2_filtrado_por_fecha(self):
+        fecha_a = date(2026, 11, 25)
+        fecha_b = date(2026, 11, 26)
+        itin_a = Itinerario.objects.create(
+            fecha=fecha_a,
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_b = Itinerario.objects.create(
+            fecha=fecha_b,
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"fecha": "2026-11-25"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"IT-2026-{itin_a.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_b.pk:05d}")
+
+    def test_hu60_scenario_3_filtrado_por_transportista(self):
+        user_model = get_user_model()
+        otro_user = user_model.objects.create_user(
+            username="33333333",
+            password="Driver-Password-123!",
+            first_name="Carlos",
+            last_name="Chofer",
+        )
+        otro_user.groups.add(self.grupo_transportista)
+        otro_vehiculo = Vehiculo.objects.create(patente="ZZ999YY")
+        otro_transportista = Transportista.objects.create(
+            usuario=otro_user,
+            vehiculo=otro_vehiculo,
+        )
+
+        itin_propio = Itinerario.objects.create(
+            fecha=date(2026, 11, 27),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_otro = Itinerario.objects.create(
+            fecha=date(2026, 11, 27),
+            transportista=otro_transportista,
+            vehiculo=otro_vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_sin_asignar = Itinerario.objects.create(
+            fecha=date(2026, 11, 28),
+            transportista=None,
+            vehiculo=None,
+            estado=EstadoItinerario.PENDIENTE,
+        )
+
+        # Filtro por chofer específico
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"transportista": str(self.transportista.pk)},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"IT-2026-{itin_propio.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_otro.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_sin_asignar.pk:05d}")
+
+        # Filtro por sin asignar
+        response_sin = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"transportista": "sin_asignar"},
+        )
+        self.assertEqual(response_sin.status_code, 200)
+        self.assertContains(response_sin, f"IT-2026-{itin_sin_asignar.pk:05d}")
+        self.assertNotContains(response_sin, f"IT-2026-{itin_propio.pk:05d}")
+        self.assertNotContains(response_sin, f"IT-2026-{itin_otro.pk:05d}")
+
+    def test_hu60_scenario_4_filtrado_por_estado(self):
+        itin_asignado = Itinerario.objects.create(
+            fecha=date(2026, 11, 29),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        itin_en_curso = Itinerario.objects.create(
+            fecha=date(2026, 11, 30),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.EN_CURSO,
+        )
+        itin_finalizado = Itinerario.objects.create(
+            fecha=date(2026, 12, 1),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.FINALIZADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {"estado": "en_curso"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"IT-2026-{itin_en_curso.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_asignado.pk:05d}")
+        self.assertNotContains(response, f"IT-2026-{itin_finalizado.pk:05d}")
+
+    def test_hu60_filtros_combinados_y_estado_vacio(self):
+        Itinerario.objects.create(
+            fecha=date(2026, 11, 29),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        # Combinación exitosa
+        response_match = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {
+                "fecha": "2026-11-29",
+                "transportista": str(self.transportista.pk),
+                "estado": "asignado",
+            },
+        )
+        self.assertEqual(response_match.status_code, 200)
+        self.assertContains(response_match, "IT-2026-")
+
+        # Combinación sin coincidencias despliega mensaje informativo de filtros
+        response_empty = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {
+                "fecha": "2026-11-29",
+                "estado": "finalizado",
+            },
+        )
+        self.assertEqual(response_empty.status_code, 200)
+        self.assertContains(
+            response_empty,
+            "No se encontraron itinerarios con los filtros aplicados",
+        )
+        self.assertContains(response_empty, "Limpiar filtros")
+
+    def test_hu60_filtros_valores_invalidos_no_producen_error(self):
+        response = self.client.get(
+            reverse("itinerarios:itinerario_lista"),
+            {
+                "fecha": "fecha-invalida",
+                "transportista": "invalido",
+                "estado": "estado-inventado",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
 
 
 class ItinerariosModelTests(TestCase):

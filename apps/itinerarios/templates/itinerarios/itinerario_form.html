@@ -50,10 +50,24 @@
             <div class="col-md-4">
                 <div class="itin-field">
                     <label for="{{ form.fecha.id_for_label }}">Fecha del itinerario</label>
-                    {{ form.fecha }}
+                    <div class="input-group itin-date-group">
+                        {{ form.fecha }}
+                        <button type="button" 
+                                id="btn-actualizar-fecha" 
+                                class="btn itin-btn-actualizar" 
+                                title="Actualizar disponibilidad para esta fecha" 
+                                aria-label="Actualizar disponibilidad de transportistas">
+                            <i class="fas fa-arrows-rotate" id="icon-actualizar-fecha"></i>
+                            <span>Actualizar</span>
+                        </button>
+                    </div>
                     {% if form.fecha.errors %}
                         <div class="text-danger small mt-1">{{ form.fecha.errors.0 }}</div>
                     {% endif %}
+                    <div id="fecha-modificada-aviso" class="itin-fecha-aviso" style="display: none;" aria-live="polite">
+                        <i class="fas fa-circle-info"></i>
+                        <span>Fecha modificada. Tocá «Actualizar» para consultar disponibilidad.</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -66,20 +80,36 @@
                 <div class="text-danger small mb-2">{{ form.transportistas.errors.0 }}</div>
             {% endif %}
 
-            <div class="itin-stop-groups">
+            <div class="itin-stop-groups" id="transportistas-container">
                 {% for checkbox in form.transportistas %}
-                    <label class="itin-stop-group" for="{{ checkbox.id_for_label }}">
+                    {% with ocupado=checkbox.data.value.value %}
+                    <label class="itin-stop-group {% if ocupado in form.ocupados_ids %}is-disabled{% endif %}" for="{{ checkbox.id_for_label }}">
                         <div class="itin-stop-group__header">
                             <div class="itin-stop-group__left">
-                                {{ checkbox.tag }}
+                                {% if ocupado in form.ocupados_ids %}
+                                    <input type="checkbox" disabled>
+                                {% else %}
+                                    {{ checkbox.tag }}
+                                {% endif %}
                                 <div>
                                     <div class="cell-main">{{ checkbox.choice_label }}</div>
-                                    <div class="cell-sub">Transportista activo con vehículo asignado</div>
+                                    <div class="cell-sub">
+                                        {% if ocupado in form.ocupados_ids %}
+                                            Ya tiene un itinerario asignado para la fecha indicada
+                                        {% else %}
+                                            Transportista activo con vehículo asignado
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
-                            <span class="itin-badge itin-badge--asignado">Disponible</span>
+                            {% if ocupado in form.ocupados_ids %}
+                                <span class="itin-badge itin-badge--finalizado">Ocupado</span>
+                            {% else %}
+                                <span class="itin-badge itin-badge--asignado">Disponible</span>
+                            {% endif %}
                         </div>
                     </label>
+                    {% endwith %}
                 {% empty %}
                     <div class="itin-paradas-empty">
                         <div class="itin-paradas-empty__icon">
@@ -102,4 +132,113 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fechaInput = document.getElementById("{{ form.fecha.id_for_label }}");
+        const btnActualizar = document.getElementById("btn-actualizar-fecha");
+        const iconActualizar = document.getElementById("icon-actualizar-fecha");
+        const avisoModificada = document.getElementById("fecha-modificada-aviso");
+        const container = document.getElementById("transportistas-container");
+
+        if (!fechaInput || !btnActualizar || !container) {
+            return;
+        }
+
+        let fechaCargada = fechaInput.value;
+
+        // Mostrar aviso en gris si el usuario modifica la fecha respecto a la cargada actualmente
+        function verificarCambioFecha() {
+            const valorActual = fechaInput.value.trim();
+            if (valorActual && valorActual !== fechaCargada) {
+                avisoModificada.style.display = "flex";
+                btnActualizar.classList.add("is-pending");
+            } else {
+                avisoModificada.style.display = "none";
+                btnActualizar.classList.remove("is-pending");
+            }
+        }
+
+        fechaInput.addEventListener("input", verificarCambioFecha);
+        fechaInput.addEventListener("change", verificarCambioFecha);
+
+        // Actualización ÚNICAMENTE al hacer clic en el botón Actualizar
+        btnActualizar.addEventListener("click", function () {
+            const nuevaFecha = fechaInput.value.trim();
+            if (!nuevaFecha) {
+                return;
+            }
+
+            // Validar formato AAAA-MM-DD
+            const regexFecha = /^\d{4}-\d{2}-\d{2}$/;
+            if (!regexFecha.test(nuevaFecha)) {
+                return;
+            }
+
+            // Guardar IDs de los transportistas seleccionados previamente
+            const seleccionadosPrevios = new Set();
+            container.querySelectorAll('input[type="checkbox"]:checked').forEach(function (cb) {
+                if (cb.value) {
+                    seleccionadosPrevios.add(cb.value);
+                }
+            });
+
+            // Feedback visual de carga en el botón y opacidad en la lista
+            btnActualizar.disabled = true;
+            if (iconActualizar) {
+                iconActualizar.classList.add("fa-spin");
+            }
+            container.style.opacity = "0.5";
+
+            const url = new URL(window.location.href);
+            url.searchParams.set("fecha", nuevaFecha);
+
+            fetch(url.toString(), {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error("Error en la respuesta del servidor");
+                }
+                return response.text();
+            })
+            .then(function (htmlText) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, "text/html");
+                const nuevoContenedor = doc.getElementById("transportistas-container");
+
+                if (nuevoContenedor) {
+                    // Restaurar selecciones si el transportista sigue disponible
+                    nuevoContenedor.querySelectorAll('input[type="checkbox"]:not([disabled])').forEach(function (cb) {
+                        if (seleccionadosPrevios.has(cb.value)) {
+                            cb.checked = true;
+                        }
+                    });
+
+                    container.innerHTML = nuevoContenedor.innerHTML;
+                    fechaCargada = nuevaFecha;
+                    window.history.replaceState(null, "", url.toString());
+                    avisoModificada.style.display = "none";
+                    btnActualizar.classList.remove("is-pending");
+                } else {
+                    window.location.href = url.toString();
+                }
+            })
+            .catch(function () {
+                window.location.href = url.toString();
+            })
+            .finally(function () {
+                btnActualizar.disabled = false;
+                if (iconActualizar) {
+                    iconActualizar.classList.remove("fa-spin");
+                }
+                container.style.opacity = "1";
+            });
+        });
+    });
+</script>
 {% endblock %}

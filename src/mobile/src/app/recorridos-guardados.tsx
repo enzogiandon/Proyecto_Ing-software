@@ -1,10 +1,17 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { crearPlantillaRuta, eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta } from '../services/itinerarios';
-import { entregarItinerarioActualizado, obtenerItinerarioJornada } from '../services/itinerarioService';
+import {
+  entregarItinerarioActualizado,
+  obtenerItinerarioJornada,
+  isJornadaIniciada,
+  getJornadaIniciadaGlobal,
+  getUltimoItinerarioActivo,
+} from '../services/itinerarioService';
+import { isJornadaIniciadaStorage } from '../services/storage';
 import type { RutaGuardadaItem } from '../types/api';
 
 type Listado =
@@ -49,6 +56,8 @@ export default function RecorridosGuardadosScreen() {
   const [toastGuardado, setToastGuardado] = useState(false);
   const toastTimerGuardado = useRef<any>(null);
   const [paradasActivas, setParadasActivas] = useState<number[]>([]);
+  // HU-68: Controla si la jornada laboral del itinerario ya fue iniciada
+  const [jornadaIniciada, setJornadaIniciada] = useState<boolean>(true);
 
   useFocusEffect(useCallback(() => {
     let vigente = true;
@@ -63,16 +72,37 @@ export default function RecorridosGuardadosScreen() {
   useFocusEffect(useCallback(() => {
     let vigente = true;
     setAsignacion('consultando');
-    obtenerItinerarioJornada({ soloDjango: true }).then(
-      ({ itinerario }) => {
+    obtenerItinerarioJornada().then(
+      async ({ itinerario }) => {
         if (vigente) {
-          setAsignacion(itinerario ? 'asignado' : 'sin-itinerario');
-          if (itinerario && Array.isArray(itinerario.paradas)) {
-            setParadasActivas(itinerario.paradas.map((p) => p.id));
+          const itin = itinerario || getUltimoItinerarioActivo();
+          setAsignacion(itin ? 'asignado' : 'sin-itinerario');
+          if (itin) {
+            const storageIniciada = await isJornadaIniciadaStorage(itin.id || 101);
+            const iniciada = isJornadaIniciada(itin) || storageIniciada || getJornadaIniciadaGlobal();
+            setJornadaIniciada(iniciada);
+            if (Array.isArray(itin.paradas)) {
+              setParadasActivas(itin.paradas.map((p) => p.id));
+            }
+          } else {
+            setJornadaIniciada(getJornadaIniciadaGlobal());
           }
         }
       },
-      () => { if (vigente) setAsignacion('error'); },
+      () => {
+        if (vigente) {
+          const itin = getUltimoItinerarioActivo();
+          if (itin) {
+            setAsignacion('asignado');
+            setJornadaIniciada(isJornadaIniciada(itin) || getJornadaIniciadaGlobal());
+            if (Array.isArray(itin.paradas)) {
+              setParadasActivas(itin.paradas.map((p) => p.id));
+            }
+          } else {
+            setAsignacion('error');
+          }
+        }
+      },
     );
     return () => { vigente = false; };
   }, [intentoAsignacion]));
@@ -97,7 +127,7 @@ export default function RecorridosGuardadosScreen() {
     if (operacionEnCurso.current) return;
     if (seleccion.estado !== 'confirmar' && seleccion.estado !== 'error-envio' &&
       seleccion.estado !== 'error-actualizacion') return;
-    if (seleccion.estado !== 'error-actualizacion' && asignacion !== 'asignado') return;
+    if (seleccion.estado !== 'error-actualizacion' && (asignacion !== 'asignado' || !jornadaIniciada)) return;
 
     const { recorrido } = seleccion;
     operacionEnCurso.current = true;
@@ -117,7 +147,7 @@ export default function RecorridosGuardadosScreen() {
 
       setCarga({ estado: 'actualizando', recorrido, orden });
       try {
-        const { itinerario } = await obtenerItinerarioJornada({ soloDjango: true });
+        const { itinerario } = await obtenerItinerarioJornada();
         if (!itinerario || itinerario.paradas.length !== orden.length ||
           itinerario.paradas.some((parada, indice) => parada.id !== orden[indice])) {
           throw new Error('El itinerario todavía no refleja el orden confirmado.');
@@ -193,6 +223,14 @@ export default function RecorridosGuardadosScreen() {
   };
 
   const abrirModalGuardar = () => {
+    // HU-68: Bloquea el guardado de plantillas si la jornada no ha sido iniciada
+    if (asignacion === 'asignado' && !jornadaIniciada) {
+      Alert.alert(
+        'Jornada no iniciada',
+        'Debés comenzar tu jornada laboral en Mi Itinerario para guardar el orden de las paradas.'
+      );
+      return;
+    }
     setNombreRecorrido('');
     setErrorNombre('');
     setModalGuardarVisible(true);
@@ -220,7 +258,7 @@ export default function RecorridosGuardadosScreen() {
       let ids = paradasActivas;
       if (ids.length === 0) {
         try {
-          const { itinerario } = await obtenerItinerarioJornada({ soloDjango: true });
+          const { itinerario } = await obtenerItinerarioJornada();
           if (itinerario?.paradas?.length) {
             ids = itinerario.paradas.map((p) => p.id);
             setParadasActivas(ids);
@@ -301,14 +339,22 @@ export default function RecorridosGuardadosScreen() {
             : 'Cargá un recorrido para aplicar su orden a tu hoja de ruta.'}
         </Text>
 
-        {/* HU-63: Botón "+ Guardar orden actual" SIEMPRE VISIBLE según Figma */}
+        {/* HU-63 y HU-68: Botón "+ Guardar orden actual" */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Guardar orden actual"
-          style={styles.botonGuardarOrdenPrincipal}
+          style={[
+            styles.botonGuardarOrdenPrincipal,
+            (!jornadaIniciada && asignacion === 'asignado') && styles.botonGuardarOrdenDeshabilitado,
+          ]}
           onPress={abrirModalGuardar}
         >
-          <Text style={styles.textoBotonGuardarOrden}>+ Guardar orden actual</Text>
+          <Text style={[
+            styles.textoBotonGuardarOrden,
+            (!jornadaIniciada && asignacion === 'asignado') && styles.textoBotonGuardarOrdenDeshabilitado,
+          ]}>
+            {(!jornadaIniciada && asignacion === 'asignado') ? '🔒 + Guardar orden actual (Iniciá jornada)' : '+ Guardar orden actual'}
+          </Text>
         </Pressable>
 
         {!!avisoCarga && (
@@ -343,6 +389,14 @@ export default function RecorridosGuardadosScreen() {
                 {listado.recorridos.length === 1 ? '1 recorrido guardado' : `${listado.recorridos.length} recorridos guardados`}
               </Text>
             </View>
+
+            {listado.recorridos.length > 0 && asignacion === 'asignado' && !jornadaIniciada && (
+              <View style={styles.avisoJornadaBloqueada} accessibilityLiveRegion="polite">
+                <Text style={styles.textoAvisoJornadaBloqueada}>
+                  🟡 Hoja de ruta en espera. Debés comenzar la jornada laboral en Mi Itinerario para cargar o guardar recorridos.
+                </Text>
+              </View>
+            )}
 
             {listado.recorridos.length > 0 && asignacion !== 'asignado' && (
               <View style={styles.avisoAsignacion} accessibilityLiveRegion="polite">
@@ -389,17 +443,17 @@ export default function RecorridosGuardadosScreen() {
                   <View style={styles.acciones}>
                     {/* Botón Cargar (Naranja YA) */}
                     <Pressable
-                      disabled={asignacion !== 'asignado'}
+                      disabled={asignacion !== 'asignado' || !jornadaIniciada}
                       accessibilityRole="button"
                       accessibilityLabel={`Cargar ${recorrido.nombre}`}
-                      accessibilityState={{ disabled: asignacion !== 'asignado' }}
+                      accessibilityState={{ disabled: asignacion !== 'asignado' || !jornadaIniciada }}
                       style={[
                         styles.botonCargarAccion,
-                        asignacion !== 'asignado' && styles.botonDeshabilitado,
+                        (asignacion !== 'asignado' || !jornadaIniciada) && styles.botonDeshabilitado,
                       ]}
                       onPress={() => setCarga({ estado: 'confirmar', recorrido })}
                     >
-                      <Text style={[styles.textoBotonCargar, asignacion !== 'asignado' && styles.textoDeshabilitado]}>
+                      <Text style={[styles.textoBotonCargar, (asignacion !== 'asignado' || !jornadaIniciada) && styles.textoDeshabilitado]}>
                         Cargar
                       </Text>
                     </Pressable>
@@ -1180,5 +1234,28 @@ const styles = StyleSheet.create({
     color: RepartoYA.blanco,
     fontSize: 15,
     fontWeight: '800',
+  },
+
+  // HU-68: Estilos para bloqueo previo al inicio de jornada
+  botonGuardarOrdenDeshabilitado: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#D1D5DB',
+  },
+  textoBotonGuardarOrdenDeshabilitado: {
+    color: '#9CA3AF',
+  },
+  avisoJornadaBloqueada: {
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  textoAvisoJornadaBloqueada: {
+    color: '#92400E',
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
   },
 });

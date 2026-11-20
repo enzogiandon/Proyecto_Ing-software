@@ -1,5 +1,5 @@
 // src/mobile/src/data/mockData.ts
-// Basado en el esquema relacional de Grupo Softech/db.sqlite3
+// Choferes simulados para pruebas offline / modo demostración sin conexión
 
 export interface Vehiculo {
   id: number;
@@ -24,31 +24,34 @@ export interface UsuarioTransportista {
   vehiculo: Vehiculo;
 }
 
-// Choferes simulados para probar los estados de Figma y credenciales del backend
+/**
+ * Choferes de prueba simplificados para demostración completa sin conexión.
+ * Todos admiten la clave universal '1234' o su PIN de 4 dígitos (ej: '3333').
+ */
 export const CHOFERES_PRUEBA: UsuarioTransportista[] = [
   {
-    id: 10,
-    transportista_id: 10,
-    dni: "12345678",
+    id: 1,
+    transportista_id: 1,
+    dni: "33333333",
     password: "1234",
-    first_name: "Martín",
-    last_name: "Rodríguez",
-    email: "martin.rodriguez@softech.com.ar",
+    first_name: "Carlos",
+    last_name: "Gómez",
+    email: "carlos.gomez@softech.com.ar",
     is_active: true,
     intentos_fallidos: 0,
-    telefono: "11-5555-7777",
-    habilitado: true, // Chofer principal oficial de los bocetos Figma (MR)
+    telefono: "11-4567-8901",
+    habilitado: true, // USUARIO PRINCIPAL: Iniciar jornada (HU-68), Caso 2 (parada extra hoy no en plantilla), reordenar, cobrar e incidentes
     vehiculo: {
-      id: 10,
-      patente: "AB 458 CD",
-      modelo: "Unidad 024 · Iveco Daily",
-      estado: "disponible"
-    }
+      id: 1,
+      patente: "AB 123 CD",
+      modelo: "Mercedes-Benz 710",
+      estado: "disponible",
+    },
   },
   {
-    id: 11,
-    transportista_id: 11,
-    dni: "1234567",
+    id: 2,
+    transportista_id: 2,
+    dni: "11111111",
     password: "1234",
     first_name: "Lautaro",
     last_name: "Gómez",
@@ -56,56 +59,56 @@ export const CHOFERES_PRUEBA: UsuarioTransportista[] = [
     is_active: true,
     intentos_fallidos: 0,
     telefono: "11-5555-4444",
-    habilitado: true, // Chofer de poblar_db del backend Django
+    habilitado: true, // CASO 1: Recorrido guardado que contiene un comercio que NO está asignado en la jornada de hoy
     vehiculo: {
-      id: 11,
-      patente: "AF 123 CD",
+      id: 2,
+      patente: "AF 111 CD",
       modelo: "Mercedes-Benz Accelo 815",
-      estado: "disponible"
-    }
-  },
-  {
-    id: 1,
-    transportista_id: 1,
-    dni: "38492011",
-    password: "1234",
-    first_name: "Carlos",
-    last_name: "Gómez",
-    email: "carlos.gomez@softech.com.ar",
-    is_active: true,
-    intentos_fallidos: 0,
-    telefono: "11-4567-8901",
-    habilitado: true, // Cuenta ACTIVA y HABILITADA -> Ingreso exitoso
-    vehiculo: {
-      id: 1,
-      patente: "AB 123 CD",
-      modelo: "Mercedes-Benz 710",
-      estado: "disponible"
-    }
-  },
-  {
-    id: 2,
-    transportista_id: 1,
-    dni: "34891204",
-    password: "1234",
-    first_name: "Carlos",
-    last_name: "Gómez",
-    email: "carlos.gomez@softech.com.ar",
-    is_active: true,
-    intentos_fallidos: 0,
-    telefono: "11-4567-8901",
-    habilitado: true,
-    vehiculo: {
-      id: 1,
-      patente: "AB 123 CD",
-      modelo: "Mercedes-Benz 710",
-      estado: "disponible"
-    }
+      estado: "disponible",
+    },
   },
   {
     id: 3,
-    transportista_id: 2,
-    dni: "29111222",
+    transportista_id: 3,
+    dni: "22222222",
+    password: "1234",
+    first_name: "Martín",
+    last_name: "Rodríguez",
+    email: "martin.rodriguez@softech.com.ar",
+    is_active: true,
+    intentos_fallidos: 0,
+    telefono: "11-5555-7777",
+    habilitado: true, // CASO 3: Badges de estado operativo (verde/rojo/neutro) y jornada en curso
+    vehiculo: {
+      id: 3,
+      patente: "AB 222 CD",
+      modelo: "Unidad 024 · Iveco Daily",
+      estado: "disponible",
+    },
+  },
+  {
+    id: 4,
+    transportista_id: 4,
+    dni: "55555555",
+    password: "1234",
+    first_name: "Lucas",
+    last_name: "Romero",
+    email: "lucas.romero@softech.com.ar",
+    is_active: true,
+    intentos_fallidos: 0,
+    telefono: "11-5555-6666",
+    habilitado: true, // CASO 4: Sin itinerario asignado (Pantalla vacía Figma con botón de soporte)
+    vehiculo: {
+      id: 4,
+      patente: "AC 555 YA",
+      modelo: "Renault Kangoo Maxi",
+      estado: "disponible",
+    },
+  },
+  {
+    id: 5,
+    transportista_id: 5,
+    dni: "66666666",
     password: "1234",
     first_name: "Roberto",
     last_name: "Díaz",
@@ -113,52 +116,14 @@ export const CHOFERES_PRUEBA: UsuarioTransportista[] = [
     is_active: true,
     intentos_fallidos: 0,
     telefono: "11-2345-6789",
-    habilitado: false, // Cuenta INHABILITADA (RF01/RF08) -> Dispara Modal Soporte
+    habilitado: false, // CASO 5: Cuenta inhabilitada (HU-23 Criterio 3 / RF01 / RF08 -> Modal Soporte)
     vehiculo: {
-      id: 2,
-      patente: "AA 987 ZZ",
+      id: 5,
+      patente: "AA 666 ZZ",
       modelo: "Ford Cargo 1722",
-      estado: "disponible"
-    }
+      estado: "disponible",
+    },
   },
-  {
-    id: 4,
-    transportista_id: 3,
-    dni: "44444444",
-    password: "4444",
-    first_name: "Martín",
-    last_name: "Álvarez",
-    email: "martin.alvarez@softech.com.ar",
-    is_active: true,
-    intentos_fallidos: 0,
-    telefono: "11-4444-5555",
-    habilitado: true, // Cuenta ACTIVA con itinerario asignado
-    vehiculo: {
-      id: 3,
-      patente: "AF 444 YA",
-      modelo: "Ford Ranger XLT",
-      estado: "disponible"
-    }
-  },
-  {
-    id: 5,
-    transportista_id: 4,
-    dni: "55555555",
-    password: "5555",
-    first_name: "Lucas",
-    last_name: "Romero",
-    email: "lucas.romero@softech.com.ar",
-    is_active: true,
-    intentos_fallidos: 0,
-    telefono: "11-5555-6666",
-    habilitado: true, // Cuenta ACTIVA pero SIN ITINERARIO ASIGNADO (Figma)
-    vehiculo: {
-      id: 4,
-      patente: "AC 555 YA",
-      modelo: "Renault Kangoo Maxi",
-      estado: "disponible"
-    }
-  }
 ];
 
 export const MOCK_CHOFER_ACTUAL = CHOFERES_PRUEBA[0];

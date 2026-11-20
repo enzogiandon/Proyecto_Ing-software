@@ -25,6 +25,12 @@
                 <h1 class="text-title mb-1">Subir Planilla</h1>
                 <p class="text-body text-c-secondary mb-0">Agrega un archivo CSV para importar datos</p>
             </div>
+            <div>
+                <button type="button" class="home-btn home-btn--compacto" data-bs-toggle="modal" data-bs-target="#modalFormatoPlanilla" id="btn-ver-formato">
+                    <i class="fas fa-circle-question text-primary"></i>
+                    <span>Ver formato requerido de planilla</span>
+                </button>
+            </div>
         </header>
 
         <!-- FORMULARIO DIRECTO -->
@@ -43,5 +49,123 @@
                 <button type="submit" class="home-btn home-btn--primary">Subir</button>
             </div>
         </form>
+
+        <!-- MODAL FORMATO REQUERIDO DE PLANILLA (HU-02) -->
+        <div class="modal fade" id="modalFormatoPlanilla" tabindex="-1" aria-labelledby="modalFormatoPlanillaLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom pb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-file-csv text-primary fs-4"></i>
+                            <div>
+                                <h5 class="modal-title fw-bold mb-0" id="modalFormatoPlanillaLabel">Formato Estándar de Planilla de Remitos</h5>
+                                <small class="text-muted">Especificación técnica oficial para carga masiva (HU-02)</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body py-3">
+                        <div class="alert alert-primary d-flex align-items-center gap-2 mb-3 py-2 px-3">
+                            <i class="fas fa-info-circle fs-5 text-primary flex-shrink-0"></i>
+                            <div class="small">
+                                El archivo debe ser un <strong>CSV</strong> delimitado por comas (<code>,</code>), codificado en <strong>UTF-8</strong> o <strong>UTF-8-sig</strong>. El procesamiento es <strong>atómico</strong>: si una fila falla, se rechaza todo el lote.
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-signature text-secondary me-1"></i> Nomenclatura del archivo (Autoasociación de Marca)</h6>
+                        <p class="small text-muted mb-3">
+                            El nombre del archivo debe iniciar con el CUIT de la marca para asociarla automáticamente:<br>
+                            <code class="bg-light px-2 py-1 rounded text-dark">&lt;CUIT_MARCA&gt;_&lt;YYYYMMDD&gt;_&lt;LOTE&gt;.csv</code><br>
+                            <em>Ejemplo:</em> <code>30654321090_20261027_DISTR-01.csv</code>
+                        </p>
+
+                        <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-table text-secondary me-1"></i> Estructura de Columnas Requeridas</h6>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm table-bordered align-middle small mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Columna</th>
+                                        <th>Tipo</th>
+                                        <th>Obligatorio</th>
+                                        <th>Restricciones y Formato</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>cuit_comercio</code></td>
+                                        <td>Numérico</td>
+                                        <td><span class="badge bg-danger">Sí</span></td>
+                                        <td>Exactamente 11 dígitos sin puntos ni guiones (ej. <code>23200048148</code>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>condicion_iva</code></td>
+                                        <td>Texto</td>
+                                        <td><span class="badge bg-secondary">Opcional</span></td>
+                                        <td>Texto descriptivo (ej. <em>Monotributo</em>, <em>Responsable Inscripto</em>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>numero_iibb</code></td>
+                                        <td>Texto</td>
+                                        <td><span class="badge bg-secondary">Opcional</span></td>
+                                        <td>Número de Ingresos Brutos (ej. <code>976-036690-9</code>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>razon_social</code></td>
+                                        <td>Texto</td>
+                                        <td><span class="badge bg-warning text-dark">Condicional</span></td>
+                                        <td>Obligatorio si el CUIT no existe aún en la base de datos maestra.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>domicilio</code></td>
+                                        <td>Texto</td>
+                                        <td><span class="badge bg-danger">Sí</span></td>
+                                        <td>Dirección completa de entrega del comercio destinatario.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>monto_a_cobrar</code></td>
+                                        <td>Decimal</td>
+                                        <td><span class="badge bg-danger">Sí</span></td>
+                                        <td>Mayor a <code>0.00</code>. Usar punto (<code>.</code>) como separador decimal.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>fecha_factura</code></td>
+                                        <td>Fecha</td>
+                                        <td><span class="badge bg-secondary">Opcional</span></td>
+                                        <td>Formato ISO <code>YYYY-MM-DD</code> (ej. <code>2026-10-21</code>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>numero_sucursal</code></td>
+                                        <td>Numérico</td>
+                                        <td><span class="badge bg-danger">Sí</span></td>
+                                        <td>4 dígitos con ceros iniciales (ej. <code>0005</code>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>numero_factura</code></td>
+                                        <td>Numérico</td>
+                                        <td><span class="badge bg-danger">Sí</span></td>
+                                        <td>8 dígitos con ceros iniciales (ej. <code>00024715</code>).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="small text-muted mb-3">
+                            <i class="fas fa-asterisk text-primary me-1"></i>
+                            El identificador único de remito resultante es <code>&lt;numero_sucursal&gt;-&lt;numero_factura&gt;</code> (ej. <code>0005-00024715</code>) y no puede repetirse dentro de la misma marca proveedora.
+                        </p>
+
+                        <h6 class="fw-bold mb-2 text-dark"><i class="fas fa-code text-secondary me-1"></i> Ejemplo Válido de Planilla</h6>
+                        <pre class="bg-dark text-light p-3 rounded small mb-0" style="font-family: monospace; overflow-x: auto;"><code>cuit_comercio,condicion_iva,numero_iibb,razon_social,domicilio,monto_a_cobrar,fecha_factura,numero_sucursal,numero_factura
+23200048148,Monotributo,976-036690-9,KIOSCO AVENIDA S.R.L.,"Av. Hipolito Yrigoyen 2810, Florencio Varela",364269.35,2026-10-21,0005,00024715
+23200033191,Exento,923-226025-6,AUTOSERVICIO LA RIBERA,"Dorrego 3429, Sarandi",199477.06,2026-10-22,0002,00023458
+23200056655,Monotributo,931-491905-8,MINIMERCADO DOÑA ROSA S.A.S.,"Belgrano 4950, Bernal",829717.82,2026-10-23,0002,00023496</code></pre>
+                    </div>
+                    <div class="modal-footer border-top">
+                        <button type="button" class="home-btn home-btn--compacto home-btn--primary" data-bs-dismiss="modal">
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}

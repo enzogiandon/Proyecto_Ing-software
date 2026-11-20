@@ -11,7 +11,7 @@ from .models import EstadoVehiculo, Grupos, Transportista, Usuario, Vehiculo
 
 class LoginForm(AuthenticationForm):
     error_messages = {
-        "invalid_login": "El usuario o la contraseña ingresados son incorrectos. Inténtalo de nuevo.",
+        "invalid_login": "El DNI o la contraseña ingresados son incorrectos. Inténtalo de nuevo.",
         "inactive": "Esta cuenta se encuentra suspendida.",
     }
 
@@ -19,7 +19,7 @@ class LoginForm(AuthenticationForm):
         super().__init__(*args, **kwargs)
 
         self.fields["username"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Usuario"}
+            {"class": "form-control", "placeholder": "DNI"}
         )
         self.fields["password"].widget.attrs.update(
             {"class": "form-control", "placeholder": "Contraseña"}
@@ -62,6 +62,9 @@ class EmpleadoCreateForm(forms.ModelForm):
         empty_label="Seleccione un vehículo (opcional)",
         widget=forms.Select(attrs={"class": "form-select"}),
         label="Vehículo asignado",
+        error_messages={
+            "invalid_choice": "El vehículo seleccionado no se encuentra disponible."
+        },
     )
 
     class Meta:
@@ -110,12 +113,32 @@ class EmpleadoCreateForm(forms.ModelForm):
         validate_password(password, user=self.instance)
         return password
 
+    def clean_grupos(self):
+        grupos = self.cleaned_data.get("grupos")
+        if not grupos:
+            return grupos
+
+        nombres_grupos = [getattr(g, "name", str(g)) for g in grupos]
+        if Grupos.TRANSPORTISTA in nombres_grupos and len(nombres_grupos) > 1:
+            raise ValidationError(
+                "Un transportista no puede tener otros roles asignados."
+            )
+        return grupos
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         password_confirm = cleaned_data.get("password_confirm")
         if password and password_confirm and password != password_confirm:
             self.add_error("password_confirm", "Las contraseñas no coinciden.")
+
+        vehiculo = cleaned_data.get("vehiculo")
+        if vehiculo and vehiculo.estado != EstadoVehiculo.DISPONIBLE:
+            self.add_error(
+                "vehiculo",
+                "El vehículo seleccionado no se encuentra disponible.",
+            )
+
         return cleaned_data
 
     def save(self, commit=True):
@@ -154,6 +177,9 @@ class EmpleadoUpdateForm(forms.ModelForm):
         empty_label="Seleccione un vehículo (opcional)",
         widget=forms.Select(attrs={"class": "form-select"}),
         label="Vehículo asignado",
+        error_messages={
+            "invalid_choice": "El vehículo seleccionado no se encuentra disponible."
+        },
     )
 
     class Meta:
@@ -198,14 +224,23 @@ class EmpleadoUpdateForm(forms.ModelForm):
             perfil = getattr(self.instance, "perfil_transportista", None)
             
             # Vehículos disponibles + el vehículo actualmente asignado a este transportista
-            qs_disponibles = Q(transportista__isnull=True, estado="disponible")
+            qs_disponibles = Q(transportista__isnull=True, estado=EstadoVehiculo.DISPONIBLE)
             if perfil and perfil.vehiculo_id:
-                qs_final = Vehiculo.objects.filter(qs_disponibles | Q(pk=perfil.vehiculo_id))
+                qs_final = Vehiculo.objects.filter(qs_disponibles | Q(pk=perfil.vehiculo_id)).order_by("modelo", "patente")
                 self.fields["vehiculo"].initial = perfil.vehiculo
             else:
-                qs_final = Vehiculo.objects.filter(qs_disponibles)
+                qs_final = Vehiculo.objects.filter(qs_disponibles).order_by("modelo", "patente")
 
-            self.fields["vehiculo"].queryset = qs_final.order_by("modelo", "patente")
+            self.fields["vehiculo"].queryset = qs_final
+
+    def clean_vehiculo(self):
+        vehiculo = self.cleaned_data.get("vehiculo")
+        if vehiculo:
+            perfil = getattr(self.instance, "perfil_transportista", None)
+            vehiculo_actual = perfil.vehiculo if perfil else None
+            if vehiculo != vehiculo_actual and vehiculo.estado != EstadoVehiculo.DISPONIBLE:
+                raise ValidationError("El vehículo seleccionado no se encuentra disponible.")
+        return vehiculo
 
     def clean_grupos(self):
         grupos = self.cleaned_data.get("grupos")
@@ -228,6 +263,30 @@ class EmpleadoUpdateForm(forms.ModelForm):
         ):
             raise ValidationError("El empleado ya se encuentra registrado.")
         return username
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Validación al asignar / cambiar vehículo
+        nuevo_vehiculo = cleaned_data.get("vehiculo")
+        if nuevo_vehiculo:
+            perfil = getattr(self.instance, "perfil_transportista", None)
+            vehiculo_actual = perfil.vehiculo if perfil else None
+
+            # Si se está asignando o cambiando el vehículo
+            if nuevo_vehiculo != vehiculo_actual:
+                if self.instance and not self.instance.is_active:
+                    self.add_error(
+                        "vehiculo",
+                        "No se puede asignar un vehículo a un transportista suspendido.",
+                    )
+                elif nuevo_vehiculo.estado != EstadoVehiculo.DISPONIBLE:
+                    self.add_error(
+                        "vehiculo",
+                        "El vehículo seleccionado no se encuentra disponible.",
+                    )
+
+        return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -327,3 +386,9 @@ class VehiculoForm(forms.ModelForm):
         if vehiculos.exists():
             raise ValidationError("Vehículo repetido")
         return patente
+
+    def save(self, commit=True):
+        vehiculo = super().save(commit=commit)
+        if vehiculo.estado == EstadoVehiculo.NO_OPERATIVO:
+            Transportista.objects.filter(vehiculo=vehiculo).update(vehiculo=None)
+        return vehiculo

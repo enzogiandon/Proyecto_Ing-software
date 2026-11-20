@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from apps.core.forms import EmpleadoCreateForm
-from apps.core.models import EstadoVehiculo, Grupos, Transportista, Vehiculo
+from apps.core.models import EstadoVehiculo, Grupos, Transportista, Usuario, Vehiculo
 
 
 class EmpleadoViewsTests(TestCase):
@@ -78,6 +78,33 @@ class EmpleadoViewsTests(TestCase):
         self.assertTrue(Transportista.objects.filter(usuario=employee).exists())
         self.assertQuerySetEqual(employee.groups.all(), [self.grupo_transportista])
 
+    def test_create_transportista_rejects_multiple_roles(self):
+        response = self.client.post(
+            reverse("core:empleado_crear"),
+            {
+                "username": "34567899",
+                "email": "chofer_multi@example.com",
+                "first_name": "Pedro",
+                "last_name": "Gómez",
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk, self.gestion_personal.pk],
+                "password": "Transport-Password-42!",
+                "password_confirm": "Transport-Password-42!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("grupos", form.errors)
+        self.assertIn(
+            "Un transportista no puede tener otros roles asignados.",
+            form.errors["grupos"],
+        )
+        self.assertFalse(
+            get_user_model().objects.filter(username="34567899").exists()
+        )
+
     def test_duplicate_employee_dni_is_rejected(self):
         get_user_model().objects.create_user(
             username="45678901",
@@ -143,10 +170,93 @@ class EmpleadoViewsTests(TestCase):
         self.assertQuerySetEqual(employee.groups.all(), [self.gestion_personal])
         self.assertFalse(Transportista.objects.filter(usuario=employee).exists())
 
+    def test_update_employee_rejects_assigning_vehicle_to_suspended_transportista(self):
+        employee = get_user_model().objects.create_user(
+            username="56789099",
+            password="Original-Password-42!",
+            first_name="Nombre",
+            last_name="Suspendido",
+            is_active=False,
+        )
+        employee.groups.add(self.grupo_transportista)
+        Transportista.objects.create(usuario=employee)
+        vehiculo = Vehiculo.objects.create(
+            patente="AA111AA",
+            modelo="Mercedes",
+            estado=EstadoVehiculo.DISPONIBLE,
+        )
+
+        response = self.client.post(
+            reverse("core:empleado_editar", args=[employee.pk]),
+            {
+                "username": employee.username,
+                "email": "suspendido@example.com",
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk],
+                "vehiculo": vehiculo.pk,
+                "password": "",
+                "password_confirm": "",
+            },
+        )
+
+        self.assertRedirects(response, reverse("core:empleado_lista"))
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("Error: Transportista deshabilitado" in m.message for m in messages))
+
+    def test_update_employee_rejects_assigning_non_available_vehicle(self):
+        employee = get_user_model().objects.create_user(
+            username="56789098",
+            password="Original-Password-42!",
+            first_name="Nombre",
+            last_name="Activo",
+            is_active=True,
+        )
+        employee.groups.add(self.grupo_transportista)
+        Transportista.objects.create(usuario=employee)
+        vehiculo_no_operativo = Vehiculo.objects.create(
+            patente="BB222BB",
+            modelo="Ford",
+            estado=EstadoVehiculo.NO_OPERATIVO,
+        )
+
+        response = self.client.post(
+            reverse("core:empleado_editar", args=[employee.pk]),
+            {
+                "username": employee.username,
+                "email": "activo@example.com",
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk],
+                "vehiculo": vehiculo_no_operativo.pk,
+                "password": "",
+                "password_confirm": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("vehiculo", form.errors)
+        self.assertIn(
+            "El vehículo seleccionado no se encuentra disponible.",
+            form.errors["vehiculo"],
+        )
+
     def test_suspend_employee_disables_account_without_deleting_it(self):
         employee = get_user_model().objects.create_user(
             username="67890123",
             password="Original-Password-42!",
+        )
+        vehiculo = Vehiculo.objects.create(
+            patente="CC333CC",
+            modelo="Iveco",
+            estado=EstadoVehiculo.ASIGNADO,
+        )
+        transportista = Transportista.objects.create(
+            usuario=employee, vehiculo=vehiculo
         )
 
         response = self.client.post(
@@ -161,6 +271,10 @@ class EmpleadoViewsTests(TestCase):
         employee.refresh_from_db()
         self.assertFalse(employee.is_active)
         self.assertTrue(get_user_model().objects.filter(pk=employee.pk).exists())
+        transportista.refresh_from_db()
+        self.assertIsNone(transportista.vehiculo)
+        vehiculo.refresh_from_db()
+        self.assertEqual(vehiculo.estado, EstadoVehiculo.DISPONIBLE)
         self.client.logout()
         self.assertFalse(
             self.client.login(
@@ -305,6 +419,39 @@ class VehiculoViewsTests(TestCase):
             ["Vehículo modificado exitosamente"],
         )
 
+    def test_update_vehicle_to_no_operativo_unassigns_transportista(self):
+        vehiculo = Vehiculo.objects.create(
+            patente="AB123CD", estado=EstadoVehiculo.ASIGNADO
+        )
+        user = Usuario.objects.create_user(
+            username="98765432",
+            password="test-password-123",
+            first_name="Chofer",
+            last_name="Test",
+        )
+        transportista = Transportista.objects.create(usuario=user, vehiculo=vehiculo)
+
+        response = self.client.post(
+            reverse("core:vehiculo_editar", args=[vehiculo.pk]),
+            {
+                "patente": "AB123CD",
+                "modelo": "Camión",
+                "poliza": "POL-123",
+                "estado": EstadoVehiculo.NO_OPERATIVO,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:vehiculo_lista"),
+            fetch_redirect_response=False,
+        )
+        vehiculo.refresh_from_db()
+        self.assertEqual(vehiculo.estado, EstadoVehiculo.NO_OPERATIVO)
+        transportista.refresh_from_db()
+        self.assertIsNone(transportista.vehiculo)
+
+
     def test_create_vehicle_requires_login(self):
         self.client.logout()
 
@@ -345,7 +492,7 @@ class PoblarCommandTests(TestCase):
         self.assertIn("11111111", output)
         self.assertIn("1234567", output)
         self.assertIn("12345678", output)
-        self.assertIn("Consolidación Multimarca", output)
+        self.assertIn("Datos maestros cargados exitosamente", output)
 
     def test_poblar_limpiar_unblocks_all_users(self):
         user_model = get_user_model()
@@ -382,40 +529,40 @@ class PoblarCommandTests(TestCase):
         for grupo_val in Grupos.values:
             self.assertIn(grupo_val, nombres_grupos)
 
-    def test_poblar_completo_creates_route_and_collections_for_driver(self):
+    def test_poblar_carga_datos_maestros_y_rutas_guardadas_sin_remitos(self):
         call_command("crear_grupos", stdout=StringIO())
         out = StringIO()
         call_command("poblar", "--completo", stdout=out)
         output = out.getvalue()
 
         self.assertIn("Datos maestros cargados exitosamente", output)
-        self.assertIn("Itinerario asignado a 1234567", output)
+        self.assertIn("Remitos e Itinerarios: 0", output)
 
         user = get_user_model().objects.get(username="1234567")
         self.assertIsNotNone(user.perfil_transportista)
 
-        from apps.itinerarios.models import Itinerario, Parada, EstadoItinerario, EstadoParada
-        from apps.cobranza.models import Cobranza
-        from apps.remitos.models import Remito
+        from apps.itinerarios.models import Itinerario, Parada, RutaGuardada
+        from apps.remitos.models import Comercio, Marca, Remito
 
-        itinerarios = Itinerario.objects.filter(transportista=user.perfil_transportista)
-        self.assertEqual(itinerarios.count(), 1)
-        itinerario = itinerarios.first()
-        self.assertEqual(itinerario.estado, EstadoItinerario.ASIGNADO)
+        # Comercios y marcas cargados
+        self.assertEqual(Comercio.objects.count(), 50)
+        self.assertEqual(Marca.objects.count(), 4)
 
-        paradas = Parada.objects.filter(itinerario=itinerario).order_by("orden")
-        self.assertEqual(paradas.count(), 4)
+        # Rutas guardadas para transportistas
+        self.assertTrue(
+            RutaGuardada.objects.filter(transportista=user.perfil_transportista).exists()
+        )
 
-        # Paradas con cobranzas
-        cobranzas = Cobranza.objects.filter(parada__itinerario=itinerario)
-        self.assertEqual(cobranzas.count(), 2)
-        for c in cobranzas:
-            self.assertEqual(c.estado, "registrado")
+        # No debe crear remitos, paradas ni itinerarios artificiales
+        self.assertEqual(Remito.objects.count(), 0)
+        self.assertEqual(Parada.objects.count(), 0)
+        self.assertEqual(Itinerario.objects.count(), 0)
 
-        # Una de las cobranzas tiene 2 medios de pago
-        detalles_conteo = [c.detalles.count() for c in cobranzas]
-        self.assertIn(2, detalles_conteo)
-
-        # Remitos asignados a paradas
-        remitos_asignados = Remito.objects.filter(parada__itinerario=itinerario)
-        self.assertGreaterEqual(remitos_asignados.count(), 5)
+        # Usuario administrativo suspendido para caso de prueba
+        admin_susp = get_user_model().objects.get(username="55555555")
+        self.assertFalse(admin_susp.is_active)
+        self.assertEqual(admin_susp.intentos_fallidos, 5)
+        self.assertTrue(admin_susp.is_staff)
+        self.assertTrue(
+            admin_susp.groups.filter(name=Grupos.ADMIN_PLANIFICACION).exists()
+        )

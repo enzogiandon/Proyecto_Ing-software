@@ -34,6 +34,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { obtenerDetalleParada, getParadaSeleccionada, setParadaSeleccionada } from '../services/paradaService';
+import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
+import * as mockItinData from '../data/mockItinerario';
+import { getUsuarioActual } from '../services/authService';
+import { entregarItinerarioActualizado } from '../services/itinerarioService';
 
 export default function ParadaScreen() {
   const router = useRouter();
@@ -45,6 +49,12 @@ export default function ParadaScreen() {
   // Estado de los datos de la parada (inicia con la parada seleccionada en memoria)
   const [parada, setParada] = useState<DetalleParada>(() => getParadaSeleccionada());
   const [cargando, setCargando] = useState<boolean>(true);
+
+  // Regla de Negocio: Si el cobro fue validado o la parada está finalizada, la visita fue exitosa
+  const cobroValidado =
+    parada.estadoCobro === 'validado' ||
+    parada.estado === 'finalizada' ||
+    (parada.estado as any) === 'completada';
 
   // Modales interactivos para las acciones secundarias
   const [modalRemitosVisible, setModalRemitosVisible] = useState<boolean>(false);
@@ -98,6 +108,35 @@ export default function ParadaScreen() {
     }
   };
 
+  // Sincronización proactiva y navegación de regreso hacia el itinerario
+  const handleVolverAlItinerario = () => {
+    const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+    const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+    const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222;
+    const itin4444 = (mockItinData as any).MOCK_ITINERARIO_44444444 || itin2222;
+    const itinActivo = usuario?.dni === '11111111'
+      ? (itin1111 || MOCK_ITINERARIO_ASIGNADO)
+      : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+      ? (itin2222 || itin4444 || MOCK_ITINERARIO_ASIGNADO)
+      : MOCK_ITINERARIO_ASIGNADO;
+
+    if (itinActivo && Array.isArray(itinActivo.paradas)) {
+      const idx = itinActivo.paradas.findIndex((p: any) => p.id === parada.id);
+      if (idx !== -1) {
+        itinActivo.paradas[idx] = {
+          ...itinActivo.paradas[idx],
+          estado: parada.estado,
+          orden: parada.orden,
+        };
+      }
+      entregarItinerarioActualizado({
+        ...itinActivo,
+        paradas: [...itinActivo.paradas.map((p: any) => ({ ...p, comercio: { ...p.comercio } }))],
+      });
+    }
+    router.replace('/itinerario' as any);
+  };
+
   return (
     <View style={styles.safeContainer}>
       <StatusBar
@@ -109,10 +148,10 @@ export default function ParadaScreen() {
       {/* ================= HEADER CORPORATIVO (Azul Ruta #123C6B) ================= */}
       <View style={[styles.header, { paddingTop: topPaddingSeguro }]}>
         <View style={styles.headerTop}>
-          {/* Botón de retroceso al Itinerario */}
+          {/* Botón de retroceso al Itinerario con sincronización inmediata */}
           <TouchableOpacity
             style={styles.botonVolver}
-            onPress={() => router.replace('/itinerario' as any)}
+            onPress={handleVolverAlItinerario}
             activeOpacity={0.7}
           >
             <Text style={styles.iconoVolver}>←</Text>
@@ -139,6 +178,11 @@ export default function ParadaScreen() {
               #{parada.orden} de {parada.totalParadasRuta}
             </Text>
           </View>
+          {parada.estado === 'error' && (
+            <View style={styles.badgeHeaderInconveniente}>
+              <Text style={styles.badgeHeaderInconvenienteTexto}>⚠️ Con inconveniente</Text>
+            </View>
+          )}
         </View>
         <Text style={styles.headerSubtitulo}>Información operativa de destino y cobranza</Text>
       </View>
@@ -249,9 +293,25 @@ export default function ParadaScreen() {
                   })}
                 </Text>
               </View>
-              <View style={styles.badgeEstadoCobro}>
-                <Text style={styles.textoBadgeCobro}>
-                  {parada.estadoCobro === 'validado' ? '✓ Cobro Validado' : '⏳ Pendiente'}
+              <View
+                style={[
+                  styles.badgeEstadoCobro,
+                  cobroValidado && styles.badgeCobroExito,
+                  !cobroValidado && parada.estado === 'error' && styles.badgeInconvenienteRojo,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.textoBadgeCobro,
+                    cobroValidado && styles.textoBadgeCobroExito,
+                    !cobroValidado && parada.estado === 'error' && styles.textoBadgeInconvenienteRojo,
+                  ]}
+                >
+                  {cobroValidado
+                    ? '✓ Cobro Validado'
+                    : parada.estado === 'error'
+                    ? '⚠️ Con inconveniente'
+                    : '⏳ Pendiente'}
                 </Text>
               </View>
             </View>
@@ -271,26 +331,71 @@ export default function ParadaScreen() {
           {/* ================= ACCIONES OPERATIVAS ================= */}
           <Text style={styles.seccionTitulo}>ACCIONES OPERATIVAS</Text>
 
-          {/* 1. Botón Principal: Registrar Cobro (Naranja YA #F4661B) */}
+          {/* 1. Botón Principal: Registrar Cobro (Naranja YA #F4661B o Verde si ya está validado) */}
           <TouchableOpacity
-            style={styles.botonRegistrarCobro}
-            onPress={handleRegistrarCobro}
-            activeOpacity={0.85}
+            style={[
+              styles.botonRegistrarCobro,
+              cobroValidado && styles.botonCobroValidado,
+            ]}
+            onPress={
+              cobroValidado
+                ? () => {
+                    Alert.alert(
+                      'Cobranza ya registrada',
+                      'Esta parada ya cuenta con la cobranza validada y la entrega finalizada con éxito.',
+                      [{ text: 'Entendido' }]
+                    );
+                  }
+                : handleRegistrarCobro
+            }
+            activeOpacity={cobroValidado ? 0.9 : 0.85}
+            accessibilityRole="button"
+            accessibilityLabel={cobroValidado ? 'Cobranza ya validada' : 'Registrar Cobro'}
           >
-            <View style={styles.botonIconoCirculo}>
-              <Image
-                source={require('../../assets/icons/icono-efectivo.png')}
-                style={styles.iconoBotonCobro}
-                resizeMode="contain"
-              />
+            <View
+              style={[
+                styles.botonIconoCirculo,
+                cobroValidado && styles.botonIconoCirculoValidado,
+              ]}
+            >
+              {cobroValidado ? (
+                <Text style={styles.iconoTildeCobro}>✓</Text>
+              ) : (
+                <Image
+                  source={require('../../assets/icons/icono-efectivo.png')}
+                  style={styles.iconoBotonCobro}
+                  resizeMode="contain"
+                />
+              )}
             </View>
             <View style={styles.botonTextoCol}>
-              <Text style={styles.textoBotonCobroPrincipal}>Registrar Cobro</Text>
-              <Text style={styles.subtextoBotonCobro}>
-                Validar pagos en efectivo, transferencia o QR
+              <Text
+                style={[
+                  styles.textoBotonCobroPrincipal,
+                  cobroValidado && styles.textoBotonCobroValidado,
+                ]}
+              >
+                {cobroValidado ? 'Cobranza Registrada' : 'Registrar Cobro'}
+              </Text>
+              <Text
+                style={[
+                  styles.subtextoBotonCobro,
+                  cobroValidado && styles.subtextoBotonCobroValidado,
+                ]}
+              >
+                {cobroValidado
+                  ? 'El cobro de la entrega ya fue confirmado'
+                  : 'Validar pagos en efectivo, transferencia o QR'}
               </Text>
             </View>
-            <Text style={styles.flechaBoton}>➔</Text>
+            <Text
+              style={[
+                styles.flechaBoton,
+                cobroValidado && styles.flechaBotonValidado,
+              ]}
+            >
+              {cobroValidado ? '✓' : '➔'}
+            </Text>
           </TouchableOpacity>
 
           {/* 2. Botón: Ver Remitos */}
@@ -341,30 +446,74 @@ export default function ParadaScreen() {
             />
           </TouchableOpacity>
 
-          {/* 4. Botón: Registrar Inconveniente */}
+          {/* 4. Botón: Registrar Inconveniente (Bloqueado si el cobro ya fue validado) */}
           <TouchableOpacity
-            style={[styles.botonSecundario, styles.botonInconveniente]}
+            style={[
+              styles.botonSecundario,
+              styles.botonInconveniente,
+              cobroValidado && styles.botonInconvenienteBloqueado,
+            ]}
             onPress={() => {
+              if (cobroValidado) {
+                Alert.alert(
+                  'Inconveniente no aplicable',
+                  'Al haberse registrado y validado la cobranza, la entrega se considera completada sin contingencias. No es posible reportar inconvenientes.',
+                  [{ text: 'Entendido' }]
+                );
+                return;
+              }
               setParadaSeleccionada(parada);
               router.push('/registrar-inconveniente' as any);
             }}
-            activeOpacity={0.8}
+            activeOpacity={cobroValidado ? 0.9 : 0.8}
+            accessibilityRole="button"
+            accessibilityLabel={
+              cobroValidado
+                ? 'Registrar inconveniente bloqueado por cobro validado'
+                : 'Registrar inconveniente'
+            }
+            accessibilityState={{ disabled: cobroValidado }}
           >
             {/* Núcleo del cambio: Ícono minimalista de alerta en inconveniente */}
             <Image
               source={require('../../assets/icons/icono-alerta.png')}
-              style={styles.iconoAccionSecundario}
+              style={[
+                styles.iconoAccionSecundario,
+                cobroValidado && styles.iconoInconvenienteBloqueado,
+              ]}
               resizeMode="contain"
             />
             <View style={styles.textoSecundarioCol}>
-              <Text style={[styles.textoBotonSecundario, styles.textoAlertaInconveniente]}>
-                Registrar inconveniente
+              <Text
+                style={[
+                  styles.textoBotonSecundario,
+                  styles.textoAlertaInconveniente,
+                  cobroValidado && styles.textoInconvenienteBloqueado,
+                ]}
+              >
+                {cobroValidado
+                  ? 'Registrar inconveniente (Bloqueado)'
+                  : 'Registrar inconveniente'}
               </Text>
-              <Text style={styles.subtextoBotonSecundario}>
-                Local cerrado, cliente ausente o rechazo de mercadería
+              <Text
+                style={[
+                  styles.subtextoBotonSecundario,
+                  cobroValidado && styles.subtextoInconvenienteBloqueado,
+                ]}
+              >
+                {cobroValidado
+                  ? 'No disponible: cobro registrado y entrega completada'
+                  : 'Local cerrado, cliente ausente o rechazo de mercadería'}
               </Text>
             </View>
-            <Text style={styles.indicadorBotonSecundario}>➔</Text>
+            <Text
+              style={[
+                styles.indicadorBotonSecundario,
+                cobroValidado && styles.indicadorInconvenienteBloqueado,
+              ]}
+            >
+              {cobroValidado ? '🔒' : '➔'}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -775,10 +924,39 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FDE68A',
   },
+  badgeCobroExito: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+  },
+  badgeInconvenienteRojo: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderColor: '#FCA5A5',
+  },
   textoBadgeCobro: {
     fontSize: 12,
     fontWeight: '700',
     color: '#92400E',
+  },
+  textoBadgeCobroExito: {
+    color: '#065F46',
+  },
+  textoBadgeInconvenienteRojo: {
+    color: RepartoYA.error,
+    fontWeight: '800',
+  },
+  badgeHeaderInconveniente: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  badgeHeaderInconvenienteTexto: {
+    color: RepartoYA.error,
+    fontSize: 11,
+    fontWeight: '800',
   },
   divisorCobranza: {
     height: 1,
@@ -860,6 +1038,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  // Estados para cobro ya validado (HU-67 / HU-32)
+  botonCobroValidado: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1.5,
+    borderColor: '#10B981',
+    shadowColor: '#10B981',
+    shadowOpacity: 0.15,
+  },
+  botonIconoCirculoValidado: {
+    backgroundColor: '#D1FAE5',
+  },
+  iconoTildeCobro: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#059669',
+  },
+  textoBotonCobroValidado: {
+    color: '#065F46',
+  },
+  subtextoBotonCobroValidado: {
+    color: '#047857',
+  },
+  flechaBotonValidado: {
+    color: '#059669',
+  },
   // Botones Secundarios
   botonSecundario: {
     backgroundColor: RepartoYA.blanco,
@@ -899,6 +1102,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: RepartoYA.grisTexto,
     marginLeft: 8,
+  },
+  // Inconveniente bloqueado por cobro validado (HU-56)
+  botonInconvenienteBloqueado: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+    opacity: 0.8,
+  },
+  iconoInconvenienteBloqueado: {
+    opacity: 0.35,
+  },
+  textoInconvenienteBloqueado: {
+    color: RepartoYA.grisTexto,
+  },
+  subtextoInconvenienteBloqueado: {
+    color: '#9CA3AF',
+  },
+  indicadorInconvenienteBloqueado: {
+    color: '#9CA3AF',
+    fontSize: 14,
   },
   // MODALES
   modalOverlay: {

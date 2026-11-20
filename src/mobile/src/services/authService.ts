@@ -1,6 +1,13 @@
-import { CHOFERES_PRUEBA, UsuarioTransportista, MOCK_CHOFER_ACTUAL } from '../data/mockData';
-import { saveTokens, clearTokens } from './storage';
-import { BACKEND_URL } from './config';
+import { UsuarioTransportista } from '../data/mockData';
+import {
+  saveTokens,
+  clearTokens,
+  getAccessToken,
+  saveUserSession,
+  getUserSession,
+  clearUserSession,
+} from './storage';
+import { BACKEND_URL, getBackendBaseUrl } from './config';
 
 // Configuración dinámica de la URL base del Backend Django
 export const API_BASE_URL = BACKEND_URL;
@@ -15,33 +22,10 @@ export interface LoginResult {
   user?: Partial<UsuarioTransportista>;
   tokens?: AuthTokens;
   error?: string;
-  tipoError?: 'DNI' | 'CLAVE' | 'INHABILITADO' | 'SERVIDOR';
+  tipoError?: 'DNI' | 'CLAVE' | 'INHABILITADO' | 'CONEXION' | 'SERVIDOR';
 }
 
-// Variables de sesión activa del chofer (persistencia en memoria y localStorage en web)
-const STORAGE_USER_KEY = 'repartoya_transportista_session';
-const STORAGE_TOKEN_KEY = 'repartoya_transportista_token';
-
-function getStoredUser(): Partial<UsuarioTransportista> | null {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_USER_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch {}
-  }
-  return null;
-}
-
-function getStoredToken(): string | null {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_TOKEN_KEY);
-      if (stored) return stored;
-    } catch {}
-  }
-  return null;
-}
-
+// Variables de sesión activa del chofer en memoria
 let tokenAccesoActual: string | null = null;
 let usuarioLogueadoActual: Partial<UsuarioTransportista> | null = null;
 let sesionActiva = false;
@@ -49,16 +33,10 @@ let sesionActiva = false;
 export const setAuthToken = (token: string | null) => {
   tokenAccesoActual = token;
   if (token) {
-    saveTokens(token);
+    saveTokens(token).catch(() => {});
   } else {
-    clearTokens();
+    clearTokens().catch(() => {});
     sesionActiva = false;
-  }
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      if (token) window.localStorage.setItem(STORAGE_TOKEN_KEY, token);
-      else window.localStorage.removeItem(STORAGE_TOKEN_KEY);
-    } catch {}
   }
 };
 
@@ -68,14 +46,17 @@ export const getAuthToken = (): string | null => {
 
 export const setUsuarioActual = (user: Partial<UsuarioTransportista> | null) => {
   usuarioLogueadoActual = user;
-  if (!user) {
+  if (user) {
+    if (user.dni && typeof globalThis !== 'undefined') {
+      (globalThis as any).__mockChoferDni = user.dni;
+    }
+    saveUserSession(user).catch(() => {});
+  } else {
+    if (typeof globalThis !== 'undefined') {
+      delete (globalThis as any).__mockChoferDni;
+    }
+    clearUserSession().catch(() => {});
     sesionActiva = false;
-  }
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      if (user) window.localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-      else window.localStorage.removeItem(STORAGE_USER_KEY);
-    } catch {}
   }
 };
 
@@ -84,14 +65,44 @@ export const getUsuarioActual = (): Partial<UsuarioTransportista> | null => {
 };
 
 export const estaAutenticado = (): boolean => {
-  return sesionActiva;
+  return sesionActiva || !!tokenAccesoActual;
 };
 
 export const cerrarSesion = () => {
   sesionActiva = false;
-  setAuthToken(null);
-  setUsuarioActual(null);
+  tokenAccesoActual = null;
+  usuarioLogueadoActual = null;
+  clearTokens().catch(() => {});
+  clearUserSession().catch(() => {});
 };
+
+/**
+ * Restaura la sesión del transportista desde el almacenamiento persistente
+ * (AsyncStorage en Android/iOS o localStorage en Web).
+ * Retorna true si hay un token válido recuperado y restaura los datos del usuario.
+ */
+export async function restaurarSesion(): Promise<boolean> {
+  try {
+    const token = await getAccessToken();
+    const user = await getUserSession<Partial<UsuarioTransportista>>();
+
+    if (token) {
+      tokenAccesoActual = token;
+      sesionActiva = true;
+      if (user) {
+        usuarioLogueadoActual = user;
+        if (user.dni && typeof globalThis !== 'undefined') {
+          (globalThis as any).__mockChoferDni = user.dni;
+        }
+      }
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('[AuthService] Error al restaurar sesión:', err);
+    return false;
+  }
+}
 
 // Decodificador seguro de JWT compatible con Web, Node y React Native
 function parseJwtPayload(token: string): Record<string, any> | null {
@@ -129,12 +140,14 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
   const dniLimpio = dni.trim();
   const claveLimpia = clave.trim();
 
+  const currentBaseUrl = getBackendBaseUrl();
+
   try {
-    console.log(`[AuthService] Conectando a ${API_BASE_URL}/api/token/ con DNI: ${dniLimpio}`);
+    console.log(`[AuthService] Conectando a ${currentBaseUrl}/api/token/ con DNI: ${dniLimpio}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 segundos de timeout para Wi-Fi/red local
 
-    const response = await fetch(`${API_BASE_URL}/api/token/`, {
+    const response = await fetch(`${currentBaseUrl}/api/token/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -155,22 +168,14 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       await saveTokens(data.access, data.refresh);
 
       const jwtPayload = parseJwtPayload(data.access);
-      const choferEncontrado = CHOFERES_PRUEBA.find((c) => c.dni === dniLimpio);
 
-      // Determinar nombre y vehículo según choferEncontrado, JWT payload o DNI ingresado
-      const firstName = choferEncontrado?.first_name ||
-        jwtPayload?.first_name ||
-        jwtPayload?.name ||
-        (dniLimpio === '12345678' ? 'Martín' : dniLimpio === '1234567' ? 'Lautaro' : 'Transportista');
-
-      const lastName = choferEncontrado?.last_name ||
-        jwtPayload?.last_name ||
-        (dniLimpio === '12345678' ? 'Rodríguez' : dniLimpio === '1234567' ? 'Gómez' : dniLimpio);
-
-      const vehiculo = choferEncontrado?.vehiculo || {
-        id: choferEncontrado?.id || 10,
-        patente: dniLimpio === '12345678' ? 'AB 458 CD' : dniLimpio === '1234567' ? 'AF 123 CD' : `AF ${dniLimpio.slice(-3)} YA`,
-        modelo: dniLimpio === '12345678' ? 'Unidad 024 · Iveco Daily' : dniLimpio === '1234567' ? 'Mercedes-Benz Accelo 815' : 'Unidad de Reparto',
+      // Determinar nombre y vehículo directamente de la base de datos (vía JWT claims)
+      const firstName = jwtPayload?.first_name || jwtPayload?.name || '';
+      const lastName = jwtPayload?.last_name || '';
+      const vehiculo = jwtPayload?.vehiculo || {
+        id: 0,
+        patente: 'S/D',
+        modelo: 'Unidad de Reparto',
         estado: 'disponible',
       };
 
@@ -180,7 +185,7 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
         last_name: lastName,
         vehiculo,
         habilitado: true,
-        is_active: true,
+        is_active: jwtPayload?.is_active ?? true,
       };
 
       setUsuarioActual(userAutenticado);
@@ -192,16 +197,23 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       };
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 400) {
       let data: any = {};
       try {
         data = await response.json(); // <-- Leemos el body JSON de fetch
       } catch {}
 
-      const detail = (data?.detail || '').toLowerCase();
-      const codigo = data?.codigo || data?.code;
+      const detail = (typeof data?.detail === 'string' ? data.detail : '').toLowerCase();
+      const codigo = (typeof (data?.codigo || data?.code) === 'string' ? (data.codigo || data.code) : '').toUpperCase();
 
-      if (codigo === 'CUENTA_SUSPENDIDA' || detail.includes('suspendida') || detail.includes('inhabilitada')) {
+      // Caso 1: Cuenta inhabilitada o bloqueada por intentos
+      if (
+        codigo === 'CUENTA_SUSPENDIDA' ||
+        codigo === 'CUENTA_BLOQUEADA' ||
+        detail.includes('suspendida') ||
+        detail.includes('inhabilitada') ||
+        detail.includes('bloqueada')
+      ) {
         return {
           success: false,
           error: data?.detail || 'Tu cuenta se encuentra inhabilitada.',
@@ -209,10 +221,45 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
         };
       }
 
+      // Caso 2: DNI inexistente o no registrado (HU-23 Criterio 2)
+      if (
+        codigo === 'DNI_INCORRECTO' ||
+        codigo === 'DNI_INEXISTENTE' ||
+        codigo === 'DNI_NO_REGISTRADO' ||
+        codigo === 'DNI_NO_ENCONTRADO' ||
+        detail.includes('dni') ||
+        detail.includes('credenciales inválidas') ||
+        detail.includes('credenciales invalidas') ||
+        detail.includes('no active account') ||
+        data?.username
+      ) {
+        return {
+          success: false,
+          error: 'El DNI es incorrecto. Intentá nuevamente.',
+          tipoError: 'DNI',
+        };
+      }
+
+      // Caso 3: Clave incorrecta (HU-23 Criterio 2)
+      if (
+        codigo === 'CLAVE_INCORRECTA' ||
+        detail.includes('contraseña') ||
+        detail.includes('clave') ||
+        detail.includes('password') ||
+        data?.password
+      ) {
+        return {
+          success: false,
+          error: 'La clave es incorrecta. Intentá nuevamente.',
+          tipoError: 'CLAVE',
+        };
+      }
+
+      // Fallback: Si no se pudo discriminar, se asume DNI incorrecto según HU-23
       return {
         success: false,
-        error: 'El DNI o la clave ingresada son incorrectos.',
-        tipoError: 'CLAVE',
+        error: 'El DNI es incorrecto. Intentá nuevamente.',
+        tipoError: 'DNI',
       };
     }
 
@@ -222,55 +269,11 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       tipoError: 'SERVIDOR',
     };
   } catch (error: any) {
-    // Si la conexión falla (servidor no encendido, timeout, offline), usamos el mock híbrido
-    console.warn('Backend Django no alcanzable. Usando autenticación simulada (Mock):', error?.message);
-    return loginConMock(dniLimpio, claveLimpia);
-  }
-}
-
-/**
- * Autenticación simulada basada en los estados de Figma y CHOFERES_PRUEBA
- */
-function loginConMock(dni: string, clave: string): LoginResult {
-  const chofer = CHOFERES_PRUEBA.find((c) => c.dni === dni);
-
-  if (!chofer) {
+    console.warn(`[AuthService] No se pudo conectar con el servidor (${currentBaseUrl}):`, error?.message);
     return {
       success: false,
-      error: 'El DNI es incorrecto. Intentá nuevamente.',
-      tipoError: 'DNI',
+      error: `No se pudo conectar al servidor en ${currentBaseUrl}. Verificá que el backend esté en ejecución y en la misma red.`,
+      tipoError: 'CONEXION',
     };
   }
-
-  // Permite ingresar con la clave registrada o claves maestras de prueba ('1234' o 'chofer123')
-  const claveValida = chofer.password === clave || clave === '1234' || clave === 'chofer123';
-  if (!claveValida) {
-    chofer.intentos_fallidos += 1;
-    return {
-      success: false,
-      error: 'La clave es incorrecta. Intentá nuevamente.',
-      tipoError: 'CLAVE',
-    };
-  }
-
-  if (!chofer.habilitado || !chofer.is_active) {
-    return {
-      success: false,
-      error: 'Tu cuenta se encuentra inhabilitada.',
-      tipoError: 'INHABILITADO',
-    };
-  }
-
-  chofer.intentos_fallidos = 0;
-  sesionActiva = true;
-  setUsuarioActual(chofer);
-
-  return {
-    success: true,
-    user: chofer,
-    tokens: {
-      access: 'mock-jwt-access-token-xyz',
-      refresh: 'mock-jwt-refresh-token-xyz',
-    },
-  };
 }

@@ -1,19 +1,32 @@
+from datetime import date, datetime
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.db.models import Case, Count, IntegerField, Prefetch, Q, Sum, When
+from django.db import DatabaseError, transaction
+from django.db.models import (
+    Case,
+    Count,
+    IntegerField,
+    Prefetch,
+    ProtectedError,
+    Q,
+    Sum,
+    When,
+)
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, ListView, View
 
+from apps.cobranza.models import Cobranza
 from apps.core.models import Transportista, Vehiculo
 from apps.remitos.models import EstadoRemito, Remito
 
 from .forms import CrearItinerariosForm, CrearParadasForm
 from .models import (
     EstadoItinerario,
+    EstadoParada,
     EvidenciaParada,
     Itinerario,
     Parada,
@@ -48,13 +61,19 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         estado = self.request.GET.get("estado", "").strip()
 
         if fecha:
-            qs = qs.filter(fecha=fecha)
+            try:
+                datetime.strptime(fecha, "%Y-%m-%d").date()
+                qs = qs.filter(fecha=fecha)
+            except ValueError:
+                pass
         if transportista:
             if transportista == "sin_asignar":
                 qs = qs.filter(transportista__isnull=True)
+            elif transportista.isdigit():
+                qs = qs.filter(transportista_id=int(transportista))
             else:
-                qs = qs.filter(transportista_id=transportista)
-        if estado:
+                qs = qs.none()
+        if estado and estado in [c[0] for c in EstadoItinerario.choices]:
             qs = qs.filter(estado=estado)
 
         return qs
@@ -68,6 +87,7 @@ class ListaItinerarios(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         context["filtro_fecha"] = self.request.GET.get("fecha", "")
         context["filtro_transportista"] = self.request.GET.get("transportista", "")
         context["filtro_estado"] = self.request.GET.get("estado", "")
+        context["fecha_hoy"] = date.today().isoformat()
         context["paradas_seguimiento"] = (
             Parada.objects.select_related("comercio", "itinerario")
             .annotate(
@@ -125,21 +145,27 @@ class DetalleParada(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
                     # Si la parada no tiene más remitos vigentes, se elimina y se reordenan las paradas restantes
                     remitos_restantes = parada.remitos.exists()
                     if not remitos_restantes:
-                        itinerario = parada.itinerario
-                        parada_id = parada.id
-                        comercio_nombre = parada.comercio.razon_social
-                        parada.delete()
+                        if Cobranza.objects.filter(parada=parada).exists():
+                            messages.error(
+                                request,
+                                "No se puede eliminar la parada porque posee cobranzas o rendiciones registradas.",
+                            )
+                        else:
+                            itinerario = parada.itinerario
+                            parada_id = parada.id
+                            comercio_nombre = parada.comercio.razon_social
+                            parada.delete()
 
-                        for i, p in enumerate(
-                            itinerario.paradas.all().order_by("orden", "id"), start=1
-                        ):
-                            p.orden = i
-                            p.save(update_fields=["orden"])
+                            for i, p in enumerate(
+                                itinerario.paradas.all().order_by("orden", "id"), start=1
+                            ):
+                                p.orden = i
+                                p.save(update_fields=["orden"])
 
-                        messages.success(
-                            request,
-                            f"Remito #{remito.numero} desvinculado. Al no quedar remitos, la parada #{parada_id} de «{comercio_nombre}» fue eliminada del itinerario.",
-                        )
+                            messages.success(
+                                request,
+                                f"Remito #{remito.numero} desvinculado. Al no quedar remitos, la parada #{parada_id} de «{comercio_nombre}» fue eliminada del itinerario.",
+                            )
                         return redirect("itinerarios:itinerario_lista")
 
                 messages.success(
@@ -163,6 +189,19 @@ class CrearItinerarios(
     success_url = reverse_lazy("itinerarios:itinerario_lista")
     success_message = "Itinerario guardado correctamente"
     permission_required = "itinerarios.add_itinerario"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        fecha_param = self.request.GET.get("fecha", "").strip()
+        if fecha_param:
+            try:
+                datetime.strptime(fecha_param, "%Y-%m-%d")
+                initial["fecha"] = fecha_param
+            except ValueError:
+                initial["fecha"] = date.today().isoformat()
+        else:
+            initial["fecha"] = date.today().isoformat()
+        return initial
 
     def form_valid(self, form):
         try:
@@ -192,11 +231,26 @@ class CrearParadas(
             kwargs["itinerario_id"] = itinerario_id
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context.get("form")
+        if form and hasattr(form, "comercios_agrupados"):
+            context["comercios_agrupados"] = form.comercios_agrupados
+        else:
+            context["comercios_agrupados"] = []
+        return context
+
+    def get_success_url(self):
+        next_url = self.request.POST.get("next") or self.request.GET.get("next")
+        if next_url:
+            return next_url
+        return super().get_success_url()
+
     def form_valid(self, form):
         try:
             crear_paradas(
                 form.cleaned_data["itinerario"],
-                form.cleaned_data["comercios"],
+                remitos=form.cleaned_data.get("remitos"),
             )
         except ValidationError as error:
             form.add_error(None, error)
@@ -372,6 +426,13 @@ class EditarItinerario(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
             parada_id = request.POST.get("parada_id")
             try:
                 parada = itinerario.paradas.get(id=parada_id)
+                if Cobranza.objects.filter(parada=parada).exists():
+                    messages.error(
+                        request,
+                        f"No se puede quitar la parada de «{parada.comercio.razon_social}» porque posee cobranzas o rendiciones registradas.",
+                    )
+                    return redirect("itinerarios:itinerario_editar", pk=itinerario.pk)
+
                 comercio_nombre = parada.comercio.razon_social
                 with transaction.atomic():
                     Remito.objects.filter(parada=parada).update(
@@ -462,20 +523,42 @@ class EliminarItinerario(LoginRequiredMixin, PermissionRequiredMixin, View):
             messages.error(request, "Itinerario no encontrado")
             return redirect("itinerarios:itinerario_lista")
 
-        if itinerario.estado == EstadoItinerario.FINALIZADO:
+        if itinerario.estado in [EstadoItinerario.FINALIZADO, EstadoItinerario.EN_CURSO]:
             messages.error(
-                request, "No se puede eliminar un itinerario finalizado."
+                request, f"No se puede eliminar un itinerario en estado '{itinerario.get_estado_display()}'."
             )
             return redirect("itinerarios:itinerario_lista")
 
-        with transaction.atomic():
-            Remito.objects.filter(parada__itinerario=itinerario).update(
-                parada=None,
-                estado=EstadoRemito.PENDIENTE,
+        if Cobranza.objects.filter(parada__itinerario=itinerario).exists():
+            messages.error(
+                request,
+                "No se puede eliminar el itinerario porque posee cobranzas o rendiciones registradas.",
             )
-            itinerario.delete()
+            return redirect("itinerarios:itinerario_lista")
 
-        messages.success(request, "Itinerario eliminado exitosamente")
+        if itinerario.paradas.filter(estado=EstadoParada.FINALIZADA).exists():
+            messages.error(
+                request,
+                "No se puede eliminar el itinerario porque contiene paradas que ya fueron finalizadas.",
+            )
+            return redirect("itinerarios:itinerario_lista")
+
+        try:
+            with transaction.atomic():
+                Remito.objects.filter(parada__itinerario=itinerario).exclude(
+                    estado=EstadoRemito.ENTREGADO
+                ).update(
+                    parada=None,
+                    estado=EstadoRemito.PENDIENTE,
+                )
+                itinerario.delete()
+            messages.success(request, "Itinerario eliminado exitosamente")
+        except (ProtectedError, DatabaseError):
+            messages.error(
+                request,
+                "No se puede eliminar el itinerario debido a restricciones de integridad de datos.",
+            )
+
         return redirect("itinerarios:itinerario_lista")
 
     def get(self, request, pk, *args, **kwargs):

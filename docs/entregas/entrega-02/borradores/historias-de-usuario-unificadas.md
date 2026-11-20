@@ -10,7 +10,7 @@
 
 ## 🎯 Criterios Editoriales y Metodológicos de Unificación
 
-Este documento presenta una reescritura integral del backlog de **53 Historias de Usuario (HU)** registradas en Taiga, homologando la sintaxis, el vocabulario técnico-operativo y la estructura narrativa conforme a los estándares de ingeniería de software de **Softech** y las pautas de calidad de la cátedra:
+Este documento presenta una reescritura integral del backlog de **54 Historias de Usuario (HU)** registradas en Taiga, homologando la sintaxis, el vocabulario técnico-operativo y la estructura narrativa conforme a los estándares de ingeniería de software de **Softech** y las pautas de calidad de la cátedra:
 
 1. **Estructura homogénea de 4 campos:**
    * **Campo 1 (Identificador):** Formato uniforme `HU-[ID]: [NOMBRE DE LA HISTORIA EN MAYÚSCULAS]`.
@@ -62,12 +62,13 @@ quiero IMPORTAR LAS PLANILLAS DE REMITOS DE LAS MARCAS PROVEEDORAS
 para CARGAR Y PROCESAR AUTOMÁTICAMENTE LA INFORMACIÓN EN EL SISTEMA.
 
 **Reglas a considerar:**
-- Las planillas son provistas por las marcas proveedoras bajo una estructura tabular preestablecida de columnas (`cuit_comercio`, `condicion_iva`, `numero_iibb`, `razon_social`, `domicilio`, `monto_a_cobrar`, `fecha_factura`, `numero_sucursal`, `numero_factura`).   
-- Solo se admiten archivos en formato `.csv` delimitados por comas y codificados en UTF-8 o UTF-8-sig.   
-- Cada archivo debe asociarse a una marca proveedora registrada. Si el nombre del archivo inicia con el CUIT de una marca registrada (nomenclatura `<cuit_marca>_<fecha>_<lote>.csv`), el sistema asocia automáticamente la marca proveedora correspondiente.   
-- Si el CUIT del comercio ya existe en la base de datos, el remito se asocia automáticamente a la razón social y domicilio maestros registrados, ignorando variaciones menores en el archivo. Si el CUIT no existe previamente y la razón social viene vacía, la fila se rechaza.   
-- Cada fila válida representa un remito individual conformado por `<numero_sucursal>-<numero_factura>`.   
-- La importación y el procesamiento del lote se ejecutan de manera atómica e integral: si una o más filas contienen datos vacíos requeridos, formatos incorrectos o números de remito duplicados para esa marca, se rechaza la totalidad del archivo y no se registra ningún remito.
+- Las planillas deben ajustarse estrictamente a la especificación técnica de intercambio definida en `docs/especificacion-planillas-importacion.md`.
+- **Estructura y Formato del Archivo:** Solo se admiten archivos `.csv` delimitados por comas (`,`), codificados en `UTF-8` o `UTF-8-sig`, con cabecera obligatoria compuesta exactamente por 9 columnas: `cuit_comercio`, `condicion_iva`, `numero_iibb`, `razon_social`, `domicilio`, `monto_a_cobrar`, `fecha_factura`, `numero_sucursal`, `numero_factura`.
+- **Nomenclatura y Autoasociación de Marca:** Cada archivo debe asociarse a una marca proveedora registrada. Si el nombre del archivo cumple el patrón estándar `<cuit_marca>_<fecha>_<lote>.csv` (ej. `30654321090_20261027_DISTR-01.csv`), el sistema identifica automáticamente la marca mediante el CUIT inicial. Caso contrario, requiere selección manual en el formulario.
+- **Identificación Unívoca del Remito:** Cada fila representa un remito conformado por `<numero_sucursal>-<numero_factura>` (sucursal de 4 dígitos y factura de 8 dígitos, ej. `0005-00024715`). El número de remito resultante debe ser estrictamente único por marca proveedora tanto dentro del archivo como contra los registros previos del sistema.
+- **Regla Maestra de Comercios (Resolución por CUIT):** Si el `cuit_comercio` (11 dígitos numéricos sin guiones) ya existe en la base de datos maestra, el remito se vincula automáticamente a la entidad existente preservando su razón social y domicilio oficiales. Si el CUIT no existe en el sistema, la columna `razon_social` es de ingreso obligatorio para registrar el nuevo comercio destinatario.
+- **Validaciones de Importe y Fechas:** El `monto_a_cobrar` debe ser un valor decimal estrictamente mayor a `0.00` con punto como separador decimal. La columna `fecha_factura` es opcional (formato ISO `YYYY-MM-DD`) y representa la emisión contable de la marca, siendo independiente de la fecha en que se diagrame la entrega logística.
+- **Atomicidad Transaccional e Integridad de Lote:** El procesamiento se ejecuta bajo el principio de "todo o nada". Si una o más filas presentan columnas requeridas vacías, tipos de datos incompatibles, CUIT inválido, importes menores o iguales a cero o remitos duplicados, el lote completo se califica en estado "Rechazado", no se registra ningún remito en la base de datos y se guarda el detalle de los errores observados por número de fila.
 
 **Criterios de Aceptación:**
 
@@ -1204,6 +1205,57 @@ Desde la pantalla de detalle de la parada, el chofer presiona el botón de retor
 
 **ESCENARIO 3: Acceso a las acciones operativas de la parada**  
 En la pantalla de detalle, el chofer visualiza los botones de acción habilitados ("Registrar Cobro", "Ver remitos", "Adjuntar documento" y "Registrar inconveniente") y puede pulsar sobre cualquiera de ellos para iniciar la acción correspondiente.
+
+---
+
+#### HU-68: INICIAR JORNADA LABORAL Y HABILITACIÓN DE HOJA DE RUTA
+
+**Título:**
+Como TRANSPORTISTA  
+quiero INICIAR FORMALMENTE MI JORNADA LABORAL DESDE LA APLICACIÓN  
+para HABILITAR LA OPERACIÓN DE PARADAS, EL REORDENAMIENTO Y LA APLICACIÓN DE RECORRIDOS, NOTIFICANDO A LA BASE QUE EL VEHÍCULO ESTÁ EN CALLE.
+
+**Reglas a considerar:**
+- Al ingresar a la pantalla principal "Mi Itinerario" con una hoja de ruta asignada para el día, el sistema exhibe un botón prioritario y destacado: "Comenzar jornada laboral".
+- Mientras la jornada laboral no haya sido iniciada:
+  * El itinerario permanece en estado 'Asignado' y se despliega en modo preventivo / solo lectura.
+  * El chofer puede visualizar la secuencia de paradas, comercios, direcciones y montos a cobrar previstos, pero no puede interactuar con las tarjetas ni ingresar al detalle de ninguna parada.
+  * El botón "Reordenar paradas" permanece deshabilitado / bloqueado.
+  * El transportista puede acceder a la sección "Recorridos Guardados" para consultar y visualizar sus plantillas, pero el sistema bloquea tanto la creación de nuevas plantillas ("+ Guardar orden actual") como la carga de recorridos guardados ("Cargar"), informando el motivo.
+  * La eliminación de plantillas obsoletas en "Recorridos Guardados" permanece permitida.
+- Al pulsar "Comenzar jornada laboral":
+  * El sistema transiciona el estado del itinerario de 'asignado' a 'en_curso' tanto en el backend Django como en el dispositivo móvil.
+  * Desaparece el botón de inicio de jornada y se habilita la totalidad de las funciones operativas: ingreso al detalle de paradas (HU-67), registro de cobros (HU-31), remitos y documentos (HU-30), reordenamiento táctil de paradas (HU-24), y guardado o carga de plantillas de recorridos (HU-26 y HU-64).
+- Persistencia y robustez ante desconexión o reinicio:
+  * El estado de jornada iniciada se persiste de forma segura en almacenamiento nativo (`AsyncStorage`) y en base de datos.
+  * Si la aplicación se minimiza, se reinicia o se descarga de memoria RAM durante el reparto, al reabrir la app el chofer accede directamente a su itinerario en estado "En curso", manteniendo habilitadas todas las operaciones sin requerir volver a comenzar la jornada.
+
+**Criterios de Aceptación:**
+
+ESCENARIO 1: Consulta preventiva con jornada no iniciada  
+Dado que el transportista inicia sesión y posee un itinerario asignado para el día que aún no comenzó,  
+cuando visualiza la pantalla de "Mi Itinerario",  
+entonces se exhibe el botón "Comenzar jornada laboral", la lista de paradas en modo solo lectura (sin acceso a detalles de parada) y el botón "Reordenar paradas" bloqueado.
+
+ESCENARIO 2: Bloqueo de guardado y carga en Recorridos Guardados previo al inicio de jornada  
+Dado que la jornada laboral no ha sido iniciada,  
+cuando el chofer ingresa a la sección "Recorridos Guardados",  
+entonces puede consultar sus plantillas personales existentes, pero los botones "Cargar" y "+ Guardar orden actual" se encuentran deshabilitados, advirtiendo que debe comenzar la jornada para aplicar o guardar recorridos.
+
+ESCENARIO 3: Activación exitosa de la jornada laboral  
+Dado que el chofer presiona el botón "Comenzar jornada laboral",  
+cuando el sistema confirma el cambio de estado a 'en_curso',  
+entonces desaparece el botón de inicio, se muestra el indicador de jornada activa, se desbloquean los accesos al detalle de cada parada y queda plenamente habilitado el reordenamiento de paradas.
+
+ESCENARIO 4: Habilitación de carga y guardado de recorridos con jornada en curso  
+Dado que la jornada laboral ya fue iniciada ('en_curso'),  
+cuando el chofer navega a "Recorridos Guardados",  
+entonces los botones "Cargar" y "+ Guardar orden actual" se encuentran habilitados y disponibles para su uso inmediato.
+
+ESCENARIO 5: Persistencia del estado 'en_curso' tras reinicio de la aplicación  
+Dado que el transportista ya inició su jornada laboral,  
+cuando se cierra por completo la aplicación móvil o se descarga de la memoria RAM y se vuelve a abrir,  
+entonces el sistema restaura el itinerario directamente en estado "En curso", sin mostrar nuevamente el botón de comenzar jornada ni bloquear las paradas.
 
 ---
 

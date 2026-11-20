@@ -117,7 +117,7 @@ function screenHarness(service = serviceHarness()) {
   }).default;
   h.draw = () => { h.i = h.r = 0; return h.Component(); };
   h.draw(); h.file = { name: 'archivo.pdf', uri: 'blob:pdf', mimeType: 'application/pdf', webFile: pdf() };
-  h.states[0] = h.file;
+  h.states[0] = [h.file];
   h.button = () => find(h.draw(), n => n.props.accessibilityState && 'busy' in n.props.accessibilityState);
   return h;
 }
@@ -130,7 +130,7 @@ function find(node, predicate) {
 test('la pantalla conserva el archivo al bloquear una parada no verificada y permite reintentar', async () => {
   const service = serviceHarness(); service.verifiedId = null;
   const h = screenHarness(service); await h.button().props.onPress();
-  assert.equal(h.states[0], h.file); assert.equal(h.states[1], false);
+  assert.deepEqual(h.states[0], [h.file]); assert.equal(h.states[1], false);
   assert.match(h.states[2], /no está verificada/); assert.equal(service.calls.length, 0); assert.equal(h.routes.length, 0);
   service.verifiedId = 42; await h.button().props.onPress();
   assert.equal(service.calls.length, 1); assert.equal(h.routes[0].params.paradaId, '42');
@@ -141,7 +141,7 @@ test('una selección diferente bloquea el envío sin perder el documento', async
   const service = serviceHarness(), h = screenHarness(service);
   service.verifiedId = 99;
   await h.button().props.onPress();
-  assert.equal(service.calls.length, 0); assert.equal(h.states[0], h.file);
+  assert.equal(service.calls.length, 0); assert.deepEqual(h.states[0], [h.file]);
   assert.match(h.states[2], /cambió la selección/);
 });
 
@@ -153,7 +153,101 @@ test('se conservan indicador, bloqueo de doble toque y reintento después de un 
   assert.equal(service.calls.length, 1); assert.equal(h.routes.length, 0);
   assert.equal(h.button().props.disabled, true); assert.ok(find(h.draw(), n => n.type === 'ActivityIndicator'));
   reject({ response: { status: 400, data: { archivo: ['Archivo rechazado'] } } }); await first;
-  assert.equal(h.states[0], h.file); assert.match(h.states[2], /Archivo rechazado/); assert.equal(h.button().props.disabled, false);
+  assert.deepEqual(h.states[0], [h.file]); assert.match(h.states[2], /Archivo rechazado/); assert.equal(h.button().props.disabled, false);
   service.pending = null; await h.button().props.onPress();
-  assert.equal(h.routes.length, 1); assert.equal(h.states[0], null);
+  assert.equal(h.routes.length, 1);
+  assert.equal(h.states[0]?.length, 0);
+});
+
+test('la pantalla solo permite tomar fotografía desde la cámara y no ofrece selector de archivo', () => {
+  const service = serviceHarness();
+  const h = screenHarness(service);
+  h.states[0] = [];
+  const tree = h.draw();
+
+  const buttons = [];
+  function collectButtons(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'TouchableOpacity') buttons.push(node);
+    for (const c of (node.children || []).flat(Infinity)) collectButtons(c);
+  }
+  collectButtons(tree);
+
+  const takePhotoBtn = buttons.find(b =>
+    find(b, n => n.type === 'Text' && typeof n.children?.[0] === 'string' && n.children[0].includes('Tomar fotografía'))
+  );
+  assert.ok(takePhotoBtn, 'Debe existir el botón Tomar fotografía');
+
+  const selectFileBtn = buttons.find(b =>
+    find(b, n => n.type === 'Text' && typeof n.children?.[0] === 'string' && n.children[0].includes('Seleccionar archivo'))
+  );
+  assert.equal(selectFileBtn, undefined, 'No debe existir el botón Seleccionar archivo');
+
+  const texts = [];
+  function collectTexts(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'Text' && node.children) texts.push(node.children.flat(Infinity).join(''));
+    for (const c of (node.children || []).flat(Infinity)) collectTexts(c);
+  }
+  collectTexts(tree);
+  assert.ok(texts.some(t => t.includes('cámara')), 'Debe mencionar el uso de la cámara');
+  assert.ok(!texts.some(t => t.includes('elegir un archivo')), 'No debe indicar elegir un archivo');
+});
+
+test('la pantalla permite acumular múltiples fotos, muestra el botón "Tomar otra foto" y carrusel de miniaturas', () => {
+  const service = serviceHarness();
+  const h = screenHarness(service);
+  const foto1 = { name: 'remito_frente.jpg', uri: 'file:///foto1.jpg', mimeType: 'image/jpeg' };
+  const foto2 = { name: 'remito_dorso.jpg', uri: 'file:///foto2.jpg', mimeType: 'image/jpeg' };
+  h.states[0] = [foto1, foto2];
+  const tree = h.draw();
+
+  const buttons = [];
+  function collectButtons(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'TouchableOpacity') buttons.push(node);
+    for (const c of (node.children || []).flat(Infinity)) collectButtons(c);
+  }
+  collectButtons(tree);
+
+  // Al haber fotos acumuladas debe aparecer la opción "Tomar otra foto"
+  const takeAnotherBtn = buttons.find(b =>
+    find(b, n => n.type === 'Text' && typeof n.children?.[0] === 'string' && n.children[0].includes('Tomar otra foto'))
+  );
+  assert.ok(takeAnotherBtn, 'Debe mostrar el botón Tomar otra foto cuando ya hay fotos acumuladas');
+
+  // Comprobar que los textos indican 2 fotografías acumuladas
+  const texts = [];
+  function collectTexts(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'Text' && node.children) texts.push(node.children.flat(Infinity).join(''));
+    for (const c of (node.children || []).flat(Infinity)) collectTexts(c);
+  }
+  collectTexts(tree);
+  assert.ok(texts.some(t => t.includes('Fotos acumuladas (2)')), 'Debe indicar la cantidad de fotos acumuladas');
+  assert.ok(texts.some(t => t.includes('2 fotografías listas para guardar')), 'Debe indicar que están listas para guardar');
+});
+
+test('la subida secuencial procesa todas las fotos del arreglo selectedFiles con Promise/secuencial', async () => {
+  const service = serviceHarness();
+  const h = screenHarness(service);
+  const foto1 = { name: 'remito_pag1.jpg', uri: 'blob:p1', mimeType: 'image/jpeg', webFile: pdf() };
+  const foto2 = { name: 'remito_pag2.jpg', uri: 'blob:p2', mimeType: 'image/jpeg', webFile: pdf() };
+  h.states[0] = [foto1, foto2];
+  service.verifiedId = 42;
+
+  await h.button().props.onPress();
+
+  // Se deben haber realizado exactamente 2 subidas
+  assert.equal(service.calls.length, 2);
+  assert.equal(service.calls[0][0], 'paradas/42/subir-evidencia/');
+  assert.equal(service.calls[0][1].get('archivo').name, 'remito_pag1.jpg');
+  assert.equal(service.calls[1][0], 'paradas/42/subir-evidencia/');
+  assert.equal(service.calls[1][1].get('archivo').name, 'remito_pag2.jpg');
+
+  // Estado limpio tras subir
+  assert.equal(h.states[0]?.length, 0);
+  assert.equal(h.routes.length, 1);
+  assert.equal(h.routes[0].params.paradaId, '42');
+  assert.match(h.routes[0].params.nombreArchivo, /2 fotos adjuntadas/);
 });

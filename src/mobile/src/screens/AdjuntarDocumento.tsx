@@ -13,7 +13,6 @@ import {
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { getParadaSeleccionada, getIdParadaSeleccionadaParaCobro } from '../services/paradaService';
 import { subirEvidenciaParada } from '../services/itinerarios';
@@ -46,29 +45,39 @@ export default function AdjuntarDocumento() {
     maximumFractionDigits: 0,
   }).format(parada.montoCobranza);
 
-  const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const uploadInProgress = useRef(false);
 
-  const tamanoLegible = selectedFile?.size
-    ? selectedFile.size > 1024 * 1024
-      ? `${(selectedFile.size / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
-      : `${Math.round(selectedFile.size / 1024)} KB`
-    : null;
+  // Normalización para garantizar siempre un arreglo (incluso si se inyecta un mock unitario)
+  const filesList: SelectedFile[] = Array.isArray(selectedFiles)
+    ? selectedFiles
+    : selectedFiles
+    ? [selectedFiles]
+    : [];
 
-  // Núcleo del cambio: Manejo de cámara según plataforma (aviso de "sin cámara" en computadora y apertura nativa en celulares)
+  const activeIndex = Math.min(
+    Math.max(0, activePhotoIndex),
+    Math.max(0, filesList.length - 1)
+  );
+  const fotoActiva = filesList[activeIndex] ?? null;
+
+  const formatearTamano = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return null;
+    return bytes > 1024 * 1024
+      ? `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
+      : `${Math.round(bytes / 1024)} KB`;
+  };
+
+  const tamanoTotalBytes = filesList.reduce((acc, f) => acc + (f.size || 0), 0);
+  const tamanoTotalLegible = formatearTamano(tamanoTotalBytes);
+  const tamanoFotoActivaLegible = formatearTamano(fotoActiva?.size);
+
+  // Núcleo: Captura exclusiva de cámara con acumulación de múltiples fotografías
   const tomarFotografia = async () => {
-    // 1. Simulación en Computadora (Web): Notifica directamente que no hay cámara física disponible
-    if (Platform.OS === 'web') {
-      Alert.alert(
-        'Cámara no detectada',
-        'No se detectó ninguna cámara disponible en este dispositivo. Podés adjuntar el documento seleccionando un archivo desde tu equipo.'
-      );
-      return;
-    }
-
-    // 2. Dispositivo Móvil Físico (Android / iOS): Detecta y abre la cámara nativa del celular
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -83,96 +92,68 @@ export default function AdjuntarDocumento() {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
         quality: 0.8,
+        cameraType: ImagePicker.CameraType.back,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const photo = result.assets[0];
-        setSelectedFile({
-          name: photo.fileName || `remito_camara_${Date.now()}.jpg`,
+        let webFile = (photo as any).file;
+        if (!webFile && Platform.OS === 'web' && photo.uri) {
+          try {
+            const res = await fetch(photo.uri);
+            webFile = await res.blob();
+          } catch {
+            // continuar si falla la conversión directa
+          }
+        }
+
+        const nuevaFoto: SelectedFile = {
+          name: photo.fileName || `remito_camara_${Date.now()}_${filesList.length + 1}.jpg`,
           uri: photo.uri,
           mimeType: photo.mimeType || 'image/jpeg',
           size: photo.fileSize,
+          webFile,
+        };
+
+        setSelectedFiles((prev) => {
+          const arr = Array.isArray(prev) ? prev : prev ? [prev] : [];
+          return [...arr, nuevaFoto];
         });
+        setActivePhotoIndex(filesList.length);
       }
     } catch (error: any) {
       console.warn('Error al iniciar la cámara en el dispositivo:', error);
       Alert.alert(
         'Cámara no disponible',
-        'No fue posible iniciar la cámara del dispositivo móvil. Podés adjuntar el documento seleccionando un archivo.'
+        'No fue posible iniciar la cámara del dispositivo. Verificá los permisos de la cámara e intentá nuevamente.'
       );
     }
   };
 
-  const eliminarDocumento = () => {
+  const eliminarFoto = (index: number) => {
     Alert.alert(
-      'Quitar documento',
-      '¿Deseás eliminar el documento seleccionado de esta entrega?',
+      'Quitar fotografía',
+      `¿Deseás eliminar la fotografía #${index + 1} de esta entrega?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Eliminar',
           style: 'destructive',
-          onPress: () => setSelectedFile(null),
+          onPress: () => {
+            setSelectedFiles((prev) => {
+              const arr = Array.isArray(prev) ? prev : prev ? [prev] : [];
+              return arr.filter((_, i) => i !== index);
+            });
+            setActivePhotoIndex((prev) => Math.max(0, prev >= index ? prev - 1 : prev));
+          },
         },
       ]
     );
   };
 
-  // Núcleo del cambio: Selección de archivos compatible con simulador en PC (Web) y celulares (Android/iOS)
-  const seleccionarArchivo = async () => {
-    // 1. Entorno Web / Simulación en Computadora: Dispara el explorador nativo de archivos (Windows, Linux, Mac)
-    if (Platform.OS === 'web' && typeof document !== 'undefined') {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*,application/pdf';
-      input.style.display = 'none';
-
-      input.onchange = (event: any) => {
-        const file = event.target?.files?.[0];
-        if (file) {
-          // Genera una URL local de blob en el navegador para mostrar la imagen o PDF en pantalla
-          const objectUrl = URL.createObjectURL(file);
-          setSelectedFile({
-            name: file.name,
-            uri: objectUrl,
-            mimeType: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
-            size: file.size,
-            webFile: file,
-          });
-        }
-      };
-
-      document.body.appendChild(input);
-      input.click();
-      document.body.removeChild(input);
-      return;
-    }
-
-    // 2. Entorno Nativo Móvil: Utiliza el DocumentPicker de Expo para dispositivos físicos
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/*', 'application/pdf'],
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const file = result.assets[0];
-
-        setSelectedFile({
-          name: file.name,
-          uri: file.uri,
-          mimeType: file.mimeType,
-          size: file.size,
-        });
-      }
-    } catch {
-      Alert.alert('Error', 'No se pudo seleccionar el archivo.');
-    }
-  };
-
   const guardarDocumento = async () => {
     // El ref bloquea incluso dos pulsaciones anteriores al siguiente render.
-    if (uploadInProgress.current || !selectedFile) return;
+    if (uploadInProgress.current || filesList.length === 0) return;
     const paradaId = getIdParadaSeleccionadaParaCobro();
     if (paradaId === null || paradaId !== parada.id) {
       const mensaje = 'La parada no está verificada o cambió la selección. Abrí su detalle con conexión antes de subir el documento. El archivo seleccionado se conserva.';
@@ -183,32 +164,42 @@ export default function AdjuntarDocumento() {
     uploadInProgress.current = true;
     setIsUploading(true);
     setUploadError(null);
-    const archivo = selectedFile;
 
     try {
-      const respuesta = await subirEvidenciaParada(
-        paradaId,
-        archivo.uri,
-        archivo.name,
-        archivo.mimeType || (archivo.name.toLowerCase().endsWith('.pdf')
-          ? 'application/pdf' : 'image/jpeg'),
-        archivo.webFile
-      );
+      const respuestas = [];
+      // Subida secuencial con progreso transparente
+      for (let i = 0; i < filesList.length; i++) {
+        const archivo = filesList[i];
+        setUploadProgress({ current: i + 1, total: filesList.length });
+        const respuesta = await subirEvidenciaParada(
+          paradaId,
+          archivo.uri,
+          archivo.name,
+          archivo.mimeType || (archivo.name.toLowerCase().endsWith('.pdf')
+            ? 'application/pdf' : 'image/jpeg'),
+          archivo.webFile
+        );
+        respuestas.push(respuesta);
+      }
 
+      const ultimaRespuesta = respuestas[respuestas.length - 1];
       // Solo navegar después de recibir una evidencia confirmada por el servidor.
       router.replace({
         pathname: './documento-guardado',
         params: {
-          evidenciaId: String(respuesta.evidencia.id),
+          evidenciaId: String(ultimaRespuesta.evidencia.id),
           paradaId: String(paradaId),
-          nombreArchivo: archivo.name,
-          uriArchivo: archivo.uri,
-          tipoArchivo: archivo.mimeType ?? '',
-          tamanoBytes: archivo.size?.toString() ?? '',
+          nombreArchivo:
+            filesList.length === 1
+              ? filesList[0].name
+              : `${filesList.length} fotos adjuntadas (${filesList[0].name})`,
+          uriArchivo: filesList[0].uri,
+          tipoArchivo: filesList[0].mimeType ?? 'image/jpeg',
+          tamanoBytes: tamanoTotalBytes.toString(),
         },
       });
       // Las pantallas de Tabs pueden conservarse montadas: limpiar al completar.
-      setSelectedFile(null);
+      setSelectedFiles([]);
     } catch (error: unknown) {
       const mensaje = error instanceof Error
         ? error.message : 'No se pudo subir el documento. Podés reintentar.';
@@ -217,10 +208,14 @@ export default function AdjuntarDocumento() {
     } finally {
       uploadInProgress.current = false;
       setIsUploading(false);
+      setUploadProgress(null);
     }
   };
 
-  const isImage = selectedFile?.mimeType?.startsWith('image/');
+  const isImage = (archivo: SelectedFile | null) =>
+    !archivo?.mimeType ||
+    archivo.mimeType.startsWith('image/') ||
+    !archivo.mimeType.toLowerCase().includes('pdf');
 
   return (
     <View style={styles.container}>
@@ -253,49 +248,106 @@ export default function AdjuntarDocumento() {
         </View>
 
         <Text style={styles.instructions}>
-          Adjuntá el remito o comprobante de la entrega.
+          Tomá una fotografía del remito o comprobante de entrega con la cámara. Podés acumular varias fotos si el documento tiene varias hojas.
         </Text>
 
-        {/* Núcleo del cambio: Botón para tomar fotografía con ícono oficial */}
+        {/* Botón para capturar o acumular fotografías con la cámara */}
         <TouchableOpacity
           style={styles.outlineButton}
           onPress={tomarFotografia}
           disabled={isUploading}
+          accessibilityRole="button"
+          accessibilityLabel={filesList.length === 0 ? 'Tomar fotografía con la cámara' : 'Tomar otra foto con la cámara'}
         >
           <Image
             source={require('../../assets/icons/icono-camara.png')}
             style={styles.iconoBotonOutline}
             resizeMode="contain"
           />
-          <Text style={styles.outlineButtonText}>Tomar fotografía</Text>
+          <Text style={styles.outlineButtonText}>
+            {filesList.length === 0 ? 'Tomar fotografía' : 'Tomar otra foto'}
+          </Text>
         </TouchableOpacity>
 
-        {/* Núcleo del cambio: Botón para seleccionar archivo con ícono oficial */}
-        <TouchableOpacity
-          style={styles.outlineButton}
-          onPress={seleccionarArchivo}
-          disabled={isUploading}
-        >
-          <Image
-            source={require('../../assets/icons/icono-adjuntar-archivo.png')}
-            style={styles.iconoBotonOutline}
-            resizeMode="contain"
-          />
-          <Text style={styles.outlineButtonText}>Seleccionar archivo</Text>
-        </TouchableOpacity>
+        {/* Carrusel de miniaturas cuando hay una o más fotos capturadas */}
+        {filesList.length > 0 && (
+          <View style={styles.carruselSection}>
+            <View style={styles.carruselHeader}>
+              <Text style={styles.carruselTitulo}>Fotos acumuladas ({filesList.length})</Text>
+              <Text style={styles.carruselSubtitulo}>Tocá para ampliar</Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carruselContent}
+            >
+              {filesList.map((foto, index) => {
+                const esActiva = index === activeIndex;
+                return (
+                  <TouchableOpacity
+                    key={`${foto.uri}-${index}`}
+                    style={[
+                      styles.miniaturaCard,
+                      esActiva && styles.miniaturaCardActiva,
+                    ]}
+                    onPress={() => setActivePhotoIndex(index)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ver fotografía ${index + 1}`}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: foto.uri }}
+                      style={styles.miniaturaImagen}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.miniaturaNumeroBadge}>
+                      <Text style={styles.miniaturaNumeroTexto}>#{index + 1}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.miniaturaBotonEliminar}
+                      onPress={() => eliminarFoto(index)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Eliminar fotografía ${index + 1}`}
+                      disabled={isUploading}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.miniaturaEliminarTexto}>✕</Text>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                );
+              })}
+
+              <TouchableOpacity
+                style={styles.miniaturaAgregarCard}
+                onPress={tomarFotografia}
+                disabled={isUploading}
+                accessibilityRole="button"
+                accessibilityLabel="Tomar otra foto con la cámara"
+                activeOpacity={0.7}
+              >
+                <Text style={styles.miniaturaAgregarIcono}>+</Text>
+                <Text style={styles.miniaturaAgregarTexto}>Otra foto</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        )}
 
         <View style={styles.previewHeading}>
           <Text style={styles.sectionTitle}>Vista previa</Text>
-          <Text style={styles.previewStatus}>Sin guardar</Text>
+          <Text style={styles.previewStatus}>
+            {filesList.length > 0
+              ? `Foto ${activeIndex + 1} de ${filesList.length}`
+              : 'Sin guardar'}
+          </Text>
         </View>
 
         <View style={styles.previewCard}>
-          {selectedFile ? (
+          {fotoActiva ? (
             <>
-              {isImage ? (
+              {isImage(fotoActiva) ? (
                 <View style={styles.previewImageContainer}>
                   <Image
-                    source={{ uri: selectedFile.uri }}
+                    source={{ uri: fotoActiva.uri }}
                     style={styles.previewImage}
                     resizeMode="contain"
                   />
@@ -310,37 +362,50 @@ export default function AdjuntarDocumento() {
 
               <View style={styles.fileInfoContainer}>
                 <Text style={styles.fileName} numberOfLines={2}>
-                  {selectedFile.name}
+                  {fotoActiva.name}
                 </Text>
-                {tamanoLegible && (
-                  <Text style={styles.fileSizeText}>Tamaño: {tamanoLegible}</Text>
+                {tamanoFotoActivaLegible && (
+                  <Text style={styles.fileSizeText}>
+                    Foto: {tamanoFotoActivaLegible}
+                    {filesList.length > 1 && tamanoTotalLegible
+                      ? ` · Total (${filesList.length}): ${tamanoTotalLegible}`
+                      : ''}
+                  </Text>
                 )}
                 <View style={styles.badgeSeleccionado}>
-                  <Text style={styles.badgeSeleccionadoTexto}>✓ Comprobante listo para guardar</Text>
+                  <Text style={styles.badgeSeleccionadoTexto}>
+                    ✓ {filesList.length === 1
+                      ? '1 fotografía lista para guardar'
+                      : `${filesList.length} fotografías listas para guardar`}
+                  </Text>
                 </View>
               </View>
             </>
           ) : (
             <View style={styles.emptyPreview}>
-              <Text style={styles.emptyPreviewIcon}>▤</Text>
+              <Text style={styles.emptyPreviewIcon}>📷</Text>
               <Text style={styles.emptyPreviewText}>
-                Todavía no seleccionaste un documento
+                Todavía no tomaste una fotografía
               </Text>
               <Text style={styles.emptyPreviewSubtext}>
-                Podés tomar una foto del comprobante o elegir un archivo
+                Presioná &ldquo;Tomar fotografía&rdquo; para capturar el comprobante con la cámara. Podés acumular varias fotos.
               </Text>
             </View>
           )}
         </View>
 
-        {selectedFile && (
+        {fotoActiva && (
           <TouchableOpacity
             style={styles.botonQuitarArchivo}
-            onPress={eliminarDocumento}
+            onPress={() => eliminarFoto(activeIndex)}
             disabled={isUploading}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`Quitar fotografía ${activeIndex + 1}`}
           >
-            <Text style={styles.textoQuitarArchivo}>✕ Quitar este documento</Text>
+            <Text style={styles.textoQuitarArchivo}>
+              ✕ Quitar fotografía #{activeIndex + 1}
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -352,20 +417,22 @@ export default function AdjuntarDocumento() {
             <TouchableOpacity
               style={[styles.outlineButton, { borderColor: COLORS.orange, backgroundColor: COLORS.white }]}
               onPress={() => {
-                if (!selectedFile) return;
-                const archivo = selectedFile;
+                if (filesList.length === 0) return;
                 router.replace({
                   pathname: './documento-guardado',
                   params: {
                     evidenciaId: String(Date.now()),
                     paradaId: String(parada.id),
-                    nombreArchivo: archivo.name,
-                    uriArchivo: archivo.uri,
-                    tipoArchivo: archivo.mimeType ?? '',
-                    tamanoBytes: archivo.size?.toString() ?? '',
+                    nombreArchivo:
+                      filesList.length === 1
+                        ? filesList[0].name
+                        : `${filesList.length} fotos adjuntadas (${filesList[0].name})`,
+                    uriArchivo: filesList[0].uri,
+                    tipoArchivo: filesList[0].mimeType ?? 'image/jpeg',
+                    tamanoBytes: tamanoTotalBytes.toString(),
                   },
                 });
-                setSelectedFile(null);
+                setSelectedFiles([]);
               }}
             >
               <Text style={{ color: COLORS.orange, fontWeight: '700', textAlign: 'center' }}>
@@ -382,16 +449,24 @@ export default function AdjuntarDocumento() {
         <TouchableOpacity
           style={[
             styles.primaryButton,
-            (!selectedFile || isUploading) && styles.primaryButtonDisabled,
+            (filesList.length === 0 || isUploading) && styles.primaryButtonDisabled,
           ]}
           onPress={guardarDocumento}
-          disabled={!selectedFile || isUploading}
-          accessibilityState={{ disabled: !selectedFile || isUploading, busy: isUploading }}
+          disabled={filesList.length === 0 || isUploading}
+          accessibilityState={{ disabled: filesList.length === 0 || isUploading, busy: isUploading }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             {isUploading && <ActivityIndicator color={COLORS.white} />}
             <Text style={styles.primaryButtonText}>
-              {isUploading ? 'Subiendo documento…' : uploadError ? 'Reintentar subida' : 'Guardar documento'}
+              {isUploading
+                ? uploadProgress
+                  ? `Subiendo foto ${uploadProgress.current} de ${uploadProgress.total}…`
+                  : 'Subiendo fotografías…'
+                : uploadError
+                ? 'Reintentar subida'
+                : filesList.length > 1
+                ? `Guardar ${filesList.length} fotografías`
+                : 'Guardar documento'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -478,6 +553,107 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     marginBottom: 20,
+  },
+  carruselSection: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  carruselHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  carruselTitulo: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.navy,
+  },
+  carruselSubtitulo: {
+    fontSize: 12,
+    color: COLORS.gray,
+  },
+  carruselContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  miniaturaCard: {
+    width: 78,
+    height: 78,
+    borderRadius: 12,
+    backgroundColor: COLORS.white,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniaturaCardActiva: {
+    borderColor: COLORS.orange,
+    borderWidth: 2.5,
+  },
+  miniaturaImagen: {
+    width: '100%',
+    height: '100%',
+  },
+  miniaturaNumeroBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(18, 60, 107, 0.85)',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  miniaturaNumeroTexto: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  miniaturaBotonEliminar: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(220, 38, 38, 0.9)',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniaturaEliminarTexto: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: '900',
+    lineHeight: 12,
+  },
+  miniaturaAgregarCard: {
+    width: 78,
+    height: 78,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: COLORS.navy,
+    backgroundColor: '#F0F4FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniaturaAgregarIcono: {
+    fontSize: 24,
+    color: COLORS.navy,
+    fontWeight: '700',
+    lineHeight: 26,
+  },
+  miniaturaAgregarTexto: {
+    fontSize: 11,
+    color: COLORS.navy,
+    fontWeight: '700',
+    marginTop: 2,
   },
   outlineButton: {
     backgroundColor: COLORS.white,

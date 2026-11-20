@@ -7,7 +7,7 @@ Documento de consolidación y seguimiento de issues técnicos, bugs y especifica
 | # | GitHub Issue | Tipo / Área | Título | Épica / HU | Estado |
 |---|---|---|---|---|---|
 | 1 | [#8](https://github.com/enzogiandon/Proyecto_Ing-software/issues/8) | `Docs / Backend` | Documentar regla de resolución CUIT a Razón Social en importación y validar comercios nuevos | Épica 1 / HU-02 | `Abierto` |
-| 2 | [#9](https://github.com/enzogiandon/Proyecto_Ing-software/issues/9) | `Docs` | Especificar y documentar el formato estándar de las planillas de importación masiva de remitos | Épica 1 / HU-02 | `Abierto` |
+| 2 | [#9](https://github.com/enzogiandon/Proyecto_Ing-software/issues/9) | `Docs` | Especificar y documentar el formato estándar de las planillas de importación masiva de remitos | Épica 1 / HU-02 | `Cerrado` |
 | 3 | [#10](https://github.com/enzogiandon/Proyecto_Ing-software/issues/10) | `Bug / Backend` | Permitir mismo número de remito para marcas distintas (Unicidad compuesta) | Épica 1 / HU-04, HU-02 | `Abierto` |
 | 4 | [#11](https://github.com/enzogiandon/Proyecto_Ing-software/issues/11) | `Feature / Fullstack` | Restringir modificación de itinerarios iniciados y añadir nuevo estado 'En curso' | Épica 3 / HU-13, HU-14; Épica 6 | `Abierto` |
 | 5 | [#12](https://github.com/enzogiandon/Proyecto_Ing-software/issues/12) | `Bug / Cobranzas` | Permitir realizar múltiples ajustes sucesivos sobre una cobranza y corregir visibilidad del botón | Épica 4 / HU-19, HU-21 | `Abierto` |
@@ -104,9 +104,9 @@ Dicha especificación debe estar disponible tanto en la documentación interna d
    *(El número de remito se conforma como `<numero_sucursal>-<numero_factura>`)*.
 
 #### 🛠️ Tareas de Implementación
-- [ ] Crear documento `docs/especificacion-planillas-importacion.md` con la tabla de estructura, tipos de datos, códigos de error y ejemplos válidos e inválidos.
-- [ ] Actualizar la sección de "Reglas a considerar" de la **HU-02** en la entrega 2.
-- [ ] Agregar enlace o botón de ayuda en el template `apps/remitos/templates/remitos/importar_csv.html` ("Ver formato requerido de planilla").
+- [x] Crear documento `docs/especificacion-planillas-importacion.md` con la tabla de estructura, tipos de datos, códigos de error y ejemplos válidos e inválidos.
+- [x] Actualizar la sección de "Reglas a considerar" de la **HU-02** en la entrega 2.
+- [x] Agregar enlace o botón de ayuda en el template `apps/remitos/templates/remitos/importar_csv.html` ("Ver formato requerido de planilla").
 
 ---
 

@@ -9,8 +9,9 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -45,19 +46,8 @@ class CrearRemito(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     permission_required = "remitos.add_remito"
 
     def form_valid(self, form):
-        comercio = form.cleaned_data.get("comercio")
-        parada_existente = Parada.objects.filter(
-            comercio=comercio,
-            estado=EstadoParada.PENDIENTE,
-        ).first()
-
-        if parada_existente:
-            form.instance.parada = parada_existente
-            form.instance.estado = EstadoRemito.ASIGNADO
-        else:
-            form.instance.parada = None
-            form.instance.estado = EstadoRemito.PENDIENTE
-
+        form.instance.parada = None
+        form.instance.estado = EstadoRemito.PENDIENTE
         return super().form_valid(form)
 
 
@@ -65,8 +55,19 @@ class EditarRemito(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = RemitoForm
     model = Remito
     template_name = "remitos/remito_form.html"
-    success_url = reverse_lazy("remitos:remito_lista")
     permission_required = "remitos.change_remito"
+
+    def get_success_url(self):
+        return reverse_lazy("remitos:remito_detalle", kwargs={"pk": self.object.pk})
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if self.object.estado != EstadoRemito.PENDIENTE:
+            messages.error(request, "Solo editable en estado pendiente")
+            return redirect("remitos:remito_detalle", pk=self.object.pk)
+            
+        return super().dispatch(request, *args, **kwargs)
 
 
 class DetalleRemito(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
@@ -169,6 +170,12 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                 )
                 continue
 
+            if not marca.activo:
+                errores.append(
+                    f"La marca {marca.nombre} (CUIT {marca.cuit}) se encuentra inactiva."
+                )
+                continue
+
             try:
                 archivo.seek(0)
                 wrapper = io.TextIOWrapper(archivo, encoding="utf-8-sig")
@@ -178,9 +185,51 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                 if not filas:
                     raise ValueError(f"El archivo {nombre_archivo} está vacío.")
 
+                columnas_requeridas = {
+                    "cuit_comercio",
+                    "razon_social",
+                    "domicilio",
+                    "monto_a_cobrar",
+                    "numero_sucursal",
+                    "numero_factura",
+                }
+                columnas_archivo = set(reader.fieldnames or [])
+                if not columnas_requeridas.issubset(columnas_archivo):
+                    archivo.seek(0)
+                    with transaction.atomic():
+                        importacion = ImportacionRemitos.objects.create(
+                            archivo=archivo,
+                            marca=marca,
+                            estado=EstadoImportacion.RECHAZADO,
+                            cantidad=0,
+                        )
+                        lotes_guardados += 1
+                        ErrorImportacion.objects.create(
+                            importacion=importacion,
+                            fila=1,
+                            motivo="Importación fallida: la estructura del archivo seleccionado es inválida.",
+                        )
+                    errores.append(
+                        "Importación fallida: la estructura del archivo seleccionado es inválida"
+                    )
+                    continue
+
                 errores_filas = []
                 datos_validados = []
                 numeros_en_archivo = set()
+
+                # Extraer CUITs válidos del archivo para consultar cuáles ya existen en la base de datos
+                cuits_en_filas = set()
+                for row in filas:
+                    cuit = (row.get("cuit_comercio") or "").strip()
+                    if cuit.isdigit() and len(cuit) == 11:
+                        cuits_en_filas.add(cuit)
+
+                cuits_existentes_db = set(
+                    Comercio.objects.filter(cuit__in=cuits_en_filas).values_list(
+                        "cuit", flat=True
+                    )
+                )
 
                 for fila_num, row in enumerate(filas, start=2):
                     cuit_comercio = (row.get("cuit_comercio") or "").strip()
@@ -199,6 +248,10 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         motivos.append(
                             "CUIT del comercio inválido (debe tener 11 dígitos numéricos)"
                         )
+                    elif cuit_comercio not in cuits_existentes_db and not razon_social:
+                        motivos.append(
+                            "La razón social es obligatoria para comercios no registrados"
+                        )
 
                     total_monto = None
                     try:
@@ -211,7 +264,9 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                     if not num_sucursal or not num_factura:
                         motivos.append("Falta número de sucursal o factura")
                     else:
-                        numero_remito = f"{num_sucursal}-{num_factura}"
+                        num_sucursal_pad = num_sucursal.zfill(4) if num_sucursal.isdigit() else num_sucursal
+                        num_factura_pad = num_factura.zfill(8) if num_factura.isdigit() else num_factura
+                        numero_remito = f"{num_sucursal_pad}-{num_factura_pad}"
                         if numero_remito in numeros_en_archivo:
                             motivos.append(f"Número de remito '{numero_remito}' duplicado dentro del mismo archivo")
                         else:
@@ -230,10 +285,10 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                             }
                         )
 
-                # Si no hubo errores de formato, verificar duplicados contra la base de datos
                 if not errores_filas and datos_validados:
                     existentes = set(
                         Remito.objects.filter(
+                            marca=marca,
                             numero__in=numeros_en_archivo,
                         ).values_list("numero", flat=True)
                     )
@@ -241,7 +296,7 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         for idx, d in enumerate(datos_validados, start=2):
                             if d["numero"] in existentes:
                                 errores_filas.append(
-                                    (idx, f"El remito '{d['numero']}' ya existe en el sistema.")
+                                    (idx, "El número de remito debe ser único por marca proveedora.")
                                 )
 
                 archivo.seek(0)
@@ -268,7 +323,7 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         ]
                         ErrorImportacion.objects.bulk_create(errores_objs, batch_size=100)
                         errores.append(
-                            f"El archivo {nombre_archivo} contiene {len(errores_filas)} errores y fue rechazado (Lote #{importacion.id})."
+                            f"Importación rechazada: se detectaron {len(errores_filas)} errores en las filas observadas de {nombre_archivo}. Corrija el archivo e intente nuevamente."
                         )
                     else:
                         # 1. Obtener comercios existentes y crear los que falten en bloque
@@ -322,12 +377,12 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
                         creados += 1
                         total_remitos_creados += remitos_creados_lote
 
-            except (UnicodeDecodeError, csv.Error, ValueError) as e:
-                errores.append(f"El archivo {nombre_archivo} tiene un formato inválido o no legible: {str(e)}")
-            except (IntegrityError, DatabaseError) as e:
-                errores.append(f"Error de base de datos al procesar {nombre_archivo}: {str(e)}")
-            except OSError as e:
-                errores.append(f"Error de lectura o acceso al archivo {nombre_archivo}: {str(e)}")
+            except (UnicodeDecodeError, csv.Error, ValueError):
+                errores.append(f"El archivo {nombre_archivo} tiene un formato inválido o no legible.")
+            except (IntegrityError, DatabaseError):
+                errores.append(f"Error de base de datos al procesar {nombre_archivo}.")
+            except OSError:
+                errores.append(f"Error de lectura o acceso al archivo {nombre_archivo}.")
 
         if errores:
             for error in errores:
@@ -373,7 +428,7 @@ class DetalleImportacion(LoginRequiredMixin, PermissionRequiredMixin, DetailView
     permission_required = "remitos.view_importacionremitos"
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related("errores")
+        return super().get_queryset().prefetch_related("errores", "remitos")
 
 
 class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
@@ -404,7 +459,7 @@ class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
         if self._tiene_remitos_no_pendientes(self.object):
             messages.error(
                 self.request,
-                "No se puede eliminar la importación porque contiene remitos que ya fueron asignados a un itinerario.",
+                "La importación no se puede eliminar porque contiene remitos que ya fueron asignados a un itinerario.",
             )
             return redirect(self.success_url)
 
@@ -414,7 +469,7 @@ class EliminarImportacion(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
             self.object.delete()
 
         messages.success(
-            self.request, "Importación y sus remitos eliminados correctamente."
+            self.request, "La importación y sus remitos asociados fueron eliminados exitosamente."
         )
         return HttpResponseRedirect(self.get_success_url())
 
@@ -458,10 +513,9 @@ class EliminarComercio(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 class CrearMarca(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     form_class = MarcaForm
     model = Marca
-    template_name = "remitos/marca_crear.html"
-    context_object_name = "marcas"
+    template_name = "remitos/marca_form.html"
     success_url = reverse_lazy("remitos:marca_lista")
-    success_message = "Marca agregado exitosamente"
+    success_message = "Marca agregada exitosamente"
     permission_required = "remitos.add_marca"
 
 
@@ -476,11 +530,12 @@ class ListaMarca(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return Marca.objects.all().order_by("-activo", "-id")
 
 
-class EditarMarca(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+class EditarMarca(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     form_class = MarcaForm
     model = Marca
     template_name = "remitos/marca_form.html"
     success_url = reverse_lazy("remitos:marca_lista")
+    success_message = "Marca modificada exitosamente"
     permission_required = "remitos.change_marca"
 
 
@@ -489,3 +544,31 @@ class EliminarMarca(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     template_name = "remitos/marca_eliminar.html"
     success_url = reverse_lazy("remitos:marca_lista")
     permission_required = "remitos.delete_marca"
+
+    def form_valid(self, form):
+        marca = self.get_object()
+        remitos_activos = marca.remitos.filter(
+            estado__in=[EstadoRemito.PENDIENTE, EstadoRemito.ASIGNADO]
+        )
+        if remitos_activos.exists():
+            messages.error(
+                self.request,
+                "No se puede eliminar la marca porque tiene remitos en estado pendiente o asignado.",
+            )
+            return redirect(self.success_url)
+
+        marca.activo = False
+        marca.save(update_fields=["activo"])
+        messages.success(self.request, "Marca eliminada exitosamente")
+        return redirect(self.success_url)
+
+
+class ReactivarMarca(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "remitos.change_marca"
+
+    def post(self, request, pk):
+        marca = get_object_or_404(Marca, pk=pk)
+        marca.activo = True
+        marca.save(update_fields=["activo"])
+        messages.success(request, "Marca reactivada exitosamente")
+        return redirect("remitos:marca_lista")

@@ -86,11 +86,11 @@
                 <table class="remitos-tabla">
                     <thead>
                         <tr>
-                            <th>N° de remito <i class="fas fa-arrow-down ms-1 small"></i></th>
-                            <th>Estado <i class="fas fa-sort ms-1 small opacity-50"></i></th>
-                            <th>Marca proveedora <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>N° de remito</th>
+                            <th>Estado</th>
+                            <th>Marca proveedora</th>
                             <th>Monto a cobrar</th>
-                            <th>Destinatario <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Destinatario</th>
                             <th>Itinerario</th>
                             <th class="text-end pe-3">Acciones</th>
                         </tr>
@@ -189,7 +189,7 @@
                 </p>
                 <div class="d-flex gap-2">
                     {% if filtro_comercio or filtro_estado or filtro_marca or filtro_fecha %}
-                        <a href="{% url 'remitos:remito_lista' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'remitos:remito_lista' %}" class="home-btn">
                             Restablecer filtros
                         </a>
                     {% endif %}

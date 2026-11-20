@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Marcas - RepartoYA{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'core/css/home.css' %}" rel="stylesheet">
+<link href="{% static 'itinerarios/css/itinerarios.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% now "l, j \d\e F \d\e Y" as fecha_hoy %}
+<div class="itinerarios-page">
+
+    <!-- Encabezado de página -->
+    <header class="itinerarios-header">
+        <div class="itinerarios-header-info">
+            <h1 class="text-title mb-0">Marcas proveedoras</h1>
+            <p class="text-body text-c-secondary mb-0">{{ fecha_hoy|capfirst }}</p>
+        </div>
+        <div>
+            <a href="{% url 'remitos:marca_crear' %}" class="btn-itinerario-primary">
+                <i class="fa fa-plus"></i>
+                Agregar marca
+            </a>
+        </div>
+    </header>
+
+    <!-- Lista de marcas -->
+    <div class="itinerarios-card p-3 overflow-hidden">
+        {% if marcas %}
+            <div class="table-responsive">
+                <table class="itinerarios-tabla">
+                    <thead>
+                        <tr>
+                            <th>Marca / Razón Social</th>
+                            <th>CUIT</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for marca in marcas %}
+                            <tr>
+                                <td>
+                                    <div class="cell-main">
+                                        {{ marca.nombre }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="itin-badge">{{ marca.cuit }}</span>
+                                </td>
+                                <td>
+                                    {% if marca.activo %}
+                                        <span class="itin-badge itin-badge--entregado">Activa</span>
+                                    {% else %}
+                                        <span class="itin-badge itin-badge--error text-badge">Inactiva</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center pe-3">
+                                    <div class="d-flex align-items-center gap-2" role="group">
+                                        <!-- Botón Editar -->
+                                        <a href="{% url 'remitos:marca_editar' marca.pk %}" 
+                                           class="btn-ver-detalle btn-sm py-1 px-2" 
+                                           title="Editar marca">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <!-- Botón Eliminar / Reactivar -->
+                                        {% if marca.activo %}
+                                        <a href="{% url 'remitos:marca_eliminar' marca.pk %}" 
+                                           class="btn btn-outline-danger btn-sm py-1 px-2" 
+                                           title="Eliminar marca">
+                                            <i class="far fa-trash-alt"></i> Eliminar
+                                        </a>
+                                        {% else %}
+                                        <form action="{% url 'remitos:marca_reactivar' marca.pk %}" method="post" class="d-inline m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" 
+                                                    class="btn btn-outline-success btn-sm py-1 px-2" 
+                                                    title="Reactivar marca"
+                                                    onclick="return confirm('¿Seguro que deseas reactivar esta marca?');">
+                                                <i class="fas fa-rotate-left"></i> Reactivar
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="itinerarios-tabla-footer">
+                Se muestran {{ marcas|length }} marcas.
+            </div>
+        {% else %}
+            <div class="itin-paradas-empty mb-0 border-0">
+                <div class="itin-paradas-empty__icon">
+                    <i class="fas fa-tags fa-2x"></i>
+                </div>
+                <div class="itin-paradas-empty__title">No hay marcas registradas</div>
+                <p class="itin-paradas-empty__desc mb-3">Registrá una nueva marca para comenzar a asociarla a los remitos.</p>
+                <a href="{% url 'remitos:marca_crear' %}" class="btn-itinerario-primary">
+                    <i class="fas fa-plus"></i>
+                    <span>Agregar marca</span>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Paginación -->
+    {% if is_paginated %}
+    <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center py-3">
+        <span class="text-muted small">
+            Mostrando página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} (Total: {{ paginator.count }} registros)
+        </span>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        Anterior
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        Siguiente
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -6,7 +6,7 @@
  * 1. El header corporativo que toma dinámicamente el nombre y las iniciales del chofer que inició
  * 2. La tarjeta con la barra de progreso (porcentaje de entregas completadas en color Naranja YA).
  * 3. El botón de acceso a 'Rutas Guardadas' (que conecta con el módulo de recorridos del Sprint 1).
- * 4. La lista de paradas: destacando la próxima parada (#1) con llamada a la acción en naranja
+ * 4. La lista de paradas: destacando la próxima parada a visitar con llamada a la acción en naranja
  *    ('Ir a la parada') que conecta directamente con la pantalla de Validar Cobro (HU-32)
  *    y las paradas siguientes con su detalle y monto total a recaudar.
  * 5. La vista de 'Itinerario sin asignar': si el chofer todavía no tiene hoja de ruta asignada,
@@ -35,9 +35,14 @@ import type { Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
-import { obtenerItinerarioJornada, tomarItinerarioActualizado } from '../services/itinerarioService';
-import { getUsuarioActual, estaAutenticado, cerrarSesion } from '../services/authService';
-import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
+import {
+  obtenerItinerarioJornada,
+  tomarItinerarioActualizado,
+  entregarItinerarioActualizado,
+  isJornadaIniciada,
+  comenzarJornadaLaboral,
+} from '../services/itinerarioService';
+import { getUsuarioActual, estaAutenticado, restaurarSesion, cerrarSesion } from '../services/authService';
 import { seleccionarParadaItem } from '../services/paradaService';
 // Núcleo del cambio: Servicio para abrir chat de WhatsApp con soporte de Base Logística
 import { contactarSoporteWhatsApp } from '../services/soporteService';
@@ -52,6 +57,8 @@ export default function ItinerarioScreen() {
   // Estado del itinerario y control de carga
   const [itinerario, setItinerario] = useState<ItinerarioJornada | null>(null);
   const [cargando, setCargando] = useState<boolean>(true);
+  const [iniciandoJornada, setIniciandoJornada] = useState<boolean>(false);
+  const [errorSinItinerario, setErrorSinItinerario] = useState<string | null>(null);
   // Estado para el modal de confirmación de cierre de sesión (HU-156)
   const [modalLogoutVisible, setModalLogoutVisible] = useState<boolean>(false);
 
@@ -59,16 +66,16 @@ export default function ItinerarioScreen() {
   const usuarioLogueado = getUsuarioActual();
   const nombreChofer = usuarioLogueado?.first_name 
     ? `${usuarioLogueado.first_name} ${usuarioLogueado.last_name || ''}`.trim()
-    : (itinerario?.transportistaNombre || 'Martín Rodríguez');
+    : (itinerario?.transportistaNombre || (usuarioLogueado?.dni ? `Transportista ${usuarioLogueado.dni}` : 'Transportista'));
 
-  // Iniciales dinámicas para el badge del avatar (ej: Martín Rodríguez -> MR)
+  // Iniciales dinámicas para el badge del avatar (ej: Martín Pérez -> MP)
   const inicialesChofer = usuarioLogueado?.first_name
     ? `${usuarioLogueado.first_name[0] || ''}${usuarioLogueado.last_name ? usuarioLogueado.last_name[0] : ''}`.toUpperCase()
-    : (itinerario?.transportistaIniciales || 'MR');
+    : (itinerario?.transportistaIniciales || 'TR');
 
   const vehiculoChofer = usuarioLogueado?.vehiculo
     ? `${usuarioLogueado.vehiculo.modelo} · ${usuarioLogueado.vehiculo.patente}`
-    : `${itinerario?.vehiculo.modelo || 'Unidad 024 · Iveco Daily'} · ${itinerario?.vehiculo.patente || 'AB 458 CD'}`;
+    : `${itinerario?.vehiculo.modelo || 'Unidad de Reparto'} · ${itinerario?.vehiculo.patente || 'S/D'}`;
 
   // Función para pegarle al servicio o cargar los datos simulados
   const cargarDatos = async () => {
@@ -76,32 +83,70 @@ export default function ItinerarioScreen() {
     try {
       const res = await obtenerItinerarioJornada();
       setItinerario(res.itinerario);
+      if (!res.itinerario) {
+        setErrorSinItinerario(res.error || 'No posees ningún itinerario asignado para esta jornada.');
+      } else {
+        setErrorSinItinerario(null);
+      }
     } catch (e) {
       console.error('Error al cargar itinerario:', e);
+      setErrorSinItinerario('Error de conexión al consultar el itinerario.');
     } finally {
       setCargando(false);
     }
   };
 
   useEffect(() => {
-    if (!estaAutenticado()) {
-      router.replace('/login' as any);
-      return;
+    let cancelado = false;
+
+    async function inicializar() {
+      if (!estaAutenticado()) {
+        const restaurado = await restaurarSesion();
+        if (!restaurado && !cancelado) {
+          router.replace('/login' as any);
+          return;
+        }
+      }
+      if (cancelado) return;
+
+      const actualizado = tomarItinerarioActualizado();
+      if (actualizado) {
+        setItinerario(actualizado);
+        setCargando(false);
+        return;
+      }
+      cargarDatos();
     }
-    const actualizado = tomarItinerarioActualizado();
-    if (actualizado) {
-      setItinerario(actualizado);
-      setCargando(false);
-      return;
-    }
-    cargarDatos();
+
+    inicializar();
+
+    return () => {
+      cancelado = true;
+    };
   }, []);
 
   // Bloquea el botón físico o gesto de retroceso del celular para no volver al login una vez autenticado
   useFocusEffect(
     useCallback(() => {
       const actualizado = tomarItinerarioActualizado();
-      if (actualizado) setItinerario(actualizado);
+      if (actualizado) {
+        setItinerario({
+          ...actualizado,
+          paradas: [...(actualizado.paradas || []).map((p) => ({ ...p, comercio: { ...p.comercio } }))],
+        });
+      } else {
+        // Re-sincronizar el itinerario al volver al foco para reflejar cambios de paradas
+        obtenerItinerarioJornada()
+          .then((res) => {
+            if (res.itinerario) {
+              setItinerario({
+                ...res.itinerario,
+                paradas: [...(res.itinerario.paradas || []).map((p) => ({ ...p, comercio: { ...p.comercio } }))],
+              });
+            }
+          })
+          .catch(() => {});
+      }
       const onBackPress = () => {
         // En el itinerario no se debe volver al login bajo ninguna circunstancia
         return true;
@@ -130,8 +175,52 @@ export default function ItinerarioScreen() {
     } as any);
   };
 
-  // Núcleo Sprint 2 (HU-24): Botón de acceso a reordenar paradas
+  // HU-68: Determina si la jornada laboral ya fue iniciada ('en_curso' o 'en_ruta')
+  const jornadaIniciada = isJornadaIniciada(itinerario);
+
+  // HU-68: Inicia la jornada laboral formal y desbloquea las operaciones
+  const handleComenzarJornada = async () => {
+    if (!itinerario) return;
+    setIniciandoJornada(true);
+    try {
+      const res = await comenzarJornadaLaboral(itinerario.id);
+      if (!res.success) {
+        Alert.alert(
+          'Itinerario no disponible',
+          res.error || 'No posees ningún itinerario asignado para iniciar.'
+        );
+        if (res.code === 'SIN_ITINERARIO_ASIGNADO') {
+          setItinerario(null);
+          setErrorSinItinerario(res.error || 'No posees ningún itinerario asignado para iniciar.');
+        }
+        return;
+      }
+      const actualizado: ItinerarioJornada = {
+        ...itinerario,
+        estado: (res.estado as any) || 'en_curso',
+      };
+      setItinerario(actualizado);
+      entregarItinerarioActualizado(actualizado);
+      Alert.alert(
+        '¡Jornada laboral iniciada!',
+        'Ya podés visitar paradas, reordenar el recorrido y registrar cobranzas.'
+      );
+    } catch {
+      Alert.alert('Aviso', 'No se pudo iniciar la jornada laboral. Intentá nuevamente.');
+    } finally {
+      setIniciandoJornada(false);
+    }
+  };
+
+  // Núcleo Sprint 2 (HU-24 y HU-68): Botón de acceso a reordenar paradas
   const handleReordenarParadas = () => {
+    if (!jornadaIniciada) {
+      Alert.alert(
+        'Jornada no iniciada',
+        'Debés presionar "Comenzar jornada laboral" antes de poder reordenar las paradas.'
+      );
+      return;
+    }
     router.push('/reordenar-paradas' as Href);
   };
 
@@ -141,8 +230,15 @@ export default function ItinerarioScreen() {
     router.push('/recorridos-guardados' as Href);
   };
 
-  // Redirección hacia la pantalla de detalle de la parada (HU-67)
+  // Redirección hacia la pantalla de detalle de la parada (HU-67 y HU-68)
   const handleIrAParada = (parada: ParadaItem) => {
+    if (!jornadaIniciada) {
+      Alert.alert(
+        'Jornada no iniciada',
+        'La hoja de ruta está en modo solo lectura. Presioná "Comenzar jornada laboral" para ingresar a la parada.'
+      );
+      return;
+    }
     seleccionarParadaItem(parada, itinerario?.totalParadas || paradas.length);
     router.push({
       pathname: '/parada',
@@ -151,6 +247,13 @@ export default function ItinerarioScreen() {
   };
 
   const handleVerDetalle = (parada: ParadaItem) => {
+    if (!jornadaIniciada) {
+      Alert.alert(
+        'Jornada no iniciada',
+        'La hoja de ruta está en modo solo lectura. Presioná "Comenzar jornada laboral" para consultar el detalle de la parada.'
+      );
+      return;
+    }
     seleccionarParadaItem(parada, itinerario?.totalParadas || paradas.length);
     router.push({
       pathname: '/parada',
@@ -179,16 +282,45 @@ export default function ItinerarioScreen() {
     );
   };
 
-  // Separo la próxima parada (la #1 a entregar) del resto de las paradas
+  // Clasificación de paradas según su estado operativo
   const paradas = itinerario?.paradas || [];
-  const proximaParada = paradas[0];
-  const siguientesParadas = paradas.slice(1);
+
+  const esEntregada = (p: ParadaItem) =>
+    (p.estado as string) === 'finalizada' || (p.estado as string) === 'completada';
+
+  // Paradas no entregadas (pendientes, en_curso o con inconveniente)
+  // Las paradas con inconveniente (estado 'error' o 'Con inconveniente') se ordenan automáticamente al final de las pendientes
+  const paradasNoEntregadas = paradas
+    .filter((p) => !esEntregada(p))
+    .sort((a, b) => {
+      const aError = a.estado === 'error' || (typeof a.subtitulo === 'string' && a.subtitulo.includes('Con inconveniente'));
+      const bError = b.estado === 'error' || (typeof b.subtitulo === 'string' && b.subtitulo.includes('Con inconveniente'));
+      if (aError && !bError) return 1;
+      if (!aError && bError) return -1;
+      return a.orden - b.orden;
+    });
+
+  // Paradas ya entregadas (finalizadas) -> Van abajo de todo
+  const paradasEntregadas = paradas
+    .filter(esEntregada)
+    .sort((a, b) => a.orden - b.orden);
+
+  // Parada principal destacada: la siguiente parada a entregar
+  const proximaParada = paradasNoEntregadas.length > 0 ? paradasNoEntregadas[0] : null;
+
+  // Paradas que le siguen a esa siguiente parada
+  const siguientesParadas = paradasNoEntregadas.length > 1 ? paradasNoEntregadas.slice(1) : [];
+
+  // Cálculos de totales y progreso consistentes
+  const totalParadasCount = itinerario?.totalParadas || paradas.length;
+  const paradasEntregadasCount = Math.max(itinerario?.paradasCompletadas ?? 0, paradasEntregadas.length);
+  const paradasRestantesCount = Math.max(0, totalParadasCount - paradasEntregadasCount);
 
   // Cálculo del porcentaje completado para la barra de progreso
   const porcentajeProgreso =
-    itinerario && itinerario.totalParadas > 0
-      ? Math.round((itinerario.paradasCompletadas / itinerario.totalParadas) * 100)
-      : 50;
+    totalParadasCount > 0
+      ? Math.round((paradasEntregadasCount / totalParadasCount) * 100)
+      : 0;
 
   return (
     <View style={styles.safeContainer}>
@@ -295,7 +427,8 @@ export default function ItinerarioScreen() {
             </View>
             <Text style={styles.sinAsignarTitulo}>Itinerario sin asignar</Text>
             <Text style={styles.sinAsignarDescripcion}>
-              No tenés un itinerario asignado para esta jornada. Cuando haya uno disponible, vas a poder consultar las paradas, las direcciones y los montos a cobrar.
+              {errorSinItinerario ||
+                'No tenés un itinerario asignado para esta jornada. Cuando haya uno disponible, vas a poder consultar las paradas, las direcciones y los montos a cobrar.'}
             </Text>
 
             <TouchableOpacity
@@ -338,7 +471,7 @@ export default function ItinerarioScreen() {
           <View style={styles.progresoCard}>
             <View style={styles.progresoHeaderRow}>
               <Text style={styles.progresoTitulo}>
-                {itinerario.paradasCompletadas} de {itinerario.totalParadas} paradas entregadas
+                {paradasEntregadasCount} de {totalParadasCount} paradas entregadas
               </Text>
               <Text style={styles.progresoPorcentaje}>{porcentajeProgreso}%</Text>
             </View>
@@ -355,13 +488,47 @@ export default function ItinerarioScreen() {
 
             <View style={styles.progresoFooterRow}>
               <Text style={styles.progresoEntregadas}>
-                {itinerario.paradasCompletadas} entregadas
+                {paradasEntregadasCount} entregadas
               </Text>
               <Text style={styles.progresoPorVisitar}>
-                {itinerario.totalParadas - itinerario.paradasCompletadas} por visitar
+                {paradasRestantesCount} por visitar
               </Text>
             </View>
           </View>
+
+          {/* HU-68: Tarjeta y Botón de Inicio de Jornada Laboral */}
+          {!jornadaIniciada ? (
+            <View style={styles.cardComenzarJornada}>
+              <View style={styles.bannerJornadaPendiente}>
+                <Text style={styles.bannerJornadaTitulo}>🟡 Hoja de ruta asignada · Esperando inicio</Text>
+                <Text style={styles.bannerJornadaTexto}>
+                  Tu recorrido está asignado. Iniciá la jornada laboral para habilitar el reordenamiento, la carga de recorridos y la gestión de paradas.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.botonComenzarJornada}
+                onPress={handleComenzarJornada}
+                disabled={iniciandoJornada}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Comenzar jornada laboral"
+              >
+                {iniciandoJornada ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <View style={styles.filaBotonComenzar}>
+                    <Text style={styles.iconoPlayComenzar}>▶</Text>
+                    <Text style={styles.textoBotonComenzar}>Comenzar jornada laboral</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.badgeJornadaEnCurso}>
+              <Text style={styles.textoJornadaEnCurso}>🟢 Jornada laboral en curso</Text>
+            </View>
+          )}
 
           {/* Botón con ícono minimalista oficial de recorridos guardados */}
           <TouchableOpacity
@@ -377,50 +544,93 @@ export default function ItinerarioScreen() {
             <Text style={styles.textoRutasGuardadas}>Recorridos guardados</Text>
           </TouchableOpacity>
 
-          {/* Núcleo del cambio Sprint 2 (HU-24): Botón Reordenar paradas según Figma */}
+          {/* Núcleo del cambio Sprint 2 (HU-24 y HU-68): Botón Reordenar paradas según Figma */}
           <TouchableOpacity
-            style={styles.botonReordenarParadas}
+            style={[
+              styles.botonReordenarParadas,
+              !jornadaIniciada && styles.botonReordenarParadasBloqueado,
+            ]}
             onPress={handleReordenarParadas}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={jornadaIniciada ? 'Reordenar paradas' : 'Reordenar paradas bloqueado'}
           >
             <Image
               source={require('../../assets/icons/icono-ruta.png')}
-              style={styles.iconoReordenarParadas}
+              style={[
+                styles.iconoReordenarParadas,
+                !jornadaIniciada && { opacity: 0.4 },
+              ]}
               resizeMode="contain"
             />
-            <Text style={styles.textoReordenarParadas}>Reordenar paradas</Text>
+            <Text
+              style={[
+                styles.textoReordenarParadas,
+                !jornadaIniciada && styles.textoReordenarParadasBloqueado,
+              ]}
+            >
+              {jornadaIniciada ? 'Reordenar paradas' : '🔒 Reordenar paradas (Iniciá jornada)'}
+            </Text>
           </TouchableOpacity>
 
           {/* Encabezado de la lista: Próximas paradas */}
-          <View style={styles.seccionHeader}>
-            <View style={styles.seccionTituloRow}>
-              <Text style={styles.seccionTitulo}>Próximas paradas</Text>
-              <Text style={styles.seccionRestantes}>
-                {itinerario.totalParadas - itinerario.paradasCompletadas} restantes
+          {proximaParada ? (
+            <View style={styles.seccionHeader}>
+              <View style={styles.seccionTituloRow}>
+                <Text style={styles.seccionTitulo}>Próximas paradas</Text>
+                <Text style={styles.seccionRestantes}>
+                  {paradasRestantesCount} restante{paradasRestantesCount !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <Text style={styles.seccionSubtitulo}>
+                Prioridad de visita · continuás en la parada {proximaParada.orden} de {totalParadasCount}
               </Text>
             </View>
-            <Text style={styles.seccionSubtitulo}>
-              Prioridad de visita · continuás en la parada {proximaParada ? proximaParada.orden : 5} de {itinerario.totalParadas}
-            </Text>
-          </View>
-
-          {/* PARADA DESTACADA #1 (Conecta con la pantalla de Validar Cobro) */}
-          {proximaParada && (
-            <View style={styles.paradaCardDestacada}>
-              <View style={styles.paradaHeaderRow}>
-                {/* Badge Naranja YA */}
-                <View style={styles.badgeNaranja}>
-                  <Text style={styles.badgeNaranjaTexto}>#1</Text>
-                </View>
-                <View style={styles.paradaTituloWrap}>
-                  <Text style={styles.comercioNombre}>
-                    {proximaParada.comercio.razonSocial}
-                  </Text>
-                  <Text style={styles.comercioSubtitulo}>
-                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${itinerario.totalParadas} · Próxima entrega`}
-                  </Text>
-                </View>
+          ) : (
+            <View style={styles.bannerTodasEntregadas}>
+              <View style={styles.badgeVerdeGrande}>
+                <Text style={styles.badgeVerdeGrandeTexto}>✓</Text>
               </View>
+              <Text style={styles.bannerTodasEntregadasTitulo}>¡Todas las paradas entregadas!</Text>
+              <Text style={styles.bannerTodasEntregadasSubtitulo}>
+                Completaste con éxito la totalidad de las entregas de esta hoja de ruta.
+              </Text>
+            </View>
+          )}
+
+          {/* PARADA DESTACADA (Conecta con la pantalla de Validar Cobro) */}
+          {proximaParada && (() => {
+            const proximaEsInconveniente =
+              proximaParada.estado === 'error' ||
+              (typeof proximaParada.subtitulo === 'string' && proximaParada.subtitulo.includes('Con inconveniente'));
+            return (
+              <View style={[styles.paradaCardDestacada, proximaEsInconveniente && styles.paradaCardInconveniente]}>
+                <View style={styles.paradaHeaderRow}>
+                  {/* Badge Naranja YA con número correlativo real */}
+                  <View style={[styles.badgeNaranja, proximaEsInconveniente && styles.badgeInconveniente]}>
+                    <Text style={[styles.badgeNaranjaTexto, proximaEsInconveniente && styles.badgeInconvenienteTexto]}>
+                      #{proximaParada.orden}
+                    </Text>
+                  </View>
+                  <View style={styles.paradaTituloWrap}>
+                    <View style={styles.filaComercioHeaderCard}>
+                      <Text style={styles.comercioNombre}>
+                        {proximaParada.comercio.razonSocial}
+                      </Text>
+                      {proximaEsInconveniente && (
+                        <View style={styles.badgeChipInconveniente}>
+                          <Text style={styles.badgeChipInconvenienteTexto}>Con inconveniente</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.comercioSubtitulo, proximaEsInconveniente && styles.comercioSubtituloInconveniente]}>
+                      {`Parada ${proximaParada.orden} de ${totalParadasCount} · `}
+                      <Text style={proximaEsInconveniente ? styles.textoInconvenienteRojo : undefined}>
+                        {proximaEsInconveniente ? 'Con inconveniente' : 'Próxima entrega'}
+                      </Text>
+                    </Text>
+                  </View>
+                </View>
 
               {/* Dirección del comercio */}
               <View style={styles.direccionRow}>
@@ -462,33 +672,55 @@ export default function ItinerarioScreen() {
 
               {/* Botón de acción primario en Naranja YA -> Va a Validar Cobro */}
               <TouchableOpacity
-                style={styles.botonIrParada}
+                style={[
+                  styles.botonIrParada,
+                  !jornadaIniciada && styles.botonIrParadaBloqueado,
+                ]}
                 onPress={() => handleIrAParada(proximaParada)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.iconoNavegacion}>➤</Text>
-                <Text style={styles.textoBotonIrParada}>Ir a la parada</Text>
+                <Text style={styles.iconoNavegacion}>{jornadaIniciada ? '➤' : '🔒'}</Text>
+                <Text style={[styles.textoBotonIrParada, !jornadaIniciada && styles.textoBotonIrParadaBloqueado]}>
+                  {jornadaIniciada ? 'Ir a la parada' : 'Solo lectura (Iniciá jornada)'}
+                </Text>
               </TouchableOpacity>
             </View>
-          )}
+          );
+        })()}
 
-          {/* PARADAS SIGUIENTES #2 EN ADELANTE (Figma: Botón Contorno Azul) */}
-          {siguientesParadas.map((parada, idx) => (
-            <View key={parada.id} style={styles.paradaCardSecundaria}>
-              <View style={styles.paradaHeaderRow}>
-                {/* Badge de orden secundario */}
-                <View style={styles.badgeNeutro}>
-                  <Text style={styles.badgeNeutroTexto}>#{idx + 2}</Text>
+          {/* PARADAS SIGUIENTES (Figma: Botón Contorno Azul) */}
+          {siguientesParadas.map((parada) => {
+            const esInconveniente =
+              parada.estado === 'error' ||
+              (typeof parada.subtitulo === 'string' && parada.subtitulo.includes('Con inconveniente'));
+            return (
+              <View key={parada.id} style={[styles.paradaCardSecundaria, esInconveniente && styles.paradaCardInconveniente]}>
+                <View style={styles.paradaHeaderRow}>
+                  {/* Badge con número correlativo real */}
+                  <View style={[styles.badgeNeutro, esInconveniente && styles.badgeInconveniente]}>
+                    <Text style={[styles.badgeNeutroTexto, esInconveniente && styles.badgeInconvenienteTexto]}>
+                      #{parada.orden}
+                    </Text>
+                  </View>
+                  <View style={styles.paradaTituloWrap}>
+                    <View style={styles.filaComercioHeaderCard}>
+                      <Text style={styles.comercioNombre}>
+                        {parada.comercio.razonSocial}
+                      </Text>
+                      {esInconveniente && (
+                        <View style={styles.badgeChipInconveniente}>
+                          <Text style={styles.badgeChipInconvenienteTexto}>Con inconveniente</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.comercioSubtituloSecundario, esInconveniente && styles.comercioSubtituloInconveniente]}>
+                      {`Parada ${parada.orden} de ${totalParadasCount} · `}
+                      <Text style={esInconveniente ? styles.textoInconvenienteRojo : undefined}>
+                        {esInconveniente ? 'Con inconveniente' : 'A continuación'}
+                      </Text>
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.paradaTituloWrap}>
-                  <Text style={styles.comercioNombre}>
-                    {parada.comercio.razonSocial}
-                  </Text>
-                  <Text style={styles.comercioSubtituloSecundario}>
-                    {parada.subtitulo || `Parada ${parada.orden} de ${itinerario.totalParadas} · A continuación`}
-                  </Text>
-                </View>
-              </View>
 
               {/* Dirección */}
               <View style={styles.direccionRow}>
@@ -530,34 +762,133 @@ export default function ItinerarioScreen() {
 
               {/* Botón con contorno azul */}
               <TouchableOpacity
-                style={styles.botonVerDetalle}
+                style={[
+                  styles.botonVerDetalle,
+                  !jornadaIniciada && styles.botonVerDetalleBloqueado,
+                ]}
                 onPress={() => handleVerDetalle(parada)}
                 activeOpacity={0.85}
               >
                 <Image
                   source={require('../../assets/icons/icono-adjuntar-archivo.png')}
-                  style={styles.iconoVerDetalleCustom}
+                  style={[
+                    styles.iconoVerDetalleCustom,
+                    !jornadaIniciada && { opacity: 0.5 },
+                  ]}
                   resizeMode="contain"
                 />
-                <Text style={styles.textoBotonVerDetalle}>Ver detalle de parada</Text>
+                <Text style={[styles.textoBotonVerDetalle, !jornadaIniciada && { color: '#9CA3AF' }]}>
+                  {jornadaIniciada ? 'Ver detalle de parada' : '🔒 Solo lectura'}
+                </Text>
               </TouchableOpacity>
             </View>
-          ))}
+            );
+          })}
 
-          {/* Pie de lista con las paradas restantes del recorrido */}
-          <View style={styles.footerParadasRestantes}>
-            <Image
-              source={require('../../assets/icons/icono-transferencia.png')}
-              style={styles.iconoRutaPunteadaCustom}
-              resizeMode="contain"
-            />
-            <View style={styles.footerParadasInfo}>
-              <Text style={styles.footerParadasTitulo}>Luego, paradas 7 y 8</Text>
-              <Text style={styles.footerParadasDetalle}>
-                Kiosco El Sol · Mercado San José
-              </Text>
-            </View>
-          </View>
+          {/* PARADAS ENTREGADAS (A bajo de todo) */}
+          {paradasEntregadas.length > 0 && (
+            <>
+              <View style={[styles.seccionHeader, styles.seccionHeaderEntregadas]}>
+                <View style={styles.seccionTituloRow}>
+                  <Text style={styles.seccionTitulo}>Paradas entregadas</Text>
+                  <View style={styles.badgeContadorEntregadas}>
+                    <Text style={styles.badgeContadorEntregadasTexto}>
+                      {paradasEntregadas.length} de {totalParadasCount}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.seccionSubtitulo}>
+                  Entregas finalizadas y cobranzas registradas
+                </Text>
+              </View>
+
+              {paradasEntregadas.map((parada) => (
+                <View key={parada.id} style={styles.paradaCardEntregada}>
+                  <View style={styles.paradaHeaderRow}>
+                    {/* Badge Verde con Check */}
+                    <View style={styles.badgeVerde}>
+                      <Text style={styles.badgeVerdeTexto}>✓</Text>
+                    </View>
+                    <View style={styles.paradaTituloWrap}>
+                      <View style={styles.filaComercioEntregado}>
+                        <Text style={styles.comercioNombre}>
+                          {parada.comercio.razonSocial}
+                        </Text>
+                        <View style={styles.badgeChipEntregada}>
+                          <Text style={styles.badgeChipEntregadaTexto}>Entregada</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.comercioSubtituloEntregada}>
+                        Parada #{parada.orden} de {totalParadasCount} · Cobro validado
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Dirección */}
+                  <View style={styles.direccionRow}>
+                    <Image
+                      source={require('../../assets/icons/icono-domicilio.png')}
+                      style={styles.iconoPinCustom}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.direccionTexto}>
+                      {parada.comercio.domicilio}
+                      {parada.comercio.localidad ? ` · ${parada.comercio.localidad}` : ''}
+                    </Text>
+                  </View>
+
+                  {/* Remitos y Monto Recaudado */}
+                  <View style={styles.montosRow}>
+                    <View>
+                      <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
+                      <View style={styles.remitosFila}>
+                        <Image
+                          source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                          style={styles.iconoRemitoCustom}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.metaValorRemitos}>
+                          {parada.cantidadRemitos} remitos
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.alignEnd}>
+                      <Text style={styles.metaLabel}>TOTAL RECAUDADO</Text>
+                      <Text style={styles.montoEntregado}>
+                        $ {parada.montoCobranza.toLocaleString('es-AR', {
+                          minimumFractionDigits: 2,
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Botón Ver Detalle de Entrega */}
+                  <TouchableOpacity
+                    style={[
+                      styles.botonVerDetalleEntregada,
+                      !jornadaIniciada && styles.botonVerDetalleBloqueado,
+                    ]}
+                    onPress={() => handleVerDetalle(parada)}
+                    activeOpacity={0.85}
+                  >
+                    <Image
+                      source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                      style={[
+                        styles.iconoVerDetalleCustom,
+                        !jornadaIniciada && { opacity: 0.5 },
+                      ]}
+                      resizeMode="contain"
+                    />
+                    <Text style={[styles.textoBotonVerDetalleEntregada, !jornadaIniciada && { color: '#9CA3AF' }]}>
+                      {jornadaIniciada ? 'Ver detalle de entrega' : '🔒 Solo lectura'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </>
+          )}
+
+
         </ScrollView>
       )}
       {/* ================= MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN (HU-156) ================= */}
@@ -830,7 +1161,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Parada activa (#1)
+  // Parada activa / destacada
   paradaCardDestacada: {
     backgroundColor: RepartoYA.blanco,
     borderRadius: 16,
@@ -887,6 +1218,39 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 14,
   },
+  // Estilos semánticos preparados para estados operativos (HU-62)
+  badgeVerde: {
+    backgroundColor: RepartoYA.exitoFondo,
+    borderWidth: 1,
+    borderColor: RepartoYA.exito,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  badgeVerdeTexto: {
+    color: RepartoYA.exito,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  badgeRojo: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderWidth: 1,
+    borderColor: RepartoYA.error,
+    borderRadius: 8,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  badgeRojoTexto: {
+    color: RepartoYA.error,
+    fontWeight: '800',
+    fontSize: 14,
+  },
   paradaTituloWrap: {
     flex: 1,
   },
@@ -894,6 +1258,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: RepartoYA.carbon,
+  },
+  filaComercioHeaderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   comercioSubtitulo: {
     fontSize: 12,
@@ -906,6 +1277,40 @@ const styles = StyleSheet.create({
     color: RepartoYA.grisTexto,
     fontWeight: '600',
     marginTop: 2,
+  },
+  comercioSubtituloInconveniente: {
+    color: RepartoYA.error,
+    fontWeight: '700',
+  },
+  textoInconvenienteRojo: {
+    color: RepartoYA.error,
+    fontWeight: '800',
+  },
+  badgeChipInconveniente: {
+    backgroundColor: RepartoYA.errorFondo,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  badgeChipInconvenienteTexto: {
+    color: RepartoYA.error,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  paradaCardInconveniente: {
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FFFDFD',
+  },
+  badgeInconveniente: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  badgeInconvenienteTexto: {
+    color: RepartoYA.error,
+    fontWeight: '800',
   },
   direccionRow: {
     flexDirection: 'row',
@@ -1022,38 +1427,117 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Footer paradas
-  footerParadasRestantes: {
+  // Estilos de Paradas Entregadas (A bajo de todo)
+  seccionHeaderEntregadas: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: RepartoYA.grisBorde,
+  },
+  badgeContadorEntregadas: {
+    backgroundColor: RepartoYA.exitoFondo,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  badgeContadorEntregadasTexto: {
+    color: RepartoYA.exito,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  paradaCardEntregada: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  filaComercioEntregado: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: RepartoYA.blanco,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 4,
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  badgeChipEntregada: {
+    backgroundColor: RepartoYA.exitoFondo,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: RepartoYA.grisBorde,
+    borderColor: '#86EFAC',
   },
-  iconoRutaPunteadaCustom: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
+  badgeChipEntregadaTexto: {
+    color: RepartoYA.exito,
+    fontSize: 11,
+    fontWeight: '800',
   },
-  iconoRutaPunteada: {
-    fontSize: 20,
-    marginRight: 10,
-  },
-  footerParadasInfo: {
-    flex: 1,
-  },
-  footerParadasTitulo: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: RepartoYA.carbon,
-  },
-  footerParadasDetalle: {
+  comercioSubtituloEntregada: {
     fontSize: 12,
-    color: RepartoYA.grisTexto,
-    marginTop: 1,
+    color: RepartoYA.exito,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  montoEntregado: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: RepartoYA.exito,
+  },
+  botonVerDetalleEntregada: {
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.grisBorde,
+    borderRadius: 12,
+    height: 46,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textoBotonVerDetalleEntregada: {
+    color: RepartoYA.carbon,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Banner cuando todas las paradas han sido entregadas
+  bannerTodasEntregadas: {
+    backgroundColor: RepartoYA.exitoFondo,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.exito,
+  },
+  badgeVerdeGrande: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: RepartoYA.exito,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  badgeVerdeGrandeTexto: {
+    color: RepartoYA.blanco,
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  bannerTodasEntregadasTitulo: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#065F46',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  bannerTodasEntregadasSubtitulo: {
+    fontSize: 13,
+    color: '#047857',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 
   // Estado sin asignar
@@ -1253,5 +1737,90 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     fontSize: 16,
     fontWeight: '700',
+  },
+
+  // HU-68: Estilos de Inicio de Jornada Laboral
+  cardComenzarJornada: {
+    backgroundColor: '#FFF8F3',
+    borderWidth: 1.5,
+    borderColor: RepartoYA.naranjaYA,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: RepartoYA.naranjaYA,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  bannerJornadaPendiente: {
+    marginBottom: 12,
+  },
+  bannerJornadaTitulo: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#B44507',
+    marginBottom: 4,
+  },
+  bannerJornadaTexto: {
+    fontSize: 13,
+    color: '#6B4028',
+    lineHeight: 18,
+  },
+  botonComenzarJornada: {
+    backgroundColor: RepartoYA.naranjaYA,
+    borderRadius: 10,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filaBotonComenzar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconoPlayComenzar: {
+    color: RepartoYA.blanco,
+    fontSize: 16,
+    marginRight: 8,
+    fontWeight: '900',
+  },
+  textoBotonComenzar: {
+    color: RepartoYA.blanco,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  badgeJornadaEnCurso: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  textoJornadaEnCurso: {
+    color: '#065F46',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  botonReordenarParadasBloqueado: {
+    borderColor: '#D1D5DB',
+    backgroundColor: '#F9FAFB',
+  },
+  textoReordenarParadasBloqueado: {
+    color: '#9CA3AF',
+  },
+  botonIrParadaBloqueado: {
+    backgroundColor: '#E5E7EB',
+  },
+  textoBotonIrParadaBloqueado: {
+    color: '#6B7280',
+  },
+  botonVerDetalleBloqueado: {
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
   },
 });

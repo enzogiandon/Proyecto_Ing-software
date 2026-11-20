@@ -64,11 +64,13 @@
 
         <div class="d-flex gap-2">
             <button type="submit" class="btn-itinerario-outline">
-                Filtrar
+                <i class="fas fa-filter"></i>
+                <span>Filtrar</span>
             </button>
             {% if filtro_fecha or filtro_transportista or filtro_estado %}
-                <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline text-muted">
-                    Limpiar
+                <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline text-muted" title="Limpiar todos los filtros">
+                    <i class="fas fa-times"></i>
+                    <span>Limpiar</span>
                 </a>
             {% endif %}
         </div>
@@ -83,11 +85,11 @@
                 <table class="itinerarios-tabla">
                     <thead>
                         <tr>
-                            <th>Itinerario / Fecha <i class="fas fa-arrow-down ms-1 small"></i></th>
-                            <th>Transportista / Vehículo <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Itinerario / Fecha</th>
+                            <th>Transportista / Vehículo</th>
                             <th>Paradas / Remitos</th>
                             <th>Total a cobrar</th>
-                            <th>Estado <i class="fas fa-sort ms-1 small opacity-50"></i></th>
+                            <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -127,12 +129,12 @@
                                 </td>
                                 <td>
                                     <div class="itinerarios-acciones-grupo">
-                                        <a href="{% url 'itinerarios:itinerario_editar' itinerario.pk %}" class="btn-accion-tabla" title="Editar itinerario">
+                                        <a href="{% url 'itinerarios:itinerario_editar' itinerario.pk %}" class="btn {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}btn-ver-detalle-outline{% else %}btn-ver-detalle{% endif %}" title="Editar itinerario">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         {% with primera_parada=itinerario.paradas.first %}
                                             {% if primera_parada %}
-                                                <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn-accion-tabla" title="Reordenar secuencia de paradas">
+                                                <a href="{% url 'itinerarios:itinerario_reordenar' itinerario.pk %}" class="btn {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}btn-ver-detalle-outline{% else %}btn-ver-detalle{% endif %}" title="Reordenar secuencia de paradas">
                                                     <i class="fas fa-sort"></i>
                                                 </a>
                                             {% else %}
@@ -143,9 +145,9 @@
                                             {% endif %}
                                         {% endwith %}
                                         <button type="button"
-                                                class="btn-accion-tabla btn-accion-tabla--danger"
+                                                class="btn-accion-tabla {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}btn-ver-detalle-outline{% else %}btn-accion-tabla--danger{% endif %}"
                                                 title="Eliminar itinerario"
-                                                {% if itinerario.estado == 'finalizado' %}disabled{% else %}onclick="confirmarEliminarItinerario('{% url 'itinerarios:itinerario_eliminar' itinerario.pk %}', 'IT-{{ itinerario.fecha|date:'Y' }}-{{ itinerario.id|stringformat:'05d' }}')"{% endif %}>
+                                                {% if itinerario.estado == 'finalizado' or itinerario.estado == 'en_curso' %}disabled{% else %}onclick="confirmarEliminarItinerario('{% url 'itinerarios:itinerario_eliminar' itinerario.pk %}', 'IT-{{ itinerario.fecha|date:'Y' }}-{{ itinerario.id|stringformat:'05d' }}')"{% endif %}>
                                             <i class="far fa-trash-alt"></i>
                                         </button>
                                     </div>
@@ -163,12 +165,27 @@
                 <div class="itin-paradas-empty__icon">
                     <i class="fas fa-route fa-2x"></i>
                 </div>
-                <div class="itin-paradas-empty__title">No hay itinerarios registrados</div>
-                <p class="itin-paradas-empty__desc mb-3">Creá un nuevo itinerario para comenzar a planificar las entregas del día.</p>
-                <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
-                    <i class="fas fa-plus"></i>
-                    <span>Agregar itinerario</span>
-                </a>
+                {% if filtro_fecha or filtro_transportista or filtro_estado %}
+                    <div class="itin-paradas-empty__title">No se encontraron itinerarios con los filtros aplicados</div>
+                    <p class="itin-paradas-empty__desc mb-3">Probá cambiando los criterios de búsqueda o limpiá los filtros para ver todos los itinerarios.</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+                            <i class="fas fa-times"></i>
+                            <span>Limpiar filtros</span>
+                        </a>
+                        <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Agregar itinerario</span>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="itin-paradas-empty__title">No hay itinerarios registrados</div>
+                    <p class="itin-paradas-empty__desc mb-3">Creá un nuevo itinerario para comenzar a planificar las entregas del día.</p>
+                    <a href="{% url 'itinerarios:itinerario_crear' %}" class="btn-itinerario-primary">
+                        <i class="fas fa-plus"></i>
+                        <span>Agregar itinerario</span>
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>

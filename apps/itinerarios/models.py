@@ -1,11 +1,13 @@
 # itinerarios/models.py
 
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 
 class EstadoItinerario(models.TextChoices):
     PENDIENTE = "pendiente", "Pendiente"
     ASIGNADO = "asignado", "Asignado"
+    EN_CURSO = "en_curso", "En curso"
     FINALIZADO = "finalizado", "Finalizado"
 
 

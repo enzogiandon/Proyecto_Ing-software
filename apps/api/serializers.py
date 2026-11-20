@@ -20,6 +20,25 @@ User = get_user_model()
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["username"] = user.username
+        token["first_name"] = user.first_name
+        token["last_name"] = user.last_name
+        token["is_active"] = user.is_active
+
+        # Inyectar vehículo si tiene perfil de transportista
+        if hasattr(user, "perfil_transportista") and user.perfil_transportista.vehiculo:
+            v = user.perfil_transportista.vehiculo
+            token["vehiculo"] = {
+                "id": v.id,
+                "patente": v.patente,
+                "modelo": v.modelo or "Camión de Reparto",
+                "estado": v.estado,
+            }
+        return token
+
     def validate(self, attrs):
         username = attrs.get(self.username_field)
         password = attrs.get("password")
@@ -27,7 +46,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         try:
             user = User.objects.get(**{self.username_field: username})
         except User.DoesNotExist:
-            raise AuthenticationFailed("Credenciales inválidas.")
+            raise AuthenticationFailed(
+                {
+                    "detail": "El DNI es incorrecto. Intentá nuevamente.",
+                    "codigo": "DNI_INCORRECTO",
+                }
+            )
 
 
         if user and user.check_password(password) and not user.is_active:
@@ -45,10 +69,20 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             if user.intentos_fallidos >= 5:
                 user.is_active = False
                 user.save(update_fields=['intentos_fallidos', 'is_active'])
-                raise AuthenticationFailed("Superaste el límite de intentos. Cuenta bloqueada.")
+                raise AuthenticationFailed(
+                    {
+                        "detail": "Superaste el límite de intentos. Cuenta bloqueada.",
+                        "codigo": "CUENTA_BLOQUEADA",
+                    }
+                )
 
             user.save(update_fields=['intentos_fallidos'])
-            raise AuthenticationFailed("Contraseña incorrecta.")
+            raise AuthenticationFailed(
+                {
+                    "detail": "La clave es incorrecta. Intentá nuevamente.",
+                    "codigo": "CLAVE_INCORRECTA",
+                }
+            )
 
         if user.intentos_fallidos > 0:
             user.intentos_fallidos = 0
@@ -73,9 +107,11 @@ def calcular_monto_recaudar(parada) -> str:
 
 
 class ComercioSerializer(serializers.ModelSerializer):
+    razonSocial = serializers.CharField(source="razon_social", read_only=True)
+
     class Meta:
         model = Comercio
-        fields = ["id", "razon_social", "cuit", "domicilio", "telefono"]
+        fields = ["id", "razon_social", "razonSocial", "cuit", "domicilio", "telefono"]
 
 
 class RemitoSerializer(serializers.ModelSerializer):
@@ -87,13 +123,30 @@ class RemitoSerializer(serializers.ModelSerializer):
 class ListaParadaSerializer(serializers.ModelSerializer):
     comercio = ComercioSerializer(read_only=True)
     monto_recaudar = serializers.SerializerMethodField()
+    montoCobranza = serializers.SerializerMethodField()
+    cantidadRemitos = serializers.SerializerMethodField()
 
     class Meta:
         model = Parada
-        fields = ["id", "orden", "estado", "comercio", "monto_recaudar"]
+        fields = [
+            "id",
+            "orden",
+            "estado",
+            "comercio",
+            "monto_recaudar",
+            "montoCobranza",
+            "cantidadRemitos",
+        ]
 
     def get_monto_recaudar(self, obj) -> str:
         return calcular_monto_recaudar(obj)
+
+    def get_montoCobranza(self, obj) -> float:
+        total = obj.remitos.aggregate(total=Sum("total"))["total"] or Decimal("0.00")
+        return float(total)
+
+    def get_cantidadRemitos(self, obj) -> int:
+        return obj.remitos.count()
 
 
 class ProblemaParadaSerializer(serializers.ModelSerializer):
@@ -114,6 +167,8 @@ class ProblemaParadaSerializer(serializers.ModelSerializer):
 
 
 class EvidenciaParadaSerializer(serializers.ModelSerializer):
+    archivo = serializers.ImageField()
+
     class Meta:
         model = EvidenciaParada
         fields = ["id", "parada", "archivo", "fecha"]
@@ -124,6 +179,8 @@ class DetalleParadaSerializer(serializers.ModelSerializer):
     comercio = ComercioSerializer(read_only=True)
     remitos = RemitoSerializer(many=True, read_only=True)
     monto_recaudar = serializers.SerializerMethodField()
+    montoCobranza = serializers.SerializerMethodField()
+    cantidadRemitos = serializers.SerializerMethodField()
     evidencias = EvidenciaParadaSerializer(many=True, read_only=True)
 
     class Meta:
@@ -136,11 +193,20 @@ class DetalleParadaSerializer(serializers.ModelSerializer):
             "comercio",
             "remitos",
             "monto_recaudar",
+            "montoCobranza",
+            "cantidadRemitos",
             "evidencias",
         ]
 
     def get_monto_recaudar(self, obj) -> str:
         return calcular_monto_recaudar(obj)
+
+    def get_montoCobranza(self, obj) -> float:
+        total = obj.remitos.aggregate(total=Sum("total"))["total"] or Decimal("0.00")
+        return float(total)
+
+    def get_cantidadRemitos(self, obj) -> int:
+        return obj.remitos.count()
 
 
 class GuardarRutaSerializer(serializers.Serializer):
@@ -224,22 +290,31 @@ class RegistrarRemitosInputSerializer(serializers.Serializer):
     )
 
     def validate_remitos(self, value):
+        parada = self.context["parada"]
         remitos = []
         for item in value:
             if not item or not str(item).strip():
                 raise serializers.ValidationError("No puede haber remitos vacíos.")
 
-            item_str = str(item).strip()
-            try:
-                remito = Remito.objects.get(pk=int(item_str))
-            except (TypeError, ValueError, Remito.DoesNotExist):
-                remito = Remito.objects.filter(numero=item_str).first()
-                if remito is None:
-                    raise serializers.ValidationError(
-                        f"El remito '{item_str}' no existe o no pertenece a la operación."
-                    )
+            numero = str(item).strip()
+            coincidencias = list(
+                Remito.objects.filter(
+                    numero=numero,
+                    comercio=parada.comercio,
+                    estado__in=[EstadoRemito.PENDIENTE, EstadoRemito.ASIGNADO],
+                )[:2]
+            )
+            if not coincidencias:
+                raise serializers.ValidationError(
+                    f"El remito '{numero}' no existe o no pertenece a la operación."
+                )
+            if len(coincidencias) > 1:
+                raise serializers.ValidationError(
+                    f"El remito '{numero}' es ambiguo: hay más de un remito con "
+                    "ese número para este comercio."
+                )
 
-            remitos.append(remito)
+            remitos.append(coincidencias[0])
 
         if not remitos:
             raise serializers.ValidationError("Debe enviar al menos un remito.")

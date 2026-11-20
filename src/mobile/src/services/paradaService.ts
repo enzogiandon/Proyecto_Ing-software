@@ -2,9 +2,12 @@
 // Gestión de estado y consulta de parada seleccionada con soporte dinámico y contratos de Django
 
 import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
+import { getBackendBaseUrl } from './config';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { ParadaItem } from '../types/itinerario';
-import { MOCK_ITINERARIO_ASIGNADO, MOCK_ITINERARIO_44444444 } from '../data/mockItinerario';
+import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
+import * as mockItinData from '../data/mockItinerario';
+import { entregarItinerarioActualizado } from './itinerarioService';
 
 // Parada seleccionada en memoria durante la navegación
 let paradaSeleccionadaActual: DetalleParada = MOCK_PARADA_SELECCIONADA;
@@ -28,13 +31,20 @@ export const getParadaSeleccionada = (): DetalleParada => {
 export const obtenerParadaSeleccionadaOId = (paradaId?: number): DetalleParada => {
   if (paradaId !== undefined && paradaSeleccionadaActual?.id !== paradaId) {
     const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
-    const itinerarioUsuario = usuario?.dni === '44444444'
-      ? MOCK_ITINERARIO_44444444
+    const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+    const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222;
+    const itin4444 = (mockItinData as any).MOCK_ITINERARIO_44444444 || itin2222;
+
+    const itinerarioUsuario = usuario?.dni === '11111111'
+      ? (itin1111 || MOCK_ITINERARIO_ASIGNADO)
+      : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+      ? (itin2222 || itin4444 || MOCK_ITINERARIO_ASIGNADO)
       : MOCK_ITINERARIO_ASIGNADO;
     const paradasDisponibles = [
       ...(itinerarioUsuario?.paradas || []),
       ...(MOCK_ITINERARIO_ASIGNADO?.paradas || []),
-      ...((MOCK_ITINERARIO_44444444 as any)?.paradas || []),
+      ...(itin1111?.paradas || []),
+      ...(itin2222?.paradas || []),
     ];
     const encontrada =
       paradasDisponibles.find((p) => p.id === paradaId) ||
@@ -52,6 +62,7 @@ export const actualizarEstadoCobroParada = (
   estadoParada?: DetalleParada['estado']
 ) => {
   if (paradaSeleccionadaActual) {
+    const nuevoEstado = estadoParada || (estado === 'validado' ? 'finalizada' : 'pendiente');
     const verificada = paradasVerificadas.has(paradaSeleccionadaActual);
     paradaSeleccionadaActual = {
       ...paradaSeleccionadaActual,
@@ -59,6 +70,113 @@ export const actualizarEstadoCobroParada = (
       ...(estadoParada ? { estado: estadoParada } : {}),
     };
     if (verificada) paradasVerificadas.add(paradaSeleccionadaActual);
+
+    // Sincronizar también en mocks para reflejar la parada entregada en el itinerario
+    const targetId = paradaSeleccionadaActual.id;
+    const actualizarMock = (itin: any) => {
+      if (!itin || !Array.isArray(itin.paradas)) return false;
+      const p = itin.paradas.find((item: any) => item.id === targetId);
+      if (p) {
+        p.estado = nuevoEstado;
+        if ((nuevoEstado as string) === 'finalizada' || (nuevoEstado as string) === 'completada') {
+          p.subtitulo = `Parada ${p.orden} de ${itin.totalParadas || itin.paradas.length} · Entregada`;
+        }
+        itin.paradasCompletadas = itin.paradas.filter(
+          (item: any) => (item.estado as string) === 'finalizada' || (item.estado as string) === 'completada'
+        ).length;
+        return true;
+      }
+      return false;
+    };
+
+    let modificado = false;
+    if (actualizarMock(MOCK_ITINERARIO_ASIGNADO)) modificado = true;
+    if (actualizarMock((mockItinData as any).MOCK_ITINERARIO_11111111)) modificado = true;
+    if (actualizarMock((mockItinData as any).MOCK_ITINERARIO_22222222)) modificado = true;
+    if (actualizarMock((mockItinData as any).MOCK_ITINERARIO_44444444)) modificado = true;
+
+    if (modificado) {
+      const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+      const itinActivo = usuario?.dni === '11111111'
+        ? (mockItinData as any).MOCK_ITINERARIO_11111111
+        : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+        ? ((mockItinData as any).MOCK_ITINERARIO_22222222 || (mockItinData as any).MOCK_ITINERARIO_44444444)
+        : MOCK_ITINERARIO_ASIGNADO;
+      if (itinActivo) {
+        entregarItinerarioActualizado({
+          ...itinActivo,
+          paradas: [...itinActivo.paradas],
+        });
+      }
+    }
+  }
+};
+
+/**
+ * Actualiza el estado de la parada con inconveniente ('error') y la desplaza
+ * automáticamente a la última posición de las paradas pendientes en el itinerario.
+ */
+export const actualizarEstadoInconvenienteParada = (paradaId: number) => {
+  if (paradaSeleccionadaActual && paradaSeleccionadaActual.id === paradaId) {
+    paradaSeleccionadaActual = {
+      ...paradaSeleccionadaActual,
+      estado: 'error',
+    };
+  }
+
+  const moverEnMock = (itin: any) => {
+    if (!itin || !Array.isArray(itin.paradas)) return false;
+    const esEntregada = (p: any) =>
+      p.estado === 'finalizada' || p.estado === 'completada';
+
+    const pendientes = itin.paradas.filter((p: any) => !esEntregada(p));
+    const entregadas = itin.paradas.filter(esEntregada);
+
+    const idx = pendientes.findIndex((p: any) => p.id === paradaId);
+    if (idx !== -1) {
+      const [afectada] = pendientes.splice(idx, 1);
+      afectada.estado = 'error';
+      pendientes.push(afectada);
+
+      const todas = [...pendientes, ...entregadas];
+      todas.forEach((p, i) => {
+        p.orden = i + 1;
+        const etiqueta =
+          p.estado === 'finalizada' || p.estado === 'completada'
+            ? 'Entregada'
+            : p.estado === 'error'
+            ? 'Con inconveniente'
+            : i === 0
+            ? 'Próxima entrega'
+            : 'A continuación';
+        p.subtitulo = `Parada ${p.orden} de ${itin.totalParadas || todas.length} · ${etiqueta}`;
+      });
+
+      itin.paradas = todas;
+      return true;
+    }
+    return false;
+  };
+
+  let modificado = false;
+  if (moverEnMock(MOCK_ITINERARIO_ASIGNADO)) modificado = true;
+  if (moverEnMock((mockItinData as any).MOCK_ITINERARIO_11111111)) modificado = true;
+  if (moverEnMock((mockItinData as any).MOCK_ITINERARIO_22222222)) modificado = true;
+  if (moverEnMock((mockItinData as any).MOCK_ITINERARIO_44444444)) modificado = true;
+
+  if (modificado) {
+    const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+    const itinActivo = usuario?.dni === '11111111'
+      ? (mockItinData as any).MOCK_ITINERARIO_11111111
+      : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+      ? ((mockItinData as any).MOCK_ITINERARIO_22222222 || (mockItinData as any).MOCK_ITINERARIO_44444444)
+      : MOCK_ITINERARIO_ASIGNADO;
+    if (itinActivo) {
+      entregarItinerarioActualizado({
+        ...itinActivo,
+        paradas: [...itinActivo.paradas],
+      });
+    }
   }
 };
 
@@ -131,7 +249,7 @@ export function normalizarParadaBackend(data: any): DetalleParada {
     },
     montoCobranza: monto,
     cantidadRemitos: data.remitos?.length ?? MOCK_PARADA_SELECCIONADA.cantidadRemitos,
-    estadoCobro: data.estadoCobro || (data.estado === 'completada' ? 'validado' : 'pendiente'),
+    estadoCobro: data.estadoCobro || (data.estado === 'completada' || data.estado === 'finalizada' ? 'validado' : 'pendiente'),
     remitos: (data.remitos && data.remitos.length > 0)
       ? data.remitos.map((r: any, idx: number) => ({
           id: r.id ?? idx + 1,
@@ -160,7 +278,7 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-    const response = await fetch(`${API_BASE_URL}/api/paradas/${idObjetivo}/`, {
+    const response = await fetch(`${getBackendBaseUrl()}/api/paradas/${idObjetivo}/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -186,13 +304,20 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
     // Si no hay backend, buscar la parada solicitada en el itinerario
     if (paradaId !== undefined) {
       const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
-      const itinerarioUsuario = usuario?.dni === '44444444'
-        ? MOCK_ITINERARIO_44444444
+      const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+      const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222;
+      const itin4444 = (mockItinData as any).MOCK_ITINERARIO_44444444 || itin2222;
+
+      const itinerarioUsuario = usuario?.dni === '11111111'
+        ? (itin1111 || MOCK_ITINERARIO_ASIGNADO)
+        : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+        ? (itin2222 || itin4444 || MOCK_ITINERARIO_ASIGNADO)
         : MOCK_ITINERARIO_ASIGNADO;
       const paradasDisponibles = [
         ...(itinerarioUsuario?.paradas || []),
         ...(MOCK_ITINERARIO_ASIGNADO?.paradas || []),
-        ...((MOCK_ITINERARIO_44444444 as any)?.paradas || []),
+        ...(itin1111?.paradas || []),
+        ...(itin2222?.paradas || []),
       ];
       const encontrada =
         paradasDisponibles.find((p) => p.id === paradaId) ||

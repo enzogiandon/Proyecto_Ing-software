@@ -66,6 +66,7 @@
 
     <!-- Tabla de Cobranzas -->
     <div class="itinerarios-card p-3 overflow-hidden">
+        {% if cobranzas %}
             <div class="table-responsive">
                 <table class="itinerarios-tabla">
                     <thead>
@@ -127,9 +128,9 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if cobranza.observacion_ajuste %}
-                                        <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cobranza.observacion_ajuste }}">
-                                            <i class="fas fa-circle-info"></i> {{ cobranza.observacion_ajuste }}
+                                    {% if cobranza.observacion %}
+                                        <span class="d-inline-block text-truncate small text-danger" style="max-width: 180px;" title="{{ cobranza.observacion }}">
+                                            <i class="fas fa-circle-info"></i> {{ cobranza.observacion }}
                                         </span>
                                     {% else %}
                                         <span class="text-muted small">-</span>
@@ -143,28 +144,39 @@
                                         title="Ver comprobantes y pagos">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        
+                                        {% if cobranza.estado == 'registrado' %}
+                                            <!-- Botón Ajustar (deshabilitado hasta realizar arqueo) -->
+                                            <button type="button" 
+                                                class="btn btn-ver-detalle-outline" 
+                                                disabled 
+                                                title="Debe realizar el arqueo/validación antes de ajustar diferencias">
+                                                <i class="fas fa-pen-to-square"></i>
+                                            </button>
 
-                                        <!-- Botón Ajustar (visible si tiene discrepancia o está registrada) -->
-                                        <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
-                                            class="btn {% if cobranza.estado == 'difiere' or cobranza.estado == 'registrado' %}btn-ver-detalle{% else %}btn-ver-detalle-outline{% endif %}" 
-                                            title="Ajustar importe por diferencia">
-                                            <i class="fas fa-pen-to-square"></i>
-                                        </a>
+                                            <!-- Botón Validar -->
+                                            <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
+                                            class="btn btn-ver-detalle-primary" 
+                                            title="Arqueo y validación de importes">
+                                                <i class="fas fa-circle-check"></i> Validar
+                                            </a>
+                                        {% else %}
+                                            <!-- Botón Ajustar (habilitado para cobranzas validadas) -->
+                                            <a href="{% url 'cobranza:cobranza_ajustar' cobranza.pk %}" 
+                                                class="btn btn-ver-detalle" 
+                                                title="Ajustar importe por diferencia">
+                                                <i class="fas fa-pen-to-square"></i>
+                                            </a>
 
-                                        <!-- Botón Validar -->
-                                        <a href="{% url 'cobranza:cobranza_validar' cobranza.pk %}" 
-                                        class="btn {% if cobranza.estado == 'aprobado' %}btn-ver-detalle-primary-outline{% else %}btn-ver-detalle-primary{% endif %}" 
-                                        title="Arqueo y validación de importes">
-                                            <i class="fas fa-circle-check"></i> Validar
-                                        </a>
+                                            <!-- Botón Validar (ya validada) -->
+                                            <button type="button" 
+                                            class="btn btn-ver-detalle-primary-outline" 
+                                            disabled 
+                                            title="Cobranza ya validada">
+                                                <i class="fas fa-circle-check"></i> Validada
+                                            </button>
+                                        {% endif %}
                                     </div>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <i class="fas fa-inbox fs-2 d-block mb-2 text-secondary"></i>
-                                    No se encontraron cobranzas registradas con los filtros seleccionados.
                                 </td>
                             </tr>
                     {% endfor %}
@@ -174,6 +186,15 @@
             <div class="itinerarios-tabla-footer">
                 Se muestran {{ cobranzas|length }} cobranzas. Ajustá los filtros para acotar la búsqueda.
             </div>
+        {% else %}
+            <div class="itin-paradas-empty mb-0 border-0">
+                <div class="itin-paradas-empty__icon">
+                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                </div>
+                <div class="itin-paradas-empty__title">No hay cobranzas registradas</div>
+                <p class="itin-paradas-empty__desc mb-3">Aún no se han cargado cobranzas.</p>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Paginación -->

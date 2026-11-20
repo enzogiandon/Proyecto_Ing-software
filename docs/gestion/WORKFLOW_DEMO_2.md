@@ -88,17 +88,16 @@
     `facturas/seeds-facturas/30654321090_20261110_DISTR-01.csv`.
   * *Validación:* Mensaje de éxito; los remitos ingresan en estado `Pendiente`.
   * *Regla verificada:* Desacople total entre fecha de emisión de factura y fecha de despacho logístico.
-* **Escenario 1.2 — Rechazo por Duplicado con Primera Planilla en Orden Ascendente (45 seg):**  
-  * *Acción:* En `/remitos/importaciones/nueva`, seleccionar `Cerveceria La Diagonal S.A.` e intentar importar la **primera planilla en orden alfabético/ascendente**:  
-    `facturas/seeds-facturas/30654321090_20261027_DISTR-01.csv`.
-  * *Validación:* El sistema detecta inmediatamente colisión con los remitos ya sembrados en base de datos (`0005-00024715`, `0002-00023458` y `0002-00023496`), rechaza el lote y marca:  
-    *"Importación rechazada: se detectaron 3 errores en las filas observadas de 30654321090_20261027_DISTR-01.csv"*, detallando en filas 2, 3 y 4: *"El número de remito debe ser único por marca proveedora."*
-  * *Garantía de entorno:* **Este es el único archivo con conflicto**; todas las demás planillas del directorio están libres de colisiones para cualquier otra prueba.
-* **Escenario 1.3 — Validación de Archivo Inválido / Formato Corrupto (30 seg):**  
-  * *Acción:* Subir el archivo preparado con cabeceras rotas:  
-    `facturas/seeds-facturas/formato_invalido_error.csv`.
-  * *Validación:* El sistema rechaza la carga mostrando en pantalla:  
-    *"Importación fallida: la estructura del archivo seleccionado es inválida"*, sin caída del servidor (cero error 500).
+* **Escenario 1.2 — Rechazo Atómico por Duplicado al Reintentar la Misma Planilla (45 seg):**  
+  * *Acción:* En `/remitos/importaciones/nueva`, seleccionar `Cerveceria La Diagonal S.A.` e intentar importar nuevamente la **misma planilla recién subida**:  
+    `facturas/seeds-facturas/30654321090_20261110_DISTR-01.csv`.
+  * *Validación:* El sistema detecta inmediatamente que los remitos ya existen en base de datos para esa marca, rechaza el lote completo de forma atómica y reporta:  
+    *"Importación rechazada: se detectaron errores en las filas observadas... El número de remito debe ser único por marca proveedora."*
+  * *Garantía de entorno:* No se requieren planillas corruptas externas; la validación de unicidad se prueba directamente contra la base de datos real.
+* **Escenario 1.3 — Validación de Marca Inactiva HU-09 / HU-02 (45 seg):**  
+  * *Acción:* En `/remitos/importaciones/nueva`, intentar subir una planilla seleccionando la marca inhabilitada `Inactiva Prueba` (`30999999991`, sembrada en base).  
+  * *Validación:* El backend rechaza la ingesta mostrando en pantalla:  
+    *"La marca Inactiva Prueba (CUIT 30999999991) se encuentra inactiva"*, protegiendo la integridad del catálogo de marcas (HU-09 / HU-242).
 * **Escenario 1.4 — Unicidad Compuesta `Marca + Remito` (45 seg):**  
   * *Acción:* Ir a `/remitos/` y filtrar en el buscador por el número correlativo `0001-00099999`.
   * *Validación:* Se observan dos remitos idénticos en número coexistiendo en la base de datos:
@@ -107,13 +106,13 @@
   * *Regla verificada:* Cumplimiento estricto del constraint `models.UniqueConstraint(fields=["marca", "numero"])`.
 * **Escenario 1.5 — Edición de Remito Pendiente vs. Bloqueo en Itinerario (45 seg):**  
   * *Acción:* En `/remitos/`, editar el remito pendiente `0090-00028325` (Lacteos El Tambo, $526.471,00) modificando su monto -> Éxito.
-  * *Prueba de bloqueo:* Intentar editar el remito `0005-00024715` (asignado a la Parada 1 del itinerario activo) -> El sistema restringe la modificación para preservar la consistencia de carga del vehículo.
+  * *Prueba de bloqueo:* Intentar editar un remito asignado a un itinerario activo -> El sistema restringe la modificación para preservar la consistencia de carga del vehículo.
 * **Escenario 1.6 — Consulta y Descarte de Lote Erróneo HU-38 / HU-40 (45 seg):**  
-  * *Acción 1 (HU-38):* En `/remitos/importaciones/`, abrir el detalle del lote en estado `Rechazado` (`30712345671_lote_con_errores.csv`) y mostrar el desglose de errores por fila (filas 2 y 5 con CUITs y razón social observados).
-  * *Acción 2 (HU-40):* Abrir el lote `Lote Descartable` (`30709876542_lote_descartable.csv` con remitos `0090-00025539` y `0090-00003921` en estado `Pendiente`). Hacer click en **Eliminar Importación**.
+  * *Acción 1 (HU-38):* En `/remitos/importaciones/`, abrir el detalle del lote precargado en estado `Rechazado` (`30712345671_lote_con_errores.csv` de `Gaseosas del Sur S.A.`) y mostrar el desglose de errores por fila (filas 2 y 5 con CUITs y razón social observados).
+  * *Acción 2 (HU-40):* Abrir un lote con remitos en estado `Pendiente` (el lote recién importado o de prueba) y hacer click en **Eliminar Importación**.
   * *Validación:* Se eliminan físicamente el lote y sus remitos pendientes asociados con mensaje de confirmación exitosa.
 * **Talk Track:**
-  > *"Con el rol de Planificación ejecutamos la ingesta de las planillas oficiales. El backend valida el formato y desacopla la fecha contable de la de despacho. Si intentamos importar la primera planilla en orden ascendente (30654321090_20261027_DISTR-01.csv), el sistema detecta que sus remitos ya existen para esa marca y rechaza el lote indicando las filas exactas en conflicto. Asimismo, ante un archivo dañado o con cabeceras rotas, el sistema reporta el fallo sin caerse. Comprobamos también que remitos con igual numeración coexisten entre marcas distintas (0001-00099999), que un remito pendiente permite correcciones pero se bloquea al estar ruteado, y que los lotes no ruteados pueden eliminarse limpiamente conforme a la HU-40."*
+  > *"Con el rol de Planificación ejecutamos la ingesta de las planillas oficiales. El backend valida el formato y desacopla la fecha contable de la de despacho. Al reintentar subir la misma planilla (30654321090_20261110_DISTR-01.csv), el sistema detecta que sus remitos ya existen para esa marca y rechaza el lote indicando las filas exactas en conflicto. Además, comprobamos que marcas inactivas o dadas de baja bloquean la carga protegiendo el catálogo. Demostramos también que remitos con igual numeración coexisten entre marcas distintas (0001-00099999), que un remito pendiente permite correcciones pero se bloquea al estar ruteado, auditamos las excepciones de un lote rechazado conforme a la HU-38 y eliminamos físicamente lotes no ruteados conforme a la HU-40."*
 
 ---
 
@@ -253,8 +252,8 @@
   - Backend Django corriendo en `http://localhost:8000/`.
   - Servidor Metro / Expo levantado para la aplicación móvil (`src/mobile`).
 - [ ] **Archivos de prueba listos en `facturas/seeds-facturas/`:**
-  - Archivo válido: `30654321090_20261110_DISTR-01.csv`.
-  - Archivo inválido: `formato_invalido_error.csv`.
+  - Archivo oficial válido: `30654321090_20261110_DISTR-01.csv` (Cervecería La Diagonal).
+  - Archivo complementario: `30709876542_20261110_DISTR-02.csv` (Snacks Andinos).
 - [ ] **Pestañas de navegador preparadas:**
   - Pestaña 1: Tablero Taiga (Sprint 2 cerrado, 96 pts).
   - Pestaña 2: Web RepartoYA deslogueada (lista para `33333333` Planificación).

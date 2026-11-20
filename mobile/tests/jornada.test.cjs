@@ -20,6 +20,7 @@ function loadModule(file, modules = {}, globals = {}) {
     exports,
     require(name) {
       if (name in modules) return modules[name];
+      if (name === './config') return { getBackendBaseUrl: () => 'http://test', BACKEND_URL: 'http://test' };
       if (name.endsWith('.png')) return name;
       throw new Error('Importación sin preparar: ' + name);
     },

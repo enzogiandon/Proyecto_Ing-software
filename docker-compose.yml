@@ -31,15 +31,17 @@ services:
   #     --save ""
 
   web:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: st_web
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/app
+      - ./backend:/app
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - ./backend/.env
     # depends_on:
     #   db:
     #     condition: service_healthy

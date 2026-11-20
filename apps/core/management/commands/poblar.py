@@ -204,6 +204,27 @@ class Command(BaseCommand):
             personal.groups.add(grupo_personal)
             personal.save()
 
+            admin_suspendido, _ = Usuario.objects.get_or_create(
+                username="55555555",
+                defaults={
+                    "first_name": "Administrativo",
+                    "last_name": "Suspendido",
+                    "email": "admin.suspendido@softech.com.ar",
+                    "telefono": "1155551111",
+                    "is_staff": True,
+                    "is_superuser": False,
+                    "is_active": False,
+                    "intentos_fallidos": 5,
+                },
+            )
+            admin_suspendido.is_staff = True
+            admin_suspendido.is_superuser = False
+            admin_suspendido.is_active = False
+            admin_suspendido.intentos_fallidos = 5
+            admin_suspendido.set_password("123")
+            admin_suspendido.groups.add(grupo_planificacion)
+            admin_suspendido.save()
+
             # ------------------------------------------------------------------
             # 2. Vehículos
             # ------------------------------------------------------------------
@@ -787,6 +808,7 @@ class Command(BaseCommand):
         self.stdout.write("  • Administrativo Conciliacion: 22222222 (clave: 123)")
         self.stdout.write("  • Administrativo Planificacion: 33333333 (clave: 123)")
         self.stdout.write("  • Administrativo Gestion Personal: 44444444 (clave: 123)")
+        self.stdout.write("  • Administrativo Suspendido: 55555555 (clave: 123)")
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
         self.stdout.write("  • Choferes / Transportistas: 5 perfiles activos/configurados")
@@ -808,6 +830,7 @@ class Command(BaseCommand):
         self.stdout.write("   • Admin Conciliación   : 22222222 | Clave: 123 (Cobranzas, Arqueo, Ajuste con DNI registrado)")
         self.stdout.write("   • Admin Planificación  : 33333333 | Clave: 123 (Planillas, Remitos, Diagramación)")
         self.stdout.write("   • Admin Personal       : 44444444 | Clave: 123 (Choferes, Desbloqueo)")
+        self.stdout.write("   • Admin Suspendido     : 55555555 | Clave: 123 (Cuenta inhabilitada / suspendida para pruebas HU-66 / Login)")
 
         self.stdout.write(self.style.WARNING("\n2. Transportistas (Choferes - App Móvil / Rutas)"))
         self.stdout.write("   • Chofer 1: DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD")

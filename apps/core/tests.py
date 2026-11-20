@@ -530,3 +530,12 @@ class PoblarCommandTests(TestCase):
         self.assertEqual(Remito.objects.count(), 0)
         self.assertEqual(Parada.objects.count(), 0)
         self.assertEqual(Itinerario.objects.count(), 0)
+
+        # Usuario administrativo suspendido para caso de prueba
+        admin_susp = get_user_model().objects.get(username="55555555")
+        self.assertFalse(admin_susp.is_active)
+        self.assertEqual(admin_susp.intentos_fallidos, 5)
+        self.assertTrue(admin_susp.is_staff)
+        self.assertTrue(
+            admin_susp.groups.filter(name=Grupos.ADMIN_PLANIFICACION).exists()
+        )

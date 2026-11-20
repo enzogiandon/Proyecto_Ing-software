@@ -50,6 +50,7 @@
 | **Admin Conciliación** | `22222222` | `123` | Módulo de Cobranzas, arqueo de caja y registro auditado de ajustes con DNI. |
 | **Admin Planificación** | `33333333` | `123` | Ingesta de planillas, gestión de remitos y diagramación de itinerarios. |
 | **Admin Personal** | `44444444` | `123` | Gestión de choferes, habilitaciones y desbloqueo de cuentas. |
+| **Admin Suspendido** | `55555555` | `123` | Cuenta administrativa inhabilitada/suspendida para pruebas de login y reactivación. |
 | **Chofer 1 (Activo Completo)** | `1234567` | `123` | Lautaro Gómez — Móvil: `AF123CD` (Mercedes-Benz). Itinerario activo hoy (4 paradas). |
 | **Chofer 2 (Completo Avanzado)** | `12345678` | `123` | Martín Pérez — Móvil: `AG456EF` (Iveco). Itinerario con 5 paradas y ruta "Ruta Costera 12". |
 | **Chofer 3 (Bloqueado)** | `12345679` | `123` | Carlos Bloqueado (Cuenta inhabilitada por 5 intentos fallidos, para prueba HU-11/66). |

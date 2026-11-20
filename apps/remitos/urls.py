@@ -20,6 +20,7 @@ from .views import (
     ListaImportacion,
     ListaMarca,
     ListaRemito,
+    ReactivarMarca,
 )
 
 app_name = "remitos"
@@ -40,6 +41,7 @@ urlpatterns = [
     path("marcas/<int:pk>/editar", EditarMarca.as_view(), name="marca_editar"),
     path("marcas/nuevo", CrearMarca.as_view(), name="marca_crear"),
     path("marcas/<int:pk>/eliminar", EliminarMarca.as_view(), name="marca_eliminar"),
+    path("marcas/<int:pk>/reactivar", ReactivarMarca.as_view(), name="marca_reactivar"),
 
     path("comercios/", ListaComercio.as_view(), name="comercio_lista"),
     path("comercios/<int:pk>/editar", EditarComercio.as_view(), name="comercio_editar"),

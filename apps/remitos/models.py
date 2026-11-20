@@ -21,7 +21,7 @@ class EstadoRemito(models.TextChoices):
 
 
 class Marca(models.Model):
-    nombre = models.CharField(max_length=50, unique=True)
+    nombre = models.CharField(max_length=50)
     cuit = models.CharField(max_length=11, unique=True)
     activo = models.BooleanField(default=True)
 

@@ -65,6 +65,25 @@
                                            title="Editar marca">
                                             <i class="fas fa-edit"></i>
                                         </a>
+
+                                        <!-- Botón Eliminar / Reactivar -->
+                                        {% if marca.activo %}
+                                        <a href="{% url 'remitos:marca_eliminar' marca.pk %}" 
+                                           class="btn btn-outline-danger btn-sm py-1 px-2" 
+                                           title="Eliminar marca">
+                                            <i class="far fa-trash-alt"></i> Eliminar
+                                        </a>
+                                        {% else %}
+                                        <form action="{% url 'remitos:marca_reactivar' marca.pk %}" method="post" class="d-inline m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" 
+                                                    class="btn btn-outline-success btn-sm py-1 px-2" 
+                                                    title="Reactivar marca"
+                                                    onclick="return confirm('¿Seguro que deseas reactivar esta marca?');">
+                                                <i class="fas fa-rotate-left"></i> Reactivar
+                                            </button>
+                                        </form>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

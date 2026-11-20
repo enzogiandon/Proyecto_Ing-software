@@ -353,29 +353,87 @@
   color: var(--color-text, #1b1b1f);
 }
 
-.itin-input-action-group {
+/* Grupo integrado de fecha y botón de actualización */
+.itin-date-group {
   display: flex;
-  gap: var(--spacing-8, 8px);
-  align-items: center;
+  width: 100%;
 }
 
-.itin-input-action-group .form-control {
-  flex: 1 1 auto;
+.itin-date-group .form-control {
+  height: 40px;
+  border: 1px solid var(--color-border, #d1cac3);
+  border-right: none;
+  border-radius: var(--radius-md, 8px) 0 0 var(--radius-md, 8px) !important;
+  font-size: 14px;
+  color: var(--color-text, #1b1b1f);
+  background-color: var(--color-surface, #ffffff);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.itin-date-group .form-control:focus {
+  border-color: var(--color-primary, #123c6b);
+  box-shadow: 0 0 0 3px var(--color-primary-focus-ring, rgba(18, 60, 107, 0.15));
+  z-index: 3;
 }
 
 .itin-btn-actualizar {
-  flex: 0 0 auto;
-  white-space: nowrap;
+  height: 40px;
+  padding: 0 16px;
+  background-color: #f7f5f2;
+  border: 1px solid var(--color-border, #d1cac3);
+  border-left: 1px solid var(--color-border, #d1cac3);
+  border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0 !important;
+  color: var(--color-primary, #123c6b);
+  font: 600 13px/normal var(--font-family);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 0 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  z-index: 2;
 }
 
-.itin-feedback-aviso {
+.itin-btn-actualizar:hover:not(:disabled) {
+  background-color: var(--color-bg, #fff6ec);
+  color: var(--color-accent, #f4661b);
+  border-color: var(--color-border, #d1cac3);
+}
+
+.itin-btn-actualizar:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-focus-ring, rgba(18, 60, 107, 0.2));
+  z-index: 3;
+}
+
+.itin-btn-actualizar.is-pending {
+  background-color: var(--color-bg, #fff6ec);
+  border-color: var(--color-accent, #f4661b);
+  color: var(--color-accent, #f4661b);
+  box-shadow: 0 0 0 1px var(--color-accent, #f4661b);
+}
+
+.itin-btn-actualizar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Aviso sutil debajo del campo fecha */
+.itin-fecha-aviso {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12.5px;
-  color: var(--color-text-secondary, #545457);
+  font-size: 12px;
+  color: var(--color-text-muted, #6b6b6d);
+  line-height: 1.35;
+  margin-top: 4px;
+}
+
+.itin-fecha-aviso i {
+  font-size: 12px;
+  flex-shrink: 0;
+  color: var(--color-text-muted, #6b6b6d);
 }
 
 .itin-paradas-header {

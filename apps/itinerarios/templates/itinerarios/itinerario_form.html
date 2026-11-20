@@ -47,26 +47,26 @@
                     <input type="text" class="form-control" value="Autogenerado al guardar" readonly>
                 </div>
             </div>
-            <div class="col-md-5 col-lg-4">
+            <div class="col-md-4">
                 <div class="itin-field">
                     <label for="{{ form.fecha.id_for_label }}">Fecha del itinerario</label>
-                    <div class="itin-input-action-group">
+                    <div class="input-group itin-date-group">
                         {{ form.fecha }}
                         <button type="button" 
                                 id="btn-actualizar-fecha" 
-                                class="btn-itinerario-outline itin-btn-actualizar" 
+                                class="btn itin-btn-actualizar" 
                                 title="Actualizar disponibilidad para esta fecha" 
                                 aria-label="Actualizar disponibilidad de transportistas">
                             <i class="fas fa-arrows-rotate" id="icon-actualizar-fecha"></i>
-                            <span class="d-none d-sm-inline">Actualizar</span>
+                            <span>Actualizar</span>
                         </button>
                     </div>
                     {% if form.fecha.errors %}
                         <div class="text-danger small mt-1">{{ form.fecha.errors.0 }}</div>
                     {% endif %}
-                    <div id="fecha-modificada-aviso" class="itin-feedback-aviso mt-1" style="display: none;" aria-live="polite">
+                    <div id="fecha-modificada-aviso" class="itin-fecha-aviso" style="display: none;" aria-live="polite">
                         <i class="fas fa-circle-info"></i>
-                        <span>Tocá «Actualizar» para consultar la disponibilidad en la nueva fecha.</span>
+                        <span>Fecha modificada. Tocá «Actualizar» para consultar disponibilidad.</span>
                     </div>
                 </div>
             </div>
@@ -154,8 +154,10 @@
             const valorActual = fechaInput.value.trim();
             if (valorActual && valorActual !== fechaCargada) {
                 avisoModificada.style.display = "flex";
+                btnActualizar.classList.add("is-pending");
             } else {
                 avisoModificada.style.display = "none";
+                btnActualizar.classList.remove("is-pending");
             }
         }
 
@@ -221,6 +223,7 @@
                     fechaCargada = nuevaFecha;
                     window.history.replaceState(null, "", url.toString());
                     avisoModificada.style.display = "none";
+                    btnActualizar.classList.remove("is-pending");
                 } else {
                     window.location.href = url.toString();
                 }

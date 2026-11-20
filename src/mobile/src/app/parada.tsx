@@ -34,6 +34,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { obtenerDetalleParada, getParadaSeleccionada, setParadaSeleccionada } from '../services/paradaService';
+import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
+import * as mockItinData from '../data/mockItinerario';
+import { getUsuarioActual } from '../services/authService';
+import { entregarItinerarioActualizado } from '../services/itinerarioService';
 
 export default function ParadaScreen() {
   const router = useRouter();
@@ -104,6 +108,35 @@ export default function ParadaScreen() {
     }
   };
 
+  // Sincronización proactiva y navegación de regreso hacia el itinerario
+  const handleVolverAlItinerario = () => {
+    const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+    const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111;
+    const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222;
+    const itin4444 = (mockItinData as any).MOCK_ITINERARIO_44444444 || itin2222;
+    const itinActivo = usuario?.dni === '11111111'
+      ? (itin1111 || MOCK_ITINERARIO_ASIGNADO)
+      : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+      ? (itin2222 || itin4444 || MOCK_ITINERARIO_ASIGNADO)
+      : MOCK_ITINERARIO_ASIGNADO;
+
+    if (itinActivo && Array.isArray(itinActivo.paradas)) {
+      const idx = itinActivo.paradas.findIndex((p: any) => p.id === parada.id);
+      if (idx !== -1) {
+        itinActivo.paradas[idx] = {
+          ...itinActivo.paradas[idx],
+          estado: parada.estado,
+          orden: parada.orden,
+        };
+      }
+      entregarItinerarioActualizado({
+        ...itinActivo,
+        paradas: [...itinActivo.paradas.map((p: any) => ({ ...p, comercio: { ...p.comercio } }))],
+      });
+    }
+    router.replace('/itinerario' as any);
+  };
+
   return (
     <View style={styles.safeContainer}>
       <StatusBar
@@ -115,10 +148,10 @@ export default function ParadaScreen() {
       {/* ================= HEADER CORPORATIVO (Azul Ruta #123C6B) ================= */}
       <View style={[styles.header, { paddingTop: topPaddingSeguro }]}>
         <View style={styles.headerTop}>
-          {/* Botón de retroceso al Itinerario */}
+          {/* Botón de retroceso al Itinerario con sincronización inmediata */}
           <TouchableOpacity
             style={styles.botonVolver}
-            onPress={() => router.replace('/itinerario' as any)}
+            onPress={handleVolverAlItinerario}
             activeOpacity={0.7}
           >
             <Text style={styles.iconoVolver}>←</Text>
@@ -145,6 +178,11 @@ export default function ParadaScreen() {
               #{parada.orden} de {parada.totalParadasRuta}
             </Text>
           </View>
+          {parada.estado === 'error' && (
+            <View style={styles.badgeHeaderInconveniente}>
+              <Text style={styles.badgeHeaderInconvenienteTexto}>⚠️ Con inconveniente</Text>
+            </View>
+          )}
         </View>
         <Text style={styles.headerSubtitulo}>Información operativa de destino y cobranza</Text>
       </View>
@@ -255,9 +293,25 @@ export default function ParadaScreen() {
                   })}
                 </Text>
               </View>
-              <View style={[styles.badgeEstadoCobro, cobroValidado && styles.badgeCobroExito]}>
-                <Text style={[styles.textoBadgeCobro, cobroValidado && styles.textoBadgeCobroExito]}>
-                  {cobroValidado ? '✓ Cobro Validado' : '⏳ Pendiente'}
+              <View
+                style={[
+                  styles.badgeEstadoCobro,
+                  cobroValidado && styles.badgeCobroExito,
+                  !cobroValidado && parada.estado === 'error' && styles.badgeInconvenienteRojo,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.textoBadgeCobro,
+                    cobroValidado && styles.textoBadgeCobroExito,
+                    !cobroValidado && parada.estado === 'error' && styles.textoBadgeInconvenienteRojo,
+                  ]}
+                >
+                  {cobroValidado
+                    ? '✓ Cobro Validado'
+                    : parada.estado === 'error'
+                    ? '⚠️ Con inconveniente'
+                    : '⏳ Pendiente'}
                 </Text>
               </View>
             </View>
@@ -874,6 +928,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ECFDF5',
     borderColor: '#A7F3D0',
   },
+  badgeInconvenienteRojo: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderColor: '#FCA5A5',
+  },
   textoBadgeCobro: {
     fontSize: 12,
     fontWeight: '700',
@@ -881,6 +939,24 @@ const styles = StyleSheet.create({
   },
   textoBadgeCobroExito: {
     color: '#065F46',
+  },
+  textoBadgeInconvenienteRojo: {
+    color: RepartoYA.error,
+    fontWeight: '800',
+  },
+  badgeHeaderInconveniente: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  badgeHeaderInconvenienteTexto: {
+    color: RepartoYA.error,
+    fontSize: 11,
+    fontWeight: '800',
   },
   divisorCobranza: {
     height: 1,

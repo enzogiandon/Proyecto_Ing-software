@@ -112,6 +112,74 @@ export const actualizarEstadoCobroParada = (
 };
 
 /**
+ * Actualiza el estado de la parada con inconveniente ('error') y la desplaza
+ * automáticamente a la última posición de las paradas pendientes en el itinerario.
+ */
+export const actualizarEstadoInconvenienteParada = (paradaId: number) => {
+  if (paradaSeleccionadaActual && paradaSeleccionadaActual.id === paradaId) {
+    paradaSeleccionadaActual = {
+      ...paradaSeleccionadaActual,
+      estado: 'error',
+    };
+  }
+
+  const moverEnMock = (itin: any) => {
+    if (!itin || !Array.isArray(itin.paradas)) return false;
+    const esEntregada = (p: any) =>
+      p.estado === 'finalizada' || p.estado === 'completada';
+
+    const pendientes = itin.paradas.filter((p: any) => !esEntregada(p));
+    const entregadas = itin.paradas.filter(esEntregada);
+
+    const idx = pendientes.findIndex((p: any) => p.id === paradaId);
+    if (idx !== -1) {
+      const [afectada] = pendientes.splice(idx, 1);
+      afectada.estado = 'error';
+      pendientes.push(afectada);
+
+      const todas = [...pendientes, ...entregadas];
+      todas.forEach((p, i) => {
+        p.orden = i + 1;
+        const etiqueta =
+          p.estado === 'finalizada' || p.estado === 'completada'
+            ? 'Entregada'
+            : p.estado === 'error'
+            ? 'Con inconveniente'
+            : i === 0
+            ? 'Próxima entrega'
+            : 'A continuación';
+        p.subtitulo = `Parada ${p.orden} de ${itin.totalParadas || todas.length} · ${etiqueta}`;
+      });
+
+      itin.paradas = todas;
+      return true;
+    }
+    return false;
+  };
+
+  let modificado = false;
+  if (moverEnMock(MOCK_ITINERARIO_ASIGNADO)) modificado = true;
+  if (moverEnMock((mockItinData as any).MOCK_ITINERARIO_11111111)) modificado = true;
+  if (moverEnMock((mockItinData as any).MOCK_ITINERARIO_22222222)) modificado = true;
+  if (moverEnMock((mockItinData as any).MOCK_ITINERARIO_44444444)) modificado = true;
+
+  if (modificado) {
+    const usuario = typeof getUsuarioActual === 'function' ? getUsuarioActual() : null;
+    const itinActivo = usuario?.dni === '11111111'
+      ? (mockItinData as any).MOCK_ITINERARIO_11111111
+      : usuario?.dni === '22222222' || usuario?.dni === '44444444'
+      ? ((mockItinData as any).MOCK_ITINERARIO_22222222 || (mockItinData as any).MOCK_ITINERARIO_44444444)
+      : MOCK_ITINERARIO_ASIGNADO;
+    if (itinActivo) {
+      entregarItinerarioActualizado({
+        ...itinActivo,
+        paradas: [...itinActivo.paradas],
+      });
+    }
+  }
+};
+
+/**
  * Selecciona una parada específica desde el itinerario
  * y genera el modelo DetalleParada correspondiente con su monto y datos exactos.
  */

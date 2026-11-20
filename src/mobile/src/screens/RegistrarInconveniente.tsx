@@ -23,7 +23,7 @@ import {
   descripcionEsValida,
 } from '../types/inconveniente';
 import { getParadaSeleccionada, getIdParadaSeleccionadaParaCobro } from '../services/paradaService';
-import { reportarProblemaParada } from '../services/itinerarios';
+import { reportarProblemaParada, moverParadaConInconvenienteAlFinal } from '../services/itinerarios';
 
 export default function RegistrarInconveniente() {
   const router = useRouter();
@@ -116,6 +116,11 @@ export default function RegistrarInconveniente() {
     }
 
     if (registradoExitoso && activa.current) {
+      try {
+        await moverParadaConInconvenienteAlFinal(parada.id);
+      } catch (e) {
+        console.warn('Error al mover la parada con inconveniente al final:', e);
+      }
       router.replace({
         pathname: '/inconveniente-registrado',
         params: {

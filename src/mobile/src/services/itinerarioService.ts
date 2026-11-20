@@ -137,7 +137,7 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 7000);
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
 
     // 1. Intentamos consultar primero /api/itinerarios/hoy/ (cabecera estructurada del día)
     let response = await fetch(`${API_BASE_URL}/api/itinerarios/hoy/`, {
@@ -190,8 +190,15 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
         if (data.estado === 'en_curso' || data.estado === 'en_ruta' || data.estado === 'finalizado') {
           jornadaLaboralIniciadaGlobal = true;
         }
-        ultimoItinerarioActivo = data;
-        return { itinerario: data };
+        const dataClonada: ItinerarioJornada = {
+          ...data,
+          paradas: data.paradas.map((p: any) => ({
+            ...p,
+            comercio: { ...(p?.comercio || {}) },
+          })),
+        };
+        ultimoItinerarioActivo = dataClonada;
+        return { itinerario: dataClonada };
       }
 
       // Si devolvió el array de paradas ordenadas desde /api/itinerarios/paradas/
@@ -297,15 +304,28 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
     if (usuarioActual?.dni === '55555555') {
       return { itinerario: MOCK_ITINERARIO_SIN_ASIGNAR };
     }
+    function clonarItinerarioInmutable(itin: any): ItinerarioJornada {
+      return {
+        ...itin,
+        vehiculo: { ...(itin?.vehiculo || {}) },
+        paradas: Array.isArray(itin?.paradas)
+          ? itin.paradas.map((p: any) => ({
+              ...p,
+              comercio: { ...(p?.comercio || {}) },
+            }))
+          : [],
+      };
+    }
+
     if (usuarioActual?.dni === '11111111') {
       const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111 || MOCK_ITINERARIO_ASIGNADO;
       const idMock = itin1111?.id || 102;
       const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
       const estadoMock = (jornadaIniciada || jornadaLaboralIniciadaGlobal) ? 'en_curso' : (itin1111?.estado || 'en_curso');
-      const resultado: ItinerarioJornada = {
+      const resultado: ItinerarioJornada = clonarItinerarioInmutable({
         ...itin1111,
         estado: estadoMock,
-      };
+      });
       ultimoItinerarioActivo = resultado;
       return { itinerario: resultado };
     }
@@ -314,10 +334,10 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
       const idMock = itin2222?.id || 103;
       const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
       const estadoMock = (jornadaIniciada || jornadaLaboralIniciadaGlobal) ? 'en_curso' : (itin2222?.estado || 'en_curso');
-      const resultado: ItinerarioJornada = {
+      const resultado: ItinerarioJornada = clonarItinerarioInmutable({
         ...itin2222,
         estado: estadoMock,
-      };
+      });
       ultimoItinerarioActivo = resultado;
       return { itinerario: resultado };
     }
@@ -339,13 +359,13 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
     const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
     const estadoMock = (jornadaIniciada || jornadaLaboralIniciadaGlobal) ? 'en_curso' : (MOCK_ITINERARIO_ASIGNADO.estado || 'asignado');
 
-    const resultado: ItinerarioJornada = {
+    const resultado: ItinerarioJornada = clonarItinerarioInmutable({
       ...MOCK_ITINERARIO_ASIGNADO,
       estado: estadoMock,
       transportistaNombre: nombre,
       transportistaIniciales: iniciales,
       vehiculo,
-    };
+    });
     ultimoItinerarioActivo = resultado;
     return { itinerario: resultado };
   }
@@ -355,9 +375,19 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 let itinerarioActualizado: ItinerarioJornada | undefined;
 
 export function entregarItinerarioActualizado(itinerario: ItinerarioJornada) {
-  itinerarioActualizado = itinerario;
-  ultimoItinerarioActivo = itinerario;
-  if (isJornadaIniciada(itinerario)) {
+  const clonado: ItinerarioJornada = {
+    ...itinerario,
+    vehiculo: { ...(itinerario?.vehiculo || {}) },
+    paradas: Array.isArray(itinerario?.paradas)
+      ? itinerario.paradas.map((p: any) => ({
+          ...p,
+          comercio: { ...(p?.comercio || {}) },
+        }))
+      : [],
+  };
+  itinerarioActualizado = clonado;
+  ultimoItinerarioActivo = clonado;
+  if (isJornadaIniciada(clonado)) {
     jornadaLaboralIniciadaGlobal = true;
   }
 }

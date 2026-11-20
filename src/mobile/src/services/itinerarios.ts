@@ -4,7 +4,11 @@
 import api from './api';
 import { Platform } from 'react-native';
 import { decimalACentavos, formatoCentavos } from '../utils/importes';
-import { getIdParadaSeleccionadaParaCobro, getParadaSeleccionada } from './paradaService';
+import {
+  getIdParadaSeleccionadaParaCobro,
+  getParadaSeleccionada,
+  actualizarEstadoInconvenienteParada,
+} from './paradaService';
 import {
   Parada,
   RutaGuardadaItem,
@@ -135,9 +139,15 @@ function reordenarMockItinerario(itinerario: any, nuevoOrden: number[]) {
     const parada = paradasMap.get(id);
     if (parada) {
       parada.orden = index + 1;
-      parada.subtitulo = `Parada ${index + 1} de ${itinerario.totalParadas || nuevoOrden.length} · ${
-        parada.estado === 'en_curso' ? 'Próxima entrega' : 'A continuación'
-      }`;
+      const estadoEtiqueta =
+        parada.estado === 'finalizada' || parada.estado === 'completada'
+          ? 'Entregada'
+          : parada.estado === 'error'
+          ? 'Con inconveniente'
+          : parada.estado === 'en_curso'
+          ? 'Próxima entrega'
+          : 'A continuación';
+      parada.subtitulo = `Parada ${index + 1} de ${itinerario.totalParadas || nuevoOrden.length} · ${estadoEtiqueta}`;
       paradasOrdenadas.push(parada);
       paradasMap.delete(id);
     }
@@ -148,11 +158,46 @@ function reordenarMockItinerario(itinerario: any, nuevoOrden: number[]) {
   for (const [, paradaRestante] of paradasMap) {
     const nuevoIndice = paradasOrdenadas.length + 1;
     paradaRestante.orden = nuevoIndice;
-    paradaRestante.subtitulo = `Parada ${nuevoIndice} de ${itinerario.totalParadas || nuevoIndice} · A continuación`;
+    const estadoEtiquetaRestante =
+      paradaRestante.estado === 'finalizada' || paradaRestante.estado === 'completada'
+        ? 'Entregada'
+        : paradaRestante.estado === 'error'
+        ? 'Con inconveniente'
+        : 'A continuación';
+    paradaRestante.subtitulo = `Parada ${nuevoIndice} de ${itinerario.totalParadas || nuevoIndice} · ${estadoEtiquetaRestante}`;
     paradasOrdenadas.push(paradaRestante);
   }
 
   itinerario.paradas = paradasOrdenadas;
+}
+
+/**
+ * Desplaza automáticamente una parada con inconveniente al final de la secuencia
+ * de paradas pendientes en el itinerario y persiste el cambio.
+ */
+export async function moverParadaConInconvenienteAlFinal(paradaId: number): Promise<void> {
+  actualizarEstadoInconvenienteParada(paradaId);
+
+  try {
+    const paradasActivas = await getParadasActivas();
+    if (Array.isArray(paradasActivas) && paradasActivas.length > 0) {
+      const esEntregada = (p: Parada) =>
+        p.estado === 'finalizada' || (p.estado as string) === 'completada';
+      const pendientes = paradasActivas.filter((p) => !esEntregada(p));
+      const entregadas = paradasActivas.filter(esEntregada);
+
+      const idx = pendientes.findIndex((p) => p.id === paradaId);
+      if (idx !== -1) {
+        const [afectada] = pendientes.splice(idx, 1);
+        afectada.estado = 'error';
+        pendientes.push(afectada);
+        const nuevoOrden = [...pendientes, ...entregadas].map((p) => p.id);
+        await guardarOrdenRuta(nuevoOrden);
+      }
+    }
+  } catch (error) {
+    console.warn('[Itinerarios] No se pudo enviar el reordenamiento al servidor tras registrar inconveniente:', error);
+  }
 }
 
 function aplicarRutaMockLocal(rutaId: number): number[] {

@@ -130,12 +130,20 @@ export default function ItinerarioScreen() {
     useCallback(() => {
       const actualizado = tomarItinerarioActualizado();
       if (actualizado) {
-        setItinerario(actualizado);
+        setItinerario({
+          ...actualizado,
+          paradas: [...(actualizado.paradas || []).map((p) => ({ ...p, comercio: { ...p.comercio } }))],
+        });
       } else {
-        // Re-sincronizar el itinerario en segundo plano al volver al foco para reflejar cambios de paradas
+        // Re-sincronizar el itinerario al volver al foco para reflejar cambios de paradas
         obtenerItinerarioJornada()
           .then((res) => {
-            if (res.itinerario) setItinerario(res.itinerario);
+            if (res.itinerario) {
+              setItinerario({
+                ...res.itinerario,
+                paradas: [...(res.itinerario.paradas || []).map((p) => ({ ...p, comercio: { ...p.comercio } }))],
+              });
+            }
           })
           .catch(() => {});
       }
@@ -281,10 +289,16 @@ export default function ItinerarioScreen() {
     (p.estado as string) === 'finalizada' || (p.estado as string) === 'completada';
 
   // Paradas no entregadas (pendientes, en_curso o con inconveniente)
-  // Conservan su orden correlativo para la secuencia de visita
+  // Las paradas con inconveniente (estado 'error' o 'Con inconveniente') se ordenan automáticamente al final de las pendientes
   const paradasNoEntregadas = paradas
     .filter((p) => !esEntregada(p))
-    .sort((a, b) => a.orden - b.orden);
+    .sort((a, b) => {
+      const aError = a.estado === 'error' || (typeof a.subtitulo === 'string' && a.subtitulo.includes('Con inconveniente'));
+      const bError = b.estado === 'error' || (typeof b.subtitulo === 'string' && b.subtitulo.includes('Con inconveniente'));
+      if (aError && !bError) return 1;
+      if (!aError && bError) return -1;
+      return a.orden - b.orden;
+    });
 
   // Paradas ya entregadas (finalizadas) -> Van abajo de todo
   const paradasEntregadas = paradas
@@ -585,22 +599,38 @@ export default function ItinerarioScreen() {
           )}
 
           {/* PARADA DESTACADA (Conecta con la pantalla de Validar Cobro) */}
-          {proximaParada && (
-            <View style={styles.paradaCardDestacada}>
-              <View style={styles.paradaHeaderRow}>
-                {/* Badge Naranja YA con número correlativo real */}
-                <View style={styles.badgeNaranja}>
-                  <Text style={styles.badgeNaranjaTexto}>#{proximaParada.orden}</Text>
+          {proximaParada && (() => {
+            const proximaEsInconveniente =
+              proximaParada.estado === 'error' ||
+              (typeof proximaParada.subtitulo === 'string' && proximaParada.subtitulo.includes('Con inconveniente'));
+            return (
+              <View style={[styles.paradaCardDestacada, proximaEsInconveniente && styles.paradaCardInconveniente]}>
+                <View style={styles.paradaHeaderRow}>
+                  {/* Badge Naranja YA con número correlativo real */}
+                  <View style={[styles.badgeNaranja, proximaEsInconveniente && styles.badgeInconveniente]}>
+                    <Text style={[styles.badgeNaranjaTexto, proximaEsInconveniente && styles.badgeInconvenienteTexto]}>
+                      #{proximaParada.orden}
+                    </Text>
+                  </View>
+                  <View style={styles.paradaTituloWrap}>
+                    <View style={styles.filaComercioHeaderCard}>
+                      <Text style={styles.comercioNombre}>
+                        {proximaParada.comercio.razonSocial}
+                      </Text>
+                      {proximaEsInconveniente && (
+                        <View style={styles.badgeChipInconveniente}>
+                          <Text style={styles.badgeChipInconvenienteTexto}>Con inconveniente</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.comercioSubtitulo, proximaEsInconveniente && styles.comercioSubtituloInconveniente]}>
+                      {`Parada ${proximaParada.orden} de ${totalParadasCount} · `}
+                      <Text style={proximaEsInconveniente ? styles.textoInconvenienteRojo : undefined}>
+                        {proximaEsInconveniente ? 'Con inconveniente' : 'Próxima entrega'}
+                      </Text>
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.paradaTituloWrap}>
-                  <Text style={styles.comercioNombre}>
-                    {proximaParada.comercio.razonSocial}
-                  </Text>
-                  <Text style={styles.comercioSubtitulo}>
-                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${totalParadasCount} · ${proximaParada.estado === 'error' ? 'Con inconveniente' : 'Próxima entrega'}`}
-                  </Text>
-                </View>
-              </View>
 
               {/* Dirección del comercio */}
               <View style={styles.direccionRow}>
@@ -655,25 +685,42 @@ export default function ItinerarioScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-          )}
+          );
+        })()}
 
           {/* PARADAS SIGUIENTES (Figma: Botón Contorno Azul) */}
-          {siguientesParadas.map((parada) => (
-            <View key={parada.id} style={styles.paradaCardSecundaria}>
-              <View style={styles.paradaHeaderRow}>
-                {/* Badge con número correlativo real */}
-                <View style={styles.badgeNeutro}>
-                  <Text style={styles.badgeNeutroTexto}>#{parada.orden}</Text>
+          {siguientesParadas.map((parada) => {
+            const esInconveniente =
+              parada.estado === 'error' ||
+              (typeof parada.subtitulo === 'string' && parada.subtitulo.includes('Con inconveniente'));
+            return (
+              <View key={parada.id} style={[styles.paradaCardSecundaria, esInconveniente && styles.paradaCardInconveniente]}>
+                <View style={styles.paradaHeaderRow}>
+                  {/* Badge con número correlativo real */}
+                  <View style={[styles.badgeNeutro, esInconveniente && styles.badgeInconveniente]}>
+                    <Text style={[styles.badgeNeutroTexto, esInconveniente && styles.badgeInconvenienteTexto]}>
+                      #{parada.orden}
+                    </Text>
+                  </View>
+                  <View style={styles.paradaTituloWrap}>
+                    <View style={styles.filaComercioHeaderCard}>
+                      <Text style={styles.comercioNombre}>
+                        {parada.comercio.razonSocial}
+                      </Text>
+                      {esInconveniente && (
+                        <View style={styles.badgeChipInconveniente}>
+                          <Text style={styles.badgeChipInconvenienteTexto}>Con inconveniente</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.comercioSubtituloSecundario, esInconveniente && styles.comercioSubtituloInconveniente]}>
+                      {`Parada ${parada.orden} de ${totalParadasCount} · `}
+                      <Text style={esInconveniente ? styles.textoInconvenienteRojo : undefined}>
+                        {esInconveniente ? 'Con inconveniente' : 'A continuación'}
+                      </Text>
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.paradaTituloWrap}>
-                  <Text style={styles.comercioNombre}>
-                    {parada.comercio.razonSocial}
-                  </Text>
-                  <Text style={styles.comercioSubtituloSecundario}>
-                    {parada.subtitulo || `Parada ${parada.orden} de ${totalParadasCount} · ${parada.estado === 'error' ? 'Con inconveniente' : 'A continuación'}`}
-                  </Text>
-                </View>
-              </View>
 
               {/* Dirección */}
               <View style={styles.direccionRow}>
@@ -735,7 +782,8 @@ export default function ItinerarioScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-          ))}
+            );
+          })}
 
           {/* PARADAS ENTREGADAS (A bajo de todo) */}
           {paradasEntregadas.length > 0 && (
@@ -1211,6 +1259,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: RepartoYA.carbon,
   },
+  filaComercioHeaderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
   comercioSubtitulo: {
     fontSize: 12,
     color: RepartoYA.azulRuta,
@@ -1222,6 +1277,40 @@ const styles = StyleSheet.create({
     color: RepartoYA.grisTexto,
     fontWeight: '600',
     marginTop: 2,
+  },
+  comercioSubtituloInconveniente: {
+    color: RepartoYA.error,
+    fontWeight: '700',
+  },
+  textoInconvenienteRojo: {
+    color: RepartoYA.error,
+    fontWeight: '800',
+  },
+  badgeChipInconveniente: {
+    backgroundColor: RepartoYA.errorFondo,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  badgeChipInconvenienteTexto: {
+    color: RepartoYA.error,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  paradaCardInconveniente: {
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FFFDFD',
+  },
+  badgeInconveniente: {
+    backgroundColor: RepartoYA.errorFondo,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  badgeInconvenienteTexto: {
+    color: RepartoYA.error,
+    fontWeight: '800',
   },
   direccionRow: {
     flexDirection: 'row',

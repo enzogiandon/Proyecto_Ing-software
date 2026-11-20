@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Agregar paradas - RepartosYA{% endblock %}
+{% block title %}{% if request.GET.itinerario %}Modificar paradas{% else %}Agregar paradas{% endif %} - RepartosYA{% endblock %}
 
 {% block extra_css %}
 <link href="{% static 'core/css/home.css' %}" rel="stylesheet">
@@ -11,14 +11,21 @@
 {% block content %}
 <div class="itinerarios-page">
     <div>
-        <a href="{% url 'itinerarios:itinerario_lista' %}" class="home-btn home-btn--compacto">
-            <i class="fas fa-arrow-left"></i>
-            <span>Volver a itinerarios</span>
-        </a>
+        {% if request.GET.next %}
+            <a href="{{ request.GET.next }}" class="home-btn home-btn--compacto">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver a editar itinerario</span>
+            </a>
+        {% else %}
+            <a href="{% url 'itinerarios:itinerario_lista' %}" class="home-btn home-btn--compacto">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver a itinerarios</span>
+            </a>
+        {% endif %}
     </div>
 
     <header>
-        <h1 class="text-title mb-1">Agregar paradas</h1>
+        <h1 class="text-title mb-1">{% if request.GET.itinerario %}Modificar paradas{% else %}Agregar paradas{% endif %}</h1>
         <p class="text-body text-c-secondary mb-0">
             Seleccioná un comercio completo para asignar todos sus remitos a la vez, o desplegá su menú para elegir remitos específicos.
         </p>
@@ -37,6 +44,9 @@
 
     <form method="post" class="itinerarios-card">
         {% csrf_token %}
+        {% if request.GET.next %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
 
         <div class="row g-3 mb-4">
             <div class="col-md-6">
@@ -147,9 +157,15 @@
                 </div>
             </div>
             <div class="itin-sticky-bar__actions">
-                <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
-                    Cancelar
-                </a>
+                {% if request.GET.next %}
+                    <a href="{{ request.GET.next }}" class="btn-itinerario-outline">
+                        Cancelar
+                    </a>
+                {% else %}
+                    <a href="{% url 'itinerarios:itinerario_lista' %}" class="btn-itinerario-outline">
+                        Cancelar
+                    </a>
+                {% endif %}
                 <button type="submit" class="btn-itinerario-primary" id="btn-submit">
                     <i class="fas fa-check me-1"></i> Asignar al itinerario
                 </button>

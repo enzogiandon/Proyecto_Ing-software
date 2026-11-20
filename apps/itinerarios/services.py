@@ -106,6 +106,9 @@ def crear_paradas(
                 parada=p,
                 estado=EstadoRemito.ASIGNADO,
             )
+            if not p.remitos.exists():
+                p.delete()
+                paradas_existentes_por_comercio.pop(p.comercio_id, None)
 
     # 4. Agregar comercios nuevos
     max_orden = (

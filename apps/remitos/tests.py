@@ -9,6 +9,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
+from apps.cobranza.models import Cobranza
 from apps.core.models import Grupos
 from apps.itinerarios.models import EstadoItinerario, EstadoParada, Itinerario, Parada
 from apps.remitos.forms import MarcaForm, RemitoForm
@@ -779,4 +780,138 @@ class ImportacionRemitosTestCase(TestCase):
             any("Importación fallida: la estructura del archivo seleccionado es inválida" in str(m) for m in messages)
         )
         importacion.archivo.delete(save=False)
+
+
+class RemitoParadaIntegridadSignalsTestCase(TestCase):
+    def setUp(self):
+        call_command("crear_grupos", stdout=StringIO())
+        self.comercio1 = Comercio.objects.create(
+            razon_social="Comercio 1",
+            cuit="30111111111",
+            domicilio="Calle 1 #100",
+        )
+        self.comercio2 = Comercio.objects.create(
+            razon_social="Comercio 2",
+            cuit="30222222222",
+            domicilio="Calle 2 #200",
+        )
+        self.marca = Marca.objects.create(
+            nombre="Marca Test",
+            cuit="30333333333",
+        )
+        from django.utils import timezone
+        self.itinerario = Itinerario.objects.create(
+            fecha=timezone.localdate(),
+            estado=EstadoItinerario.PENDIENTE,
+        )
+
+    def test_eliminar_ultimo_remito_elimina_la_parada_y_reordena_secuencia(self):
+        parada1 = Parada.objects.create(
+            itinerario=self.itinerario,
+            comercio=self.comercio1,
+            orden=1,
+        )
+        parada2 = Parada.objects.create(
+            itinerario=self.itinerario,
+            comercio=self.comercio2,
+            orden=2,
+        )
+
+        remito1 = Remito.objects.create(
+            numero="R-001",
+            marca=self.marca,
+            comercio=self.comercio1,
+            total=Decimal("100.00"),
+            parada=parada1,
+        )
+        remito2 = Remito.objects.create(
+            numero="R-002",
+            marca=self.marca,
+            comercio=self.comercio2,
+            total=Decimal("200.00"),
+            parada=parada2,
+        )
+
+        # Al borrar el único remito de parada1, parada1 debe eliminarse automáticamente
+        remito1.delete()
+
+        self.assertFalse(Parada.objects.filter(pk=parada1.pk).exists())
+        self.assertTrue(Parada.objects.filter(pk=parada2.pk).exists())
+
+        # Parada 2 debe haberse reordenado a orden 1
+        parada2.refresh_from_db()
+        self.assertEqual(parada2.orden, 1)
+
+    def test_desvincular_ultimo_remito_elimina_la_parada(self):
+        parada = Parada.objects.create(
+            itinerario=self.itinerario,
+            comercio=self.comercio1,
+            orden=1,
+        )
+        remito = Remito.objects.create(
+            numero="R-003",
+            marca=self.marca,
+            comercio=self.comercio1,
+            total=Decimal("150.00"),
+            parada=parada,
+        )
+
+        # Al desvincular el remito (parada = None), la parada queda con 0 remitos y debe eliminarse
+        remito.parada = None
+        remito.save()
+
+        self.assertFalse(Parada.objects.filter(pk=parada.pk).exists())
+
+    def test_parada_con_multiples_remitos_no_se_elimina_si_queda_al_menos_uno(self):
+        parada = Parada.objects.create(
+            itinerario=self.itinerario,
+            comercio=self.comercio1,
+            orden=1,
+        )
+        remito_a = Remito.objects.create(
+            numero="R-004A",
+            marca=self.marca,
+            comercio=self.comercio1,
+            total=Decimal("50.00"),
+            parada=parada,
+        )
+        remito_b = Remito.objects.create(
+            numero="R-004B",
+            marca=self.marca,
+            comercio=self.comercio1,
+            total=Decimal("75.00"),
+            parada=parada,
+        )
+
+        # Se elimina un remito pero queda otro asociado
+        remito_a.delete()
+
+        self.assertTrue(Parada.objects.filter(pk=parada.pk).exists())
+        self.assertEqual(parada.remitos.count(), 1)
+        self.assertEqual(parada.remitos.first().pk, remito_b.pk)
+
+    def test_parada_con_cobranza_no_se_elimina_al_borrar_remito(self):
+        parada = Parada.objects.create(
+            itinerario=self.itinerario,
+            comercio=self.comercio1,
+            orden=1,
+        )
+        remito = Remito.objects.create(
+            numero="R-005",
+            marca=self.marca,
+            comercio=self.comercio1,
+            total=Decimal("200.00"),
+            parada=parada,
+        )
+        Cobranza.objects.create(
+            parada=parada,
+        )
+
+        # Se elimina el remito, pero la parada tiene cobranza registrada -> debe preservarse
+        remito.delete()
+
+        self.assertTrue(Parada.objects.filter(pk=parada.pk).exists())
+        self.assertEqual(parada.remitos.count(), 0)
+        self.assertIsNotNone(parada.cobranza)
+
 

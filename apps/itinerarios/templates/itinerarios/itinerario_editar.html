@@ -77,9 +77,9 @@
                     <h2 class="text-section mb-1">Paradas ({{ paradas_lista|length }})</h2>
                     <p class="text-help text-c-muted mb-0">Paradas asignadas al recorrido del repartidor.</p>
                 </div>
-                <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}" class="btn-itinerario-outline">
-                    <i class="fas fa-plus"></i>
-                    <span>Agregar paradas</span>
+                <a href="{% url 'itinerarios:paradas_crear' %}?itinerario={{ itinerario.pk }}&next={% url 'itinerarios:itinerario_editar' itinerario.pk %}" class="btn-itinerario-outline">
+                    <i class="fas fa-edit"></i>
+                    <span>Modificar paradas</span>
                 </a>
             </div>
 
@@ -92,7 +92,6 @@
                             <th>Remitos asociados</th>
                             <th class="text-center">Productos</th>
                             <th class="text-end">Monto a cobrar</th>
-                            <th class="text-center" style="width: 80px;">Quitar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -125,15 +124,10 @@
                                 <td class="text-end">
                                     <span class="fw-bold">$ {{ parada.monto_total|default:0|floatformat:2 }}</span>
                                 </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn-quitar-parada" onclick="confirmarQuitarParada('{{ parada.id }}', '{{ parada.comercio.razon_social|escapejs }}')" title="Quitar parada del itinerario">
-                                        <i class="far fa-trash-alt"></i>
-                                    </button>
-                                </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">
+                                <td colspan="5" class="text-center py-4 text-muted">
                                     Este itinerario no tiene paradas registradas aún.
                                 </td>
                             </tr>
@@ -161,22 +155,9 @@
             </button>
         </div>
     </form>
-
-    <form method="post" id="formQuitarParada" style="display: none;">
-        {% csrf_token %}
-        <input type="hidden" name="accion" value="quitar_parada">
-        <input type="hidden" name="parada_id" id="inputQuitarParadaId" value="">
-    </form>
 </div>
 
 <script>
-    function confirmarQuitarParada(paradaId, razonSocial) {
-        if (confirm(`¿Estás seguro de quitar la parada de «${razonSocial}» del itinerario? Sus remitos volverán al estado pendiente.`)) {
-            document.getElementById("inputQuitarParadaId").value = paradaId;
-            document.getElementById("formQuitarParada").submit();
-        }
-    }
-
     document.addEventListener("DOMContentLoaded", function () {
         const selectTransportista = document.getElementById("id_transportista");
         const selectVehiculo = document.getElementById("id_vehiculo");

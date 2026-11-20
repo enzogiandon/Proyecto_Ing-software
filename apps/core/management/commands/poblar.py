@@ -46,8 +46,7 @@ Usuario = get_user_model()
 
 class Command(BaseCommand):
     help = (
-        "Carga datos maestros (Superusuario, Vehículos, Usuarios Chofer, Marcas, Comercios) "
-        "y opcionalmente Remitos, Itinerarios y Cobranzas."
+        "Carga datos maestros (Superusuario, Vehículos, Usuarios Chofer, Marcas, Comercios y Rutas Guardadas)."
     )
 
     def add_arguments(self, parser):
@@ -59,12 +58,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--con-remitos",
             action="store_true",
-            help="Carga un conjunto de remitos de prueba pendientes (por defecto no se cargan remitos).",
+            help="(Deshabilitado) Los remitos se gestionan importando las planillas de reparto.",
         )
         parser.add_argument(
             "--completo",
             action="store_true",
-            help="Carga el flujo completo: remitos, itinerario con paradas asignado al usuario 1234567 y cobranzas.",
+            help="(Deshabilitado) Mantenido por retrocompatibilidad.",
         )
 
     def handle(self, *args, **options):
@@ -719,718 +718,61 @@ class Command(BaseCommand):
                 comercios[c_data["cuit"]] = comercio
 
             # ------------------------------------------------------------------
-            # 6. Remitos (opcional mediante --con-remitos o --completo)
+            # 6. Lote con errores de auditoría (HU-38)
             # ------------------------------------------------------------------
-            total_remitos = 0
-            cargar_remitos = options["con_remitos"] or options["completo"]
-            remitos_creados = {}
-            if cargar_remitos:
-                remitos_definicion = [
-                    # Cerveceria La Diagonal S.A. (30654321090)
-                    {
-                        "numero": "0005-00024715",
-                        "marca": marcas["30654321090"],
-                        "comercio": comercios["23200048148"],
-                        "total": Decimal("364269.35"),
-                    },
-                    {
-                        "numero": "0002-00023458",
-                        "marca": marcas["30654321090"],
-                        "comercio": comercios["23200034562"],
-                        "total": Decimal("199477.06"),
-                    },
-                    {
-                        "numero": "0002-00023496",
-                        "marca": marcas["30654321090"],
-                        "comercio": comercios["23200056655"],
-                        "total": Decimal("829717.82"),
-                    },
-                    # Snacks Andinos S.R.L. (30709876542)
-                    {
-                        "numero": "0090-00015378",
-                        "marca": marcas["30709876542"],
-                        "comercio": comercios["23200039289"],
-                        "total": Decimal("475923.72"),
-                    },
-                    {
-                        "numero": "0090-00025539",
-                        "marca": marcas["30709876542"],
-                        "comercio": comercios["23200042867"],
-                        "total": Decimal("692074.74"),
-                    },
-                    {
-                        "numero": "0090-00015345",
-                        "marca": marcas["30709876542"],
-                        "comercio": comercios["23200056655"],
-                        "total": Decimal("671210.29"),
-                    },
-                    # Gaseosas del Sur S.A. (30712345671)
-                    {
-                        "numero": "0090-00003901",
-                        "marca": marcas["30712345671"],
-                        "comercio": comercios["23200039289"],
-                        "total": Decimal("733385.18"),
-                    },
-                    {
-                        "numero": "0090-00003921",
-                        "marca": marcas["30712345671"],
-                        "comercio": comercios["30200025527"],
-                        "total": Decimal("492487.48"),
-                    },
-                    {
-                        "numero": "0090-00033994",
-                        "marca": marcas["30712345671"],
-                        "comercio": comercios["23200063767"],
-                        "total": Decimal("334706.88"),
-                    },
-                    # Lacteos El Tambo S.A. (33698712347)
-                    {
-                        "numero": "0090-00028325",
-                        "marca": marcas["33698712347"],
-                        "comercio": comercios["23200063767"],
-                        "total": Decimal("526471.00"),
-                    },
-                    {
-                        "numero": "0090-00010362",
-                        "marca": marcas["33698712347"],
-                        "comercio": comercios["23200058011"],
-                        "total": Decimal("353247.34"),
-                    },
-                    {
-                        "numero": "0090-00028378",
-                        "marca": marcas["33698712347"],
-                        "comercio": comercios["23200060768"],
-                        "total": Decimal("609129.43"),
-                    },
-                    # Casos de Unicidad Compuesta por Marca + Remito (HU-04)
-                    {
-                        "numero": "0001-00099999",
-                        "marca": marcas["30654321090"],  # Cervecería La Diagonal S.A.
-                        "comercio": comercios["23200034562"],
-                        "total": Decimal("150000.00"),
-                    },
-                    {
-                        "numero": "0001-00099999",
-                        "marca": marcas["30709876542"],  # Snacks Andinos S.R.L.
-                        "comercio": comercios["23200039289"],
-                        "total": Decimal("85000.00"),
-                    },
-                ]
-
-                for r_info in remitos_definicion:
-                    remito_obj, creado = Remito.objects.get_or_create(
-                        numero=r_info["numero"],
-                        marca=r_info["marca"],
-                        defaults={
-                            "comercio": r_info["comercio"],
-                            "total": r_info["total"],
-                            "estado": EstadoRemito.PENDIENTE,
-                            "parada": None,
-                            "importacion": None,
-                        },
-                    )
-                    remitos_creados[r_info["numero"]] = remito_obj
-                    remitos_creados[(r_info["marca"].cuit, r_info["numero"])] = remito_obj
-                    if creado:
-                        total_remitos += 1
-
-                # 6.1. Lotes de Importación de Remitos (HU-37, HU-38, HU-40)
-                # Lote 1: Exitoso y Descartable (remitos en estado PENDIENTE para probar HU-40)
-                lote_descartable, _ = ImportacionRemitos.objects.get_or_create(
-                    archivo="importaciones/30709876542_lote_descartable.csv",
-                    defaults={
-                        "marca": marcas["30709876542"],
-                        "cantidad": 2,
-                        "estado": EstadoImportacion.EXITO,
-                    },
-                )
-                rem_desc_1 = remitos_creados.get("0090-00025539")
-                rem_desc_2 = remitos_creados.get("0090-00003921")
-                if rem_desc_1:
-                    rem_desc_1.importacion = lote_descartable
-                    rem_desc_1.save(update_fields=["importacion"])
-                if rem_desc_2:
-                    rem_desc_2.importacion = lote_descartable
-                    rem_desc_2.save(update_fields=["importacion"])
-
-                # Lote 2: Con Errores / Rechazado (para probar HU-38: detalle de excepciones)
-                lote_rechazado, _ = ImportacionRemitos.objects.get_or_create(
-                    archivo="importaciones/30712345671_lote_con_errores.csv",
-                    defaults={
-                        "marca": marcas["30712345671"],
-                        "cantidad": 0,
-                        "estado": EstadoImportacion.RECHAZADO,
-                    },
-                )
-                ErrorImportacion.objects.filter(importacion=lote_rechazado).delete()
-                ErrorImportacion.objects.create(
-                    importacion=lote_rechazado,
-                    fila=2,
-                    motivo="CUIT del comercio inválido (debe tener 11 dígitos numéricos).",
-                )
-                ErrorImportacion.objects.create(
-                    importacion=lote_rechazado,
-                    fila=5,
-                    motivo="La razón social es obligatoria para comercios no registrados previamente.",
-                )
+            # Se registra un lote rechazado con errores para verificar la pantalla de excepciones
+            lote_rechazado, _ = ImportacionRemitos.objects.get_or_create(
+                archivo="importaciones/30712345671_lote_con_errores.csv",
+                defaults={
+                    "marca": marcas["30712345671"],
+                    "cantidad": 0,
+                    "estado": EstadoImportacion.RECHAZADO,
+                },
+            )
+            ErrorImportacion.objects.filter(importacion=lote_rechazado).delete()
+            ErrorImportacion.objects.create(
+                importacion=lote_rechazado,
+                fila=2,
+                motivo="CUIT del comercio inválido (debe tener 11 dígitos numéricos).",
+            )
+            ErrorImportacion.objects.create(
+                importacion=lote_rechazado,
+                fila=5,
+                motivo="La razón social es obligatoria para comercios no registrados previamente.",
+            )
 
             # ------------------------------------------------------------------
-            # 7. Itinerario asignado y ruta guardada (Chofer Martín Pérez - 12345678)
+            # 7. Rutas Guardadas de prueba (HU-63, HU-64, HU-65)
             # ------------------------------------------------------------------
+            # Asociadas directamente a Chofer y Comercios, sin remitos ni paradas
+            comercios_lista = list(comercios.values())
+
             transportista_martin = Transportista.objects.filter(
                 usuario__username="12345678"
             ).first()
-            itinerario_martin = None
-            total_paradas_creadas = 0
-
             if transportista_martin:
-                itinerario_martin, _ = Itinerario.objects.get_or_create(
-                    fecha=date.today(),
-                    transportista=transportista_martin,
-                    defaults={
-                        "estado": EstadoItinerario.ASIGNADO,
-                        "vehiculo": transportista_martin.vehiculo,
-                    },
-                )
-                itinerario_martin.estado = EstadoItinerario.ASIGNADO
-                itinerario_martin.vehiculo = transportista_martin.vehiculo
-                itinerario_martin.save()
-
-                comercios_disponibles = [
-                    c for c in comercios.values()
-                    if c.cuit not in {"23200048148", "23200000145", "23200033191", "23200056655"}
-                ]
-                paradas_comercios = comercios_disponibles[:5]
-                marcas_list = list(marcas.values())
-                admin_user = Usuario.objects.filter(username="11111111").first()
-                total_cobranzas_creadas = 0
-
-                paradas_config = [
-                    {
-                        "orden": 1,
-                        "estado": EstadoParada.FINALIZADA,
-                        "hora_entrega": timezone.now().replace(hour=9, minute=30, second=0),
-                        "remito_total": Decimal("150000.00"),
-                        "remito_estado": EstadoRemito.ENTREGADO,
-                        "cobranza_estado": EstadoCobranza.REGISTRADO,
-                        "detalles": [
-                            {"medio": MedioPago.EFECTIVO, "declarado": Decimal("100000.00"), "verificado": Decimal("0.00")},
-                            {"medio": MedioPago.TRANSFERENCIA, "declarado": Decimal("50000.00"), "verificado": Decimal("0.00")},
-                        ],
-                        "observacion": None,
-                        "ajuste": None,
-                    },
-                    {
-                        "orden": 2,
-                        "estado": EstadoParada.FINALIZADA,
-                        "hora_entrega": timezone.now().replace(hour=10, minute=15, second=0),
-                        "remito_total": Decimal("220000.00"),
-                        "remito_estado": EstadoRemito.ENTREGADO,
-                        "cobranza_estado": EstadoCobranza.APROBADO,
-                        "detalles": [
-                            {
-                                "medio": MedioPago.QR,
-                                "declarado": Decimal("220000.00"),
-                                "verificado": Decimal("220000.00"),
-                                "mp_payment_id": "MP-8877665544",
-                            },
-                        ],
-                        "observacion": "Cobranza validada y conciliada contra liquidación MP.",
-                        "ajuste": None,
-                    },
-                    {
-                        "orden": 3,
-                        "estado": EstadoParada.FINALIZADA,
-                        "hora_entrega": timezone.now().replace(hour=11, minute=0, second=0),
-                        "remito_total": Decimal("310000.00"),
-                        "remito_estado": EstadoRemito.ENTREGADO,
-                        "cobranza_estado": EstadoCobranza.DIFIERE,
-                        "detalles": [
-                            {
-                                "medio": MedioPago.EFECTIVO,
-                                "declarado": Decimal("310000.00"),
-                                "verificado": Decimal("300000.00"),
-                            },
-                        ],
-                        "observacion": "Faltante de $10.000 en el sobre de rendición de efectivo.",
-                        "ajuste": {
-                            "medio": MedioPago.EFECTIVO,
-                            "monto": Decimal("10000.00"),
-                            "motivo": "Acreditación complementaria por ticket de transferencia bancaria de respaldo.",
-                        },
-                    },
-                    {
-                        "orden": 4,
-                        "estado": EstadoParada.ERROR,
-                        "hora_entrega": None,
-                        "remito_total": Decimal("185000.00"),
-                        "remito_estado": EstadoRemito.ASIGNADO,
-                        "cobranza_estado": None,
-                        "problema": {
-                            "tipo": TipoProblema.LOCAL_CERRADO,
-                            "descripcion": "Local cerrado con persiana baja a las 11:45 hs. Sin respuesta al timbre.",
-                            "impide_entrega": True,
-                        },
-                    },
-                    {
-                        "orden": 5,
-                        "estado": EstadoParada.PENDIENTE,
-                        "hora_entrega": None,
-                        "cobranza_estado": None,
-                        "multimarca": [
-                            {"marca_idx": 0, "total": Decimal("75000.00"), "sufijo": "1"},
-                            {"marca_idx": 1, "total": Decimal("45000.00"), "sufijo": "2"},
-                        ],
-                    },
-                ]
-
-                for orden_idx, com in enumerate(paradas_comercios, start=1):
-                    if not com:
-                        continue
-                    cfg = paradas_config[orden_idx - 1]
-                    parada_obj, _ = Parada.objects.get_or_create(
-                        itinerario=itinerario_martin,
-                        comercio=com,
-                        defaults={
-                            "orden": cfg["orden"],
-                            "estado": cfg["estado"],
-                            "hora_entrega": cfg["hora_entrega"],
-                        },
-                    )
-                    parada_obj.orden = cfg["orden"]
-                    parada_obj.estado = cfg["estado"]
-                    parada_obj.hora_entrega = cfg["hora_entrega"]
-                    parada_obj.save()
-                    total_paradas_creadas += 1
-
-                    # Registrar problema/inconveniente operativo si corresponde (HU-56 / HU-18)
-                    if cfg.get("problema"):
-                        ProblemaParada.objects.filter(parada=parada_obj).delete()
-                        p_info = cfg["problema"]
-                        ProblemaParada.objects.create(
-                            parada=parada_obj,
-                            tipo=p_info["tipo"],
-                            descripcion=p_info["descripcion"],
-                            impide_entrega=p_info["impide_entrega"],
-                        )
-
-                    # Asegurar remitos asociados a la parada
-                    if cfg.get("multimarca"):
-                        # Parada multimarca con múltiples remitos de distintas marcas (HU-25 / HU-36)
-                        Remito.objects.filter(parada=parada_obj).delete()
-                        for m_info in cfg["multimarca"]:
-                            marca_obj = marcas_list[m_info["marca_idx"] % len(marcas_list)]
-                            Remito.objects.create(
-                                numero=f"0009-0000005{m_info['sufijo']}",
-                                marca=marca_obj,
-                                comercio=com,
-                                total=m_info["total"],
-                                estado=EstadoRemito.ASIGNADO,
-                                parada=parada_obj,
-                            )
-                    else:
-                        remito_existente = Remito.objects.filter(comercio=com, parada__isnull=True).first()
-                        if remito_existente:
-                            remito_existente.parada = parada_obj
-                            remito_existente.estado = cfg["remito_estado"]
-                            remito_existente.total = cfg["remito_total"]
-                            remito_existente.save(update_fields=["parada", "estado", "total"])
-                        else:
-                            remito_existente = Remito.objects.filter(comercio=com, parada=parada_obj).first()
-                            if not remito_existente:
-                                marca_asignada = marcas_list[(orden_idx - 1) % len(marcas_list)]
-                                Remito.objects.create(
-                                    numero=f"0009-{str(orden_idx).zfill(8)}",
-                                    marca=marca_asignada,
-                                    comercio=com,
-                                    total=cfg["remito_total"],
-                                    estado=cfg["remito_estado"],
-                                    parada=parada_obj,
-                                )
-                            else:
-                                remito_existente.estado = cfg["remito_estado"]
-                                remito_existente.total = cfg["remito_total"]
-                                remito_existente.save(update_fields=["estado", "total"])
-
-                    # Crear cobranza de ejemplo si corresponde a la configuración de la parada
-                    if cfg.get("cobranza_estado"):
-                        Cobranza.objects.filter(parada=parada_obj).delete()
-                        cobranza_obj = Cobranza.objects.create(
-                            parada=parada_obj,
-                            estado=cfg["cobranza_estado"],
-                            observacion=cfg.get("observacion"),
-                        )
-                        total_cobranzas_creadas += 1
-
-                        for det in cfg["detalles"]:
-                            DetallePago.objects.create(
-                                cobranza=cobranza_obj,
-                                medio=det["medio"],
-                                monto_declarado=det["declarado"],
-                                monto_verificado=det.get("verificado", Decimal("0.00")),
-                                mp_payment_id=det.get("mp_payment_id"),
-                            )
-
-                        if cfg.get("ajuste") and conciliacion:
-                            ajuste_data = cfg["ajuste"]
-                            AjusteCobranza.objects.create(
-                                cobranza=cobranza_obj,
-                                usuario=conciliacion,
-                                medio=ajuste_data["medio"],
-                                monto=ajuste_data["monto"],
-                                motivo=ajuste_data["motivo"],
-                            )
-
-                # Ruta guardada de prueba para validar HU-63, HU-64 y HU-65
-                ruta_guardada, _ = RutaGuardada.objects.get_or_create(
+                ruta_guardada_martin, _ = RutaGuardada.objects.get_or_create(
                     transportista=transportista_martin,
                     nombre="Ruta Costera 12",
                 )
-                DetalleRutaGuardada.objects.filter(ruta_guardada=ruta_guardada).delete()
-                for p_idx, com in enumerate(paradas_comercios[:3], start=1):
-                    if com:
-                        DetalleRutaGuardada.objects.create(
-                            ruta_guardada=ruta_guardada,
-                            comercio=com,
-                            prioridad=p_idx,
-                        )
-
-            # ------------------------------------------------------------------
-            # 8. Itinerario histórico finalizado (Jornada anterior - HU-60 / HU-61)
-            # ------------------------------------------------------------------
-            itinerario_ayer = None
-            if transportista_martin:
-                fecha_ayer = date.today() - timedelta(days=1)
-                itinerario_ayer, _ = Itinerario.objects.get_or_create(
-                    fecha=fecha_ayer,
-                    transportista=transportista_martin,
-                    defaults={
-                        "estado": EstadoItinerario.FINALIZADO,
-                        "vehiculo": transportista_martin.vehiculo,
-                    },
-                )
-                itinerario_ayer.estado = EstadoItinerario.FINALIZADO
-                itinerario_ayer.vehiculo = transportista_martin.vehiculo
-                itinerario_ayer.save()
-
-                paradas_ayer_comercios = comercios_disponibles[5:8]
-                for p_ayer_idx, c_ayer in enumerate(paradas_ayer_comercios, start=1):
-                    p_ayer_obj, _ = Parada.objects.get_or_create(
-                        itinerario=itinerario_ayer,
-                        comercio=c_ayer,
-                        defaults={
-                            "orden": p_ayer_idx,
-                            "estado": EstadoParada.FINALIZADA,
-                            "hora_entrega": timezone.now().replace(hour=8 + p_ayer_idx, minute=45, second=0),
-                        },
-                    )
-                    p_ayer_obj.estado = EstadoParada.FINALIZADA
-                    p_ayer_obj.orden = p_ayer_idx
-                    p_ayer_obj.save()
-
-                    rem_ayer = Remito.objects.filter(comercio=c_ayer, parada=p_ayer_obj).first()
-                    if not rem_ayer:
-                        rem_ayer = Remito.objects.create(
-                            numero=f"0008-0000000{p_ayer_idx}",
-                            marca=marcas_list[p_ayer_idx % len(marcas_list)],
-                            comercio=c_ayer,
-                            total=Decimal("110000.00") * p_ayer_idx,
-                            estado=EstadoRemito.ENTREGADO,
-                            parada=p_ayer_obj,
-                        )
-                    else:
-                        rem_ayer.estado = EstadoRemito.ENTREGADO
-                        rem_ayer.save(update_fields=["estado"])
-
-                    Cobranza.objects.filter(parada=p_ayer_obj).delete()
-                    cob_ayer = Cobranza.objects.create(
-                        parada=p_ayer_obj,
-                        estado=EstadoCobranza.APROBADO,
-                        observacion="Cobranza histórica aprobada y conciliada.",
-                    )
-                    DetallePago.objects.create(
-                        cobranza=cob_ayer,
-                        medio=MedioPago.EFECTIVO,
-                        monto_declarado=rem_ayer.total,
-                        monto_verificado=rem_ayer.total,
+                DetalleRutaGuardada.objects.filter(ruta_guardada=ruta_guardada_martin).delete()
+                for p_idx, com in enumerate(comercios_lista[:3], start=1):
+                    DetalleRutaGuardada.objects.create(
+                        ruta_guardada=ruta_guardada_martin,
+                        comercio=com,
+                        prioridad=p_idx,
                     )
 
-            # ------------------------------------------------------------------
-            # 8.1. Itinerario en curso (Chofer Lucas Rodríguez - 12345680)
-            # ------------------------------------------------------------------
-            transportista_lucas = Transportista.objects.filter(
-                usuario__username="12345680"
-            ).first()
-            itinerario_en_curso = None
-            total_paradas_en_curso = 0
-
-            if transportista_lucas:
-                itinerario_en_curso, _ = Itinerario.objects.get_or_create(
-                    fecha=date.today(),
-                    transportista=transportista_lucas,
-                    defaults={
-                        "estado": EstadoItinerario.EN_CURSO,
-                        "vehiculo": transportista_lucas.vehiculo,
-                    },
-                )
-                itinerario_en_curso.estado = EstadoItinerario.EN_CURSO
-                itinerario_en_curso.vehiculo = transportista_lucas.vehiculo
-                itinerario_en_curso.save()
-
-                paradas_en_curso_comercios = comercios_disponibles[8:11]
-                paradas_en_curso_cfg = [
-                    {
-                        "orden": 1,
-                        "estado": EstadoParada.FINALIZADA,
-                        "hora_entrega": timezone.now().replace(hour=10, minute=30, second=0),
-                        "remito_total": Decimal("135000.00"),
-                        "remito_estado": EstadoRemito.ENTREGADO,
-                        "cobranza_estado": EstadoCobranza.REGISTRADO,
-                        "detalles": [
-                            {"medio": MedioPago.EFECTIVO, "declarado": Decimal("135000.00"), "verificado": Decimal("0.00")},
-                        ],
-                    },
-                    {
-                        "orden": 2,
-                        "estado": EstadoParada.PENDIENTE,
-                        "hora_entrega": None,
-                        "remito_total": Decimal("85000.00"),
-                        "remito_estado": EstadoRemito.ASIGNADO,
-                        "cobranza_estado": None,
-                    },
-                    {
-                        "orden": 3,
-                        "estado": EstadoParada.PENDIENTE,
-                        "hora_entrega": None,
-                        "remito_total": Decimal("112000.00"),
-                        "remito_estado": EstadoRemito.ASIGNADO,
-                        "cobranza_estado": None,
-                    },
-                ]
-
-                for p_idx, c_obj in enumerate(paradas_en_curso_comercios, start=1):
-                    if not c_obj:
-                        continue
-                    cfg_ec = paradas_en_curso_cfg[p_idx - 1]
-                    p_obj, _ = Parada.objects.get_or_create(
-                        itinerario=itinerario_en_curso,
-                        comercio=c_obj,
-                        defaults={
-                            "orden": cfg_ec["orden"],
-                            "estado": cfg_ec["estado"],
-                            "hora_entrega": cfg_ec["hora_entrega"],
-                        },
-                    )
-                    p_obj.orden = cfg_ec["orden"]
-                    p_obj.estado = cfg_ec["estado"]
-                    p_obj.hora_entrega = cfg_ec["hora_entrega"]
-                    p_obj.save()
-                    total_paradas_en_curso += 1
-
-                    rem_ec = Remito.objects.filter(comercio=c_obj, parada=p_obj).first()
-                    if not rem_ec:
-                        Remito.objects.create(
-                            numero=f"0010-{str(p_idx).zfill(8)}",
-                            marca=marcas_list[p_idx % len(marcas_list)],
-                            comercio=c_obj,
-                            total=cfg_ec["remito_total"],
-                            estado=cfg_ec["remito_estado"],
-                            parada=p_obj,
-                        )
-                    else:
-                        rem_ec.estado = cfg_ec["remito_estado"]
-                        rem_ec.total = cfg_ec["remito_total"]
-                        rem_ec.save(update_fields=["estado", "total"])
-
-                    if cfg_ec.get("cobranza_estado"):
-                        Cobranza.objects.filter(parada=p_obj).delete()
-                        cob_ec = Cobranza.objects.create(
-                            parada=p_obj,
-                            estado=cfg_ec["cobranza_estado"],
-                            observacion="Cobranza de parada en curso registrada por chofer.",
-                        )
-                        for d_ec in cfg_ec["detalles"]:
-                            DetallePago.objects.create(
-                                cobranza=cob_ec,
-                                medio=d_ec["medio"],
-                                monto_declarado=d_ec["declarado"],
-                                monto_verificado=d_ec.get("verificado", Decimal("0.00")),
-                            )
-
-            # ------------------------------------------------------------------
-            # 8.2. Itinerario eliminable de prueba (HU-48 Happy Path - Sin cobranzas)
-            # ------------------------------------------------------------------
-            itinerario_eliminable, _ = Itinerario.objects.get_or_create(
-                fecha=date.today() + timedelta(days=1),
-                transportista=transportista_lucas,
-                defaults={
-                    "estado": EstadoItinerario.ASIGNADO,
-                    "vehiculo": transportista_lucas.vehiculo if transportista_lucas else None,
-                },
-            )
-            itinerario_eliminable.estado = EstadoItinerario.ASIGNADO
-            itinerario_eliminable.save()
-            comercio_el = comercios.get("27200002143")
-            if comercio_el:
-                Parada.objects.get_or_create(
-                    itinerario=itinerario_eliminable,
-                    comercio=comercio_el,
-                    defaults={
-                        "orden": 1,
-                        "estado": EstadoParada.PENDIENTE,
-                    },
-                )
-
-            # ------------------------------------------------------------------
-            # 9. Flujo Completo: Itinerario, Paradas y Cobranza para usuario 1234567
-            # ------------------------------------------------------------------
-            itinerario_creado = None
-            total_paradas_completo = 0
-            total_cobranzas_completo = 0
-
-            if options["completo"]:
-                chofer_user = Usuario.objects.filter(username="1234567").first()
-                if not chofer_user:
-                    self.stdout.write(
-                        self.style.ERROR("No se encontró el usuario 1234567.")
-                    )
-                else:
-                    transportista_1234567 = getattr(
-                        chofer_user, "perfil_transportista", None
-                    )
-                    vehiculo_1234567 = (
-                        transportista_1234567.vehiculo if transportista_1234567 else None
-                    )
-
-                    hoy = timezone.now().date()
-                    itinerario_creado = Itinerario.objects.create(
-                        fecha=hoy,
-                        estado=EstadoItinerario.ASIGNADO,
-                        transportista=transportista_1234567,
-                        vehiculo=vehiculo_1234567,
-                    )
-
-                    # Parada 1: Comercio "23200048148" (pendiente de entrega)
-                    comercio_1 = comercios["23200048148"]
-                    parada_1 = Parada.objects.create(
-                        itinerario=itinerario_creado,
-                        comercio=comercio_1,
-                        orden=1,
-                        estado=EstadoParada.PENDIENTE,
-                    )
-                    total_paradas_completo += 1
-
-                    remito_1 = remitos_creados.get("0005-00024715")
-                    if remito_1:
-                        remito_1.parada = parada_1
-                        remito_1.estado = EstadoRemito.ASIGNADO
-                        remito_1.save(update_fields=["parada", "estado"])
-
-                        cobranza_1 = Cobranza.objects.create(
-                            parada=parada_1,
-                            estado=EstadoCobranza.REGISTRADO,
-                        )
-                        # Pago con 2 medios (efectivo y transferencia)
-                        monto_efectivo = Decimal("150000.00")
-                        monto_transferencia = remito_1.total - monto_efectivo
-
-                        DetallePago.objects.create(
-                            cobranza=cobranza_1,
-                            medio=MedioPago.EFECTIVO,
-                            monto_declarado=monto_efectivo,
-                            monto_verificado=None,
-                        )
-                        DetallePago.objects.create(
-                            cobranza=cobranza_1,
-                            medio=MedioPago.TRANSFERENCIA,
-                            monto_declarado=monto_transferencia,
-                            monto_verificado=None,
-                        )
-                        total_cobranzas_completo += 1
-
-                    # Parada 2: Comercio "23200000145" (finalizada con cobranza registrada / pendiente de validación)
-                    # Este comercio tiene dos remitos: 0090-00015378 y 0090-00003901
-                    comercio_2 = comercios["23200000145"]
-                    parada_2 = Parada.objects.create(
-                        itinerario=itinerario_creado,
-                        comercio=comercio_2,
-                        orden=2,
-                        estado=EstadoParada.PENDIENTE,
-                    )
-                    total_paradas_completo += 1
-
-                    remito_2a = remitos_creados.get("0090-00015378")
-                    remito_2b = remitos_creados.get("0090-00003901")
-                    total_monto_parada_2 = Decimal("0.00")
-
-                    if remito_2a:
-                        remito_2a.parada = parada_2
-                        remito_2a.estado = EstadoRemito.ASIGNADO
-                        remito_2a.save(update_fields=["parada", "estado"])
-
-                    if remito_2b:
-                        remito_2b.parada = parada_2
-                        remito_2b.estado = EstadoRemito.ASIGNADO
-                        remito_2b.save(update_fields=["parada", "estado"])
-                        total_monto_parada_2 += remito_2b.total
-
-                    if total_monto_parada_2 > Decimal("0.00"):
-                        cobranza_2 = Cobranza.objects.create(
-                            parada=parada_2,
-                            estado=EstadoCobranza.REGISTRADO,
-                        )
-                        DetallePago.objects.create(
-                            cobranza=cobranza_2,
-                            medio=MedioPago.TRANSFERENCIA,
-                            monto_declarado=total_monto_parada_2,
-                            monto_verificado=None,
-                        )
-                        total_cobranzas_completo += 1
-
-                    # Parada 3: Comercio "23200033191" (pendiente de entrega)
-                    comercio_3 = comercios["23200033191"]
-                    parada_3 = Parada.objects.create(
-                        itinerario=itinerario_creado,
-                        comercio=comercio_3,
-                        orden=3,
-                        estado=EstadoParada.PENDIENTE,
-                    )
-                    total_paradas_completo += 1
-
-                    remito_3 = remitos_creados.get("0002-00023458")
-                    if remito_3:
-                        remito_3.parada = parada_3
-                        remito_3.estado = EstadoRemito.ASIGNADO
-                        remito_3.save(update_fields=["parada", "estado"])
-
-                    # Parada 4: Comercio "23200056655" (pendiente de entrega, con 2 remitos)
-                    comercio_4 = comercios["23200056655"]
-                    parada_4 = Parada.objects.create(
-                        itinerario=itinerario_creado,
-                        comercio=comercio_4,
-                        orden=4,
-                        estado=EstadoParada.PENDIENTE,
-                    )
-                    total_paradas_completo += 1
-
-                    remito_4a = remitos_creados.get("0002-00023496")
-                    remito_4b = remitos_creados.get("0090-00015345")
-                    if remito_4a:
-                        remito_4a.parada = parada_4
-                        remito_4a.estado = EstadoRemito.ASIGNADO
-                        remito_4a.save(update_fields=["parada", "estado"])
-                    if remito_4b:
-                        remito_4b.parada = parada_4
-                        remito_4b.estado = EstadoRemito.ASIGNADO
-                        remito_4b.save(update_fields=["parada", "estado"])
-
-                    # Ruta guardada de prueba para usuario 1234567 (HU-63, HU-64, HU-65)
+            chofer_lautaro = Usuario.objects.filter(username="1234567").first()
+            if chofer_lautaro:
+                transportista_lautaro = getattr(chofer_lautaro, "perfil_transportista", None)
+                if transportista_lautaro:
                     ruta_guardada_lautaro, _ = RutaGuardada.objects.get_or_create(
-                        transportista=transportista_1234567,
+                        transportista=transportista_lautaro,
                         nombre="Ruta Rapida Alternativa",
                     )
                     DetalleRutaGuardada.objects.filter(ruta_guardada=ruta_guardada_lautaro).delete()
-                    for idx_r, com_r in enumerate([comercio_1, comercio_2, comercio_3, comercio_4], start=1):
+                    for idx_r, com_r in enumerate(comercios_lista[3:7], start=1):
                         DetalleRutaGuardada.objects.create(
                             ruta_guardada=ruta_guardada_lautaro,
                             comercio=com_r,
@@ -1447,43 +789,9 @@ class Command(BaseCommand):
         self.stdout.write("  • Administrativo Gestion Personal: 44444444 (clave: 123)")
         self.stdout.write(f"  • Comercios: {len(comercios_data)}")
         self.stdout.write(f"  • Marcas: {len(marcas_data)}")
-        if cargar_remitos:
-            self.stdout.write(
-                f"  • Remitos cargados: {len(remitos_definicion)} ({total_remitos} nuevos)"
-            )
-        else:
-            self.stdout.write("  • Remitos cargados: 0 (use --con-remitos o --completo para cargarlos)")
-
-        if options["completo"]:
-            self.stdout.write(
-                f"  • Itinerario asignado a 1234567: ID #{itinerario_creado.id if itinerario_creado else 'N/A'} con {total_paradas_completo} paradas."
-            )
-            self.stdout.write(
-                f"  • Cobranzas registradas: {total_cobranzas_completo}."
-            )
-        else:
-            self.stdout.write(
-                "  • Chofer 1234567: Sin itinerario asignado (use --completo para generarlo)"
-            )
-
-        if itinerario_martin:
-            self.stdout.write(
-                f"  • Itinerario asignado (Hoy): #{itinerario_martin.id} con {total_paradas_creadas} paradas para Chofer Martín Pérez"
-            )
-            self.stdout.write(
-                "  • Ruta guardada de prueba: 'Ruta Costera 12' (3 comercios)"
-            )
-            self.stdout.write(
-                f"  • Cobranzas de ejemplo: {total_cobranzas_creadas} cobranzas registradas (1 Registrada, 1 Aprobada, 1 Difiere con Ajuste auditado por 22222222)"
-            )
-        if itinerario_en_curso:
-            self.stdout.write(
-                f"  • Itinerario en curso (Hoy): #{itinerario_en_curso.id} con {total_paradas_en_curso} paradas para Chofer Lucas Rodríguez"
-            )
-        if itinerario_ayer:
-            self.stdout.write(
-                f"  • Itinerario histórico (Ayer): #{itinerario_ayer.id} cerrado/finalizado con 3 paradas y cobranzas aprobadas"
-            )
+        self.stdout.write("  • Choferes / Transportistas: 5 perfiles activos/configurados")
+        self.stdout.write("  • Rutas guardadas: 2 rutas base ('Ruta Costera 12', 'Ruta Rapida Alternativa')")
+        self.stdout.write("  • Remitos e Itinerarios: 0 (los remitos se cargan importando las planillas CSV/Excel)")
 
         self.stdout.write(
             self.style.HTTP_INFO("\n" + "=" * 70)
@@ -1502,25 +810,18 @@ class Command(BaseCommand):
         self.stdout.write("   • Admin Personal       : 44444444 | Clave: 123 (Choferes, Desbloqueo)")
 
         self.stdout.write(self.style.WARNING("\n2. Transportistas (Choferes - App Móvil / Rutas)"))
-        self.stdout.write("   • Chofer 1 (Activo Completo): DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD")
-        self.stdout.write("     - Itinerario de hoy con 4 paradas (2 finalizadas con cobranza, 2 pendientes de entrega en calle).")
+        self.stdout.write("   • Chofer 1: DNI 1234567  | Clave: 123 | Lautaro Gómez | Vehículo: AF123CD")
         self.stdout.write("     - Ruta guardada: 'Ruta Rapida Alternativa'.")
-        self.stdout.write("   • Chofer 2 (Completo Avanzado): DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF")
-        self.stdout.write("     - Itinerario de hoy con 5 paradas (1 registrada, 1 aprobada, 1 difiere con ajuste auditado, 1 error local cerrado, 1 Consolidación Multimarca).")
+        self.stdout.write("   • Chofer 2: DNI 12345678 | Clave: 123 | Martín Pérez  | Vehículo: AG456EF")
         self.stdout.write("     - Ruta guardada: 'Ruta Costera 12'.")
         self.stdout.write("   • Chofer 3 (Bloqueado/Suspendido): DNI 12345679 | Clave: 123 | Carlos Bloqueado (Para probar desbloqueo HU-11 / HU-66).")
-        self.stdout.write("   • Chofer 4 (En Curso): DNI 12345680 | Clave: 123 | Lucas Rodríguez | Vehículo: AD345JK (Itinerario en curso HU-60).")
+        self.stdout.write("   • Chofer 4: DNI 12345680 | Clave: 123 | Lucas Rodríguez | Vehículo: AD345JK")
         self.stdout.write("   • Chofer 5 (Sin Ruta - Caso de Borde): DNI 12345681 | Clave: 123 | Esteban Suplente (Sin itinerario asignado HU-62).")
 
-        self.stdout.write(self.style.WARNING("\n3. Lotes de Importación y Remitos"))
-        self.stdout.write("   • Lote Descartable (HU-40) : Snacks Andinos S.R.L. con remitos PENDIENTES (eliminable sin trabas).")
-        self.stdout.write("   • Lote Rechazado (HU-38)   : Gaseosas del Sur S.A. con errores de fila registrados para auditoría.")
-        self.stdout.write("   • Remitos Clave Compuesta  : #0001-00099999 (coexiste en Cervecería La Diagonal y Snacks Andinos).")
-
-        self.stdout.write(self.style.WARNING("\n4. Itinerarios y Trazabilidad"))
-        self.stdout.write("   • Itinerario de Hoy (Activo)     : Asignado a Lautaro Gómez (#" + str(itinerario_creado.id if itinerario_creado else 'N/A') + ") y Martín Pérez.")
-        self.stdout.write("   • Itinerario Eliminable (HU-48)  : Hoja de ruta para mañana asignada a Lucas Rodríguez (sin cobranzas, eliminable).")
-        self.stdout.write("   • Itinerario Histórico (Inmutable): Finalizado ayer para Martín Pérez (controles deshabilitados, protegido).")
+        self.stdout.write(self.style.WARNING("\n3. Flujo Operativo y Remitos"))
+        self.stdout.write("   • Importación de Planillas: Ingresar con Admin Planificación (33333333) e importar planillas CSV/Excel.")
+        self.stdout.write("   • Diagramación de Itinerarios: Diagramar itinerarios asignando paradas y remitos desde la interfaz web.")
+        self.stdout.write("   • Lote Rechazado de Ejemplo: Lote con errores de fila registrado para verificar auditoría de excepciones.")
 
         self.stdout.write(
             self.style.HTTP_INFO("=" * 70 + "\n")

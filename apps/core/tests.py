@@ -465,7 +465,7 @@ class PoblarCommandTests(TestCase):
         self.assertIn("11111111", output)
         self.assertIn("1234567", output)
         self.assertIn("12345678", output)
-        self.assertIn("Consolidación Multimarca", output)
+        self.assertIn("Datos maestros cargados exitosamente", output)
 
     def test_poblar_limpiar_unblocks_all_users(self):
         user_model = get_user_model()
@@ -502,40 +502,31 @@ class PoblarCommandTests(TestCase):
         for grupo_val in Grupos.values:
             self.assertIn(grupo_val, nombres_grupos)
 
-    def test_poblar_completo_creates_route_and_collections_for_driver(self):
+    def test_poblar_carga_datos_maestros_y_rutas_guardadas_sin_remitos(self):
         call_command("crear_grupos", stdout=StringIO())
         out = StringIO()
         call_command("poblar", "--completo", stdout=out)
         output = out.getvalue()
 
         self.assertIn("Datos maestros cargados exitosamente", output)
-        self.assertIn("Itinerario asignado a 1234567", output)
+        self.assertIn("Remitos e Itinerarios: 0", output)
 
         user = get_user_model().objects.get(username="1234567")
         self.assertIsNotNone(user.perfil_transportista)
 
-        from apps.itinerarios.models import Itinerario, Parada, EstadoItinerario, EstadoParada
-        from apps.cobranza.models import Cobranza
-        from apps.remitos.models import Remito
+        from apps.itinerarios.models import Itinerario, Parada, RutaGuardada
+        from apps.remitos.models import Comercio, Marca, Remito
 
-        itinerarios = Itinerario.objects.filter(transportista=user.perfil_transportista)
-        self.assertEqual(itinerarios.count(), 1)
-        itinerario = itinerarios.first()
-        self.assertEqual(itinerario.estado, EstadoItinerario.ASIGNADO)
+        # Comercios y marcas cargados
+        self.assertEqual(Comercio.objects.count(), 50)
+        self.assertEqual(Marca.objects.count(), 4)
 
-        paradas = Parada.objects.filter(itinerario=itinerario).order_by("orden")
-        self.assertEqual(paradas.count(), 4)
+        # Rutas guardadas para transportistas
+        self.assertTrue(
+            RutaGuardada.objects.filter(transportista=user.perfil_transportista).exists()
+        )
 
-        # Paradas con cobranzas
-        cobranzas = Cobranza.objects.filter(parada__itinerario=itinerario)
-        self.assertEqual(cobranzas.count(), 2)
-        for c in cobranzas:
-            self.assertEqual(c.estado, "registrado")
-
-        # Una de las cobranzas tiene 2 medios de pago
-        detalles_conteo = [c.detalles.count() for c in cobranzas]
-        self.assertIn(2, detalles_conteo)
-
-        # Remitos asignados a paradas
-        remitos_asignados = Remito.objects.filter(parada__itinerario=itinerario)
-        self.assertGreaterEqual(remitos_asignados.count(), 5)
+        # No debe crear remitos, paradas ni itinerarios artificiales
+        self.assertEqual(Remito.objects.count(), 0)
+        self.assertEqual(Parada.objects.count(), 0)
+        self.assertEqual(Itinerario.objects.count(), 0)

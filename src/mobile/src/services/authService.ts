@@ -7,7 +7,7 @@ import {
   getUserSession,
   clearUserSession,
 } from './storage';
-import { BACKEND_URL } from './config';
+import { BACKEND_URL, getBackendBaseUrl } from './config';
 
 // Configuración dinámica de la URL base del Backend Django
 export const API_BASE_URL = BACKEND_URL;
@@ -140,12 +140,14 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
   const dniLimpio = dni.trim();
   const claveLimpia = clave.trim();
 
+  const currentBaseUrl = getBackendBaseUrl();
+
   try {
-    console.log(`[AuthService] Conectando a ${API_BASE_URL}/api/token/ con DNI: ${dniLimpio}`);
+    console.log(`[AuthService] Conectando a ${currentBaseUrl}/api/token/ con DNI: ${dniLimpio}`);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000); // 7 segundos de timeout para Wi-Fi/red local
 
-    const response = await fetch(`${API_BASE_URL}/api/token/`, {
+    const response = await fetch(`${currentBaseUrl}/api/token/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -267,10 +269,10 @@ export async function loginTransportista(dni: string, clave: string): Promise<Lo
       tipoError: 'SERVIDOR',
     };
   } catch (error: any) {
-    console.warn('[AuthService] No se pudo conectar con el servidor:', error?.message);
+    console.warn(`[AuthService] No se pudo conectar con el servidor (${currentBaseUrl}):`, error?.message);
     return {
       success: false,
-      error: 'No se pudo conectar con la base de datos del servidor. Verificá tu conexión a internet o que el backend esté en ejecución.',
+      error: `No se pudo conectar al servidor en ${currentBaseUrl}. Verificá que el backend esté en ejecución y en la misma red.`,
       tipoError: 'CONEXION',
     };
   }

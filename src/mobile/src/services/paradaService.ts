@@ -2,6 +2,7 @@
 // Gestión de estado y consulta de parada seleccionada con soporte dinámico y contratos de Django
 
 import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
+import { getBackendBaseUrl } from './config';
 import { DetalleParada, MOCK_PARADA_SELECCIONADA } from '../data/mockParada';
 import { ParadaItem } from '../types/itinerario';
 import { MOCK_ITINERARIO_ASIGNADO } from '../data/mockItinerario';
@@ -77,7 +78,7 @@ export const actualizarEstadoCobroParada = (
       const p = itin.paradas.find((item: any) => item.id === targetId);
       if (p) {
         p.estado = nuevoEstado;
-        if (nuevoEstado === 'finalizada' || nuevoEstado === 'completada') {
+        if ((nuevoEstado as string) === 'finalizada' || (nuevoEstado as string) === 'completada') {
           p.subtitulo = `Parada ${p.orden} de ${itin.totalParadas || itin.paradas.length} · Entregada`;
         }
         itin.paradasCompletadas = itin.paradas.filter(
@@ -277,7 +278,7 @@ export async function obtenerDetalleParada(paradaId?: number): Promise<{
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 7000);
 
-    const response = await fetch(`${API_BASE_URL}/api/paradas/${idObjetivo}/`, {
+    const response = await fetch(`${getBackendBaseUrl()}/api/paradas/${idObjetivo}/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

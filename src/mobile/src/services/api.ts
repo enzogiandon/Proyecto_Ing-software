@@ -3,10 +3,10 @@
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from './storage';
-import { BACKEND_URL } from './config';
+import { BACKEND_URL, getApiBaseUrl } from './config';
 
 // URL base del backend Django calculada dinámicamente según la plataforma
-export let API_BASE_URL = `${BACKEND_URL}/api/`;
+export let API_BASE_URL = getApiBaseUrl();
 
 export const setApiBaseUrl = (newUrl: string) => {
   API_BASE_URL = newUrl.endsWith('/') ? newUrl : `${newUrl}/`;
@@ -25,6 +25,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
+      config.baseURL = getApiBaseUrl();
       const token = await getAccessToken();
       if (token) {
         config.headers = config.headers || {};

@@ -1,5 +1,5 @@
-// src/services/itinerarioService.ts
 import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
+import { getBackendBaseUrl } from './config';
 import { saveJornadaIniciada, isJornadaIniciadaStorage } from './storage';
 import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import {
@@ -41,7 +41,7 @@ export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promis
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timeoutId = controller ? setTimeout(() => controller.abort(), 7000) : null;
 
-    let response = await fetch(`${API_BASE_URL}/api/itinerarios/iniciar/`, {
+    let response = await fetch(`${getBackendBaseUrl()}/api/itinerarios/iniciar/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promis
 
     // Fallback hacia /api/itinerarios/iniciar-jornada/ si /api/itinerarios/iniciar/ no estuviese disponible
     if (response.status === 404) {
-      response = await fetch(`${API_BASE_URL}/api/itinerarios/iniciar-jornada/`, {
+      response = await fetch(`${getBackendBaseUrl()}/api/itinerarios/iniciar-jornada/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
     const timeoutId = setTimeout(() => controller.abort(), 2500);
 
     // 1. Intentamos consultar primero /api/itinerarios/hoy/ (cabecera estructurada del día)
-    let response = await fetch(`${API_BASE_URL}/api/itinerarios/hoy/`, {
+    let response = await fetch(`${getBackendBaseUrl()}/api/itinerarios/hoy/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -165,7 +165,7 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
       }
 
       // Si no es un 404 semántico de negocio, consultar el endpoint estándar /paradas/
-      response = await fetch(`${API_BASE_URL}/api/itinerarios/paradas/`, {
+      response = await fetch(`${getBackendBaseUrl()}/api/itinerarios/paradas/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

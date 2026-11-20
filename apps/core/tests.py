@@ -78,6 +78,33 @@ class EmpleadoViewsTests(TestCase):
         self.assertTrue(Transportista.objects.filter(usuario=employee).exists())
         self.assertQuerySetEqual(employee.groups.all(), [self.grupo_transportista])
 
+    def test_create_transportista_rejects_multiple_roles(self):
+        response = self.client.post(
+            reverse("core:empleado_crear"),
+            {
+                "username": "34567899",
+                "email": "chofer_multi@example.com",
+                "first_name": "Pedro",
+                "last_name": "Gómez",
+                "telefono": "1112345678",
+                "grupos": [self.grupo_transportista.pk, self.gestion_personal.pk],
+                "password": "Transport-Password-42!",
+                "password_confirm": "Transport-Password-42!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("grupos", form.errors)
+        self.assertIn(
+            "Un transportista no puede tener otros roles asignados.",
+            form.errors["grupos"],
+        )
+        self.assertFalse(
+            get_user_model().objects.filter(username="34567899").exists()
+        )
+
     def test_duplicate_employee_dni_is_rejected(self):
         get_user_model().objects.create_user(
             username="45678901",

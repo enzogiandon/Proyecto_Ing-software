@@ -164,19 +164,19 @@
                             return;
                         }
 
+                        function esCheckboxTransportista(input) {
+                            const label = document.querySelector(`label[for="${input.id}"]`);
+                            const texto = (label ? label.textContent : "").toLowerCase();
+                            const val = (input.value || "").toLowerCase();
+                            return texto.includes("transportista") || val.includes("transportista");
+                        }
+
                         function actualizar() {
                             let esTransportista = false;
 
                             inputsGrupos.forEach((input) => {
-                                if (input.checked) {
-                                    const label = document.querySelector(`label[for="${input.id}"]`);
-                                    const texto = (label ? label.textContent : "").toLowerCase();
-                                    const val = (input.value || "").toLowerCase();
-
-                                    // Detecta si es transportista por texto visible o por ID/nombre del grupo
-                                    if (texto.includes("transportista") || val.includes("transportista")) {
-                                        esTransportista = true;
-                                    }
+                                if (input.checked && esCheckboxTransportista(input)) {
+                                    esTransportista = true;
                                 }
                             });
 
@@ -192,7 +192,26 @@
                         }
 
                         inputsGrupos.forEach((input) => {
-                            input.addEventListener("change", actualizar);
+                            input.addEventListener("change", function() {
+                                if (this.checked) {
+                                    if (esCheckboxTransportista(this)) {
+                                        // Si se selecciona transportista, desmarcar cualquier otro rol
+                                        inputsGrupos.forEach((otro) => {
+                                            if (otro !== this) {
+                                                otro.checked = false;
+                                            }
+                                        });
+                                    } else {
+                                        // Si se selecciona otro rol, desmarcar transportista
+                                        inputsGrupos.forEach((otro) => {
+                                            if (otro !== this && esCheckboxTransportista(otro)) {
+                                                otro.checked = false;
+                                            }
+                                        });
+                                    }
+                                }
+                                actualizar();
+                            });
                         });
 
                         // Verificación inmediata al cargar

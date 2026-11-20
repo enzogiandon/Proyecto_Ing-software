@@ -113,6 +113,18 @@ class EmpleadoCreateForm(forms.ModelForm):
         validate_password(password, user=self.instance)
         return password
 
+    def clean_grupos(self):
+        grupos = self.cleaned_data.get("grupos")
+        if not grupos:
+            return grupos
+
+        nombres_grupos = [getattr(g, "name", str(g)) for g in grupos]
+        if Grupos.TRANSPORTISTA in nombres_grupos and len(nombres_grupos) > 1:
+            raise ValidationError(
+                "Un transportista no puede tener otros roles asignados."
+            )
+        return grupos
+
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")

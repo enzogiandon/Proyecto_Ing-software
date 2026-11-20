@@ -1,0 +1,422 @@
+\documentclass[a4paper,9pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[scaled=0.90]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[a4paper, top=1.0cm, bottom=1.0cm, left=1.15cm, right=1.15cm, headheight=12pt, footskip=13pt]{geometry}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{colortbl}
+
+% ==============================================================================
+% DESIGN SYSTEM: PALETA Y TOKENS VISUALES (B&W / GRAYSCALE HIGH CONTRAST)
+% ==============================================================================
+\definecolor{inkblack}{gray}{0.0}       % 100% Negro puro (texto principal y títulos)
+\definecolor{inkdark}{gray}{0.15}       % 85% Negro para bordes estructurales
+\definecolor{inksubtle}{gray}{0.30}     % 70% Negro para metadatos y labels
+\definecolor{headgray}{gray}{0.94}      % 6% Gris neutro para cabeceras de tarjetas
+\definecolor{purewhite}{gray}{1.0}      % 100% Blanco
+
+\hypersetup{colorlinks=false, pdfborder={0 0 0}}
+
+% Listas estándar ultra-compactas y limpias
+\setlist{nosep, leftmargin=11pt, topsep=1pt, partopsep=0pt, itemsep=1.5pt}
+
+% Encabezados y pies de página formales
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\footnotesize\textbf{REPARTOYA} \textbar\ \textbf{Workflow Estratégico Demo 2} \textbar\ Release Final Sprint 2}
+\rhead{\footnotesize\textbf{Timebox: 30:00 min} \textbar\ Facilitador: Enzo Giandon (UNLP)}
+\lfoot{\scriptsize Softech Consultoría \& Desarrollo \textbar\ Audiencia: Martín Rodríguez (PO) \& Cátedra Ing. de Software}
+\rfoot{\footnotesize\bfseries Hoja \thepage\ de 4}
+\renewcommand{\headrulewidth}{0.7pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% ==============================================================================
+% COMPONENTES REUTILIZABLES (DESIGN SYSTEM)
+% ==============================================================================
+
+% 1. Tarjeta base unificada y tarjeta con cabecera gris tenue
+\tcbset{
+  cardframe/.style={
+    colback=purewhite,
+    colframe=inkdark,
+    boxrule=0.7pt,
+    arc=1mm,
+    top=3pt, bottom=3pt, left=5pt, right=5pt
+  },
+  cardheader/.style={
+    cardframe,
+    colbacktitle=headgray,
+    fonttitle=\bfseries\color{inkblack},
+    titlerule=0.5pt,
+    toptitle=2.5pt,
+    bottomtitle=2.5pt
+  },
+  talktrackcard/.style={
+    colback=purewhite,
+    colframe=inkblack,
+    leftrule=2.5pt,
+    rightrule=0.4pt,
+    toprule=0.4pt,
+    bottomrule=0.4pt,
+    arc=0mm,
+    top=2pt, bottom=2pt, left=5pt, right=5pt
+  }
+}
+
+% 2. Tokens de acción operativa consistentes en todos los bloques
+\newcommand{\stepact}[1]{\textbf{$\blacktriangleright$ Paso:} #1}
+\newcommand{\valact}[1]{\textbf{$\checkmark$ Validación en Vivo:} #1}
+\newcommand{\ruleact}[1]{\textbf{$\bigstar$ Regla/HU:} #1}
+\newcommand{\codeb}[1]{\texttt{\bfseries #1}}
+
+% 3. Encabezado de Bloque Unificado
+\newcommand{\blockheader}[4]{%
+  \begin{tabularx}{\textwidth}{@{}X r@{}}
+    {\fontsize{10.5pt}{12.5pt}\selectfont\textbf{#1}} & {\normalsize\textbf{#2}} \\
+    {\footnotesize\textbf{Actor / Pantalla:} #3} & {\footnotesize\textbf{Objetivo / HUs:} #4}
+  \end{tabularx}%
+  \vspace{-2pt}\hrule\vspace{3.5pt}%
+}
+
+\begin{document}
+
+% ==============================================================================
+% PÁGINA 1: SETUP, CREDENCIALES, CHECKLIST PRE-VUELO, BLOQUE 0 Y BLOQUE 1
+% ==============================================================================
+
+% CABECERA GENERAL DEL DOCUMENTO
+\begin{tcolorbox}[cardframe, boxrule=1.0pt, top=3pt, bottom=3pt, left=6pt, right=6pt]
+\begin{tabularx}{\textwidth}{@{}X r@{}}
+{\fontsize{12pt}{14pt}\selectfont\textbf{REPARTOYA — GUÍA DE MANO OPERATIVA (DEMO 2)}} & {\large\textbf{CRONÓMETRO: 30:00}} \\
+{\small\textbf{Release Final Sprint 2 \textbar\ Softech Consultora \textbar\ Facilitador: Enzo Giandon}} & {\small\textbf{Alarma preventiva: min 25:00}}
+\end{tabularx}
+\end{tcolorbox}
+
+\vspace{-4pt}
+
+% GRID 2x2: SETUP OPERATIVO Y TIMEBOXING
+\begin{minipage}[t]{0.62\textwidth}
+\begin{tcolorbox}[cardheader, title={\small REGLA DE ORO DE INICIO (Entorno 100\% Determinista)}, top=2pt, bottom=2pt]
+{\footnotesize Antes de iniciar la demo, ejecutar en la terminal del backend:}
+\begin{center}
+\vspace{-3pt}
+\framebox[\linewidth]{\small\textbf{\codeb{python manage.py poblar --limpiar --completo}}}
+\vspace{-3pt}
+\end{center}
+{\scriptsize Garantiza coincidencia 1:1 de remitos, comercios, choferes, paradas y cobranzas.}
+\end{tcolorbox}
+
+\vspace{-5pt}
+
+\begin{tcolorbox}[cardheader, title={\small Credenciales Maestras Rápidas (Clave universal: \codeb{123})}, top=2pt, bottom=2pt]
+{\scriptsize
+\begin{tabularx}{\textwidth}{@{}l c X@{}}
+\textbf{Rol / Usuario} & \textbf{DNI} & \textbf{Propósito / Recorrido Asignado} \\
+\midrule
+\textbf{Admin Conciliación} & \codeb{22222222} & Cobranzas, arqueo, ajuste auditado con su DNI. \\
+\textbf{Admin Planificación} & \codeb{33333333} & Importación de CSVs, diagramación de rutas. \\
+\textbf{Admin Personal} & \codeb{44444444} & Desbloqueo y reactivación de choferes. \\
+\textbf{Chofer 1 (Lautaro G.)} & \codeb{1234567} & Móvil \codeb{AF123CD} (Mercedes). 4 paradas hoy. \\
+\textbf{Chofer 2 (Martín P.)} & \codeb{12345678} & Móvil \codeb{AG456EF} (Iveco). Cobranza con faltante. \\
+\textbf{Chofer 3 (Bloqueado)} & \codeb{12345679} & Carlos Bloqueado (Cuenta inhabilitada HU-11). \\
+\textbf{Chofer 4 (Lucas R.)} & \codeb{12345680} & Itinerario hoy en curso e itinerario mañana. \\
+\textbf{Chofer 5 (Esteban S.)} & \codeb{12345681} & Suplente activo sin ruta (probar lista vacía HU-62). \\
+\end{tabularx}}
+\end{tcolorbox}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.36\textwidth}
+\begin{tcolorbox}[cardheader, title={\small Checklist Pre-Vuelo (15 min antes)}, top=2pt, bottom=2pt]
+{\scriptsize
+\begin{itemize}[leftmargin=9pt]
+\item[$\square$] \textbf{Backend Django} activo en \codeb{localhost:8000}.
+\item[$\square$] \textbf{Metro / Expo} activo para App React Native.
+\item[$\square$] \textbf{Pestaña 1:} Taiga (Sprint 2 cerrado, 96 pts).
+\item[$\square$] \textbf{Pestaña 2:} Web abierta (login Planificación).
+\item[$\square$] \textbf{Pestaña 3:} Modo incógnito (login Cobranzas).
+\item[$\square$] \textbf{App Móvil:} Abierta en pantalla de login.
+\item[$\square$] \textbf{Archivos seeds:} Listos en \codeb{seeds-facturas/}.
+\item[$\square$] \textbf{Cronómetro:} En cero con alarma en 25:00.
+\end{itemize}
+}
+\end{tcolorbox}
+
+\vspace{-5pt}
+
+\begin{tcolorbox}[cardheader, title={\small Timeboxing Maestro (30 min)}, top=2pt, bottom=2pt]
+{\scriptsize
+\textbf{[00:00 - 02:30]} B0: Taiga \& Backlog (2.5') \\
+\textbf{[02:30 - 07:30]} B1: Ingesta de Remitos (5.0') \\
+\textbf{[07:30 - 13:30]} B2: Rutas e Inmutabilidad (6.0') \\
+\textbf{[13:30 - 21:30]} B3: Operación Móvil Calle (8.0') \\
+\textbf{[21:30 - 27:30]} B4: Arqueo y Auditoría DNI (6.0') \\
+\textbf{[27:30 - 30:00]} B5: Balance y Feedback (2.5')
+}
+\end{tcolorbox}
+\end{minipage}
+
+\vspace{-4pt}
+
+% BLOQUE 0
+\begin{tcolorbox}[cardframe, top=2.5pt, bottom=2.5pt]
+\blockheader{BLOQUE 0: SINCRONIZACIÓN TAIGA Y CIERRE DE BACKLOG}{[00:00 - 02:30] \textbar\ 2.5 min}{Tablero Taiga RepartoYA}{30 HUs cerradas / 96 pts}
+{\footnotesize
+\begin{itemize}
+\item \textbf{0.1 — Trazabilidad y Filtro Sprint 2 (1.5 min):} \\
+\stepact{Filtrar tablero por \codeb{Sprint 2} y mostrar columna \codeb{Done/Closed}.} \\
+\valact{Exhibir las 30 HUs completadas totalizando exactamente 96 pts. Cero tareas huérfanas.}
+\item \textbf{0.2 — Estructura Normativa de HU (1.0 min):} \\
+\stepact{Abrir la ficha de HU-2 (\textit{Importar planilla}) o HU-58 (\textit{Ajustar cobranza}).} \\
+\valact{Exhibir los 4 campos formales: Rol, Descripción, Reglas de Negocio logísticas y Criterios numerados.}
+\end{itemize}
+}
+\vspace{-2pt}
+\begin{tcolorbox}[talktrackcard]
+{\scriptsize\textbf{TALK TRACK (GUION EN VIVO):}} {\scriptsize\itshape ``Iniciamos la Demo 2 con el cierre formal del Sprint 2 en Taiga: 30 HUs completadas y 96 puntos entregados. Cada funcionalidad mapea 1 a 1 reglas pactadas con criterios observables. Ejecutaremos el ciclo completo en 30 minutos con datos deterministas.''}
+\end{tcolorbox}
+\end{tcolorbox}
+
+\vspace{-4pt}
+
+% BLOQUE 1
+\begin{tcolorbox}[cardframe, top=2.5pt, bottom=2.5pt]
+\blockheader{BLOQUE 1: INGESTA MASIVA DE REMITOS Y UNICIDAD POR MARCA}{[02:30 - 07:30] \textbar\ 5.0 min}{Admin Planificación (\codeb{33333333} / \codeb{123}) en \codeb{/remitos/importaciones/}}{HU-2, 4, 9, 37, 38, 40, 41}
+{\footnotesize
+\begin{itemize}
+\item \textbf{1.1 — Carga Exitosa Planilla Oficial (1.5 min):} \\
+\stepact{En \codeb{/remitos/importaciones/nueva}, seleccionar \codeb{Cerveceria La Diagonal S.A.} y subir \codeb{30654321090\_20261110\_DISTR-01.csv}.} \\
+\valact{Mensaje de éxito. Remitos ingresan en estado \codeb{Pendiente}. Desacople fecha contable vs. fecha despacho.}
+\item \textbf{1.2 — Rechazo Atómico por Duplicado al Reintentar (45 seg):} \\
+\stepact{Seleccionar \codeb{Cerveceria La Diagonal S.A.} e intentar subir nuevamente la \textbf{misma planilla recién cargada}.} \\
+\valact{Rechazo atómico: el backend detecta colisión contra base de datos: \textit{``El número de remito debe ser único por marca''}.}
+\item \textbf{1.3 — Validación de Marca Inactiva HU-09 / HU-02 (45 seg):} \\
+\stepact{En \codeb{/remitos/importaciones/nueva}, intentar subir planilla con marca inhabilitada \codeb{Inactiva Prueba} (\codeb{30999999991}).} \\
+\valact{Bloqueo preventivo: \textit{``La marca Inactiva Prueba (CUIT 30999999991) se encuentra inactiva''}. Integridad de catálogo.}
+\item \textbf{1.4 — Unicidad Compuesta \codeb{Marca + Remito} (45 seg):} \\
+\stepact{En \codeb{/remitos/}, filtrar por el correlativo \codeb{0001-00099999}.} \\
+\valact{Coexisten dos remitos idénticos en número: Cervecería (\$150.000) y Snacks Andinos (\$85.000).} \\
+\ruleact{Constraint compuesto \codeb{models.UniqueConstraint(fields=['marca', 'numero'])}}
+\item \textbf{1.5 — Edición Pendiente vs. Bloqueo en Itinerario (45 seg):} \\
+\stepact{En \codeb{/remitos/}, editar monto de remito pendiente recién importado $\rightarrow$ Éxito. Remitos asignados a rutas activas quedan bloqueados para resguardar la carga del móvil.}
+\item \textbf{1.6 — Auditoría de Lote Rechazado y Descarte Físico HU-38 / HU-40 (45 seg):} \\
+\stepact{Abrir detalle de lote rechazado precargado en seed (\codeb{30712345671\_lote\_con\_errores.csv}) $\rightarrow$ Visor de filas 2 y 5. Luego en un lote pendiente presionar \textbf{Eliminar Importación} $\rightarrow$ Eliminación física limpia.}
+\end{itemize}
+}
+\vspace{-2pt}
+\begin{tcolorbox}[talktrackcard]
+{\scriptsize\textbf{TALK TRACK (GUION EN VIVO):}} {\scriptsize\itshape ``Planificación ingesta planillas oficiales. El backend valida formato y previene duplicados: al reintentar subir la misma planilla (20261110), detecta remitos existentes y rechaza el lote completo. Validamos que marcas dadas de baja bloqueen la ingesta. Demostramos la unicidad compuesta (remito 0001-00099999 compartido), la edición de remitos pendientes vs. su bloqueo al rutearse, el visor de errores en lotes rechazados (HU-38) y el descarte físico de lotes no asignados (HU-40).''}
+\end{tcolorbox}
+\end{tcolorbox}
+
+\newpage
+
+% ==============================================================================
+% PÁGINA 2: BLOQUE 2 - DIAGRAMACIÓN, REORDENAMIENTO E INMUTABILIDAD DE RUTAS
+% ==============================================================================
+
+\begin{tcolorbox}[cardframe, top=3pt, bottom=3pt, left=6pt, right=6pt]
+\blockheader{BLOQUE 2: DIAGRAMACIÓN, REORDENAMIENTO E INMUTABILIDAD}{[07:30 - 13:30] \textbar\ 6.0 MIN}{Admin Planificación (\codeb{33333333} / \codeb{123}) en \codeb{/itinerarios/}}{HU-11, 14, 46, 47, 48, 59, 60, 66}
+
+{\small
+\begin{itemize}[leftmargin=11pt, itemsep=4pt]
+
+\item \textbf{2.1 — Consulta de Rutas y Reordenamiento Web de Paradas (HU-59 \textbar\ 1.5 min):} \\
+\stepact{En \codeb{/itinerarios/}, abrir el itinerario activo de hoy asignado a \textbf{Lautaro Gómez} (\codeb{AF123CD}, Mercedes-Benz).} \\
+\textit{Composición inicial:} Parada 1 (\codeb{KIOSCO AVENIDA}, cobrada), Parada 2 (\codeb{AUTOSERVICIO AVENIDA}, cobrada), Paradas 3 y 4 (\codeb{ALMACEN SAN CAYETANO} y \codeb{MINIMERCADO DOÑA ROSA}, pendientes). \\
+\stepact{Hacer click en \textbf{Reordenar Paradas}. Intercambiar la posición de las paradas 3 y 4.} \\
+\valact{La secuencia numérica de visita se actualiza inmediatamente en pantalla y en base de datos.}
+
+\item \textbf{2.2 — Adición y Retiro Dinámico de Paradas (HU-46 / HU-47 \textbar\ 1.5 min):} \\
+\stepact{Presionar \textbf{Agregar Parada} y seleccionar remito pendiente \codeb{0090-00028378} (\$609.129,43) de \codeb{KIOSCO SANTA RITA}.} \\
+\valact{La parada se incorpora al final del recorrido con estado \codeb{Pendiente}.} \\
+\stepact{Acto seguido, presionar el botón de retirar parada sobre este mismo remito recién agregado.} \\
+\valact{El remito sale de la ruta y \textbf{retorna de forma transparente al catálogo general de remitos pendientes}.}
+
+\item \textbf{2.3 — Restricción por Chofer Bloqueado y Desbloqueo (HU-14 / HU-66 / HU-11 \textbar\ 1.0 min):} \\
+\stepact{Intentar asignar un itinerario al chofer \codeb{12345679} (Carlos Bloqueado).} \\
+\valact{El backend rechaza la asignación: \textit{``El transportista seleccionado se encuentra inhabilitado''}.} \\
+\stepact{Acceder con Admin Personal (\codeb{44444444} / \codeb{123}) en \codeb{/personal/transportistas/}, abrir la ficha y presionar \textbf{Restablecer / Desbloquear Credenciales}.} \\
+\valact{La cuenta queda rehabilitada operativamente para recibir itinerarios.}
+
+\item \textbf{2.4 — Inmutabilidad de Itinerario Histórico Finalizado (1.0 min):} \\
+\stepact{En \codeb{/itinerarios/}, abrir el itinerario histórico de ayer asignado a Martín Pérez (3 paradas finalizadas).} \\
+\valact{Los controles de edición, reordenamiento, chofer/vehículo y eliminación están \textbf{completamente deshabilitados / ocultos} para proteger la trazabilidad contable.}
+
+\item \textbf{2.5 — Eliminación Limpia vs. Protección Contable (HU-48 \textbar\ 1.0 min):} \\
+\stepact{Abrir el itinerario de mañana de Lucas Rodríguez (sin entregas iniciadas) y presionar \textbf{Eliminar Itinerario}.} \\
+\valact{Se elimina limpiamente de raíz con mensaje de confirmación exitoso (Happy Path HU-48).} \\
+\stepact{Intentar eliminar el itinerario de hoy de Martín Pérez o Lautaro Gómez (con cobranzas registradas).} \\
+\valact{El sistema bloquea la acción informando impacto contable consolidado, impidiendo inconsistencias.}
+
+\end{itemize}
+}
+
+\vspace{1pt}
+\begin{tcolorbox}[talktrackcard]
+{\scriptsize\textbf{TALK TRACK (GUION EN VIVO):}} {\scriptsize\itshape
+``En diagramación planificamos las hojas de ruta. Vemos el itinerario activo de Lautaro Gómez y cambiamos el orden de las paradas con un click, impactando al instante. Agregamos un remito como nueva parada y luego lo quitamos, demostrando que regresa al estado pendiente del catálogo general. Si un chofer está suspendido, el sistema bloquea su asignación hasta que Personal desbloquee sus credenciales según HU-11. Finalmente, comprobamos la regla de inmutabilidad: el itinerario sin uso de mañana permite borrado limpio (HU-48), pero los recorridos con cobranzas quedan estrictamente blindados para proteger la contabilidad.''}
+\end{tcolorbox}
+\end{tcolorbox}
+
+\vspace{-4pt}
+
+% TABLA RESUMEN DE ITINERARIOS
+\begin{tcolorbox}[cardheader, title={\small Resumen de Itinerarios Sembrados en el Sistema para Validación Visual}, top=2pt, bottom=2pt]
+{\scriptsize
+\begin{tabularx}{\textwidth}{@{}l c l c X@{}}
+\textbf{Transportista} & \textbf{Fecha} & \textbf{Vehículo} & \textbf{Estado} & \textbf{Comportamiento a Demostrar} \\
+\midrule
+\textbf{Lautaro Gómez} & Hoy & Mercedes (\codeb{AF123CD}) & En Curso & 2 entregadas, 2 pendientes. Permite reordenar HU-59. \\
+\textbf{Martín Pérez} & Ayer & Iveco (\codeb{AG456EF}) & Finalizado & Inmutable: botones de edición bloqueados por integridad. \\
+\textbf{Lucas Rodríguez} & Mañana & Kangoo (\codeb{AD345JK}) & Asignado & Happy Path HU-48: permite eliminación limpia antes de operar. \\
+\textbf{Martín Pérez} & Hoy & Iveco (\codeb{AG456EF}) & Con Discrepancia & Protección contable: no puede borrarse por tener cobranzas. \\
+\end{tabularx}}
+\end{tcolorbox}
+
+\newpage
+
+% ==============================================================================
+% PÁGINA 3: BLOQUE 3 - OPERACIÓN EN CALLE (APP MÓVIL REACT NATIVE)
+% ==============================================================================
+
+\begin{tcolorbox}[cardframe, top=3pt, bottom=3pt, left=6pt, right=6pt]
+\blockheader{BLOQUE 3: OPERACIÓN EN CALLE (APP MÓVIL)}{[13:30 - 21:30] \textbar\ 8.0 MIN}{Chofer en App Móvil Nativa (React Native / Expo) \textbar\ Móvil en Mano}{HU-23, 24, 26, 30, 31, 32, 55, 56, 62, 63, 64, 65}
+
+{\small
+\begin{itemize}[leftmargin=11pt, itemsep=4pt]
+
+\item \textbf{3.1 — Caso de Borde: Chofer Sin Itinerario Asignado (HU-62 \textbar\ 45 seg):} \\
+\stepact{En la App Móvil, iniciar sesión con el chofer suplente \textbf{Esteban Suplente} (\codeb{12345681} / \codeb{123}).} \\
+\valact{Pantalla de estado controlado: \textit{``No posees recorridos asignados para la jornada''}. Cero pantallas blancas o bloqueos. Cerrar sesión.}
+
+\item \textbf{3.2 — Login de Chofer Activo y Hoja de Ruta del Día (HU-23 / HU-62 \textbar\ 1.0 min):} \\
+\stepact{Iniciar sesión con \textbf{Lautaro Gómez} (\codeb{1234567} / \codeb{123}).} \\
+\valact{Visualización de su hoja de ruta del día: Paradas 1 y 2 marcadas como \codeb{Entregadas}. Paradas 3 y 4 (\codeb{ALMACEN SAN CAYETANO} y \codeb{MINIMERCADO DOÑA ROSA}) en estado pendiente con importes visibles.}
+
+\item \textbf{3.3 — Reordenamiento Táctil y Recorridos Guardados (HU-24 / 26 / 63 / 64 / 65 \textbar\ 2.0 min):} \\
+\stepact{Arrastrar táctilmente la Parada 4 por encima de la Parada 3 y presionar \textbf{Guardar Recorrido} con nombre \codeb{Variante Lomas Rápida} (HU-26/63).} \\
+\stepact{Abrir modal de \textbf{Recorridos Guardados}, seleccionar la ruta seed \codeb{Ruta Rapida Alternativa} (HU-64) y eliminar la variante creada (HU-65).} \\
+\valact{El orden táctil se refleja al instante y la variante se elimina con confirmación visual limpia.}
+
+\item \textbf{3.4 — Entrega Exitosa y Cobranza Mixta con Comprobante (HU-30 / 31 / 32 / 55 \textbar\ 2.5 min):} \\
+\stepact{Abrir parada de \codeb{ALMACEN SAN CAYETANO S.A.} (\$199.477,06), marcar entrega conforme (HU-30), cargar cobro mixto (\codeb{\$100.000,00} efectivo + \codeb{\$99.477,06} transferencia) y adjuntar foto del comprobante (HU-55).} \\
+\valact{Presionar \textbf{Finalizar Visita}. Parada pasa a verde (\codeb{Entregada}) y la cobranza impacta de inmediato en backend como \codeb{Registrada}.}
+
+\item \textbf{3.5 — Registro de Inconveniente / Entrega No Realizada (HU-56 / HU-33 \textbar\ 1.5 min):} \\
+\stepact{Abrir la siguiente parada pendiente: \codeb{MINIMERCADO DOÑA ROSA S.A.S.}.} \\
+\stepact{Presionar \textbf{Registrar Inconveniente}, tipificar motivo \codeb{Cliente ausente} e ingresar nota: \textit{``Local cerrado, sin respuesta al timbre''}.} \\
+\valact{La parada cambia a advertencia (\codeb{No Entregada / Con Incidencia}). El chofer continúa su jornada sin bloqueos.}
+
+\end{itemize}
+}
+
+\vspace{1pt}
+\begin{tcolorbox}[talktrackcard]
+{\scriptsize\textbf{TALK TRACK (GUION EN VIVO):}} {\scriptsize\itshape
+``Pasamos a la aplicación móvil nativa que lleva el chofer. Primero probamos a Esteban Suplente: el sistema maneja elegantemente el caso de no tener viajes asignados. Nos logueamos con Lautaro Gómez: vemos su itinerario real. Ante un corte de tránsito, el chofer reordena las paradas táctilmente y usa la función de Recorridos Guardados para cargar rutas óptimas o guardar nuevas variantes (HU-26 a 65).\\
+Llegamos a Almacén San Cayetano y registramos una cobranza mixta: \$100.000 en efectivo y \$99.477,06 por transferencia con foto del comprobante adjunta. En la siguiente parada simulamos un imprevisto real de calle: cliente ausente. Se tipifica la incidencia según HU-56 sin trabar la aplicación y dejando la trazabilidad lista para el cierre de caja.''}
+\end{tcolorbox}
+\end{tcolorbox}
+
+\vspace{-4pt}
+
+% PANEL TÁCTICO DEL PRESENTADOR
+\begin{tcolorbox}[cardheader, title={\small Panel Táctico del Presentador: Tips Clave para la App Móvil en Vivo}, top=2pt, bottom=2pt]
+{\scriptsize
+\begin{tabularx}{\textwidth}{@{}X X@{}}
+\textbf{$\blacktriangleright$ Sincronización Inmediata (Móvil $\leftrightarrow$ Backend):} & \textbf{$\blacktriangleright$ Tolerancia a Desconexión en Calle (Offline):} \\
+Al presionar \textbf{Finalizar Visita} en Almacén San Cayetano, la parada pasa a entregada en el teléfono y simultáneamente en la web contable (\codeb{/cobranzas/}) impacta la cobranza como \codeb{Registrada} sin demoras por batch. & Si se interrumpe la red local durante la demo, explicar que la app almacena el estado localmente en el dispositivo y reintenta la sincronización en segundo plano apenas recupera conectividad. \\
+\midrule
+\textbf{$\blacktriangleright$ Foco Didáctico en Cobro Mixto (HU-31/32/55):} & \textbf{$\blacktriangleright$ Registro Ágil de Incidencias (HU-56):} \\
+Destacar la combinación exacta: \$100.000 en efectivo y \$99.477,06 por transferencia con foto del comprobante adjunta, demostrando control exhaustivo de arqueo. & Mostrar que marcar \textit{``Cliente ausente''} no bloquea la app: la parada queda en estado observado y el chofer puede continuar con el resto de la jornada. \\
+\end{tabularx}
+}
+\end{tcolorbox}
+
+\newpage
+
+% ==============================================================================
+% PÁGINA 4: BLOQUE 4, BLOQUE 5 Y MATRIZ DE OBJECIONES / PREGUNTAS TÉCNICAS
+% ==============================================================================
+
+\begin{tcolorbox}[cardframe, top=3pt, bottom=3pt, left=6pt, right=6pt]
+\blockheader{BLOQUE 4: ARQUEO, CONCILIACIÓN Y AUDITORÍA DE COBRANZAS}{[21:30 - 27:30] \textbar\ 6.0 MIN}{Admin Conciliación (\codeb{22222222} / \codeb{123}) en \codeb{/cobranzas/}}{HU-19, 20, 21, 49, 50, 58}
+
+{\small
+\begin{itemize}[leftmargin=11pt, itemsep=4pt]
+
+\item \textbf{4.1 — Recepción y Validación Directa de Cobro Rendido (HU-49 \textbar\ 1.0 min):} \\
+\stepact{En \codeb{/cobranzas/}, abrir la cobranza recién rendida por Lautaro Gómez en \codeb{ALMACEN SAN CAYETANO} (\$199.477,06).} \\
+\valact{Coincidencia exacta entre facturado y cobrado (efectivo + transferencia con comprobante visible). Presionar \textbf{Validar Cobranza} $\rightarrow$ Estado pasa a \codeb{Aprobado}.}
+
+\item \textbf{4.2 — Detección Visual de Discrepancia en Cobro (HU-19 / HU-50 \textbar\ 1.0 min):} \\
+\stepact{Abrir la cobranza de Martín Pérez en \codeb{ALMACEN EL FARO} (Parada 3).} \\
+\valact{El sistema alerta visualmente con badge \codeb{Difiere}: monto declarado \$310.000 vs. verificado \$300.000 (faltante de \$10.000 en el sobre de efectivo).}
+
+\item \textbf{4.3 — Ajuste Unificado y Medios de Pago (HU-58 / Scrum \#7 \textbar\ 1.5 min):} \\
+\stepact{Presionar \textbf{Ajustar Cobranza}: corregir efectivo a \codeb{\$300.000}, agregar medio \codeb{Transferencia Bancaria} por \codeb{\$10.000} e ingresar motivo auditado.} \\
+\valact{El saldo se recalcula en tiempo real a \$310.000 y la operación se consolida en \textbf{un único envío atómico} (Scrum \#7 / HU-58).}
+
+\item \textbf{4.4 — Trazabilidad de Auditoría y Verificación de DNI (HU-58 / Scrum \#7 \textbar\ 1.5 min):} \\
+\stepact{Abrir la \textbf{Bitácora de Auditoría} de la cobranza recién ajustada.} \\
+\valact{Constatar en pantalla: Marca temporal exacta, valores previos vs. nuevos y la \textbf{presencia explícita del DNI del operador responsable: \codeb{22222222}} (cumpliendo el requerimiento de Scrum \#7).}
+
+\item \textbf{4.5 — Cuadre y Arqueo General de Caja (HU-21 \textbar\ 1.0 min):} \\
+\stepact{Acceder a la vista de \textbf{Arqueo y Cierre de Caja del Día}.} \\
+\valact{Visualizar el resumen general consolidando ingresos por medio de pago (total efectivo en tesorería, transferencias bancarias y liquidaciones QR de Mercado Pago).}
+
+\end{itemize}
+}
+
+\vspace{1pt}
+\begin{tcolorbox}[talktrackcard]
+{\scriptsize\textbf{TALK TRACK (GUION EN VIVO):}} {\scriptsize\itshape
+``En tesorería recibimos las rendiciones en vivo. Validamos la cobranza de Almacén San Cayetano con un click y abrimos la cobranza observada de Almacén El Faro. Para cumplir los requerimientos de la reunión Scrum \#7, aplicamos el ajuste unificado: corregimos el efectivo a \$300.000 y agregamos el medio complementario de \$10.000 en un solo paso. La bitácora de auditoría refleja el cambio con valores históricos y el DNI 22222222 del administrativo. Cerramos con el arqueo general consolidado.''}
+\end{tcolorbox}
+\end{tcolorbox}
+
+\vspace{-4pt}
+
+% BLOQUE 5: CIERRE
+\begin{tcolorbox}[cardframe, top=2.5pt, bottom=2.5pt]
+\blockheader{BLOQUE 5: BALANCE DE RELEASE, MÉTRICAS Y CIERRE}{[27:30 - 30:00] \textbar\ 2.5 min}{Facilitador: Enzo Giandon (UNLP)}{30 HUs cerradas / 96 pts / Cierre}
+{\footnotesize
+\stepact{Presentar el balance final de release contrastando el backlog planificado frente al entregado en el Sprint 2.} \\
+\valact{Constatar cumplimiento del 100\% de compromisos: 30 HUs cerradas, 96 puntos de historia y cero deuda técnica.}
+}
+\vspace{-2pt}
+\begin{tcolorbox}[talktrackcard]
+{\scriptsize\textbf{TALK TRACK (GUION EN VIVO):}} {\scriptsize\itshape ``En exactamente 30 minutos demostramos el ciclo logístico completo de RepartoYA: 30 Historias de Usuario y 96 puntos entregados. Vimos la robustez de ingesta, la inmutabilidad de itinerarios, la versatilidad de la app móvil y el arqueo contable con auditoría estricta por DNI. Abrimos el espacio de preguntas para Martín y el equipo docente.''}
+\end{tcolorbox}
+\end{tcolorbox}
+
+\vspace{-4pt}
+
+% MATRIZ DE OBJECIONES / PREGUNTAS DIFÍCILES (ESCUDO TÉCNICO)
+\begin{tcolorbox}[cardheader, title={\small ESCUDO TÉCNICO: MANEJO DE PREGUNTAS DIFÍCILES Y OBJECIONES}, top=2.5pt, bottom=2.5pt]
+{\scriptsize
+\begin{tabularx}{\textwidth}{@{}p{0.28\textwidth} p{0.24\textwidth} X@{}}
+\textbf{Pregunta del Cliente / Docente} & \textbf{Intención / Subtexto} & \textbf{Respuesta Técnica y Demostración en Vivo} \\
+\midrule
+\textbf{``¿Por qué no puedo borrar o cambiar paradas de un viaje finalizado?''} & Integridad contable e histórico. & \textit{``Por integridad contable: una vez que el chofer cerró el viaje y hay cobranzas registradas, borrar paradas dejaría cobros huérfanos. Cualquier corrección posterior se efectúa mediante la HU-58 de Ajuste de Cobranzas auditada.''} \\
+\midrule
+\textbf{``¿Qué ocurre si dos marcas cargan el remito 0001-00099999?''} & Manejo de colisiones en carga masiva. & \textit{``El sistema no usa el número aislado como clave; implementa un constraint compuesto: Código de Marca + Número de Remito. En \codeb{/remitos/} mostramos que coexisten en Cervecería y Snacks Andinos sin conflicto.''} \\
+\midrule
+\textbf{``¿Cómo sé quién autorizó un cambio en los cobros?''} & Control de fraude interno (Scrum \#7). & \textit{``En la bitácora queda grabado automáticamente el DNI del usuario autenticado (como comprobamos con el DNI \codeb{22222222}), junto con timestamp y valores anteriores y posteriores.''} \\
+\midrule
+\textbf{``¿Qué pasa si el chofer se queda sin señal en la calle?''} & Tolerancia a fallos y modo offline. & \textit{``La app móvil almacena el itinerario en almacenamiento local del dispositivo y reintenta la sincronización con el servidor de manera resiliente apenas recupera señal.''} \\
+\end{tabularx}
+}
+\end{tcolorbox}
+
+\end{document}

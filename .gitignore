@@ -270,3 +270,32 @@ yarn-error.*
 
 # Otros
 Mejoras.md
+
+# ==========================================
+# LaTeX Compilation Artifacts
+# ==========================================
+*.aux
+*.out
+*.toc
+*.log
+*.nav
+*.snm
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+missfont.log
+
+# ==========================================
+# macOS / System
+# ==========================================
+__MACOSX/
+.DS_Store
+
+# ==========================================
+# Backend runtime
+# ==========================================
+backend/.env
+backend/db.sqlite3
+backend/db.sqlite3-journal
+backend/media/

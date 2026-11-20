@@ -10,7 +10,7 @@
 
 ## 🎯 Criterios Editoriales y Metodológicos de Unificación
 
-Este documento presenta una reescritura integral del backlog de **54 Historias de Usuario (HU)** registradas en Taiga, homologando la sintaxis, el vocabulario técnico-operativo y la estructura narrativa conforme a los estándares de ingeniería de software de **Softech** y las pautas de calidad de la cátedra:
+Este documento presenta una reescritura integral del backlog de **62 Historias de Usuario (HU)** registradas en Taiga (166 puntos totales), homologando la sintaxis, el vocabulario técnico-operativo y la estructura narrativa conforme a los estándares de ingeniería de software de **Softech** y las pautas de calidad de la cátedra:
 
 1. **Estructura homogénea de 4 campos:**
    * **Campo 1 (Identificador):** Formato uniforme `HU-[ID]: [NOMBRE DE LA HISTORIA EN MAYÚSCULAS]`.
@@ -28,17 +28,18 @@ Este documento presenta una reescritura integral del backlog de **54 Historias d
 
 ## 📊 Matriz Resumen de Distribución por Épicas y Estimación (Planning Poker)
 
-| Código Épica | Nombre de la Épica | Actor Principal | Plataforma | Cantidad HUs | Puntos Totales | HUs Sprint 1 | Pts Sprint 1 | HUs Sprint 2 | Pts Sprint 2 | Historias de Usuario Comprendidas (pts) |
-| :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **EP-01 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | Escritorio (Web) | 9 | 26 pts | 5 | 12 pts | 4 | 14 pts | HU-02 (5), HU-04 (3), HU-05 (2), HU-37 (2), HU-38 (2), HU-39 (2), HU-40 (5), HU-41 (3), HU-42 (2) |
-| **EP-02 (#6)** | Gestión de personal y vehículos | Personal Administrativo | Escritorio (Web) | 8 | 18 pts | 6 | 13 pts | 2 | 5 pts | HU-07 (2), HU-08 (3), HU-09 (2), HU-10 (2), HU-11 (3), HU-43 (2), HU-45 (2), HU-66 (2) |
-| **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | Escritorio (Web) | 8 | 25 pts | 1 | 5 pts | 7 | 20 pts | HU-13 (5), HU-14 (2), HU-46 (5), HU-47 (3), HU-48 (2), HU-59 (3), HU-60 (2), HU-61 (3) |
-| **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | Escritorio (Web) | 8 | 30 pts | 2 | 4 pts | 6 | 26 pts | HU-17 (2), HU-18 (2), HU-19 (8), HU-20 (3), HU-21 (3), HU-49 (5), HU-50 (2), HU-58 (5) |
-| **EP-05 (#51)** | Gestion de usuarios | Personal Administrativo | Escritorio (Web) | 2 | 4 pts | 2 | 4 pts | 0 | 0 pts | HU-52 (2), HU-54 (2) |
-| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | Móvil (Smartphone) | 9 | 25 pts | 4 | 10 pts | 5 | 15 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3) |
-| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | Móvil (Smartphone) | 7 | 20 pts | 4 | 11 pts | 3 | 9 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
-| **Requerimientos Adicionales** | Backlog General / Tareas Operativas | Mixto | Mixto | 2 | 2 pts | 0 | 0 pts | 2 | 2 pts | HU-156 (2), HU-157 (0) |
-| **TOTAL** | | | | **53 HUs** | **150 pts** | **24 HUs** | **59 pts** | **29 HUs** | **91 pts** | |
+| Código Épica | Nombre de la Épica | Actor Principal | Plataforma | Cantidad HUs | Puntos Totales | HUs Sprint 1 | Pts Sprint 1 | HUs Sprint 2 | Pts Sprint 2 | HUs Backlog | Pts Backlog | Historias de Usuario Comprendidas (pts) |
+| :---: | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **EP-01 (#1)** | Importación masiva y gestión de remitos | Personal Administrativo | Escritorio (Web) | 13 | 37 pts | 5 | 12 pts | 8 | 25 pts | 0 | 0 pts | HU-02 (5), HU-04 (3), HU-05 (2), HU-37 (2), HU-38 (2), HU-39 (2), HU-40 (5), HU-41 (3), HU-42 (2), HU-239 (2), HU-240 (3), HU-241 (3), HU-242 (3) |
+| **EP-02 (#6)** | Gestión de personal y vehículos | Personal Administrativo | Escritorio (Web) | 8 | 18 pts | 6 | 13 pts | 2 | 5 pts | 0 | 0 pts | HU-07 (2), HU-08 (3), HU-09 (2), HU-10 (2), HU-11 (3), HU-43 (2), HU-45 (2), HU-66 (2) |
+| **EP-03 (#12)** | Diagramación y asignación de itinerarios | Personal Administrativo | Escritorio (Web) | 8 | 25 pts | 1 | 5 pts | 7 | 20 pts | 0 | 0 pts | HU-13 (5), HU-14 (2), HU-46 (5), HU-47 (3), HU-48 (2), HU-59 (3), HU-60 (2), HU-61 (3) |
+| **EP-04 (#16)** | Monitoreo de entregas y conciliación de cobranzas | Personal Administrativo | Escritorio (Web) | 8 | 30 pts | 2 | 4 pts | 6 | 26 pts | 0 | 0 pts | HU-17 (2), HU-18 (2), HU-19 (8), HU-20 (3), HU-21 (3), HU-49 (5), HU-50 (2), HU-58 (5) |
+| **EP-05 (#51)** | Gestion de usuarios | Personal Administrativo | Escritorio (Web) | 2 | 4 pts | 2 | 4 pts | 0 | 0 pts | 0 | 0 pts | HU-52 (2), HU-54 (2) |
+| **EP-06 (#22)** | Consulta y gestión de itinerarios en calle | Transportista | Móvil (Smartphone) | 10 | 30 pts | 4 | 10 pts | 6 | 20 pts | 0 | 0 pts | HU-23 (2), HU-24 (3), HU-25 (3), HU-26 (5), HU-62 (2), HU-63 (3), HU-64 (3), HU-65 (1), HU-67 (3), HU-236 (5) |
+| **EP-07 (#29)** | Registro de entregas y cobranzas en destino | Transportista | Móvil (Smartphone) | 7 | 20 pts | 4 | 11 pts | 3 | 9 pts | 0 | 0 pts | HU-30 (3), HU-31 (5), HU-32 (3), HU-33 (3), HU-36 (3), HU-55 (2), HU-56 (1) |
+| **EP-08 (#251)** | Gestión de marcas proveedoras | Personal Administrativo | Escritorio (Web) | 4 | 0 pts | 0 | 0 pts | 0 | 0 pts | 4 | 0 pts | HU-252 (0), HU-253 (0), HU-254 (0), HU-255 (0) |
+| **Requerimientos Adicionales** | Backlog General / Tareas Operativas | Mixto | Mixto | 2 | 2 pts | 0 | 0 pts | 2 | 2 pts | 0 | 0 pts | HU-156 (2), HU-157 (0) |
+| **TOTAL** | | | | **62 HUs** | **166 pts** | **24 HUs** | **59 pts** | **34 HUs** | **107 pts** | **4 HUs** | **0 pts** | |
 
 ---
 
@@ -276,6 +277,97 @@ En la pantalla de confirmación de eliminación del remito, el administrativo pr
 En la vista "Remitos", en cualquier remito cuyo estado sea distinto de "Pendiente" (por ejemplo, asignado a un itinerario o entregado), el botón de eliminación se muestra deshabilitado e inactivo, presentando la indicación: "Solo eliminable en estado pendiente".
 
 ---
+
+---
+
+#### HU-239: LISTAR MARCAS PROVEEDORAS
+
+**Título:**
+Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN  
+quiero CONSULTAR EL CATÁLOGO DE MARCAS PROVEEDORAS  
+para VISUALIZAR LAS EMPRESAS REGISTRADAS, SU ESTADO OPERATIVO Y DISPONIBILIDAD PARA ASOCIAR REMITOS.
+
+**Reglas a considerar:**
+- El catálogo maestro lista todas las marcas registradas en el sistema.
+- Cada registro exhibe razón social, CUIT (11 dígitos) y estado operativo (Activa / Inactiva).
+- Provee acceso directo a las acciones de creación, edición y baja/reactivación.
+
+**Criterios de Aceptación:**
+
+**ESCENARIO 1: Consulta general del catálogo**  
+En la vista "Marcas", el administrativo visualiza la tabla de marcas proveedoras con su razón social, CUIT y estado.
+
+**ESCENARIO 2: Catálogo sin registros**  
+Si no existen marcas registradas, el sistema muestra el mensaje informativo "No hay marcas registradas" con un botón para agregar una nueva marca.
+
+---
+
+#### HU-240: CREAR MARCA PROVEEDORA
+
+**Título:**
+Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN  
+quiero REGISTRAR UNA NUEVA MARCA PROVEEDORA  
+para ASOCIARLA A LOS REMITOS E IMPORTACIONES DE MERCADERÍA.
+
+**Reglas a considerar:**
+- La razón social y el CUIT son obligatorios.
+- El CUIT debe contener exactamente 11 dígitos numéricos sin puntos ni guiones, y no puede estar registrado previamente.
+- La marca se crea con estado Activo por defecto.
+
+**Criterios de Aceptación:**
+
+**ESCENARIO 1: Registro exitoso de marca**  
+En la vista "Añadir marca", el administrativo ingresa una razón social no existente y un CUIT de 11 dígitos válido y presiona "Guardar marca". El sistema guarda la nueva marca activa, redirige al listado y muestra: "Marca agregada exitosamente".
+
+**ESCENARIO 2: Intento de registro con datos inválidos o duplicados**  
+Si se deja la razón social en blanco, o el CUIT no cumple los 11 dígitos numéricos, o el CUIT ya existe en el sistema, el sistema bloquea el guardado y muestra el mensaje de error correspondiente preservando los datos válidos ingresados.
+
+---
+
+#### HU-241: EDITAR MARCA PROVEEDORA
+
+**Título:**
+Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN  
+quiero EDITAR LOS DATOS DE UNA MARCA PROVEEDORA  
+para MANTENER ACTUALIZADA SU RAZÓN SOCIAL O CUIT EN EL SISTEMA.
+
+**Reglas a considerar:**
+- La marca a editar debe existir previamente.
+- El formulario se inicializa precargado con los datos vigentes.
+- Se aplican las mismas reglas de unicidad y formato para CUIT y razón social, excluyendo la propia entidad en edición.
+
+**Criterios de Aceptación:**
+
+**ESCENARIO 1: Edición exitosa de marca**  
+En el listado de marcas, el usuario presiona "Editar" sobre una marca, modifica los datos requeridos cumpliendo con unicidad y presiona "Guardar cambios". El sistema actualiza el registro y redirige con la confirmación "Marca modificada exitosamente".
+
+**ESCENARIO 2: Bloqueo por conflicto de unicidad o formato**  
+Si el usuario ingresa un CUIT ya perteneciente a otra marca o con formato incorrecto, el sistema bloquea la actualización y señala el error específico en pantalla.
+
+---
+
+#### HU-242: ELIMINAR / DAR DE BAJA MARCA PROVEEDORA
+
+**Título:**
+Como ADMINISTRATIVO ENCARGADO DE LA PLANIFICACIÓN  
+quiero DAR DE BAJA O REACTIVAR UNA MARCA PROVEEDORA  
+para INACTIVAR MARCAS QUE YA NO OPERAN SIN AFECTAR EL HISTORIAL DE REMITOS Y PERMITIR SU REACTIVACIÓN POSTERIOR.
+
+**Reglas a considerar:**
+- Validación de remitos activos: solo se permite dar de baja una marca si no posee remitos asociados en estado Pendiente o Asignado. Si todos sus remitos están entregados o rechazados (o no tiene remitos), la baja es permitida.
+- Baja lógica: la acción no destruye físicamente el registro, sino que actualiza su estado a inactivo (`activo = False`).
+- Reactivación: desde el listado, una marca inactiva presenta la opción "Reactivar", restableciendo su estado operativo.
+
+**Criterios de Aceptación:**
+
+**ESCENARIO 1: Baja lógica exitosa**  
+En el catálogo de marcas, el usuario presiona "Eliminar" en una marca sin remitos pendientes ni asignados y confirma la operación. El sistema actualiza su estado a inactivo y notifica: "Marca eliminada exitosamente".
+
+**ESCENARIO 2: Rechazo de baja por remitos activos**  
+Si la marca posee al menos un remito en estado Pendiente o Asignado, el sistema bloquea la baja y muestra: "No se puede eliminar la marca porque tiene remitos en estado pendiente o asignado."
+
+**ESCENARIO 3: Reactivación de marca inactiva**  
+En una marca inactiva, el administrativo presiona "Reactivar". El sistema confirma la acción, reactiva la marca y notifica: "Marca reactivada exitosamente".
 
 ---
 
@@ -1208,7 +1300,7 @@ En la pantalla de detalle, el chofer visualiza los botones de acción habilitado
 
 ---
 
-#### HU-68: INICIAR JORNADA LABORAL Y HABILITACIÓN DE HOJA DE RUTA
+#### HU-236: INICIAR JORNADA LABORAL Y HABILITACIÓN DE HOJA DE RUTA
 
 **Título:**
 Como TRANSPORTISTA  

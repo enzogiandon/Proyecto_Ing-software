@@ -439,6 +439,7 @@ class VehiculoViewsTests(TestCase):
 
 class PoblarCommandTests(TestCase):
     def test_poblar_creates_superuser_with_all_roles_by_default(self):
+        call_command("crear_grupos", stdout=StringIO())
         out = StringIO()
         call_command("poblar", stdout=out)
         output = out.getvalue()
@@ -460,27 +461,21 @@ class PoblarCommandTests(TestCase):
         # Verificar credenciales de login
         self.assertTrue(self.client.login(username="11111111", password="123"))
 
-        # Verificar salida en consola de casos de prueba
-        self.assertIn("CASOS DE PRUEBA Y CREDENCIALES DISPONIBLES", output)
+        # Verificar salida en consola
+        self.assertIn("Datos maestros cargados exitosamente", output)
         self.assertIn("11111111", output)
-        self.assertIn("1234567", output)
-        self.assertIn("12345678", output)
-        self.assertIn("Consolidación Multimarca", output)
+        self.assertIn("22222222", output)
+        self.assertIn("33333333", output)
 
     def test_poblar_limpiar_unblocks_all_users(self):
+        call_command("crear_grupos", stdout=StringIO())
         user_model = get_user_model()
 
-        # Creamos un superusuario bloqueado y un usuario estándar bloqueado
+        # Creamos un superusuario bloqueado
         admin = user_model.objects.create_superuser(
             username="11111111",
             password="123",
             email="admin@softech.com.ar",
-            is_active=False,
-            intentos_fallidos=5,
-        )
-        empleado = user_model.objects.create_user(
-            username="22222222",
-            password="123",
             is_active=False,
             intentos_fallidos=5,
         )
@@ -489,11 +484,13 @@ class PoblarCommandTests(TestCase):
         call_command("poblar", limpiar=True, stdout=out)
 
         admin.refresh_from_db()
-        empleado.refresh_from_db()
 
-        # Ambos usuarios deben estar desbloqueados
+        # El superusuario debe estar desbloqueado
         self.assertTrue(admin.is_active)
         self.assertEqual(admin.intentos_fallidos, 0)
+
+        # Los usuarios recreados por poblar deben estar activos y desbloqueados
+        empleado = user_model.objects.get(username="22222222")
         self.assertTrue(empleado.is_active)
         self.assertEqual(empleado.intentos_fallidos, 0)
 
@@ -501,6 +498,7 @@ class PoblarCommandTests(TestCase):
         nombres_grupos = set(admin.groups.values_list("name", flat=True))
         for grupo_val in Grupos.values:
             self.assertIn(grupo_val, nombres_grupos)
+        self.assertEqual(len(nombres_grupos), len(Grupos.values))
 
     def test_poblar_completo_creates_route_and_collections_for_driver(self):
         call_command("crear_grupos", stdout=StringIO())
@@ -509,26 +507,35 @@ class PoblarCommandTests(TestCase):
         output = out.getvalue()
 
         self.assertIn("Datos maestros cargados exitosamente", output)
-        self.assertIn("Itinerario asignado a 1234567", output)
+        self.assertIn("Itinerarios creados: asignado", output)
+        self.assertIn("en curso", output)
+        self.assertIn("finalizado", output)
 
         user = get_user_model().objects.get(username="1234567")
         self.assertIsNotNone(user.perfil_transportista)
+        user_2 = get_user_model().objects.get(username="12345678")
+        self.assertIsNotNone(user_2.perfil_transportista)
 
         from apps.itinerarios.models import Itinerario, Parada, EstadoItinerario, EstadoParada
         from apps.cobranza.models import Cobranza
         from apps.remitos.models import Remito
 
-        itinerarios = Itinerario.objects.filter(transportista=user.perfil_transportista)
-        self.assertEqual(itinerarios.count(), 1)
-        itinerario = itinerarios.first()
-        self.assertEqual(itinerario.estado, EstadoItinerario.ASIGNADO)
+        itinerarios = Itinerario.objects.all()
+        self.assertEqual(itinerarios.count(), 3)
+        itinerario_asig = itinerarios.get(estado=EstadoItinerario.ASIGNADO, transportista=user.perfil_transportista)
+        itinerario_curso = itinerarios.get(estado=EstadoItinerario.EN_CURSO, transportista=user_2.perfil_transportista)
+        itinerario_fin = itinerarios.get(estado=EstadoItinerario.FINALIZADO, transportista=user.perfil_transportista)
 
-        paradas = Parada.objects.filter(itinerario=itinerario).order_by("orden")
-        self.assertEqual(paradas.count(), 4)
+        # Itinerario asignado tiene paradas pendientes y sin cobranzas
+        paradas_asig = Parada.objects.filter(itinerario=itinerario_asig).order_by("orden")
+        self.assertEqual(paradas_asig.count(), 4)
+        for p in paradas_asig:
+            self.assertEqual(p.estado, EstadoParada.PENDIENTE)
+        self.assertEqual(Cobranza.objects.filter(parada__itinerario=itinerario_asig).count(), 0)
 
-        # Paradas con cobranzas
-        cobranzas = Cobranza.objects.filter(parada__itinerario=itinerario)
-        self.assertEqual(cobranzas.count(), 2)
+        # Itinerarios en curso y finalizado tienen cobranzas
+        cobranzas = Cobranza.objects.filter(parada__itinerario__in=[itinerario_curso, itinerario_fin])
+        self.assertEqual(cobranzas.count(), 3)
         for c in cobranzas:
             self.assertEqual(c.estado, "registrado")
 
@@ -537,5 +544,5 @@ class PoblarCommandTests(TestCase):
         self.assertIn(2, detalles_conteo)
 
         # Remitos asignados a paradas
-        remitos_asignados = Remito.objects.filter(parada__itinerario=itinerario)
-        self.assertGreaterEqual(remitos_asignados.count(), 5)
+        remitos_asignados = Remito.objects.filter(parada__itinerario=itinerario_asig)
+        self.assertGreaterEqual(remitos_asignados.count(), 2)

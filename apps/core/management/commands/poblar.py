@@ -122,6 +122,10 @@ class Command(BaseCommand):
             admin_user.is_active = True
             admin_user.intentos_fallidos = 0
             admin_user.set_password("123")
+
+            for grupo_nombre in Grupos.values:
+                grp, _ = Group.objects.get_or_create(name=grupo_nombre)
+                admin_user.groups.add(grp)
             admin_user.save()
 
             grupo_conciliacion, _ = Group.objects.get_or_create(name=Grupos.ADMIN_CONCILIACION)
@@ -984,10 +988,19 @@ class Command(BaseCommand):
                                 parada=parada_fin_1,
                                 estado=EstadoCobranza.REGISTRADO,
                             )
+                            # Pago dividido: 50% Efectivo, 50% Transferencia
+                            monto_efectivo = (monto_parada_fin_1 / Decimal("2.00")).quantize(Decimal("0.01"))
+                            monto_transf = monto_parada_fin_1 - monto_efectivo
                             DetallePago.objects.create(
                                 cobranza=cobranza_fin_1,
                                 medio=MedioPago.EFECTIVO,
-                                monto_declarado=monto_parada_fin_1,
+                                monto_declarado=monto_efectivo,
+                                monto_verificado=None,
+                            )
+                            DetallePago.objects.create(
+                                cobranza=cobranza_fin_1,
+                                medio=MedioPago.TRANSFERENCIA,
+                                monto_declarado=monto_transf,
                                 monto_verificado=None,
                             )
                             total_cobranzas_creadas += 1

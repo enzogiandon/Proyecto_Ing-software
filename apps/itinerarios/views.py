@@ -190,6 +190,19 @@ class CrearItinerarios(
     success_message = "Itinerario guardado correctamente"
     permission_required = "itinerarios.add_itinerario"
 
+    def get_initial(self):
+        initial = super().get_initial()
+        fecha_param = self.request.GET.get("fecha", "").strip()
+        if fecha_param:
+            try:
+                datetime.strptime(fecha_param, "%Y-%m-%d")
+                initial["fecha"] = fecha_param
+            except ValueError:
+                initial["fecha"] = date.today().isoformat()
+        else:
+            initial["fecha"] = date.today().isoformat()
+        return initial
+
     def form_valid(self, form):
         try:
             crear_itinerarios(
@@ -226,6 +239,12 @@ class CrearParadas(
         else:
             context["comercios_agrupados"] = []
         return context
+
+    def get_success_url(self):
+        next_url = self.request.POST.get("next") or self.request.GET.get("next")
+        if next_url:
+            return next_url
+        return super().get_success_url()
 
     def form_valid(self, form):
         try:

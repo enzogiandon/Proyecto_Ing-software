@@ -157,6 +157,55 @@ class ItinerarioViewsTests(TestCase):
         )
         self.assertEqual(Itinerario.objects.count(), 2)
 
+    def test_crear_itinerario_get_default_date(self):
+        response = self.client.get(reverse("itinerarios:itinerario_crear"))
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("fecha"), date.today().isoformat())
+        self.assertContains(response, 'id="btn-actualizar-fecha"')
+        self.assertContains(response, 'id="fecha-modificada-aviso"')
+        self.assertContains(response, 'id="transportistas-container"')
+
+    def test_crear_itinerario_get_with_date_query_param(self):
+        second_vehiculo = Vehiculo.objects.create(patente="CD456EF")
+        second_user = get_user_model().objects.create_user(
+            username="33333333",
+            password="Driver-Password-123!",
+        )
+        second_user.groups.add(self.grupo_transportista)
+        second_transportista = Transportista.objects.create(
+            usuario=second_user,
+            vehiculo=second_vehiculo,
+        )
+
+        Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+
+        response = self.client.get(
+            reverse("itinerarios:itinerario_crear"),
+            {"fecha": "2026-10-25"},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("fecha"), "2026-10-25")
+        self.assertIn(self.transportista.pk, form.ocupados_ids)
+        self.assertNotIn(second_transportista.pk, form.ocupados_ids)
+        self.assertContains(response, "Ocupado")
+        self.assertContains(response, "Disponible")
+
+    def test_crear_itinerario_get_with_invalid_date(self):
+        response = self.client.get(
+            reverse("itinerarios:itinerario_crear"),
+            {"fecha": "fecha-invalida"},
+        )
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("fecha"), date.today().isoformat())
+
     def test_crear_itinerarios_service_rejects_busy_transportista(self):
         Itinerario.objects.create(
             fecha=date(2026, 10, 25),
@@ -724,6 +773,50 @@ class ItinerarioViewsTests(TestCase):
         itinerario.refresh_from_db()
         self.assertEqual(itinerario.transportista, self.transportista)
         self.assertContains(response_fail, "Transportista no asignado")
+
+    def test_editar_itinerario_muestra_boton_modificar_paradas_sin_columna_quitar(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Test", "20999888776")
+        Parada.objects.create(
+            itinerario=itinerario,
+            comercio=comercio,
+            orden=1,
+            estado=EstadoParada.PENDIENTE,
+        )
+        response = self.client.get(
+            reverse("itinerarios:itinerario_editar", args=[itinerario.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Modificar paradas")
+        self.assertNotContains(response, ">Quitar<")
+        self.assertNotContains(response, "btn-quitar-parada")
+        self.assertNotContains(response, "confirmarQuitarParada")
+
+    def test_crear_paradas_redirecciona_a_next_si_esta_presente(self):
+        itinerario = Itinerario.objects.create(
+            fecha=date(2026, 10, 25),
+            transportista=self.transportista,
+            vehiculo=self.vehiculo,
+            estado=EstadoItinerario.ASIGNADO,
+        )
+        comercio = self.crear_comercio("Comercio Redirect", "20888777665")
+        self.crear_remito(comercio, "R-RED-001")
+        next_url = reverse("itinerarios:itinerario_editar", args=[itinerario.pk])
+
+        response = self.client.post(
+            reverse("itinerarios:paradas_crear"),
+            {
+                "itinerario": itinerario.pk,
+                "comercios": [comercio.pk],
+                "next": next_url,
+            },
+        )
+        self.assertRedirects(response, next_url)
 
     # -------------------------------------------------------------------------
     # HU-60: Listar itinerarios del día y filtrado operativo

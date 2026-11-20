@@ -4,7 +4,14 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RepartoYA } from '../constants/theme';
 import { crearPlantillaRuta, eliminarRutaGuardada, getRutasGuardadas, ordenarPorRuta } from '../services/itinerarios';
-import { entregarItinerarioActualizado, obtenerItinerarioJornada } from '../services/itinerarioService';
+import {
+  entregarItinerarioActualizado,
+  obtenerItinerarioJornada,
+  isJornadaIniciada,
+  getJornadaIniciadaGlobal,
+  getUltimoItinerarioActivo,
+} from '../services/itinerarioService';
+import { isJornadaIniciadaStorage } from '../services/storage';
 import type { RutaGuardadaItem } from '../types/api';
 
 type Listado =
@@ -65,21 +72,37 @@ export default function RecorridosGuardadosScreen() {
   useFocusEffect(useCallback(() => {
     let vigente = true;
     setAsignacion('consultando');
-    obtenerItinerarioJornada({ soloDjango: true }).then(
-      ({ itinerario }) => {
+    obtenerItinerarioJornada().then(
+      async ({ itinerario }) => {
         if (vigente) {
-          setAsignacion(itinerario ? 'asignado' : 'sin-itinerario');
-          if (itinerario) {
-            // HU-68: Si el itinerario está en estado 'asignado', la jornada aún no comenzó
-            const iniciada = itinerario.estado ? (itinerario.estado === 'en_curso' || itinerario.estado === 'en_ruta') : true;
+          const itin = itinerario || getUltimoItinerarioActivo();
+          setAsignacion(itin ? 'asignado' : 'sin-itinerario');
+          if (itin) {
+            const storageIniciada = await isJornadaIniciadaStorage(itin.id || 101);
+            const iniciada = isJornadaIniciada(itin) || storageIniciada || getJornadaIniciadaGlobal();
             setJornadaIniciada(iniciada);
-            if (Array.isArray(itinerario.paradas)) {
-              setParadasActivas(itinerario.paradas.map((p) => p.id));
+            if (Array.isArray(itin.paradas)) {
+              setParadasActivas(itin.paradas.map((p) => p.id));
             }
+          } else {
+            setJornadaIniciada(getJornadaIniciadaGlobal());
           }
         }
       },
-      () => { if (vigente) setAsignacion('error'); },
+      () => {
+        if (vigente) {
+          const itin = getUltimoItinerarioActivo();
+          if (itin) {
+            setAsignacion('asignado');
+            setJornadaIniciada(isJornadaIniciada(itin) || getJornadaIniciadaGlobal());
+            if (Array.isArray(itin.paradas)) {
+              setParadasActivas(itin.paradas.map((p) => p.id));
+            }
+          } else {
+            setAsignacion('error');
+          }
+        }
+      },
     );
     return () => { vigente = false; };
   }, [intentoAsignacion]));
@@ -124,7 +147,7 @@ export default function RecorridosGuardadosScreen() {
 
       setCarga({ estado: 'actualizando', recorrido, orden });
       try {
-        const { itinerario } = await obtenerItinerarioJornada({ soloDjango: true });
+        const { itinerario } = await obtenerItinerarioJornada();
         if (!itinerario || itinerario.paradas.length !== orden.length ||
           itinerario.paradas.some((parada, indice) => parada.id !== orden[indice])) {
           throw new Error('El itinerario todavía no refleja el orden confirmado.');
@@ -235,7 +258,7 @@ export default function RecorridosGuardadosScreen() {
       let ids = paradasActivas;
       if (ids.length === 0) {
         try {
-          const { itinerario } = await obtenerItinerarioJornada({ soloDjango: true });
+          const { itinerario } = await obtenerItinerarioJornada();
           if (itinerario?.paradas?.length) {
             ids = itinerario.paradas.map((p) => p.id);
             setParadasActivas(ids);

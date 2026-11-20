@@ -84,6 +84,7 @@ export default function LoginScreen() {
   // Estados para manejar los errores visuales según Figma (bordes rojos, mensajes, etc.)
   const [errorDni, setErrorDni] = useState('');
   const [errorClave, setErrorClave] = useState('');
+  const [errorGeneral, setErrorGeneral] = useState('');
   const [modalInhabilitadoVisible, setModalInhabilitadoVisible] = useState(false);
   const [modalSoporteVisible, setModalSoporteVisible] = useState(false);
 
@@ -92,6 +93,7 @@ export default function LoginScreen() {
     // Limpio errores anteriores antes de validar
     setErrorDni('');
     setErrorClave('');
+    setErrorGeneral('');
 
     // Validaciones básicas de campos obligatorios
     if (!dni.trim()) {
@@ -113,14 +115,23 @@ export default function LoginScreen() {
         if (resultado.tipoError === 'DNI') {
           setErrorDni(resultado.error || 'El DNI es incorrecto. Intentá nuevamente.');
           setErrorClave('');
+          setErrorGeneral('');
         } else if (resultado.tipoError === 'CLAVE') {
           setErrorClave(resultado.error || 'La clave es incorrecta. Intentá nuevamente.');
           setErrorDni('');
+          setErrorGeneral('');
         } else if (resultado.tipoError === 'INHABILITADO') {
           setErrorDni('');
           setErrorClave('');
+          setErrorGeneral('');
           setModalInhabilitadoVisible(true);
+        } else if (resultado.tipoError === 'CONEXION') {
+          setErrorDni('');
+          setErrorClave('');
+          setErrorGeneral(resultado.error || 'No se pudo conectar con la base de datos.');
+          Alert.alert('Error de conexión', resultado.error || 'No se pudo conectar con la base de datos.');
         } else {
+          setErrorGeneral(resultado.error || 'Error al iniciar sesión.');
           Alert.alert('Aviso', resultado.error || 'No se pudo iniciar sesión.');
         }
         return;
@@ -278,6 +289,17 @@ export default function LoginScreen() {
                 <Text style={styles.mensajeError}>{errorClave}</Text>
               ) : null}
             </View>
+
+            {errorGeneral ? (
+              <View style={styles.bannerErrorGeneral}>
+                <Image
+                  source={require('../../assets/icons/icono-alerta.png')}
+                  style={styles.iconoErrorGeneral}
+                  resizeMode="contain"
+                />
+                <Text style={styles.textoErrorGeneral}>{errorGeneral}</Text>
+              </View>
+            ) : null}
 
             {/* Botón principal en Naranja YA (#F4661B) */}
             <TouchableOpacity
@@ -586,6 +608,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 6,
     marginLeft: 2,
+  },
+  bannerErrorGeneral: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: RepartoYA.errorFondo,
+    borderColor: RepartoYA.error,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  iconoErrorGeneral: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  textoErrorGeneral: {
+    flex: 1,
+    color: RepartoYA.error,
+    fontSize: 13,
+    fontWeight: '600',
   },
   // Botón ingresar
   botonIngresar: {

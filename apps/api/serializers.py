@@ -20,6 +20,25 @@ User = get_user_model()
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["username"] = user.username
+        token["first_name"] = user.first_name
+        token["last_name"] = user.last_name
+        token["is_active"] = user.is_active
+
+        # Inyectar vehículo si tiene perfil de transportista
+        if hasattr(user, "perfil_transportista") and user.perfil_transportista.vehiculo:
+            v = user.perfil_transportista.vehiculo
+            token["vehiculo"] = {
+                "id": v.id,
+                "patente": v.patente,
+                "modelo": v.modelo or "Camión de Reparto",
+                "estado": v.estado,
+            }
+        return token
+
     def validate(self, attrs):
         username = attrs.get(self.username_field)
         password = attrs.get("password")

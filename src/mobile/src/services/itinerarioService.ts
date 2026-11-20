@@ -1,12 +1,28 @@
 // src/services/itinerarioService.ts
 import { API_BASE_URL, getAuthToken, getUsuarioActual } from './authService';
 import { saveJornadaIniciada, isJornadaIniciadaStorage } from './storage';
+import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
 import {
   MOCK_ITINERARIO_ASIGNADO,
   MOCK_ITINERARIO_SIN_ASIGNAR,
 } from '../data/mockItinerario';
 import * as mockItinData from '../data/mockItinerario';
-import { ItinerarioJornada, ParadaItem } from '../types/itinerario';
+
+// Estado global en memoria para persistir inicio de jornada durante la sesión de la app
+let jornadaLaboralIniciadaGlobal: boolean = false;
+let ultimoItinerarioActivo: ItinerarioJornada | undefined;
+
+export function getJornadaIniciadaGlobal(): boolean {
+  return jornadaLaboralIniciadaGlobal;
+}
+
+export function setJornadaIniciadaGlobal(iniciada: boolean) {
+  jornadaLaboralIniciadaGlobal = iniciada;
+}
+
+export function getUltimoItinerarioActivo(): ItinerarioJornada | undefined {
+  return ultimoItinerarioActivo;
+}
 
 /**
  * Inicia formalmente la jornada laboral del transportista (HU-68).
@@ -70,11 +86,25 @@ export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promis
 
     const data = await response.json().catch(() => ({}));
     await saveJornadaIniciada(itinerarioId, true);
+    jornadaLaboralIniciadaGlobal = true;
+    if (MOCK_ITINERARIO_ASIGNADO) MOCK_ITINERARIO_ASIGNADO.estado = 'en_curso';
+    if ((mockItinData as any).MOCK_ITINERARIO_11111111) (mockItinData as any).MOCK_ITINERARIO_11111111.estado = 'en_curso';
+    if ((mockItinData as any).MOCK_ITINERARIO_22222222) (mockItinData as any).MOCK_ITINERARIO_22222222.estado = 'en_curso';
+    if ((mockItinData as any).MOCK_ITINERARIO_44444444) (mockItinData as any).MOCK_ITINERARIO_44444444.estado = 'en_curso';
     return { success: true, estado: data?.estado || 'en_curso' };
   } catch (err: any) {
-    console.warn('[ItinerarioService] Sincronización offline al iniciar jornada:', err?.message);
+    console.warn('[ItinerarioService] Error al conectar con el servidor para iniciar jornada:', err?.message);
+    // Modo offline / mock: se permite iniciar la jornada localmente para no bloquear la app
     await saveJornadaIniciada(itinerarioId, true);
-    return { success: true, estado: 'en_curso' };
+    jornadaLaboralIniciadaGlobal = true;
+    if (MOCK_ITINERARIO_ASIGNADO) MOCK_ITINERARIO_ASIGNADO.estado = 'en_curso';
+    if ((mockItinData as any).MOCK_ITINERARIO_11111111) (mockItinData as any).MOCK_ITINERARIO_11111111.estado = 'en_curso';
+    if ((mockItinData as any).MOCK_ITINERARIO_22222222) (mockItinData as any).MOCK_ITINERARIO_22222222.estado = 'en_curso';
+    if ((mockItinData as any).MOCK_ITINERARIO_44444444) (mockItinData as any).MOCK_ITINERARIO_44444444.estado = 'en_curso';
+    return {
+      success: true,
+      estado: 'en_curso',
+    };
   }
 }
 
@@ -82,6 +112,7 @@ export async function comenzarJornadaLaboral(itinerarioId: number = 101): Promis
  * Verifica si la jornada laboral del itinerario ya fue iniciada ('en_curso' o 'en_ruta').
  */
 export function isJornadaIniciada(itinerario?: ItinerarioJornada | null): boolean {
+  if (jornadaLaboralIniciadaGlobal) return true;
   if (!itinerario) return false;
   return (
     itinerario.estado === 'en_curso' ||
@@ -151,6 +182,15 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 
       // Si el backend ya devolvió el objeto ItinerarioJornada completo
       if (data && typeof data === 'object' && Array.isArray(data.paradas)) {
+        const itinerarioId = data.id || 101;
+        const storageIniciada = await isJornadaIniciadaStorage(itinerarioId);
+        if ((storageIniciada || jornadaLaboralIniciadaGlobal) && data.estado === 'asignado') {
+          data.estado = 'en_curso';
+        }
+        if (data.estado === 'en_curso' || data.estado === 'en_ruta' || data.estado === 'finalizado') {
+          jornadaLaboralIniciadaGlobal = true;
+        }
+        ultimoItinerarioActivo = data;
         return { itinerario: data };
       }
 
@@ -162,15 +202,15 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 
         const transportistaNombre = usuario?.first_name
           ? `${usuario.first_name} ${usuario.last_name || ''}`.trim()
-          : (MOCK_ITINERARIO_ASIGNADO.transportistaNombre || 'Martín Rodríguez');
+          : (usuario?.dni ? `Transportista ${usuario.dni}` : 'Transportista');
 
         const transportistaIniciales = usuario?.first_name
           ? `${usuario.first_name[0] || ''}${usuario.last_name ? usuario.last_name[0] : ''}`.toUpperCase()
-          : 'MR';
+          : 'TR';
 
         const vehiculo = usuario?.vehiculo
           ? { patente: usuario.vehiculo.patente, modelo: usuario.vehiculo.modelo }
-          : MOCK_ITINERARIO_ASIGNADO.vehiculo;
+          : { patente: 'S/D', modelo: 'Camión de Reparto' };
 
         const paradasMapeadas: ParadaItem[] = data.map((p: any, idx: number) => {
           const estadoEtiqueta =
@@ -252,12 +292,8 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 
     throw new Error(`HTTP ${response.status}`);
   } catch (error: any) {
-    const token = getAuthToken();
-    const esMock = !token || token.startsWith('mock-');
-    if (soloDjango && !esMock) throw error;
-    console.warn('Backend de itinerario no disponible. Usando datos Mock de Figma:', error?.message);
-    // Modo híbrido: retorna el itinerario correspondiente al usuario autenticado
-    const usuarioActual = getUsuarioActual();
+    console.warn('[ItinerarioService] Backend de itinerario no disponible. Usando datos Mock de Figma:', error?.message);
+    const usuarioActual = usuario || getUsuarioActual();
     if (usuarioActual?.dni === '55555555') {
       return { itinerario: MOCK_ITINERARIO_SIN_ASIGNAR };
     }
@@ -265,25 +301,25 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
       const itin1111 = (mockItinData as any).MOCK_ITINERARIO_11111111 || MOCK_ITINERARIO_ASIGNADO;
       const idMock = itin1111?.id || 102;
       const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
-      const estadoMock = jornadaIniciada ? 'en_curso' : (itin1111?.estado || 'en_curso');
-      return {
-        itinerario: {
-          ...itin1111,
-          estado: estadoMock,
-        },
+      const estadoMock = (jornadaIniciada || jornadaLaboralIniciadaGlobal) ? 'en_curso' : (itin1111?.estado || 'en_curso');
+      const resultado: ItinerarioJornada = {
+        ...itin1111,
+        estado: estadoMock,
       };
+      ultimoItinerarioActivo = resultado;
+      return { itinerario: resultado };
     }
     if (usuarioActual?.dni === '22222222' || usuarioActual?.dni === '44444444') {
       const itin2222 = (mockItinData as any).MOCK_ITINERARIO_22222222 || (mockItinData as any).MOCK_ITINERARIO_44444444 || MOCK_ITINERARIO_ASIGNADO;
       const idMock = itin2222?.id || 103;
       const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
-      const estadoMock = jornadaIniciada ? 'en_curso' : (itin2222?.estado || 'en_curso');
-      return {
-        itinerario: {
-          ...itin2222,
-          estado: estadoMock,
-        },
+      const estadoMock = (jornadaIniciada || jornadaLaboralIniciadaGlobal) ? 'en_curso' : (itin2222?.estado || 'en_curso');
+      const resultado: ItinerarioJornada = {
+        ...itin2222,
+        estado: estadoMock,
       };
+      ultimoItinerarioActivo = resultado;
+      return { itinerario: resultado };
     }
 
     // Para Carlos Gómez (33333333) y default
@@ -301,17 +337,17 @@ export async function obtenerItinerarioJornada({ soloDjango = false } = {}): Pro
 
     const idMock = MOCK_ITINERARIO_ASIGNADO.id || 101;
     const jornadaIniciada = await isJornadaIniciadaStorage(idMock);
-    const estadoMock = jornadaIniciada ? 'en_curso' : (MOCK_ITINERARIO_ASIGNADO.estado || 'asignado');
+    const estadoMock = (jornadaIniciada || jornadaLaboralIniciadaGlobal) ? 'en_curso' : (MOCK_ITINERARIO_ASIGNADO.estado || 'asignado');
 
-    return {
-      itinerario: {
-        ...MOCK_ITINERARIO_ASIGNADO,
-        estado: estadoMock,
-        transportistaNombre: nombre,
-        transportistaIniciales: iniciales,
-        vehiculo,
-      },
+    const resultado: ItinerarioJornada = {
+      ...MOCK_ITINERARIO_ASIGNADO,
+      estado: estadoMock,
+      transportistaNombre: nombre,
+      transportistaIniciales: iniciales,
+      vehiculo,
     };
+    ultimoItinerarioActivo = resultado;
+    return { itinerario: resultado };
   }
 }
 
@@ -320,10 +356,20 @@ let itinerarioActualizado: ItinerarioJornada | undefined;
 
 export function entregarItinerarioActualizado(itinerario: ItinerarioJornada) {
   itinerarioActualizado = itinerario;
+  ultimoItinerarioActivo = itinerario;
+  if (isJornadaIniciada(itinerario)) {
+    jornadaLaboralIniciadaGlobal = true;
+  }
 }
 
 export function tomarItinerarioActualizado() {
   const itinerario = itinerarioActualizado;
   itinerarioActualizado = undefined;
+  if (itinerario) {
+    ultimoItinerarioActivo = itinerario;
+    if (isJornadaIniciada(itinerario)) {
+      jornadaLaboralIniciadaGlobal = true;
+    }
+  }
   return itinerario;
 }

@@ -43,7 +43,6 @@ import {
   comenzarJornadaLaboral,
 } from '../services/itinerarioService';
 import { getUsuarioActual, estaAutenticado, restaurarSesion, cerrarSesion } from '../services/authService';
-import { MOCK_ITINERARIO_SIN_ASIGNAR } from '../data/mockItinerario';
 import { seleccionarParadaItem } from '../services/paradaService';
 // Núcleo del cambio: Servicio para abrir chat de WhatsApp con soporte de Base Logística
 import { contactarSoporteWhatsApp } from '../services/soporteService';
@@ -67,16 +66,16 @@ export default function ItinerarioScreen() {
   const usuarioLogueado = getUsuarioActual();
   const nombreChofer = usuarioLogueado?.first_name 
     ? `${usuarioLogueado.first_name} ${usuarioLogueado.last_name || ''}`.trim()
-    : (itinerario?.transportistaNombre || 'Martín Rodríguez');
+    : (itinerario?.transportistaNombre || (usuarioLogueado?.dni ? `Transportista ${usuarioLogueado.dni}` : 'Transportista'));
 
-  // Iniciales dinámicas para el badge del avatar (ej: Martín Rodríguez -> MR)
+  // Iniciales dinámicas para el badge del avatar (ej: Martín Pérez -> MP)
   const inicialesChofer = usuarioLogueado?.first_name
     ? `${usuarioLogueado.first_name[0] || ''}${usuarioLogueado.last_name ? usuarioLogueado.last_name[0] : ''}`.toUpperCase()
-    : (itinerario?.transportistaIniciales || 'MR');
+    : (itinerario?.transportistaIniciales || 'TR');
 
   const vehiculoChofer = usuarioLogueado?.vehiculo
     ? `${usuarioLogueado.vehiculo.modelo} · ${usuarioLogueado.vehiculo.patente}`
-    : `${itinerario?.vehiculo.modelo || 'Unidad 024 · Iveco Daily'} · ${itinerario?.vehiculo.patente || 'AB 458 CD'}`;
+    : `${itinerario?.vehiculo.modelo || 'Unidad de Reparto'} · ${itinerario?.vehiculo.patente || 'S/D'}`;
 
   // Función para pegarle al servicio o cargar los datos simulados
   const cargarDatos = async () => {
@@ -130,7 +129,16 @@ export default function ItinerarioScreen() {
   useFocusEffect(
     useCallback(() => {
       const actualizado = tomarItinerarioActualizado();
-      if (actualizado) setItinerario(actualizado);
+      if (actualizado) {
+        setItinerario(actualizado);
+      } else {
+        // Re-sincronizar el itinerario en segundo plano al volver al foco para reflejar cambios de paradas
+        obtenerItinerarioJornada()
+          .then((res) => {
+            if (res.itinerario) setItinerario(res.itinerario);
+          })
+          .catch(() => {});
+      }
       const onBackPress = () => {
         // En el itinerario no se debe volver al login bajo ninguna circunstancia
         return true;
@@ -266,16 +274,39 @@ export default function ItinerarioScreen() {
     );
   };
 
-  // Separo la próxima parada a entregar del resto de las paradas
+  // Clasificación de paradas según su estado operativo
   const paradas = itinerario?.paradas || [];
-  const proximaParada = paradas[0];
-  const siguientesParadas = paradas.slice(1);
+
+  const esEntregada = (p: ParadaItem) =>
+    (p.estado as string) === 'finalizada' || (p.estado as string) === 'completada';
+
+  // Paradas no entregadas (pendientes, en_curso o con inconveniente)
+  // Conservan su orden correlativo para la secuencia de visita
+  const paradasNoEntregadas = paradas
+    .filter((p) => !esEntregada(p))
+    .sort((a, b) => a.orden - b.orden);
+
+  // Paradas ya entregadas (finalizadas) -> Van abajo de todo
+  const paradasEntregadas = paradas
+    .filter(esEntregada)
+    .sort((a, b) => a.orden - b.orden);
+
+  // Parada principal destacada: la siguiente parada a entregar
+  const proximaParada = paradasNoEntregadas.length > 0 ? paradasNoEntregadas[0] : null;
+
+  // Paradas que le siguen a esa siguiente parada
+  const siguientesParadas = paradasNoEntregadas.length > 1 ? paradasNoEntregadas.slice(1) : [];
+
+  // Cálculos de totales y progreso consistentes
+  const totalParadasCount = itinerario?.totalParadas || paradas.length;
+  const paradasEntregadasCount = Math.max(itinerario?.paradasCompletadas ?? 0, paradasEntregadas.length);
+  const paradasRestantesCount = Math.max(0, totalParadasCount - paradasEntregadasCount);
 
   // Cálculo del porcentaje completado para la barra de progreso
   const porcentajeProgreso =
-    itinerario && itinerario.totalParadas > 0
-      ? Math.round((itinerario.paradasCompletadas / itinerario.totalParadas) * 100)
-      : 50;
+    totalParadasCount > 0
+      ? Math.round((paradasEntregadasCount / totalParadasCount) * 100)
+      : 0;
 
   return (
     <View style={styles.safeContainer}>
@@ -426,7 +457,7 @@ export default function ItinerarioScreen() {
           <View style={styles.progresoCard}>
             <View style={styles.progresoHeaderRow}>
               <Text style={styles.progresoTitulo}>
-                {itinerario.paradasCompletadas} de {itinerario.totalParadas} paradas entregadas
+                {paradasEntregadasCount} de {totalParadasCount} paradas entregadas
               </Text>
               <Text style={styles.progresoPorcentaje}>{porcentajeProgreso}%</Text>
             </View>
@@ -443,10 +474,10 @@ export default function ItinerarioScreen() {
 
             <View style={styles.progresoFooterRow}>
               <Text style={styles.progresoEntregadas}>
-                {itinerario.paradasCompletadas} entregadas
+                {paradasEntregadasCount} entregadas
               </Text>
               <Text style={styles.progresoPorVisitar}>
-                {itinerario.totalParadas - itinerario.paradasCompletadas} por visitar
+                {paradasRestantesCount} por visitar
               </Text>
             </View>
           </View>
@@ -529,17 +560,29 @@ export default function ItinerarioScreen() {
           </TouchableOpacity>
 
           {/* Encabezado de la lista: Próximas paradas */}
-          <View style={styles.seccionHeader}>
-            <View style={styles.seccionTituloRow}>
-              <Text style={styles.seccionTitulo}>Próximas paradas</Text>
-              <Text style={styles.seccionRestantes}>
-                {itinerario.totalParadas - itinerario.paradasCompletadas} restantes
+          {proximaParada ? (
+            <View style={styles.seccionHeader}>
+              <View style={styles.seccionTituloRow}>
+                <Text style={styles.seccionTitulo}>Próximas paradas</Text>
+                <Text style={styles.seccionRestantes}>
+                  {paradasRestantesCount} restante{paradasRestantesCount !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <Text style={styles.seccionSubtitulo}>
+                Prioridad de visita · continuás en la parada {proximaParada.orden} de {totalParadasCount}
               </Text>
             </View>
-            <Text style={styles.seccionSubtitulo}>
-              Prioridad de visita · continuás en la parada {proximaParada ? proximaParada.orden : 1} de {itinerario.totalParadas}
-            </Text>
-          </View>
+          ) : (
+            <View style={styles.bannerTodasEntregadas}>
+              <View style={styles.badgeVerdeGrande}>
+                <Text style={styles.badgeVerdeGrandeTexto}>✓</Text>
+              </View>
+              <Text style={styles.bannerTodasEntregadasTitulo}>¡Todas las paradas entregadas!</Text>
+              <Text style={styles.bannerTodasEntregadasSubtitulo}>
+                Completaste con éxito la totalidad de las entregas de esta hoja de ruta.
+              </Text>
+            </View>
+          )}
 
           {/* PARADA DESTACADA (Conecta con la pantalla de Validar Cobro) */}
           {proximaParada && (
@@ -554,7 +597,7 @@ export default function ItinerarioScreen() {
                     {proximaParada.comercio.razonSocial}
                   </Text>
                   <Text style={styles.comercioSubtitulo}>
-                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${itinerario.totalParadas} · ${proximaParada.estado === 'finalizada' ? 'Entregada' : proximaParada.estado === 'error' ? 'Con inconveniente' : 'Próxima entrega'}`}
+                    {proximaParada.subtitulo || `Parada ${proximaParada.orden} de ${totalParadasCount} · ${proximaParada.estado === 'error' ? 'Con inconveniente' : 'Próxima entrega'}`}
                   </Text>
                 </View>
               </View>
@@ -627,7 +670,7 @@ export default function ItinerarioScreen() {
                     {parada.comercio.razonSocial}
                   </Text>
                   <Text style={styles.comercioSubtituloSecundario}>
-                    {parada.subtitulo || `Parada ${parada.orden} de ${itinerario.totalParadas} · ${parada.estado === 'finalizada' ? 'Entregada' : parada.estado === 'error' ? 'Con inconveniente' : 'A continuación'}`}
+                    {parada.subtitulo || `Parada ${parada.orden} de ${totalParadasCount} · ${parada.estado === 'error' ? 'Con inconveniente' : 'A continuación'}`}
                   </Text>
                 </View>
               </View>
@@ -693,6 +736,109 @@ export default function ItinerarioScreen() {
               </TouchableOpacity>
             </View>
           ))}
+
+          {/* PARADAS ENTREGADAS (A bajo de todo) */}
+          {paradasEntregadas.length > 0 && (
+            <>
+              <View style={[styles.seccionHeader, styles.seccionHeaderEntregadas]}>
+                <View style={styles.seccionTituloRow}>
+                  <Text style={styles.seccionTitulo}>Paradas entregadas</Text>
+                  <View style={styles.badgeContadorEntregadas}>
+                    <Text style={styles.badgeContadorEntregadasTexto}>
+                      {paradasEntregadas.length} de {totalParadasCount}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.seccionSubtitulo}>
+                  Entregas finalizadas y cobranzas registradas
+                </Text>
+              </View>
+
+              {paradasEntregadas.map((parada) => (
+                <View key={parada.id} style={styles.paradaCardEntregada}>
+                  <View style={styles.paradaHeaderRow}>
+                    {/* Badge Verde con Check */}
+                    <View style={styles.badgeVerde}>
+                      <Text style={styles.badgeVerdeTexto}>✓</Text>
+                    </View>
+                    <View style={styles.paradaTituloWrap}>
+                      <View style={styles.filaComercioEntregado}>
+                        <Text style={styles.comercioNombre}>
+                          {parada.comercio.razonSocial}
+                        </Text>
+                        <View style={styles.badgeChipEntregada}>
+                          <Text style={styles.badgeChipEntregadaTexto}>Entregada</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.comercioSubtituloEntregada}>
+                        Parada #{parada.orden} de {totalParadasCount} · Cobro validado
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Dirección */}
+                  <View style={styles.direccionRow}>
+                    <Image
+                      source={require('../../assets/icons/icono-domicilio.png')}
+                      style={styles.iconoPinCustom}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.direccionTexto}>
+                      {parada.comercio.domicilio}
+                      {parada.comercio.localidad ? ` · ${parada.comercio.localidad}` : ''}
+                    </Text>
+                  </View>
+
+                  {/* Remitos y Monto Recaudado */}
+                  <View style={styles.montosRow}>
+                    <View>
+                      <Text style={styles.metaLabel}>DOCUMENTACIÓN</Text>
+                      <View style={styles.remitosFila}>
+                        <Image
+                          source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                          style={styles.iconoRemitoCustom}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.metaValorRemitos}>
+                          {parada.cantidadRemitos} remitos
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.alignEnd}>
+                      <Text style={styles.metaLabel}>TOTAL RECAUDADO</Text>
+                      <Text style={styles.montoEntregado}>
+                        $ {parada.montoCobranza.toLocaleString('es-AR', {
+                          minimumFractionDigits: 2,
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Botón Ver Detalle de Entrega */}
+                  <TouchableOpacity
+                    style={[
+                      styles.botonVerDetalleEntregada,
+                      !jornadaIniciada && styles.botonVerDetalleBloqueado,
+                    ]}
+                    onPress={() => handleVerDetalle(parada)}
+                    activeOpacity={0.85}
+                  >
+                    <Image
+                      source={require('../../assets/icons/icono-adjuntar-archivo.png')}
+                      style={[
+                        styles.iconoVerDetalleCustom,
+                        !jornadaIniciada && { opacity: 0.5 },
+                      ]}
+                      resizeMode="contain"
+                    />
+                    <Text style={[styles.textoBotonVerDetalleEntregada, !jornadaIniciada && { color: '#9CA3AF' }]}>
+                      {jornadaIniciada ? 'Ver detalle de entrega' : '🔒 Solo lectura'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </>
+          )}
 
 
         </ScrollView>
@@ -1190,6 +1336,119 @@ const styles = StyleSheet.create({
     color: RepartoYA.azulRuta,
     fontSize: 14,
     fontWeight: '700',
+  },
+
+  // Estilos de Paradas Entregadas (A bajo de todo)
+  seccionHeaderEntregadas: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: RepartoYA.grisBorde,
+  },
+  badgeContadorEntregadas: {
+    backgroundColor: RepartoYA.exitoFondo,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  badgeContadorEntregadasTexto: {
+    color: RepartoYA.exito,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  paradaCardEntregada: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  filaComercioEntregado: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  badgeChipEntregada: {
+    backgroundColor: RepartoYA.exitoFondo,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  badgeChipEntregadaTexto: {
+    color: RepartoYA.exito,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  comercioSubtituloEntregada: {
+    fontSize: 12,
+    color: RepartoYA.exito,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  montoEntregado: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: RepartoYA.exito,
+  },
+  botonVerDetalleEntregada: {
+    backgroundColor: RepartoYA.blanco,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.grisBorde,
+    borderRadius: 12,
+    height: 46,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textoBotonVerDetalleEntregada: {
+    color: RepartoYA.carbon,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Banner cuando todas las paradas han sido entregadas
+  bannerTodasEntregadas: {
+    backgroundColor: RepartoYA.exitoFondo,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: RepartoYA.exito,
+  },
+  badgeVerdeGrande: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: RepartoYA.exito,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  badgeVerdeGrandeTexto: {
+    color: RepartoYA.blanco,
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  bannerTodasEntregadasTitulo: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#065F46',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  bannerTodasEntregadasSubtitulo: {
+    fontSize: 13,
+    color: '#047857',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 
   // Estado sin asignar

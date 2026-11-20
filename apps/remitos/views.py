@@ -9,8 +9,9 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, transaction
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -177,6 +178,12 @@ class ImportarRemitos(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
             if not marca:
                 errores.append(
                     f"No se encontró la marca con CUIT {cuit_marca} para el archivo {nombre_archivo}."
+                )
+                continue
+
+            if not marca.activo:
+                errores.append(
+                    f"La marca {marca.nombre} (CUIT {marca.cuit}) se encuentra inactiva."
                 )
                 continue
 
@@ -548,3 +555,31 @@ class EliminarMarca(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     template_name = "remitos/marca_eliminar.html"
     success_url = reverse_lazy("remitos:marca_lista")
     permission_required = "remitos.delete_marca"
+
+    def form_valid(self, form):
+        marca = self.get_object()
+        remitos_activos = marca.remitos.filter(
+            estado__in=[EstadoRemito.PENDIENTE, EstadoRemito.ASIGNADO]
+        )
+        if remitos_activos.exists():
+            messages.error(
+                self.request,
+                "No se puede eliminar la marca porque tiene remitos en estado pendiente o asignado.",
+            )
+            return redirect(self.success_url)
+
+        marca.activo = False
+        marca.save(update_fields=["activo"])
+        messages.success(self.request, "Marca eliminada exitosamente")
+        return redirect(self.success_url)
+
+
+class ReactivarMarca(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "remitos.change_marca"
+
+    def post(self, request, pk):
+        marca = get_object_or_404(Marca, pk=pk)
+        marca.activo = True
+        marca.save(update_fields=["activo"])
+        messages.success(request, "Marca reactivada exitosamente")
+        return redirect("remitos:marca_lista")

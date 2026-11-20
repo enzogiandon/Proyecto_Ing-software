@@ -2,6 +2,7 @@ from datetime import date
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db import models
 
 from .models import Comercio, ImportacionRemitos, Marca, Remito
 
@@ -31,6 +32,25 @@ class RemitoForm(forms.ModelForm):
             )
 
         return f"{partes[0].zfill(4)}-{partes[1].zfill(8)}"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo mostrar marcas activas en el selector para nuevas asignaciones
+        if not self.instance.pk:
+            self.fields["marca"].queryset = Marca.objects.filter(activo=True).order_by("nombre")
+        else:
+            # En edición, incluir la marca actual aunque haya sido cambiada a estado inativa 
+            self.fields["marca"].queryset = Marca.objects.filter(
+                models.Q(activo=True) | models.Q(pk=self.instance.marca_id)
+            ).order_by("nombre")
+
+    def clean_marca(self):
+        marca = self.cleaned_data.get("marca")
+        if not marca:
+            raise ValidationError("La marca proveedora es obligatoria.")
+        if not marca.activo:
+            raise ValidationError("La marca seleccionada se encuentra inactiva.")
+        return marca
 
     def clean(self):
         cleaned_data = super().clean()
@@ -73,6 +93,11 @@ class RemitoForm(forms.ModelForm):
                 }
             ),
         }
+        error_messages = {
+            "marca": {
+                "invalid_choice": "La marca seleccionada no existe o se encuentra inactiva.",
+            }
+        }
 
 
 class MultipleFileInput(forms.FileInput):
@@ -106,12 +131,19 @@ class ImportacionRemitosForm(forms.ModelForm):
         model = ImportacionRemitos
         fields = ["archivo", "marca"]
         widgets = {
-            "marca": forms.Select(attrs={"class": "form-select"}),
+            "marca": forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["marca"].required = False
+        self.fields["marca"].queryset = Marca.objects.filter(activo=True)
+
+    def clean_marca(self):
+        marca = self.cleaned_data.get("marca")
+        if marca and not marca.activo:
+            raise ValidationError("La marca seleccionada se encuentra inactiva.")
+        return marca
 
 
 class ComercioForm(forms.ModelForm):
@@ -146,3 +178,25 @@ class MarcaForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "CUIT (11 dígitos)"}
             ),
         }
+        labels = {
+            "nombre": "Razón social",
+            "cuit": "CUIT",
+        }
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get("nombre", "").strip()
+        if not nombre:
+            raise ValidationError("La razón social es obligatoria.")
+        return nombre
+
+    def clean_cuit(self):
+        cuit = self.cleaned_data.get("cuit", "").strip()
+        if not cuit.isdigit() or len(cuit) != 11:
+            raise ValidationError("El CUIT debe contener exactamente 11 dígitos numéricos sin guiones ni puntos.")
+        qs = Marca.objects.filter(cuit=cuit)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("Ya existe una marca registrada con este CUIT.")
+        return cuit
+

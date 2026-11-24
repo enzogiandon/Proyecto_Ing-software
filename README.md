@@ -1,7 +1,7 @@
 # RepartoYA — Sistema Integral de Gestión Logística y Distribución
 
 > **Proyecto de Ingeniería de Software** — Universidad Nacional de La Plata (UNLP).  
-> Desarrollado por el equipo **SofTech**. Contacto: `enzogiandon@gmail.com`.
+> Desarrollado por el equipo **SofTech** (nombre de fantasía usado para la materia).
 
 ---
 
